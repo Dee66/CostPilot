@@ -12,6 +12,7 @@ pub mod heuristics_loader;
 pub use prediction_engine::PredictionEngine;
 pub use cold_start::ColdStartInference;
 pub use confidence::{calculate_confidence, calculate_interval_width};
+pub use crate::engines::shared::models::CostEstimate;
 pub use calculation_steps::{
     CalculationStep, CalculationBreakdown, document_calculation,
     ec2_calculation_step, rds_calculation_step, storage_calculation_step,

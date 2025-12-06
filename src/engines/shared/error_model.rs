@@ -24,6 +24,10 @@ pub enum ErrorCategory {
     ConfigError,
     /// File system error
     FileSystemError,
+    /// Performance budget timeout
+    Timeout,
+    /// Circuit breaker triggered
+    CircuitBreaker,
 }
 
 /// Stable error with ID and remediation hints
