@@ -361,4 +361,3 @@ fn generate_example_json() -> String {
         }
     ])).unwrap_or_default()
 }
-"#.to_string()

@@ -23,6 +23,7 @@ regex = "1.10"
 walkdir = "2.4"
 atty = "0.2"
 sha2 = "0.10"
+dirs = "5.0"
 
 [dev-dependencies]
 # E2E testing
@@ -92,4 +93,3 @@ policy = []
 mapping = []
 grouping = []
 slo = []
-wasm = ["wasm-bindgen"]

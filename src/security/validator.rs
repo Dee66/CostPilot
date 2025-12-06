@@ -41,9 +41,9 @@ impl SecurityValidator {
         // Patterns to detect secrets/tokens
         let secret_patterns = vec![
             Regex::new(r"AKIA[0-9A-Z]{16}").unwrap(), // AWS Access Key ID
-            Regex::new(r"(?i)aws_secret_access_key\s*=\s*['\"][^'\"]+['\"]").unwrap(),
-            Regex::new(r"(?i)api[_-]?key\s*[:=]\s*['\"][^'\"]+['\"]").unwrap(),
-            Regex::new(r"(?i)token\s*[:=]\s*['\"][A-Za-z0-9+/]{20,}['\"]").unwrap(),
+            Regex::new(r#"(?i)aws_secret_access_key\s*=\s*['"][^'"]+['"]"#).unwrap(),
+            Regex::new(r#"(?i)api[_-]?key\s*[:=]\s*['"][^'"]+['"]"#).unwrap(),
+            Regex::new(r#"(?i)token\s*[:=]\s*['"][A-Za-z0-9+/]{20,}['"]"#).unwrap(),
             Regex::new(r"Bearer\s+[A-Za-z0-9\-._~+/]+=*").unwrap(),
         ];
 

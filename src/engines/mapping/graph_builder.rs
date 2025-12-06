@@ -4,10 +4,12 @@ use super::graph_types::*;
 use crate::engines::detection::ResourceChange;
 use crate::engines::prediction::PredictionEngine;
 use crate::errors::CostPilotError;
+use crate::engines::performance::budgets::{PerformanceTracker, PerformanceBudgets, BudgetViolation, TimeoutAction};
 
 /// Builds dependency graphs from infrastructure resources
 pub struct GraphBuilder {
     config: GraphConfig,
+    performance_tracker: Option<PerformanceTracker>,
 }
 
 impl GraphBuilder {
@@ -15,16 +17,33 @@ impl GraphBuilder {
     pub fn new() -> Self {
         Self {
             config: GraphConfig::default(),
+            performance_tracker: None,
         }
     }
 
     /// Create a new graph builder with custom config
     pub fn with_config(config: GraphConfig) -> Self {
-        Self { config }
+        Self { 
+            config,
+            performance_tracker: None,
+        }
+    }
+
+    /// Enable performance tracking with budgets
+    pub fn with_performance_tracking(mut self, budgets: PerformanceBudgets) -> Self {
+        self.performance_tracker = Some(PerformanceTracker::new(budgets.mapping, "Mapping".to_string()));
+        self
     }
 
     /// Build a dependency graph from resource changes
-    pub fn build_graph(&self, changes: &[ResourceChange]) -> Result<DependencyGraph, CostPilotError> {
+    pub fn build_graph(&mut self, changes: &[ResourceChange]) -> Result<DependencyGraph, CostPilotError> {
+        // Check budget before starting
+        if let Some(tracker) = &self.performance_tracker {
+            if let Some(violation) = tracker.check_budget() {
+                return self.handle_budget_violation(violation);
+            }
+        }
+
         let mut graph = DependencyGraph::new();
         
         // First pass: Create nodes for all resources
@@ -35,6 +54,13 @@ impl GraphBuilder {
             
             let node = self.create_node_from_resource(change)?;
             graph.add_node(node);
+
+            // Check budget periodically
+            if let Some(tracker) = &self.performance_tracker {
+                if let Some(violation) = tracker.check_budget() {
+                    return self.handle_budget_violation_with_partial(violation, graph);
+                }
+            }
         }
         
         // Second pass: Infer dependencies and create edges
@@ -46,6 +72,13 @@ impl GraphBuilder {
             let edges = self.infer_dependencies(change, changes)?;
             for edge in edges {
                 graph.add_edge(edge);
+            }
+
+            // Check budget periodically
+            if let Some(tracker) = &self.performance_tracker {
+                if let Some(violation) = tracker.check_budget() {
+                    return self.handle_budget_violation_with_partial(violation, graph);
+                }
             }
         }
         
@@ -61,8 +94,62 @@ impl GraphBuilder {
         
         // Update metadata
         graph.update_metadata();
+
+        // Mark completion and collect metrics
+        if let Some(tracker) = &mut self.performance_tracker {
+            let _metrics = tracker.complete();
+            // TODO: Log or return metrics
+        }
         
         Ok(graph)
+    }
+
+    /// Handle budget violation based on timeout action
+    fn handle_budget_violation(&self, violation: BudgetViolation) -> Result<DependencyGraph, CostPilotError> {
+        match violation.timeout_action {
+            TimeoutAction::ReturnPartialResults => {
+                eprintln!("⚠️  Mapping budget exceeded: {} ({}ms budget, {}ms elapsed)",
+                    violation.violation_type, violation.budget_ms, violation.actual_ms);
+                eprintln!("   Returning empty graph");
+                Ok(DependencyGraph::new())
+            }
+            TimeoutAction::Error => {
+                Err(CostPilotError::Timeout(format!(
+                    "Mapping exceeded budget: {} ({}ms budget, {}ms elapsed)",
+                    violation.violation_type, violation.budget_ms, violation.actual_ms
+                )))
+            }
+            TimeoutAction::CircuitBreak => {
+                Err(CostPilotError::CircuitBreaker(format!(
+                    "Mapping circuit breaker triggered: {} ({}ms budget, {}ms elapsed)",
+                    violation.violation_type, violation.budget_ms, violation.actual_ms
+                )))
+            }
+        }
+    }
+
+    /// Handle budget violation with partial graph
+    fn handle_budget_violation_with_partial(&self, violation: BudgetViolation, partial: DependencyGraph) -> Result<DependencyGraph, CostPilotError> {
+        match violation.timeout_action {
+            TimeoutAction::ReturnPartialResults => {
+                eprintln!("⚠️  Mapping budget exceeded: {} ({}ms budget, {}ms elapsed)",
+                    violation.violation_type, violation.budget_ms, violation.actual_ms);
+                eprintln!("   Returning partial graph with {} nodes", partial.nodes.len());
+                Ok(partial)
+            }
+            TimeoutAction::Error => {
+                Err(CostPilotError::Timeout(format!(
+                    "Mapping exceeded budget: {} ({}ms budget, {}ms elapsed) - partial graph discarded",
+                    violation.violation_type, violation.budget_ms, violation.actual_ms
+                )))
+            }
+            TimeoutAction::CircuitBreak => {
+                Err(CostPilotError::CircuitBreaker(format!(
+                    "Mapping circuit breaker triggered: {} ({}ms budget, {}ms elapsed) - partial graph discarded",
+                    violation.violation_type, violation.budget_ms, violation.actual_ms
+                )))
+            }
+        }
     }
 
     /// Create a graph node from a resource change

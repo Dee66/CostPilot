@@ -10,3 +10,4 @@ pub mod detection_engine;
 pub use detection_engine::DetectionEngine;
 pub use classifier::{classify_regression, RegressionClassifier};
 pub use severity::calculate_severity_score;
+pub use crate::engines::shared::models::ResourceChange;

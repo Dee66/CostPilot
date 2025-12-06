@@ -8,6 +8,7 @@ use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory}
 use crate::engines::prediction::cold_start::ColdStartInference;
 use crate::engines::prediction::confidence::calculate_confidence;
 use crate::engines::prediction::heuristics_loader::HeuristicsLoader;
+use crate::engines::performance::budgets::{PerformanceTracker, PerformanceBudgets, BudgetViolation, TimeoutAction};
 
 /// Cost heuristics database
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -154,6 +155,7 @@ pub struct PredictionEngine {
     heuristics: CostHeuristics,
     cold_start: ColdStartInference,
     verbose: bool,
+    performance_tracker: Option<PerformanceTracker>,
 }
 
 impl PredictionEngine {
@@ -166,6 +168,7 @@ impl PredictionEngine {
             cold_start: ColdStartInference::new(&heuristics.cold_start_defaults),
             heuristics,
             verbose: false,
+            performance_tracker: None,
         })
     }
 
@@ -178,6 +181,7 @@ impl PredictionEngine {
             cold_start: ColdStartInference::new(&heuristics.cold_start_defaults),
             heuristics,
             verbose: false,
+            performance_tracker: None,
         })
     }
 
@@ -187,6 +191,7 @@ impl PredictionEngine {
             cold_start: ColdStartInference::new(&heuristics.cold_start_defaults),
             heuristics,
             verbose: false,
+            performance_tracker: None,
         }
     }
 
@@ -196,17 +201,103 @@ impl PredictionEngine {
         self
     }
 
+    /// Enable performance tracking with budgets
+    pub fn with_performance_tracking(mut self, budgets: PerformanceBudgets) -> Self {
+        self.performance_tracker = Some(PerformanceTracker::new(budgets.prediction, "Prediction".to_string()));
+        self
+    }
+
     /// Predict costs for resource changes
-    pub fn predict(&self, changes: &[ResourceChange]) -> Result<Vec<CostEstimate>> {
+    pub fn predict(&mut self, changes: &[ResourceChange]) -> Result<Vec<CostEstimate>> {
+        // Check budget before starting
+        if let Some(tracker) = &self.performance_tracker {
+            if let Some(violation) = tracker.check_budget() {
+                return self.handle_budget_violation(violation);
+            }
+        }
+
         let mut estimates = Vec::new();
 
         for change in changes {
+            // Check budget periodically during processing
+            if let Some(tracker) = &self.performance_tracker {
+                if let Some(violation) = tracker.check_budget() {
+                    return self.handle_budget_violation_with_partial(violation, estimates);
+                }
+            }
+
             if let Some(estimate) = self.predict_resource(change)? {
                 estimates.push(estimate);
             }
         }
 
+        // Mark completion and collect metrics
+        if let Some(tracker) = &mut self.performance_tracker {
+            let _metrics = tracker.complete();
+            // TODO: Log or return metrics
+        }
+
         Ok(estimates)
+    }
+
+    /// Handle budget violation based on timeout action
+    fn handle_budget_violation(&self, violation: BudgetViolation) -> Result<Vec<CostEstimate>> {
+        match violation.timeout_action {
+            TimeoutAction::ReturnPartialResults => {
+                if self.verbose {
+                    eprintln!("⚠️  Budget exceeded: {} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_ms, violation.actual_ms);
+                    eprintln!("   Returning empty results");
+                }
+                Ok(Vec::new())
+            }
+            TimeoutAction::Error => {
+                Err(CostPilotError::new(
+                    "PREDICT_TIMEOUT",
+                    ErrorCategory::Timeout,
+                    &format!("Prediction exceeded budget: {} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_ms, violation.actual_ms)
+                ))
+            }
+            TimeoutAction::CircuitBreak => {
+                Err(CostPilotError::new(
+                    "PREDICT_CIRCUIT_BREAK",
+                    ErrorCategory::CircuitBreaker,
+                    &format!("Circuit breaker triggered: {} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_ms, violation.actual_ms)
+                ))
+            }
+        }
+    }
+
+    /// Handle budget violation with partial results
+    fn handle_budget_violation_with_partial(&self, violation: BudgetViolation, partial: Vec<CostEstimate>) -> Result<Vec<CostEstimate>> {
+        match violation.timeout_action {
+            TimeoutAction::ReturnPartialResults => {
+                if self.verbose {
+                    eprintln!("⚠️  Budget exceeded: {} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_ms, violation.actual_ms);
+                    eprintln!("   Returning {} partial results", partial.len());
+                }
+                Ok(partial)
+            }
+            TimeoutAction::Error => {
+                Err(CostPilotError::new(
+                    "PREDICT_TIMEOUT",
+                    ErrorCategory::Timeout,
+                    &format!("Prediction exceeded budget: {} ({}ms budget, {}ms elapsed) - {} partial results discarded",
+                        violation.violation_type, violation.budget_ms, violation.actual_ms, partial.len())
+                ))
+            }
+            TimeoutAction::CircuitBreak => {
+                Err(CostPilotError::new(
+                    "PREDICT_CIRCUIT_BREAK",
+                    ErrorCategory::CircuitBreaker,
+                    &format!("Circuit breaker triggered: {} ({}ms budget, {}ms elapsed) - {} partial results discarded",
+                        violation.violation_type, violation.budget_ms, violation.actual_ms, partial.len())
+                ))
+            }
+        }
     }
 
     /// Predict cost for a single resource

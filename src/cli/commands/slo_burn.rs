@@ -226,7 +226,7 @@ fn output_markdown(report: &BurnReport) -> Result<(), Box<dyn std::error::Error>
     }
 
     println!("| SLO | Burn Rate | Projected | Days to Breach | Risk | Confidence |");
-    println!"|-----|-----------|-----------|----------------|------|------------|");
+    println!("|-----|-----------|-----------|----------------|------|------------|");
 
     for analysis in &report.analyses {
         let risk_emoji = match analysis.risk {

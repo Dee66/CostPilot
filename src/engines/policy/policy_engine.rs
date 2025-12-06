@@ -79,13 +79,6 @@ impl PolicyEngine {
             false
         }
     }
-        self.evaluate_budgets(total_cost, &mut result);
-
-        // Evaluate resource policies
-        self.evaluate_resources(changes, &mut result);
-
-        result
-    }
 
     /// Evaluate budget policies
     fn evaluate_budgets(&self, cost: &CostEstimate, result: &mut PolicyResult) {
