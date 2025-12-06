@@ -4,8 +4,10 @@ use colored::*;
 use std::path::{Path, PathBuf};
 
 use crate::engines::policy::{
-    ApprovalWorkflowManager, PolicyContent, PolicyHistory, PolicyLifecycle, PolicyState,
+    ApprovalWorkflowManager, PolicyContent, PolicyHistory, PolicyState,
 };
+use crate::engines::policy::lifecycle::PolicyLifecycle as PolicyLifecycleManager;
+
 
 /// Execute policy submit command
 pub fn cmd_submit(
@@ -262,7 +264,7 @@ pub fn cmd_status(
     println!("{}", format!("📊 Policy status for '{}'...", policy_id).bright_blue().bold());
 
     // Mock lifecycle for demo
-    let lifecycle = PolicyLifecycle::new(policy_id.clone());
+    let lifecycle = PolicyLifecycleManager::new(policy_id.clone());
     let summary = lifecycle.summary();
 
     match format {

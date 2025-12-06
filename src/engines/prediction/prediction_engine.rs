@@ -242,11 +242,11 @@ impl PredictionEngine {
 
     /// Handle budget violation based on timeout action
     fn handle_budget_violation(&self, violation: BudgetViolation) -> Result<Vec<CostEstimate>> {
-        match violation.timeout_action {
-            TimeoutAction::ReturnPartialResults => {
+        match violation.action {
+            TimeoutAction::PartialResults => {
                 if self.verbose {
-                    eprintln!("⚠️  Budget exceeded: {} ({}ms budget, {}ms elapsed)",
-                        violation.violation_type, violation.budget_ms, violation.actual_ms);
+                    eprintln!("⚠️  Budget exceeded: {:?} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_value, violation.actual_value);
                     eprintln!("   Returning empty results");
                 }
                 Ok(Vec::new())
@@ -255,16 +255,16 @@ impl PredictionEngine {
                 Err(CostPilotError::new(
                     "PREDICT_TIMEOUT",
                     ErrorCategory::Timeout,
-                    &format!("Prediction exceeded budget: {} ({}ms budget, {}ms elapsed)",
-                        violation.violation_type, violation.budget_ms, violation.actual_ms)
+                    &format!("Prediction exceeded budget: {:?} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_value, violation.actual_value)
                 ))
             }
             TimeoutAction::CircuitBreak => {
                 Err(CostPilotError::new(
                     "PREDICT_CIRCUIT_BREAK",
                     ErrorCategory::CircuitBreaker,
-                    &format!("Circuit breaker triggered: {} ({}ms budget, {}ms elapsed)",
-                        violation.violation_type, violation.budget_ms, violation.actual_ms)
+                    &format!("Circuit breaker triggered: {:?} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_value, violation.actual_value)
                 ))
             }
         }
@@ -272,11 +272,11 @@ impl PredictionEngine {
 
     /// Handle budget violation with partial results
     fn handle_budget_violation_with_partial(&self, violation: BudgetViolation, partial: Vec<CostEstimate>) -> Result<Vec<CostEstimate>> {
-        match violation.timeout_action {
-            TimeoutAction::ReturnPartialResults => {
+        match violation.action {
+            TimeoutAction::PartialResults => {
                 if self.verbose {
-                    eprintln!("⚠️  Budget exceeded: {} ({}ms budget, {}ms elapsed)",
-                        violation.violation_type, violation.budget_ms, violation.actual_ms);
+                    eprintln!("⚠️  Budget exceeded: {:?} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_value, violation.actual_value);
                     eprintln!("   Returning {} partial results", partial.len());
                 }
                 Ok(partial)
@@ -285,16 +285,16 @@ impl PredictionEngine {
                 Err(CostPilotError::new(
                     "PREDICT_TIMEOUT",
                     ErrorCategory::Timeout,
-                    &format!("Prediction exceeded budget: {} ({}ms budget, {}ms elapsed) - {} partial results discarded",
-                        violation.violation_type, violation.budget_ms, violation.actual_ms, partial.len())
+                    &format!("Prediction exceeded budget: {:?} ({}ms budget, {}ms elapsed) - {} partial results discarded",
+                        violation.violation_type, violation.budget_value, violation.actual_value, partial.len())
                 ))
             }
             TimeoutAction::CircuitBreak => {
                 Err(CostPilotError::new(
                     "PREDICT_CIRCUIT_BREAK",
                     ErrorCategory::CircuitBreaker,
-                    &format!("Circuit breaker triggered: {} ({}ms budget, {}ms elapsed) - {} partial results discarded",
-                        violation.violation_type, violation.budget_ms, violation.actual_ms, partial.len())
+                    &format!("Circuit breaker triggered: {:?} ({}ms budget, {}ms elapsed) - {} partial results discarded",
+                        violation.violation_type, violation.budget_value, violation.actual_value, partial.len())
                 ))
             }
         }

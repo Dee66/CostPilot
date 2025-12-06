@@ -1,7 +1,7 @@
 // CLI commands for grouping operations
 
 use crate::engines::grouping::{GroupingEngine, GroupingOptions, SortBy};
-use crate::parser::plan_parser::PlanParser;
+// use crate::parser::plan_parser::PlanParser; // TODO: Implement plan parser
 use clap::{Args, Subcommand};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -91,10 +91,10 @@ pub enum GroupSubcommand {
 }
 
 pub fn execute_group_command(cmd: GroupCommand) -> Result<(), Box<dyn std::error::Error>> {
-    // Load and parse the plan
-    let parser = PlanParser::new();
-    let plan_content = std::fs::read_to_string(&cmd.plan)?;
-    let resources = parser.parse(&plan_content)?;
+    // Load and parse the plan using detection engine
+    use crate::engines::detection::DetectionEngine;
+    let detection = DetectionEngine::new();
+    let resources = detection.detect_from_terraform_plan(&cmd.plan)?;
 
     let engine = GroupingEngine::new();
 
@@ -137,7 +137,7 @@ pub fn execute_group_command(cmd: GroupCommand) -> Result<(), Box<dyn std::error
 
 fn execute_group_module(
     engine: &GroupingEngine,
-    resources: &[crate::parser::plan_parser::Resource],
+    resources: &[crate::engines::shared::models::ResourceChange],
     tree: bool,
     min_cost: f64,
     max_groups: Option<usize>,
@@ -191,7 +191,7 @@ fn execute_group_module(
 
 fn execute_group_service(
     engine: &GroupingEngine,
-    resources: &[crate::parser::plan_parser::Resource],
+    resources: &[crate::engines::shared::models::ResourceChange],
     by_category: bool,
     min_cost: f64,
     max_groups: Option<usize>,
@@ -242,7 +242,7 @@ fn execute_group_service(
 
 fn execute_group_environment(
     engine: &GroupingEngine,
-    resources: &[crate::parser::plan_parser::Resource],
+    resources: &[crate::engines::shared::models::ResourceChange],
     detailed: bool,
     detect_anomalies: bool,
     min_cost: f64,
@@ -296,7 +296,7 @@ fn execute_group_environment(
 
 fn execute_attribution(
     engine: &GroupingEngine,
-    resources: &[crate::parser::plan_parser::Resource],
+    resources: &[crate::engines::shared::models::ResourceChange],
     format: &str,
     output: Option<PathBuf>,
     top_n: usize,
@@ -335,7 +335,7 @@ fn execute_attribution(
 
 fn execute_comprehensive(
     engine: &GroupingEngine,
-    resources: &[crate::parser::plan_parser::Resource],
+    resources: &[crate::engines::shared::models::ResourceChange],
     format: &str,
     output: Option<PathBuf>,
 ) -> Result<(), Box<dyn std::error::Error>> {

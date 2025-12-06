@@ -5,20 +5,20 @@
 use crate::validation::error::{ValidationError, ValidationResult, ValidationWarning};
 use crate::validation::{ValidationReport, FileType};
 use crate::engines::policy::parser::PolicyRule;
-use crate::engines::policy::metadata::PolicyMetadata;
-use crate::engines::policy::exemptions::Exemption;
+use crate::engines::policy::{PolicyMetadata, PolicyExemption};
+// use crate::engines::policy::Exemption; // TODO: Define Exemption type
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-/// Policy file structure combining rules, metadata, and exemptions
+/// Policy configuration with rules and metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Policy {
     #[serde(default)]
     pub metadata: Option<PolicyMetadata>,
     #[serde(default)]
     pub rules: Vec<PolicyRule>,
-    #[serde(default)]
-    pub exemptions: Vec<Exemption>,
+    // #[serde(default)]
+    // pub exemptions: Vec<PolicyExemption>, // TODO: Define proper exemption structure
 }
 
 pub struct PolicyValidator;

@@ -2,7 +2,7 @@
 
 mod html_generator;
 mod snapshot_manager;
-mod snapshot_types;
+pub mod snapshot_types;
 mod svg_generator;
 
 pub use html_generator::HtmlGenerator;
