@@ -1,0 +1,15 @@
+name: 'CostPilot'
+description: 'Cost analysis and prediction for infrastructure as code'
+author: 'GuardSuite'
+inputs:
+  terraform_plan:
+    description: 'Path to terraform plan file'
+    required: false
+  config_file:
+    description: 'Path to costpilot config file'
+    required: false
+runs:
+  using: 'composite'
+  steps:
+    - run: ${{ github.action_path }}/entrypoint.sh
+      shell: bash

@@ -1,0 +1,211 @@
+{
+  "name": "costpilot",
+  "displayName": "CostPilot",
+  "description": "Real-time AWS cost intelligence for Infrastructure as Code - detect, predict, and fix cost issues directly in your editor",
+  "version": "0.1.0",
+  "publisher": "guardsuite",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guardsuite/costpilot"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters",
+    "Other"
+  ],
+  "keywords": [
+    "aws",
+    "cost",
+    "finops",
+    "terraform",
+    "cdk",
+    "cloudformation",
+    "infrastructure"
+  ],
+  "activationEvents": [
+    "onLanguage:terraform",
+    "onLanguage:json",
+    "onLanguage:typescript",
+    "workspaceContains:**/*.tf",
+    "workspaceContains:**/*.tfplan",
+    "workspaceContains:cdk.json"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "costpilot.scanWorkspace",
+        "title": "CostPilot: Scan Workspace for Cost Issues",
+        "icon": "$(search)"
+      },
+      {
+        "command": "costpilot.analyzeTerraformPlan",
+        "title": "CostPilot: Analyze Terraform Plan",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "costpilot.showCostReport",
+        "title": "CostPilot: Show Cost Report",
+        "icon": "$(graph-line)"
+      },
+      {
+        "command": "costpilot.applyFix",
+        "title": "CostPilot: Apply Cost Fix",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "costpilot.showDependencyMap",
+        "title": "CostPilot: Show Dependency Map",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "costpilot.checkSLO",
+        "title": "CostPilot: Check SLO Compliance",
+        "icon": "$(pulse)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceExtname == .tf",
+          "command": "costpilot.scanWorkspace",
+          "group": "costpilot@1"
+        },
+        {
+          "when": "editorHasCodeActionsProvider",
+          "command": "costpilot.applyFix",
+          "group": "costpilot@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "when": "resourceFilename =~ /.*\\.tfplan$/",
+          "command": "costpilot.analyzeTerraformPlan",
+          "group": "costpilot@1"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "costpilot.issues",
+          "name": "CostPilot Issues",
+          "icon": "$(graph-line)",
+          "contextualTitle": "Cost Issues"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "costpilot.issues",
+        "contents": "No cost issues detected.\n[Scan Workspace](command:costpilot.scanWorkspace)"
+      }
+    ],
+    "configuration": {
+      "title": "CostPilot",
+      "properties": {
+        "costpilot.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable CostPilot cost analysis"
+        },
+        "costpilot.autoScanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scan files on save"
+        },
+        "costpilot.cliPath": {
+          "type": "string",
+          "default": "costpilot",
+          "description": "Path to CostPilot CLI executable"
+        },
+        "costpilot.diagnostics.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline diagnostics for cost issues"
+        },
+        "costpilot.diagnostics.severity": {
+          "type": "string",
+          "default": "warning",
+          "enum": ["error", "warning", "information", "hint"],
+          "description": "Severity level for cost issue diagnostics"
+        },
+        "costpilot.costAnnotations.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline cost estimates"
+        },
+        "costpilot.costAnnotations.position": {
+          "type": "string",
+          "default": "after",
+          "enum": ["after", "above", "below"],
+          "description": "Position of cost annotations relative to resource"
+        },
+        "costpilot.codeActions.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable quick fix code actions"
+        },
+        "costpilot.statusBar.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show cost summary in status bar"
+        },
+        "costpilot.trace.server": {
+          "type": "string",
+          "scope": "window",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server"
+        }
+      }
+    },
+    "problemMatchers": [
+      {
+        "name": "costpilot",
+        "owner": "costpilot",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.4.1",
+    "@typescript-eslint/parser": "^6.4.1",
+    "@vscode/test-electron": "^2.3.4",
+    "eslint": "^8.47.0",
+    "glob": "^10.3.3",
+    "mocha": "^10.2.0",
+    "typescript": "^5.1.6",
+    "@vscode/vsce": "^2.21.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

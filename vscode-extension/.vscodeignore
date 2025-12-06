@@ -1,0 +1,12 @@
+out
+node_modules
+.vscode-test
+*.vsix
+*.map
+.DS_Store
+src/**/*.js
+test/**/*.js
+.eslintcache
+coverage
+.nyc_output
+*.log

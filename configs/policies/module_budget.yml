@@ -1,0 +1,4 @@
+# Module Budget Policy
+name: module_budget
+description: Set budget limits per module
+max_monthly_cost: 1000

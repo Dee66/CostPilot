@@ -1,0 +1,114 @@
+{
+  "operation_id": "op_a1b2c3d4e5f60789",
+  "created_at": "2024-01-15T14:30:00Z",
+  "resource_id": "aws_instance.web_server",
+  "resource_type": "aws_instance",
+  "fix_description": "Downsize instance from t3.xlarge to t3.large for cost optimization",
+  "original_state": {
+    "config": {
+      "instance_type": "t3.xlarge",
+      "ami": "ami-0c55b159cbfafe1f0",
+      "availability_zone": "us-east-1a",
+      "monitoring": true,
+      "ebs_optimized": true,
+      "root_block_device": {
+        "volume_size": 50,
+        "volume_type": "gp3"
+      },
+      "tags": {
+        "Name": "WebServer",
+        "Environment": "Production"
+      }
+    },
+    "estimated_cost": 121.76,
+    "timestamp": "2024-01-15T14:25:00Z",
+    "config_hash": "a1b2c3d4e5f60789"
+  },
+  "target_state": {
+    "config": {
+      "instance_type": "t3.large",
+      "ami": "ami-0c55b159cbfafe1f0",
+      "availability_zone": "us-east-1a",
+      "monitoring": true,
+      "ebs_optimized": true,
+      "root_block_device": {
+        "volume_size": 50,
+        "volume_type": "gp3"
+      },
+      "tags": {
+        "Name": "WebServer",
+        "Environment": "Production"
+      }
+    },
+    "estimated_cost": 60.88,
+    "timestamp": "2024-01-15T14:30:00Z",
+    "config_hash": "f6e5d4c3b2a10987"
+  },
+  "status": "pending",
+  "safety_checks": [
+    {
+      "name": "no_drift",
+      "description": "Verify resource has not drifted since snapshot",
+      "check_type": "no_drift",
+      "status": "pending",
+      "message": null,
+      "checked_at": null
+    },
+    {
+      "name": "resource_exists",
+      "description": "Verify resource still exists",
+      "check_type": "resource_exists",
+      "status": "pending",
+      "message": null,
+      "checked_at": null
+    },
+    {
+      "name": "config_hash",
+      "description": "Verify configuration hash matches snapshot",
+      "check_type": "config_hash_match",
+      "status": "pending",
+      "message": null,
+      "checked_at": null
+    },
+    {
+      "name": "cost_impact",
+      "description": "Verify cost reduction meets expectations",
+      "check_type": "cost_impact_acceptable",
+      "status": "pending",
+      "message": null,
+      "checked_at": null
+    },
+    {
+      "name": "policy_check",
+      "description": "Verify fix does not violate policies",
+      "check_type": "no_policy_violations",
+      "status": "pending",
+      "message": null,
+      "checked_at": null
+    }
+  ],
+  "rollback_plan": {
+    "steps": [
+      {
+        "order": 1,
+        "description": "Restore aws_instance.web_server to original configuration",
+        "restore_config": {
+          "instance_type": "t3.xlarge",
+          "ami": "ami-0c55b159cbfafe1f0",
+          "availability_zone": "us-east-1a",
+          "monitoring": true,
+          "ebs_optimized": true,
+          "root_block_device": {
+            "volume_size": 50,
+            "volume_type": "gp3"
+          }
+        },
+        "verification": "Verify configuration matches original hash"
+      }
+    ],
+    "timeout_seconds": 180,
+    "auto_rollback": true,
+    "status": "not_triggered"
+  },
+  "execution_log": []
+}

@@ -1,0 +1,268 @@
+// Policy validator
+//
+// Validates policy YAML files against the expected schema.
+
+use crate::validation::error::{ValidationError, ValidationResult, ValidationWarning};
+use crate::validation::{ValidationReport, FileType};
+use crate::engines::policy::parser::PolicyRule;
+use crate::engines::policy::metadata::PolicyMetadata;
+use crate::engines::policy::exemptions::Exemption;
+use serde::{Deserialize, Serialize};
+use std::path::Path;
+
+/// Policy file structure combining rules, metadata, and exemptions
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Policy {
+    #[serde(default)]
+    pub metadata: Option<PolicyMetadata>,
+    #[serde(default)]
+    pub rules: Vec<PolicyRule>,
+    #[serde(default)]
+    pub exemptions: Vec<Exemption>,
+}
+
+pub struct PolicyValidator;
+
+impl PolicyValidator {
+    /// Validate a policy file
+    pub fn validate_file(path: impl AsRef<Path>) -> ValidationResult<ValidationReport> {
+        let path = path.as_ref();
+        let mut report = ValidationReport::new(path, FileType::Policy);
+
+        // Read file
+        let content = match std::fs::read_to_string(path) {
+            Ok(c) => c,
+            Err(e) => {
+                report.add_error(
+                    ValidationError::new(format!("Failed to read file: {}", e))
+                        .with_error_code("E200")
+                        .with_hint("Ensure the file exists and is readable")
+                );
+                return Ok(report);
+            }
+        };
+
+        // Parse YAML
+        let policy: Policy = match serde_yaml::from_str(&content) {
+            Ok(p) => p,
+            Err(e) => {
+                report.add_error(ValidationError::from(e));
+                return Ok(report);
+            }
+        };
+
+        // Validate policy
+        Self::validate_policy(&policy, &mut report);
+
+        Ok(report)
+    }
+
+    fn validate_policy(policy: &Policy, report: &mut ValidationReport) {
+        // Validate metadata presence
+        if policy.metadata.is_none() {
+            report.add_warning(
+                ValidationWarning::new("Policy metadata is missing")
+                    .with_field("metadata")
+                    .with_warning_code("W200")
+                    .with_suggestion("Add metadata for better tracking (id, name, description, etc.)")
+            );
+        }
+
+        // Validate rules exist
+        if policy.rules.is_empty() {
+            report.add_error(
+                ValidationError::new("Policy has no rules defined")
+                    .with_field("rules")
+                    .with_error_code("E201")
+                    .with_hint("Add at least one rule to the policy")
+            );
+        }
+
+        // Validate each rule
+        for (idx, rule) in policy.rules.iter().enumerate() {
+            let rule_prefix = format!("rules[{}]", idx);
+
+            // Rule name
+            if rule.name.is_empty() {
+                report.add_error(
+                    ValidationError::new("Rule has empty name")
+                        .with_field(&format!("{}.name", rule_prefix))
+                        .with_error_code("E202")
+                        .with_hint("Provide a descriptive name for the rule")
+                );
+            }
+
+            // Rule conditions
+            if rule.conditions.is_empty() {
+                report.add_error(
+                    ValidationError::new("Rule has no conditions")
+                        .with_field(&format!("{}.conditions", rule_prefix))
+                        .with_error_code("E203")
+                        .with_hint("Add at least one condition to the rule")
+                );
+            }
+
+            // Validate conditions
+            for (cond_idx, condition) in rule.conditions.iter().enumerate() {
+                let cond_prefix = format!("{}.conditions[{}]", rule_prefix, cond_idx);
+                
+                // Check for valid operators
+                use crate::engines::policy::parser::{Operator, ConditionValue};
+                match condition.operator {
+                    Operator::GreaterThan | Operator::LessThan | Operator::GreaterThanOrEqual | Operator::LessThanOrEqual => {
+                        // Value should be numeric
+                        if !matches!(condition.value, ConditionValue::Number(_)) {
+                            report.add_error(
+                                ValidationError::new(format!(
+                                    "Condition with {:?} operator requires numeric value",
+                                    condition.operator
+                                ))
+                                .with_field(&format!("{}.value", cond_prefix))
+                                .with_error_code("E204")
+                                .with_hint("Use a numeric value for comparison operators")
+                            );
+                        }
+                    }
+                    Operator::Matches => {
+                        // Value should be valid regex
+                        if let ConditionValue::String(pattern) = &condition.value {
+                            if regex::Regex::new(pattern).is_err() {
+                                report.add_error(
+                                    ValidationError::new(format!(
+                                        "Invalid regex pattern: {}",
+                                        pattern
+                                    ))
+                                    .with_field(&format!("{}.value", cond_prefix))
+                                    .with_error_code("E205")
+                                    .with_hint("Provide a valid regular expression")
+                                );
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            // Rule is enabled but might want to warn about disabled rules
+            if !rule.enabled {
+                report.add_warning(
+                    ValidationWarning::new("Rule is disabled")
+                        .with_field(&format!("{}.enabled", rule_prefix))
+                        .with_warning_code("W201")
+                        .with_suggestion("Enable the rule or remove it from the policy file")
+                );
+            }
+        }
+
+        // Validate exemptions
+        for (idx, exemption) in policy.exemptions.iter().enumerate() {
+            let exemption_prefix = format!("exemptions[{}]", idx);
+
+            if exemption.resource_pattern.is_empty() {
+                report.add_error(
+                    ValidationError::new("Exemption has empty resource_pattern")
+                        .with_field(&format!("{}.resource_pattern", exemption_prefix))
+                        .with_error_code("E206")
+                        .with_hint("Specify which resource pattern to exempt")
+                );
+            }
+
+            if exemption.reason.is_empty() {
+                report.add_warning(
+                    ValidationWarning::new("Exemption has no reason")
+                        .with_field(&format!("{}.reason", exemption_prefix))
+                        .with_warning_code("W203")
+                        .with_suggestion("Provide justification for the exemption")
+                );
+            }
+
+            // Validate expiry date
+            if let Some(expiry) = exemption.expires_at {
+                let now = chrono::Utc::now();
+                if expiry < now {
+                    report.add_error(
+                        ValidationError::new("Exemption has already expired")
+                            .with_field(&format!("{}.expires_at", exemption_prefix))
+                            .with_error_code("E207")
+                            .with_hint("Remove expired exemptions or update the expiry date")
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_validate_valid_policy() {
+        let yaml = r#"
+metadata:
+  id: test-policy
+  name: Test Policy
+  version: 1.0.0
+
+rules:
+  - name: budget_limit
+    description: Limit monthly cost
+    conditions:
+      - field: monthly_cost
+        operator: GreaterThan
+        value: "1000"
+    actions:
+      - Block
+    severity: High
+
+exemptions: []
+"#;
+        let mut file = NamedTempFile::new().unwrap();
+        file.write_all(yaml.as_bytes()).unwrap();
+        
+        let report = PolicyValidator::validate_file(file.path()).unwrap();
+        assert!(report.is_valid);
+        assert_eq!(report.error_count(), 0);
+    }
+
+    #[test]
+    fn test_validate_empty_rules() {
+        let yaml = r#"
+metadata:
+  id: test-policy
+rules: []
+exemptions: []
+"#;
+        let mut file = NamedTempFile::new().unwrap();
+        file.write_all(yaml.as_bytes()).unwrap();
+        
+        let report = PolicyValidator::validate_file(file.path()).unwrap();
+        assert!(!report.is_valid);
+        assert!(report.errors.iter().any(|e| e.error_code == Some("E201".to_string())));
+    }
+
+    #[test]
+    fn test_validate_invalid_regex() {
+        let yaml = r#"
+metadata:
+  id: test-policy
+rules:
+  - name: regex_test
+    conditions:
+      - field: resource_type
+        operator: Matches
+        value: "[invalid("
+    actions:
+      - Warn
+exemptions: []
+"#;
+        let mut file = NamedTempFile::new().unwrap();
+        file.write_all(yaml.as_bytes()).unwrap();
+        
+        let report = PolicyValidator::validate_file(file.path()).unwrap();
+        assert!(!report.is_valid);
+        assert!(report.errors.iter().any(|e| e.error_code == Some("E205".to_string())));
+    }
+}

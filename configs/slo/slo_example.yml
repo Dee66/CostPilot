@@ -1,0 +1,4 @@
+# SLO Configuration Example
+name: example_slo
+target: 99.9
+window: 30d

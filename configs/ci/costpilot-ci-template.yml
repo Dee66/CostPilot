@@ -1,0 +1,13 @@
+# CostPilot CI Template
+# Example CI configuration for running CostPilot in CI/CD
+
+name: costpilot-ci
+on: [pull_request]
+
+jobs:
+  cost-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run CostPilot
+        run: costpilot scan

@@ -1,0 +1,299 @@
+{
+  "policies": [
+    {
+      "metadata": {
+        "id": "global-monthly-budget",
+        "name": "Global Monthly Budget Limit",
+        "description": "Enforces organization-wide monthly spending limit across all cloud resources and services. Critical for cost control and budget adherence.",
+        "category": "budget",
+        "severity": "critical",
+        "status": "active",
+        "version": "2.1.0",
+        "ownership": {
+          "author": "platform-team",
+          "owner": "finance-ops",
+          "team": "FinOps",
+          "contact": "finops@company.com",
+          "reviewers": ["alice@company.com", "bob@company.com"]
+        },
+        "lifecycle": {
+          "created_at": "2024-01-15T10:00:00Z",
+          "updated_at": "2024-11-01T14:30:00Z",
+          "effective_from": "2024-02-01T00:00:00Z",
+          "effective_until": null,
+          "deprecation": null,
+          "revisions": [
+            {
+              "version": "1.0.0",
+              "timestamp": "2024-01-15T10:00:00Z",
+              "author": "platform-team",
+              "changes": "Initial policy creation"
+            },
+            {
+              "version": "2.0.0",
+              "timestamp": "2024-06-01T09:00:00Z",
+              "author": "finance-ops",
+              "changes": "Increased limit from $5000 to $6000 based on Q2 growth"
+            },
+            {
+              "version": "2.1.0",
+              "timestamp": "2024-11-01T14:30:00Z",
+              "author": "finance-ops",
+              "changes": "Adjusted warning threshold from 90% to 80%"
+            }
+          ]
+        },
+        "tags": ["production", "budget", "global", "critical", "compliance"],
+        "links": {
+          "documentation": "https://wiki.company.com/finops/global-budget-policy",
+          "runbook": "https://runbooks.company.com/budget-exceeded",
+          "ticket": "https://jira.company.com/browse/FINOPS-123",
+          "related": [
+            "https://wiki.company.com/cost-allocation",
+            "https://wiki.company.com/budget-approval-process"
+          ]
+        },
+        "metrics": {
+          "evaluation_count": 847,
+          "violation_count": 23,
+          "exemption_count": 2,
+          "last_evaluated": "2024-12-06T08:00:00Z",
+          "last_violation": "2024-11-28T15:45:00Z",
+          "violation_rate": 0.027
+        },
+        "custom": {
+          "budget_year": "2024",
+          "approval_level": "executive",
+          "escalation_channel": "#finops-alerts"
+        }
+      },
+      "spec": {
+        "type": "budget_limit",
+        "monthly_limit": 6000.0,
+        "warning_threshold": 0.8
+      }
+    },
+    {
+      "metadata": {
+        "id": "vpc-module-budget",
+        "name": "VPC Module Budget",
+        "description": "Budget limit for VPC networking module including NAT gateways, VPC endpoints, and transit gateways. Prevents networking cost overruns.",
+        "category": "budget",
+        "severity": "error",
+        "status": "active",
+        "version": "1.5.0",
+        "ownership": {
+          "author": "platform-team",
+          "owner": "infrastructure-team",
+          "team": "Platform Engineering",
+          "contact": "platform@company.com",
+          "reviewers": ["carol@company.com"]
+        },
+        "lifecycle": {
+          "created_at": "2024-02-01T10:00:00Z",
+          "updated_at": "2024-10-15T11:20:00Z",
+          "effective_from": "2024-02-01T00:00:00Z",
+          "effective_until": null,
+          "deprecation": null,
+          "revisions": [
+            {
+              "version": "1.0.0",
+              "timestamp": "2024-02-01T10:00:00Z",
+              "author": "platform-team",
+              "changes": "Initial VPC budget policy"
+            },
+            {
+              "version": "1.5.0",
+              "timestamp": "2024-10-15T11:20:00Z",
+              "author": "infrastructure-team",
+              "changes": "Increased limit to account for new transit gateway"
+            }
+          ]
+        },
+        "tags": ["production", "budget", "module", "vpc", "networking"],
+        "links": {
+          "documentation": "https://wiki.company.com/infrastructure/vpc-budget",
+          "runbook": "https://runbooks.company.com/vpc-cost-optimization"
+        },
+        "metrics": {
+          "evaluation_count": 847,
+          "violation_count": 12,
+          "exemption_count": 1,
+          "last_evaluated": "2024-12-06T08:00:00Z",
+          "last_violation": "2024-11-15T09:30:00Z",
+          "violation_rate": 0.014
+        },
+        "custom": {
+          "module_path": "modules/vpc",
+          "cost_center": "CC-INFRA-001"
+        }
+      },
+      "spec": {
+        "type": "module_budget",
+        "module_name": "vpc",
+        "monthly_limit": 1200.0
+      }
+    },
+    {
+      "metadata": {
+        "id": "nat-gateway-limit",
+        "name": "NAT Gateway Regional Limit",
+        "description": "Limits NAT gateways to 2 per region for high availability while preventing cost sprawl. NAT gateways are expensive ($0.045/hr + data processing).",
+        "category": "resource",
+        "severity": "warning",
+        "status": "active",
+        "version": "1.0.0",
+        "ownership": {
+          "author": "platform-team",
+          "owner": "infrastructure-team",
+          "team": "Platform Engineering",
+          "contact": "platform@company.com",
+          "reviewers": ["dave@company.com"]
+        },
+        "lifecycle": {
+          "created_at": "2024-03-01T14:00:00Z",
+          "updated_at": "2024-03-01T14:00:00Z",
+          "effective_from": "2024-03-15T00:00:00Z",
+          "effective_until": null,
+          "deprecation": null,
+          "revisions": []
+        },
+        "tags": ["production", "resource", "nat-gateway", "networking", "cost-optimization"],
+        "links": {
+          "documentation": "https://wiki.company.com/infrastructure/nat-gateway-policy",
+          "runbook": "https://runbooks.company.com/reduce-nat-gateways"
+        },
+        "metrics": {
+          "evaluation_count": 847,
+          "violation_count": 3,
+          "exemption_count": 1,
+          "last_evaluated": "2024-12-06T08:00:00Z",
+          "last_violation": "2024-10-05T16:20:00Z",
+          "violation_rate": 0.004
+        },
+        "custom": {
+          "resource_type": "aws_nat_gateway",
+          "recommended_alternative": "VPC endpoints for AWS services"
+        }
+      },
+      "spec": {
+        "type": "resource_limit",
+        "resource_type": "aws_nat_gateway",
+        "max_count": 2
+      }
+    },
+    {
+      "metadata": {
+        "id": "s3-lifecycle-required",
+        "name": "S3 Lifecycle Policy Required",
+        "description": "All S3 buckets must have lifecycle policies configured to transition objects to cheaper storage tiers and expire old data. Prevents storage cost bloat.",
+        "category": "governance",
+        "severity": "warning",
+        "status": "active",
+        "version": "2.0.0",
+        "ownership": {
+          "author": "platform-team",
+          "owner": "storage-team",
+          "team": "Platform Engineering",
+          "contact": "storage@company.com",
+          "reviewers": ["eve@company.com", "frank@company.com"]
+        },
+        "lifecycle": {
+          "created_at": "2024-02-15T09:00:00Z",
+          "updated_at": "2024-08-20T13:45:00Z",
+          "effective_from": "2024-03-01T00:00:00Z",
+          "effective_until": null,
+          "deprecation": null,
+          "revisions": [
+            {
+              "version": "1.0.0",
+              "timestamp": "2024-02-15T09:00:00Z",
+              "author": "platform-team",
+              "changes": "Initial S3 lifecycle policy"
+            },
+            {
+              "version": "2.0.0",
+              "timestamp": "2024-08-20T13:45:00Z",
+              "author": "storage-team",
+              "changes": "Changed from error to warning severity after feedback"
+            }
+          ]
+        },
+        "tags": ["production", "governance", "s3", "storage", "cost-optimization", "lifecycle"],
+        "links": {
+          "documentation": "https://wiki.company.com/storage/s3-lifecycle-best-practices",
+          "runbook": "https://runbooks.company.com/configure-s3-lifecycle"
+        },
+        "metrics": {
+          "evaluation_count": 847,
+          "violation_count": 67,
+          "exemption_count": 5,
+          "last_evaluated": "2024-12-06T08:00:00Z",
+          "last_violation": "2024-12-05T18:30:00Z",
+          "violation_rate": 0.079
+        },
+        "custom": {
+          "resource_type": "aws_s3_bucket",
+          "recommended_tiers": "Standard -> IA after 30 days -> Glacier after 90 days"
+        }
+      },
+      "spec": {
+        "type": "tag_required",
+        "resource_type": "aws_s3_bucket",
+        "required_tags": ["lifecycle"]
+      }
+    },
+    {
+      "metadata": {
+        "id": "legacy-ec2-instances",
+        "name": "Legacy EC2 Instance Type Restriction (Deprecated)",
+        "description": "This policy restricted use of older EC2 instance types (t2, m4, c4). Replaced by instance-generation-policy which has more granular controls.",
+        "category": "resource",
+        "severity": "warning",
+        "status": "deprecated",
+        "version": "1.0.0",
+        "ownership": {
+          "author": "platform-team",
+          "owner": "compute-team",
+          "team": "Platform Engineering",
+          "contact": "compute@company.com",
+          "reviewers": []
+        },
+        "lifecycle": {
+          "created_at": "2024-01-10T10:00:00Z",
+          "updated_at": "2024-11-01T10:00:00Z",
+          "effective_from": "2024-01-15T00:00:00Z",
+          "effective_until": "2024-11-30T23:59:59Z",
+          "deprecation": {
+            "deprecated_at": "2024-11-01T10:00:00Z",
+            "reason": "Replaced by more comprehensive instance-generation-policy with better controls",
+            "replacement_policy_id": "instance-generation-policy",
+            "migration_guide": "https://wiki.company.com/compute/instance-policy-migration"
+          },
+          "revisions": []
+        },
+        "tags": ["deprecated", "legacy", "ec2", "compute"],
+        "links": {
+          "documentation": "https://wiki.company.com/compute/deprecated-policies"
+        },
+        "metrics": {
+          "evaluation_count": 523,
+          "violation_count": 45,
+          "exemption_count": 8,
+          "last_evaluated": "2024-10-30T23:59:00Z",
+          "last_violation": "2024-10-28T14:20:00Z",
+          "violation_rate": 0.086
+        },
+        "custom": {
+          "deprecation_date": "2024-11-01",
+          "end_of_life": "2024-11-30"
+        }
+      },
+      "spec": {
+        "type": "resource_limit",
+        "resource_type": "aws_instance",
+        "max_count": 0
+      }
+    }
+  ]
+}

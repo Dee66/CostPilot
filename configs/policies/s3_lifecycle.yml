@@ -1,0 +1,4 @@
+# S3 Lifecycle Policy
+name: s3_lifecycle
+description: Require lifecycle policies on S3 buckets
+required: true

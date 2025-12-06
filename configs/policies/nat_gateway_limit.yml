@@ -1,0 +1,4 @@
+# NAT Gateway Limit Policy
+name: nat_gateway_limit
+description: Limit number of NAT gateways
+threshold: 3

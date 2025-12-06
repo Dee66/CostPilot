@@ -1,0 +1,149 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-06",
+  "description": "Conservative cost heuristics for AWS services - used for deterministic prediction",
+  "default_region": "us-east-1",
+  
+  "compute": {
+    "ec2": {
+      "t3.nano": { "hourly": 0.0052, "monthly": 3.8 },
+      "t3.micro": { "hourly": 0.0104, "monthly": 7.6 },
+      "t3.small": { "hourly": 0.0208, "monthly": 15.2 },
+      "t3.medium": { "hourly": 0.0416, "monthly": 30.4 },
+      "t3.large": { "hourly": 0.0832, "monthly": 60.7 },
+      "t3.xlarge": { "hourly": 0.1664, "monthly": 121.5 },
+      "t3.2xlarge": { "hourly": 0.3328, "monthly": 243.0 },
+      "m5.large": { "hourly": 0.096, "monthly": 70.1 },
+      "m5.xlarge": { "hourly": 0.192, "monthly": 140.2 },
+      "m5.2xlarge": { "hourly": 0.384, "monthly": 280.3 },
+      "m5.4xlarge": { "hourly": 0.768, "monthly": 560.6 },
+      "c5.large": { "hourly": 0.085, "monthly": 62.1 },
+      "c5.xlarge": { "hourly": 0.17, "monthly": 124.1 },
+      "r5.large": { "hourly": 0.126, "monthly": 92.0 },
+      "r5.xlarge": { "hourly": 0.252, "monthly": 184.0 }
+    },
+    "lambda": {
+      "price_per_gb_second": 0.0000166667,
+      "price_per_request": 0.0000002,
+      "free_tier_requests": 1000000,
+      "free_tier_compute_gb_seconds": 400000,
+      "default_memory_mb": 128,
+      "default_duration_ms": 200
+    }
+  },
+  
+  "storage": {
+    "s3": {
+      "standard": {
+        "first_50tb_per_gb": 0.023,
+        "next_450tb_per_gb": 0.022,
+        "over_500tb_per_gb": 0.021
+      },
+      "intelligent_tiering": {
+        "per_gb": 0.023,
+        "monitoring_per_1000_objects": 0.0025
+      },
+      "glacier": {
+        "per_gb": 0.004
+      },
+      "deep_archive": {
+        "per_gb": 0.00099
+      },
+      "requests": {
+        "put_copy_post_list_per_1000": 0.005,
+        "get_select_per_1000": 0.0004
+      }
+    },
+    "ebs": {
+      "gp3": { "per_gb": 0.08, "iops_over_3000": 0.005, "throughput_over_125": 0.04 },
+      "gp2": { "per_gb": 0.10 },
+      "io2": { "per_gb": 0.125, "iops": 0.065 },
+      "st1": { "per_gb": 0.045 },
+      "sc1": { "per_gb": 0.015 }
+    }
+  },
+  
+  "database": {
+    "rds": {
+      "mysql": {
+        "db.t3.micro": { "hourly": 0.017, "monthly": 12.4 },
+        "db.t3.small": { "hourly": 0.034, "monthly": 24.8 },
+        "db.t3.medium": { "hourly": 0.068, "monthly": 49.6 },
+        "db.m5.large": { "hourly": 0.19, "monthly": 138.7 },
+        "db.m5.xlarge": { "hourly": 0.38, "monthly": 277.4 },
+        "db.r5.large": { "hourly": 0.29, "monthly": 211.7 },
+        "db.r5.xlarge": { "hourly": 0.58, "monthly": 423.4 }
+      },
+      "postgres": {
+        "db.t3.micro": { "hourly": 0.018, "monthly": 13.1 },
+        "db.t3.small": { "hourly": 0.036, "monthly": 26.3 },
+        "db.t3.medium": { "hourly": 0.073, "monthly": 53.3 },
+        "db.m5.large": { "hourly": 0.204, "monthly": 148.9 },
+        "db.m5.xlarge": { "hourly": 0.408, "monthly": 297.8 }
+      },
+      "storage_gp2_per_gb": 0.115,
+      "storage_gp3_per_gb": 0.115,
+      "storage_io1_per_gb": 0.125,
+      "backup_per_gb": 0.095
+    },
+    "dynamodb": {
+      "on_demand": {
+        "write_request_unit": 0.00000125,
+        "read_request_unit": 0.00000025,
+        "storage_per_gb": 0.25
+      },
+      "provisioned": {
+        "write_capacity_unit_hourly": 0.00065,
+        "read_capacity_unit_hourly": 0.00013,
+        "storage_per_gb": 0.25
+      }
+    }
+  },
+  
+  "networking": {
+    "nat_gateway": {
+      "hourly": 0.045,
+      "monthly": 32.85,
+      "data_processing_per_gb": 0.045
+    },
+    "load_balancer": {
+      "alb": {
+        "hourly": 0.0225,
+        "monthly": 16.43,
+        "lcu_hourly": 0.008
+      },
+      "nlb": {
+        "hourly": 0.0225,
+        "monthly": 16.43,
+        "lcfu_hourly": 0.006
+      }
+    },
+    "vpc_endpoint": {
+      "interface_hourly": 0.01,
+      "interface_monthly": 7.3,
+      "data_processing_per_gb": 0.01
+    },
+    "data_transfer": {
+      "out_to_internet_first_10tb_per_gb": 0.09,
+      "out_to_internet_next_40tb_per_gb": 0.085,
+      "out_to_internet_next_100tb_per_gb": 0.07,
+      "inter_region_per_gb": 0.02,
+      "inter_az_per_gb": 0.01
+    }
+  },
+  
+  "cold_start_defaults": {
+    "dynamodb_unknown_rcu": 15,
+    "dynamodb_unknown_wcu": 15,
+    "lambda_default_invocations": 10000,
+    "nat_gateway_default_gb": 10,
+    "s3_default_gb": 50,
+    "ec2_default_utilization": 0.4,
+    "rds_backup_retention_days": 7
+  },
+  
+  "prediction_intervals": {
+    "range_factor": 0.25,
+    "description": "Prediction intervals calculated as ±25% of estimate"
+  }
+}

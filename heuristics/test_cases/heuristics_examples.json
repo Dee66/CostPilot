@@ -1,0 +1,8 @@
+{
+  "test_cases": [
+    {
+      "name": "example_heuristic_test",
+      "description": "Example test case for heuristics"
+    }
+  ]
+}

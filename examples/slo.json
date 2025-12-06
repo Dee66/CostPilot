@@ -1,0 +1,155 @@
+{
+  "version": "1.0",
+  "slos": [
+    {
+      "id": "slo-global-budget",
+      "name": "Global Monthly Budget",
+      "description": "Total infrastructure spend must not exceed $6,000/month (120% of baseline)",
+      "slo_type": "monthly_budget",
+      "target": "global",
+      "threshold": {
+        "max_value": 6000.0,
+        "warning_threshold_percent": 85.0,
+        "time_window": "30d",
+        "use_baseline": true,
+        "baseline_multiplier": 1.2
+      },
+      "enforcement": "block",
+      "owner": "platform-team@example.com",
+      "created_at": "2024-01-15T10:00:00Z",
+      "tags": {
+        "priority": "critical",
+        "category": "budget"
+      }
+    },
+    {
+      "id": "slo-vpc-budget",
+      "name": "VPC Module Budget",
+      "description": "VPC networking costs must stay within $1,200/month",
+      "slo_type": "module_budget",
+      "target": "module.vpc",
+      "threshold": {
+        "max_value": 1200.0,
+        "warning_threshold_percent": 80.0,
+        "time_window": "30d",
+        "use_baseline": true,
+        "baseline_multiplier": 1.2
+      },
+      "enforcement": "warn",
+      "owner": "networking-team@example.com",
+      "created_at": "2024-01-15T10:00:00Z",
+      "tags": {
+        "service": "networking",
+        "criticality": "high"
+      }
+    },
+    {
+      "id": "slo-compute-budget",
+      "name": "Compute Module Budget",
+      "description": "Compute resources limited to $3,000/month with 20% variance for auto-scaling",
+      "slo_type": "module_budget",
+      "target": "module.compute",
+      "threshold": {
+        "max_value": 3000.0,
+        "warning_threshold_percent": 75.0,
+        "time_window": "30d",
+        "use_baseline": true,
+        "baseline_multiplier": 1.2
+      },
+      "enforcement": "warn",
+      "owner": "platform-team@example.com",
+      "created_at": "2024-01-15T10:00:00Z",
+      "tags": {
+        "service": "compute",
+        "auto-scale": "true"
+      }
+    },
+    {
+      "id": "slo-database-budget",
+      "name": "Database Module Budget",
+      "description": "Database costs tightly controlled at $1,100/month (reserved capacity)",
+      "slo_type": "module_budget",
+      "target": "module.database",
+      "threshold": {
+        "max_value": 1100.0,
+        "warning_threshold_percent": 90.0,
+        "time_window": "30d",
+        "use_baseline": true,
+        "baseline_multiplier": 1.1
+      },
+      "enforcement": "block",
+      "owner": "data-team@example.com",
+      "created_at": "2024-01-15T10:00:00Z",
+      "tags": {
+        "service": "database",
+        "reserved": "true"
+      }
+    },
+    {
+      "id": "slo-nat-gateway-service",
+      "name": "NAT Gateway Service Budget",
+      "description": "NAT Gateway costs should not exceed $450/month (3 gateways + buffer)",
+      "slo_type": "service_budget",
+      "target": "NAT Gateway",
+      "threshold": {
+        "max_value": 450.0,
+        "warning_threshold_percent": 85.0,
+        "time_window": "30d",
+        "use_baseline": true,
+        "baseline_multiplier": 1.1
+      },
+      "enforcement": "warn",
+      "owner": "networking-team@example.com",
+      "created_at": "2024-01-15T10:00:00Z",
+      "tags": {
+        "service": "networking",
+        "fixed-cost": "true"
+      }
+    },
+    {
+      "id": "slo-resource-count",
+      "name": "Total Resource Count",
+      "description": "Limit total infrastructure resources to prevent sprawl",
+      "slo_type": "resource_count",
+      "target": "global",
+      "threshold": {
+        "max_value": 500.0,
+        "warning_threshold_percent": 80.0,
+        "time_window": "30d",
+        "use_baseline": false
+      },
+      "enforcement": "warn",
+      "owner": "platform-team@example.com",
+      "created_at": "2024-01-15T10:00:00Z",
+      "tags": {
+        "category": "governance",
+        "type": "resource-limit"
+      }
+    },
+    {
+      "id": "slo-cost-growth-rate",
+      "name": "Monthly Cost Growth Rate",
+      "description": "Cost increases must not exceed 15% month-over-month",
+      "slo_type": "cost_growth_rate",
+      "target": "global",
+      "threshold": {
+        "max_value": 15.0,
+        "warning_threshold_percent": 75.0,
+        "time_window": "30d",
+        "use_baseline": false
+      },
+      "enforcement": "warn",
+      "owner": "finance-team@example.com",
+      "created_at": "2024-01-15T10:00:00Z",
+      "tags": {
+        "category": "budget",
+        "metric": "growth-rate"
+      }
+    }
+  ],
+  "config": {
+    "default_enforcement": "warn",
+    "enable_inheritance": false,
+    "baseline_file": "examples/baselines.json"
+  }
+}

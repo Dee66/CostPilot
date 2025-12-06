@@ -1,0 +1,5 @@
+# CostPilot Configuration Example
+# Copy this file to costpilot.yml and customize
+
+version: "1.0"
+project_name: "my-project"

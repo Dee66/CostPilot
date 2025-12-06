@@ -1,0 +1,95 @@
+[package]
+name = "costpilot"
+version = "1.0.0"
+edition = "2021"
+authors = ["GuardSuite"]
+description = "Cost analysis and prediction for infrastructure as code"
+license = "MIT"
+repository = "https://github.com/Dee66/CostPilot"
+keywords = ["finops", "terraform", "aws", "cost", "iac"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+clap = { version = "4.4", features = ["derive", "cargo", "env"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+anyhow = "1.0"
+thiserror = "1.0"
+colored = "2.1"
+indicatif = "0.17"
+chrono = { version = "0.4", features = ["serde"] }
+regex = "1.10"
+walkdir = "2.4"
+atty = "0.2"
+sha2 = "0.10"
+
+[dev-dependencies]
+# E2E testing
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.8"
+
+# Property-based testing
+proptest = "1.4"
+quickcheck = "1.0"
+
+# Snapshot testing
+insta = { version = "1.34", features = ["json", "yaml"] }
+
+# Benchmarking
+criterion = { version = "0.5", features = ["html_reports"] }
+
+# Test utilities
+rstest = "0.18"
+test-case = "3.3"
+fake = "2.9"
+pretty_assertions = "1.4"
+
+[[bin]]
+name = "costpilot"
+path = "src/cli/cli_entrypoint.rs"
+
+[lib]
+name = "costpilot"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+
+# WASM-optimized release profile
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"          # Optimize for size
+lto = true
+codegen-units = 1
+panic = "abort"          # Smaller panic handler
+strip = true
+
+# WASM support
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"
+wee_alloc = "0.4"        # Smaller allocator for WASM
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+# Feature flags for conditional compilation
+[features]
+default = ["full"]
+full = ["prediction", "detection", "policy", "mapping", "grouping", "slo"]
+prediction = []
+detection = []
+policy = []
+mapping = []
+grouping = []
+slo = []
+wasm = ["wasm-bindgen"]

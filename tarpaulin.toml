@@ -1,0 +1,39 @@
+# Tarpaulin configuration for code coverage
+# Run with: cargo tarpaulin --config tarpaulin.toml
+
+[report]
+# Output formats
+out = ["Html", "Lcov", "Xml"]
+output-dir = "coverage/"
+
+[run]
+# Coverage thresholds
+fail-under = 90.0  # Fail if coverage drops below 90%
+
+# Test types to run
+all-features = true
+workspace = true
+
+# Timeout
+timeout = "300s"
+
+# Exclude patterns
+exclude-files = [
+    "src/cli/cli_entrypoint.rs",  # Entry point boilerplate
+    "tests/*",                     # Test files themselves
+    "benches/*",                   # Benchmark files
+]
+
+# Include only source files
+follow-exec = true
+post-test-delay = 1
+
+[html]
+# HTML report configuration
+theme = "monokai"
+
+[coverage]
+# Coverage calculation options
+ignore-panics = false
+count-lines = true
+branch = true

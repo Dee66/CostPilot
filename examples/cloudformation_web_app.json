@@ -1,0 +1,238 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Sample web application infrastructure with EC2, RDS, and S3",
+  "Parameters": {
+    "EnvironmentName": {
+      "Type": "String",
+      "Default": "production",
+      "Description": "Environment name (dev, staging, production)",
+      "AllowedValues": ["dev", "staging", "production"]
+    },
+    "InstanceType": {
+      "Type": "String",
+      "Default": "t3.medium",
+      "Description": "EC2 instance type for web servers",
+      "AllowedValues": ["t3.micro", "t3.small", "t3.medium", "t3.large"]
+    },
+    "DBInstanceClass": {
+      "Type": "String",
+      "Default": "db.t3.small",
+      "Description": "RDS instance class",
+      "AllowedValues": ["db.t3.micro", "db.t3.small", "db.t3.medium"]
+    }
+  },
+  "Resources": {
+    "WebServerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for web servers",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Sub": "${EnvironmentName}-web-sg"}
+          },
+          {
+            "Key": "Environment",
+            "Value": {"Ref": "EnvironmentName"}
+          }
+        ]
+      }
+    },
+    "WebServer1": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": {"Ref": "InstanceType"},
+        "ImageId": "ami-0c55b159cbfafe1f0",
+        "SecurityGroupIds": [{"Ref": "WebServerSecurityGroup"}],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Sub": "${EnvironmentName}-web-1"}
+          },
+          {
+            "Key": "Environment",
+            "Value": {"Ref": "EnvironmentName"}
+          },
+          {
+            "Key": "Role",
+            "Value": "web-server"
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Sub": "#!/bin/bash\napt-get update\napt-get install -y nginx\n"
+          }
+        }
+      }
+    },
+    "WebServer2": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": {"Ref": "InstanceType"},
+        "ImageId": "ami-0c55b159cbfafe1f0",
+        "SecurityGroupIds": [{"Ref": "WebServerSecurityGroup"}],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Sub": "${EnvironmentName}-web-2"}
+          },
+          {
+            "Key": "Environment",
+            "Value": {"Ref": "EnvironmentName"}
+          }
+        ]
+      }
+    },
+    "DatabaseSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for database",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 3306,
+            "ToPort": 3306,
+            "SourceSecurityGroupId": {"Ref": "WebServerSecurityGroup"}
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Sub": "${EnvironmentName}-db-sg"}
+          }
+        ]
+      }
+    },
+    "Database": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBInstanceIdentifier": {"Fn::Sub": "${EnvironmentName}-mysql-db"},
+        "DBInstanceClass": {"Ref": "DBInstanceClass"},
+        "Engine": "mysql",
+        "EngineVersion": "8.0.35",
+        "MasterUsername": "admin",
+        "MasterUserPassword": "ChangeMe123!",
+        "AllocatedStorage": "100",
+        "StorageType": "gp3",
+        "VPCSecurityGroups": [{"Ref": "DatabaseSecurityGroup"}],
+        "BackupRetentionPeriod": 7,
+        "MultiAZ": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Sub": "${EnvironmentName}-database"}
+          },
+          {
+            "Key": "Environment",
+            "Value": {"Ref": "EnvironmentName"}
+          }
+        ]
+      }
+    },
+    "StaticAssetsBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": {"Fn::Sub": "${EnvironmentName}-static-assets-${AWS::AccountId}"},
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "TransitionToIA",
+              "Status": "Enabled",
+              "Transitions": [
+                {
+                  "TransitionInDays": 30,
+                  "StorageClass": "STANDARD_IA"
+                },
+                {
+                  "TransitionInDays": 90,
+                  "StorageClass": "GLACIER"
+                }
+              ],
+              "ExpirationInDays": 365
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Sub": "${EnvironmentName}-assets"}
+          },
+          {
+            "Key": "Environment",
+            "Value": {"Ref": "EnvironmentName"}
+          }
+        ]
+      }
+    },
+    "LoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": {"Fn::Sub": "${EnvironmentName}-alb"},
+        "Type": "application",
+        "Scheme": "internet-facing",
+        "IpAddressType": "ipv4",
+        "SecurityGroups": [{"Ref": "WebServerSecurityGroup"}],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Sub": "${EnvironmentName}-alb"}
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "WebServer1Id": {
+      "Description": "Instance ID of Web Server 1",
+      "Value": {"Ref": "WebServer1"},
+      "Export": {
+        "Name": {"Fn::Sub": "${AWS::StackName}-WebServer1Id"}
+      }
+    },
+    "WebServer2Id": {
+      "Description": "Instance ID of Web Server 2",
+      "Value": {"Ref": "WebServer2"}
+    },
+    "DatabaseEndpoint": {
+      "Description": "Database connection endpoint",
+      "Value": {"Fn::GetAtt": ["Database", "Endpoint.Address"]},
+      "Export": {
+        "Name": {"Fn::Sub": "${AWS::StackName}-DBEndpoint"}
+      }
+    },
+    "BucketName": {
+      "Description": "S3 bucket for static assets",
+      "Value": {"Ref": "StaticAssetsBucket"}
+    },
+    "LoadBalancerDNS": {
+      "Description": "Load balancer DNS name",
+      "Value": {"Fn::GetAtt": ["LoadBalancer", "DNSName"]},
+      "Export": {
+        "Name": {"Fn::Sub": "${AWS::StackName}-ALBDNS"}
+      }
+    }
+  }
+}

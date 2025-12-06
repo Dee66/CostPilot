@@ -1,0 +1,376 @@
+version: "1.0.2"
+disclaimer: "Comprehensive implementation checklist derived directly from the CostPilot Spec. ALL items must be completed or explicitly deferred according to roadmap. Deterministic, WASM-safe, zero-IAM execution is mandatory."
+
+phases:
+  - phase: "MVP (Trust Triangle)"
+    timeline_days: "0-14"
+    objectives:
+      - "Build the Trust Triangle: Detect → Predict → Explain."
+      - "Ship snippet-based autofix (deterministic, idempotent)."
+      - "Ship core CI integration (GitHub Action + PR comments)."
+      - "Validate zero-IAM, zero-network, deterministic core."
+    must_have:
+      - cli_core_and_wasm_runtime
+      - detection_engine_minimal
+      - prediction_engine_minimal
+      - explain_engine_top_5
+      - snippet_autofix_mode
+      - cli_init_and_ci_templates
+      - basic_policy_evaluation
+      - terraform_plan_json_parsing
+      - zero_iam_security_validation
+
+  - phase: "V1 (Governance & Graph)"
+    timeline_days: "15-45"
+    objectives:
+      - "Implement full Governance layer (PAC engine + metadata)."
+      - "Ship Graph-based mapping (Mermaid first)."
+      - "Ship Trend system (SVG priority, HTML fallback)."
+      - "Introduce Drift-Safe Autofix (Beta) + rollback support."
+      - "Implement Baselines system + Regression classifier."
+    must_have:
+      - policy_as_code_full_metadata
+      - exemption_workflow_v1
+      - trend_engine_v1
+      - graph_mapping_v1
+      - drift_safe_autofix_beta
+      - slo_engine_v1
+      - artifact_support_cdk_cf
+      - zero_network_policy_enforcement
+      - baselines_system_v1
+
+  - phase: "V2+ (Enterprise & Scale)"
+    timeline_days: "45-120"
+    objectives:
+      - "Enterprise suite: Burn alerts, Audit, SSO, Escrow."
+      - "Full policy lifecycle & approval workflow."
+      - "Advanced prediction (probabilistic model)."
+      - "Usage metering + PR-based billing hooks."
+    must_have:
+      - slo_burn_alerts
+      - enterprise_policy_lifecycle_and_approval_flow
+      - audit_logs_and_tamper_proofing
+      - vs_code_extension
+      - advanced_prediction_model
+      - usage_metering_hooks
+      - software_escrow_process
+      - performance_budgets_hard_limits
+
+engines:
+
+  detection_engine:
+    checklist:
+      - parse_terraform_plan_json
+      - parse_cdk_diff_json_v1
+      - parse_cloudformation_changeset_json_v1
+      - normalize_iac_to_canonical_form
+      - handle_unknown_values_conservatively
+      - handle_computed_values_conservatively
+      - handle_taint_replace_lifecycle_impact
+      - detect_cost_smells
+      - detect_cost_risks
+      - detect_cost_explosions
+      - classify_regression_type_and_severity
+    output_contract:
+      - resource_changes
+      - old_cost_estimate
+      - new_cost_estimate
+      - estimated_monthly_delta
+      - severity_score
+      - regression_type
+      - suggested_fix_snippet
+
+  prediction_engine:
+    checklist:
+      - load_heuristics_from_cost_heuristics_json
+      - conservative_deterministic_estimates
+      - cold_start_inference
+      - predict_confidence_interval
+      - emit_prediction_metadata
+      - ensure_prediction_intervals_never_inverted
+      - enforce_zero_negative_costs
+    constraints:
+      wasm_safe: true
+      max_latency_ms: 300
+
+  explain_engine:
+    checklist:
+      - reference_cost_heuristics_file
+      - show_stepwise_reasoning_prediction
+      - show_stepwise_reasoning_detection
+      - include_all_assumptions
+      - include_regression_type
+      - include_severity_score
+      - root_cause_classification_v2
+    mvp_limitations:
+      supported_top_5_anti_patterns:
+        - nat_gateway_overuse
+        - overprovisioned_ec2
+        - s3_missing_lifecycle
+        - unbounded_lambda_concurrency
+        - dynamodb_pay_per_request_default
+
+  autofix_engine:
+    snippet_mode:
+      mvp:
+        - generate_snippet_only
+        - include_human_rationale
+        - deterministic_output
+        - idempotent_output
+
+    patch_mode:
+      pro_only:
+        - generate_full_patch_diff
+        - patch_simulation_pass_required
+        - label_beta_v1
+
+    drift_safe_autofix:
+      v1_beta:
+        - verify_no_infra_drift_prior_to_patch
+        - generate_rollback_patch
+        - limited_resource_support:
+            - ec2_instance_type
+            - s3_lifecycle_rules
+
+  policy_as_code:
+    mvp_builtin_rules:
+      - nat_gateway_limit
+      - module_monthly_budget
+      - s3_lifecycle_required
+      - compute_savings_plan_suggestion
+
+    full_engine_v1:
+      - yaml_policy_loader
+      - rule_dsl_parser
+      - policy_versioning_metadata
+      - policy_approval_required_flag
+      - policy_violation_counters
+      - exemption_workflow_schema_check
+
+    enterprise_requirements:
+      - delegated_ownership
+      - approval_workflows
+      - audit_trail
+
+  baselines_system:
+    checklist:
+      - support_baselines_json_file
+      - record_expected_cost_for_module
+      - record_last_updated_and_justification
+      - integrate_with_regression_classifier
+      - integrate_with_slo_engine
+
+  slo_engine:
+    mvp:
+      - monthly_cost_slo_check
+      - module_cost_slo_check
+    v1:
+      - slo_inheritance
+      - multi_slo_composition
+      - baseline_aware_evaluation
+    enterprise_burn_alerts_v2:
+      - burn_rate_linear_regression
+      - time_to_breach_prediction
+      - cli_command_slo_burn
+
+  mapping_engine:
+    mvp_v1:
+      - resource_to_service_mapping
+      - detect_cross_service_cost_impacts
+      - infer_downstream_services_v1
+      - implement_cycle_detection
+      - enforce_max_dependency_depth_5
+      - output_mermaid_graph
+      - stable_node_ids
+    v2:
+      - graphviz_export
+      - json_graph_export
+      - cost_propagation_logic_v2
+
+  grouping_engine:
+    checklist:
+      - group_by_module
+      - group_by_service
+      - group_by_environment
+    attribution_pipeline:
+      - extract_tags
+      - normalize_tag_casing
+      - infer_environment_if_missing
+      - generate_attribution_report
+
+  trend_engine:
+    v1:
+      - write_snapshot_json
+      - validate_snapshot_schema
+      - generate_svg_graph
+      - generate_static_html
+      - annotate_regressions
+      - annotate_slo_violations
+    trend_snapshot_lifecycle:
+      - snapshot_rotation_policy
+      - detect_snapshot_corruption
+      - generate_trend_diff
+
+cli:
+  commands:
+    - costpilot_scan_basic
+    - costpilot_scan_explain
+    - costpilot_diff
+    - costpilot_autofix_snippet
+    - costpilot_autofix_patch
+    - costpilot_init
+    - costpilot_slo_check
+    - costpilot_map_mermaid
+    - costpilot_version
+
+  ux:
+    - help_text
+    - examples
+    - autocomplete_bash_zsh_fish
+    - version_flag_validation
+    - machine_parseable_output_examples
+    - debug_mode_support
+
+zero_iam_security_and_wasm:
+  invariants:
+    - no_network_allowed
+    - no_aws_sdk_allowed
+    - wasm_sandbox_enforced
+    - redact_secrets
+    - redact_tokens
+    - enforce_max_file_size_20mb
+    - sandbox_memory_limit_256mb
+    - sandbox_timeout_2000ms
+    - stable_error_signatures
+    - safe_failure_on_corrupted_input
+
+  wasm_compile_pipeline:
+    - compile_core_engines_to_wasm
+    - validate_sandbox_limits
+    - wasm_bytecode_size_limit
+    - wasm_determinism_test_suite
+    - wasm_memory_stress_tests
+
+performance_budgets:
+  max_prediction_latency_ms: 300
+  max_mapping_latency_ms: 500
+  max_autofix_generation_ms: 400
+  max_total_scan_latency_ms: 2000
+  wasm_memory_mb: 256
+  slo_engine_max_eval_ms: 150
+
+testing_and_acceptance:
+  snapshot_tests:
+    - terraform_plan_variants
+    - cdk_diff_variants
+    - cloudformation_variants
+    - malformed_plans_fuzz_safety
+    - drift_cases_for_autofix
+  fuzz_tests:
+    - prediction_engine
+    - policy_engine
+    - mapping_engine
+    - tfplan_parsing_resilience
+  golden_file_tests:
+    - predict_output_golden
+    - explain_output_golden
+    - mapping_output_golden
+  baseline_tests:
+    - baseline_file_missing_behavior
+    - baseline_override_handling
+    - regression_classifier_uses_baseline
+    - slo_uses_baseline
+  acceptance_criteria:
+    - identical_inputs_produce_identical_outputs
+    - no_network_calls
+    - patch_autofix_requires_simulation_pass
+    - cost_diff_never_negative
+    - prediction_intervals_never_inverted
+    - mapping_graph_valid_json
+  error_model_enforcement:
+    - stable_error_ids
+    - error_category_mapping
+    - remediation_hint_generator
+    - machine_message_format_tests
+  performance_regression_suite:
+    - record_perf_baseline
+    - diff_against_previous
+    - enforce_perf_budgets
+
+compatibility_enforcement:
+  - api_contract_golden_file
+  - heuristics_version_check
+  - semver_enforcement_tests
+  - canonical_output_schema_validation
+
+config_validation_engine:
+  - validate_costpilot_yaml
+  - validate_policy_files
+  - validate_baselines_file
+  - validate_slo_files
+
+pricing_and_licensing:
+  solo:
+    - snippet_autofix
+    - limited_explain
+    - unlimited_repos
+  pro:
+    - patch_autofix
+    - drift_safe_autofix
+    - mapping_graph_export
+    - policy_as_code_lite
+  enterprise:
+    - slo_burn_alerts
+    - full_PAC_engine
+    - exemption_workflow
+    - team_cost_attribution
+    - audit_logs_and_tamper_proofing
+    - software_escrow
+
+governance_and_lifecycle:
+  checklist:
+    - policy_version_increment_on_change
+    - approval_reference_required_if_flagged
+    - expired_exemptions_block_ci
+    - drift_detection_checksum_sha256
+    - critical_drift_blocks_execution
+
+gtm:
+  assets:
+    - demo_pr_repo
+    - demo_gif_60s
+    - tco_calculator
+    - launch_day_blog
+    - product_hunt_launch
+    - hacker_news_show_launch
+  marketplace_submission:
+    - metadata_json
+    - pricing_mapping
+    - readme_action
+    - icon_assets
+  github_action_packaging:
+    - generate_action_yml
+    - embed_binary_or_fetch_script
+    - test_in_ephemeral_repo
+    - verify_action_permissions
+    - publish_versioned_releases
+  seo:
+    - docs_indexable
+    - landing_page_keywords
+    - schema_metadata
+    - example_queries:
+        - "terraform cost diff"
+        - "aws finops linter"
+
+onboarding:
+  - costpilot_init_generates_ci_template
+  - sample_policies_and_baselines
+  - mermaid_mapping_sample
+  - cli_quickstart_guide
+
+release_pipeline:
+  - tag_release
+  - generate_changelog
+  - update_spec_version
+  - rebuild_wasm
+  - publish_github_release

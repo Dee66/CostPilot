@@ -1,0 +1,237 @@
+// Detection engine - main orchestrator
+
+use crate::engines::shared::models::{ResourceChange, Detection, Severity, RegressionType};
+use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
+use crate::engines::detection::terraform::{parse_terraform_plan, convert_to_resource_changes};
+use crate::engines::detection::classifier::RegressionClassifier;
+use crate::engines::detection::severity::{calculate_severity_score, score_to_severity};
+use std::path::Path;
+
+/// Main detection engine
+pub struct DetectionEngine {
+    /// Enable verbose logging
+    verbose: bool,
+}
+
+impl DetectionEngine {
+    /// Create a new detection engine
+    pub fn new() -> Self {
+        Self { verbose: false }
+    }
+
+    /// Enable verbose mode
+    pub fn with_verbose(mut self, verbose: bool) -> Self {
+        self.verbose = verbose;
+        self
+    }
+
+    /// Detect cost issues from Terraform plan JSON file
+    pub fn detect_from_terraform_plan(&self, plan_path: &Path) -> Result<Vec<ResourceChange>> {
+        // Read the plan file
+        let content = std::fs::read_to_string(plan_path).map_err(|e| {
+            CostPilotError::new(
+                "DETECT_001",
+                ErrorCategory::FileSystemError,
+                format!("Failed to read Terraform plan file: {}", e),
+            )
+            .with_hint(format!("Ensure the file exists and is readable: {}", plan_path.display()))
+        })?;
+
+        self.detect_from_terraform_json(&content)
+    }
+
+    /// Detect cost issues from Terraform plan JSON string
+    pub fn detect_from_terraform_json(&self, json_content: &str) -> Result<Vec<ResourceChange>> {
+        if self.verbose {
+            println!("Parsing Terraform plan JSON...");
+        }
+
+        // Parse the Terraform plan
+        let plan = parse_terraform_plan(json_content)?;
+
+        if self.verbose {
+            println!("Terraform version: {:?}", plan.terraform_version);
+            println!("Format version: {}", plan.format_version);
+        }
+
+        // Convert to canonical format
+        let changes = convert_to_resource_changes(&plan)?;
+
+        if self.verbose {
+            println!("Detected {} resource changes", changes.len());
+        }
+
+        Ok(changes)
+    }
+
+    /// Analyze resource changes and generate detections
+    pub fn analyze_changes(
+        &self,
+        changes: &[ResourceChange],
+        cost_estimates: &[(String, f64, f64)], // (resource_id, cost, confidence)
+    ) -> Result<Vec<Detection>> {
+        let mut detections = Vec::new();
+
+        for change in changes {
+            // Find cost estimate for this resource
+            let (cost_delta, confidence) = cost_estimates
+                .iter()
+                .find(|(id, _, _)| id == &change.resource_id)
+                .map(|(_, cost, conf)| (*cost, *conf))
+                .unwrap_or((0.0, 0.5));
+
+            // Classify the regression
+            let regression_type = RegressionClassifier::classify(change);
+
+            // Calculate severity
+            let severity_score = calculate_severity_score(
+                change,
+                cost_delta,
+                &regression_type,
+                confidence,
+            );
+            let severity = score_to_severity(severity_score);
+
+            // Detect specific anti-patterns
+            if let Some(detection) = self.detect_anti_patterns(
+                change,
+                &regression_type,
+                severity,
+                severity_score,
+                cost_delta,
+            ) {
+                detections.push(detection);
+            }
+        }
+
+        Ok(detections)
+    }
+
+    /// Detect specific cost anti-patterns
+    fn detect_anti_patterns(
+        &self,
+        change: &ResourceChange,
+        regression_type: &RegressionType,
+        severity: Severity,
+        severity_score: u32,
+        cost_delta: f64,
+    ) -> Option<Detection> {
+        // NAT Gateway overuse
+        if change.resource_type == "aws_nat_gateway" && cost_delta > 100.0 {
+            return Some(Detection {
+                rule_id: "NAT_GATEWAY_COST".to_string(),
+                severity: severity.clone(),
+                resource_id: change.resource_id.clone(),
+                regression_type: regression_type.clone(),
+                severity_score,
+                message: format!(
+                    "NAT Gateway cost increase of ${:.2}/month. Consider using VPC endpoints or reducing NAT gateway count.",
+                    cost_delta
+                ),
+            });
+        }
+
+        // Overprovisioned EC2
+        if change.resource_type == "aws_instance" {
+            if let Some(config) = &change.new_config {
+                if let Some(instance_type) = config.get("instance_type").and_then(|v| v.as_str()) {
+                    if instance_type.contains("xlarge") && cost_delta > 200.0 {
+                        return Some(Detection {
+                            rule_id: "OVERPROVISIONED_EC2".to_string(),
+                            severity: severity.clone(),
+                            resource_id: change.resource_id.clone(),
+                            regression_type: regression_type.clone(),
+                            severity_score,
+                            message: format!(
+                                "Large EC2 instance type '{}' with ${:.2}/month cost. Consider rightsizing.",
+                                instance_type, cost_delta
+                            ),
+                        });
+                    }
+                }
+            }
+        }
+
+        // S3 missing lifecycle
+        if change.resource_type == "aws_s3_bucket" {
+            if let Some(config) = &change.new_config {
+                if config.get("lifecycle_rule").is_none() && cost_delta > 50.0 {
+                    return Some(Detection {
+                        rule_id: "S3_MISSING_LIFECYCLE".to_string(),
+                        severity: Severity::Medium,
+                        resource_id: change.resource_id.clone(),
+                        regression_type: regression_type.clone(),
+                        severity_score,
+                        message: "S3 bucket without lifecycle rules. Consider adding policies to transition old data to cheaper storage.".to_string(),
+                    });
+                }
+            }
+        }
+
+        // Default: generic high-cost detection
+        if cost_delta > 300.0 {
+            return Some(Detection {
+                rule_id: "HIGH_COST_CHANGE".to_string(),
+                severity,
+                resource_id: change.resource_id.clone(),
+                regression_type: regression_type.clone(),
+                severity_score,
+                message: format!(
+                    "Significant cost increase of ${:.2}/month detected for {}",
+                    cost_delta, change.resource_type
+                ),
+            });
+        }
+
+        None
+    }
+}
+
+impl Default for DetectionEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_detection_engine_creation() {
+        let engine = DetectionEngine::new();
+        assert!(!engine.verbose);
+
+        let engine = DetectionEngine::new().with_verbose(true);
+        assert!(engine.verbose);
+    }
+
+    #[test]
+    fn test_detect_from_json() {
+        let json = r#"{
+            "format_version": "1.2",
+            "resource_changes": [
+                {
+                    "address": "aws_instance.test",
+                    "type": "aws_instance",
+                    "name": "test",
+                    "change": {
+                        "actions": ["create"],
+                        "before": null,
+                        "after": {"instance_type": "t3.micro"}
+                    }
+                }
+            ]
+        }"#;
+
+        let engine = DetectionEngine::new();
+        let result = engine.detect_from_terraform_json(json);
+        assert!(result.is_ok());
+
+        let changes = result.unwrap();
+        assert_eq!(changes.len(), 1);
+        assert_eq!(changes[0].resource_type, "aws_instance");
+    }
+}
