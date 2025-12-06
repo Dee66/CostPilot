@@ -24,6 +24,7 @@ walkdir = "2.4"
 atty = "0.2"
 sha2 = "0.10"
 dirs = "5.0"
+uuid = { version = "1.6", features = ["v4"] }
 
 [dev-dependencies]
 # E2E testing

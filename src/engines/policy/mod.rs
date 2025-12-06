@@ -5,7 +5,7 @@ mod audit_log;
 mod compliance;
 mod exemption_types;
 mod exemption_validator;
-mod lifecycle;
+pub mod lifecycle;
 mod metadata_engine;
 mod policy_engine;
 mod policy_history;

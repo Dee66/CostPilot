@@ -37,6 +37,16 @@ pub struct CostEstimate {
     pub cold_start_inference: bool,
 }
 
+/// Total cost summary
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TotalCost {
+    pub monthly: f64,
+    pub prediction_interval_low: f64,
+    pub prediction_interval_high: f64,
+    pub confidence_score: f64,
+    pub resource_count: usize,
+}
+
 /// Regression classification
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum RegressionType {

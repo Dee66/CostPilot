@@ -170,7 +170,7 @@ impl SvgGenerator {
         y_min: f64,
         y_max: f64,
     ) {
-        writeln!(svg, r#"  <g id="grid" stroke="#e5e7eb" stroke-width="1" opacity="0.5">"#).unwrap();
+        writeln!(svg, r##"  <g id="grid" stroke="#e5e7eb" stroke-width="1" opacity="0.5">"##).unwrap();
 
         // Horizontal grid lines (5 lines)
         for i in 0..=5 {
@@ -203,7 +203,7 @@ impl SvgGenerator {
     }
 
     fn draw_axes(&self, svg: &mut String, x: f64, y: f64, width: f64, height: f64) {
-        writeln!(svg, r#"  <g id="axes" stroke="#374151" stroke-width="2">"#).unwrap();
+        writeln!(svg, r##"  <g id="axes" stroke="#374151" stroke-width="2">"##).unwrap();
         
         // X axis
         writeln!(
@@ -304,7 +304,7 @@ impl SvgGenerator {
                 // Draw warning marker
                 writeln!(
                     svg,
-                    r#"    <circle cx="{}" cy="{}" r="8" fill="#ef4444" opacity="0.8"/>"#,
+                    r##"    <circle cx="{}" cy="{}" r="8" fill="#ef4444" opacity="0.8"/>"##,
                     x_pos, y_pos
                 ).unwrap();
                 
@@ -341,7 +341,7 @@ impl SvgGenerator {
                 // Draw SLO violation marker (different color from regression)
                 writeln!(
                     svg,
-                    r#"    <rect x="{}" y="{}" width="12" height="12" fill="#f59e0b" opacity="0.8" transform="rotate(45 {} {})"/>"#,
+                    r##"    <rect x="{}" y="{}" width="12" height="12" fill="#f59e0b" opacity="0.8" transform="rotate(45 {} {})"/>"##,
                     x_pos - 6.0, y_pos - 18.0, x_pos, y_pos - 12.0
                 ).unwrap();
             }
@@ -362,7 +362,7 @@ impl SvgGenerator {
     ) {
         writeln!(
             svg,
-            r#"  <g id="labels" font-family="monospace" font-size="12" fill="#374151">"#
+            r##"  <g id="labels" font-family="monospace" font-size="12" fill="#374151">"##
         ).unwrap();
 
         // Y-axis labels (cost values)

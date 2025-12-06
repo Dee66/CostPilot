@@ -7,7 +7,7 @@ pub mod chargeback;
 pub use usage_meter::{
     UsageEvent, UsageEventType, Attribution, UsageContext,
     UsageMetrics, TeamUsageSummary, UserUsage, ProjectUsage,
-    PricingModel, PricingTier, UsageMeter,
+    PricingModel, PricingTier, UsageMeter, BillingExport,
 };
 
 pub use pr_tracker::{

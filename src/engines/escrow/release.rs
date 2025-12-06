@@ -147,12 +147,15 @@ impl ReleaseAutomation {
         // Export package
         package.export(&output_dir)?;
         
-        // If escrow agent configured, upload via API
-        if let Some(agent) = &self.config.escrow_agent {
+        // Determine escrow agent name
+        let agent_name = if let Some(agent) = &self.config.escrow_agent {
             if let (Some(endpoint), Some(api_key)) = (&agent.api_endpoint, &agent.api_key) {
                 self.upload_to_agent(package, endpoint, api_key)?;
             }
-        }
+            agent.agent_name.clone()
+        } else {
+            "local".to_string()
+        };
         
         // Create receipt
         let receipt = DepositReceipt {
@@ -161,7 +164,7 @@ impl ReleaseAutomation {
             version: package.metadata.version.clone(),
             deposit_date: current_timestamp(),
             deposit_location: output_dir.to_string_lossy().to_string(),
-            escrow_agent: agent.agent_name.clone(),
+            escrow_agent: agent_name,
             status: DepositStatus::Completed,
         };
         
