@@ -446,7 +446,7 @@ fn format_team_summary_text(summary: &crate::engines::metering::TeamUsageSummary
     output.push_str(&format!("📊 Team Usage Summary\n"));
     output.push_str(&format!("====================\n\n"));
     output.push_str(&format!("Team: {} ({})\n", summary.team_name, summary.team_id));
-    output.push_str(&format!("Period: {} - {}\n\n", summary.period.0, summary.period.1));
+    output.push_str(&format!("Period: {} - {}\n\n", summary.period_start, summary.period_end));
     
     output.push_str(&format!("Usage:\n"));
     output.push_str(&format!("  Total Events: {}\n", summary.total_events));
@@ -483,8 +483,8 @@ fn format_team_summary_csv(summary: &crate::engines::metering::TeamUsageSummary)
     csv.push_str(&format!("{},{},{},{},{},{},{:.2},{},{:.2}\n",
         summary.team_id,
         summary.team_name,
-        summary.period.0,
-        summary.period.1,
+        summary.period_start,
+        summary.period_end,
         summary.total_events,
         summary.resources_analyzed,
         summary.cost_impact_detected,
@@ -500,8 +500,8 @@ fn format_billing_export_csv(export: &crate::engines::metering::BillingExport) -
     
     for (team_id, charge) in &export.team_charges {
         csv.push_str(&format!("{},{},{},{},{},{:.2}\n",
-            export.period.0,
-            export.period.1,
+            export.period_start,
+            export.period_end,
             export.total_events,
             export.total_resources,
             team_id,

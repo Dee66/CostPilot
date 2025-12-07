@@ -116,7 +116,7 @@ impl MetadataPolicyEngine {
             let metadata = PolicyMetadata::new(
                 "nat-gateway-limit".to_string(),
                 "NAT Gateway Limit".to_string(),
-                format!("Limits NAT gateways to {} per region", nat.max_per_region),
+                format!("Limits NAT gateways to {} per region", nat.max_count),
                 PolicyCategory::Resource,
                 Severity::Warning,
                 "system".to_string(),
@@ -125,7 +125,7 @@ impl MetadataPolicyEngine {
             
             let rule = PolicyRule::ResourceLimit {
                 resource_type: "aws_nat_gateway".to_string(),
-                max_count: nat.max_per_region,
+                max_count: nat.max_count,
             };
             
             let mut policy = PolicyWithMetadata::new(metadata, rule);
@@ -248,7 +248,7 @@ impl MetadataPolicyEngine {
         
         match &policy.spec {
             PolicyRule::BudgetLimit { monthly_limit, warning_threshold } => {
-                let monthly_cost = total_cost.monthly;
+                let monthly_cost = total_cost.monthly_cost;
                 
                 if monthly_cost > *monthly_limit {
                     violations.push(MetadataPolicyViolation {
