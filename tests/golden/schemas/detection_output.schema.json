@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CostPilot Detection Output Schema",
+  "description": "Canonical schema for detection JSON output",
+  "type": "object",
+  "required": ["detections", "summary", "metadata"],
+  "properties": {
+    "detections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Detection"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_count", "by_severity"],
+      "properties": {
+        "total_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "by_severity": {
+          "type": "object",
+          "properties": {
+            "Critical": { "type": "integer", "minimum": 0 },
+            "High": { "type": "integer", "minimum": 0 },
+            "Medium": { "type": "integer", "minimum": 0 },
+            "Low": { "type": "integer", "minimum": 0 },
+            "Info": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["version", "timestamp"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Detection": {
+      "type": "object",
+      "required": [
+        "rule_id",
+        "severity",
+        "resource_id",
+        "regression_type",
+        "severity_score",
+        "message"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["Critical", "High", "Medium", "Low", "Info"]
+        },
+        "resource_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "regression_type": {
+          "type": "string",
+          "enum": ["Cost", "Performance", "Reliability", "Security", "Compliance"]
+        },
+        "severity_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

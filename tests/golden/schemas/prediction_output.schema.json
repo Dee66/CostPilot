@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CostPilot Prediction Output Schema",
+  "description": "Canonical schema for cost prediction JSON output",
+  "type": "object",
+  "required": ["estimates", "total", "metadata"],
+  "properties": {
+    "estimates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CostEstimate"
+      }
+    },
+    "total": {
+      "$ref": "#/definitions/TotalCost"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["version", "timestamp", "resource_count"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "resource_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heuristics_version": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CostEstimate": {
+      "type": "object",
+      "required": [
+        "resource_id",
+        "monthly_cost",
+        "prediction_interval_low",
+        "prediction_interval_high",
+        "confidence_score"
+      ],
+      "properties": {
+        "resource_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "monthly_cost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "prediction_interval_low": {
+          "type": "number",
+          "minimum": 0
+        },
+        "prediction_interval_high": {
+          "type": "number",
+          "minimum": 0
+        },
+        "confidence_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "heuristic_reference": {
+          "type": "string"
+        },
+        "cold_start_inference": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TotalCost": {
+      "type": "object",
+      "required": [
+        "monthly",
+        "prediction_interval_low",
+        "prediction_interval_high",
+        "confidence_score",
+        "resource_count"
+      ],
+      "properties": {
+        "monthly": {
+          "type": "number",
+          "minimum": 0
+        },
+        "prediction_interval_low": {
+          "type": "number",
+          "minimum": 0
+        },
+        "prediction_interval_high": {
+          "type": "number",
+          "minimum": 0
+        },
+        "confidence_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "resource_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

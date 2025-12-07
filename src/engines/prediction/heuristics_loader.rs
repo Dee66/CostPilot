@@ -5,6 +5,11 @@ use std::path::{Path, PathBuf};
 use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
 use super::prediction_engine::CostHeuristics;
 
+/// Minimum required heuristics version (semantic versioning)
+const MIN_HEURISTICS_VERSION: &str = "1.0.0";
+/// Maximum compatible heuristics major version
+const MAX_MAJOR_VERSION: u32 = 1;
+
 /// Heuristics loader with multiple fallback strategies
 pub struct HeuristicsLoader {
     search_paths: Vec<PathBuf>,
@@ -119,6 +124,9 @@ impl HeuristicsLoader {
             ));
         }
 
+        // Check version compatibility
+        self.check_version_compatibility(&heuristics.version)?;
+
         // Check EC2 instance types
         if heuristics.compute.ec2.is_empty() {
             return Err(CostPilotError::new(
@@ -155,6 +163,81 @@ impl HeuristicsLoader {
                 ErrorCategory::ValidationError,
                 "No RDS MySQL instance types defined".to_string(),
             ));
+        }
+
+        Ok(())
+    }
+
+    /// Check version compatibility using semantic versioning
+    fn check_version_compatibility(&self, version: &str) -> Result<()> {
+        // Parse version string (major.minor.patch)
+        let parts: Vec<&str> = version.split('.').collect();
+        if parts.len() < 2 {
+            return Err(CostPilotError::new(
+                "HEURISTICS_COMPAT_001",
+                ErrorCategory::ValidationError,
+                format!("Invalid version format: {} (expected major.minor.patch)", version),
+            ));
+        }
+
+        let major: u32 = parts[0].parse().map_err(|_| {
+            CostPilotError::new(
+                "HEURISTICS_COMPAT_002",
+                ErrorCategory::ValidationError,
+                format!("Invalid major version number: {}", parts[0]),
+            )
+        })?;
+
+        let minor: u32 = parts[1].parse().map_err(|_| {
+            CostPilotError::new(
+                "HEURISTICS_COMPAT_003",
+                ErrorCategory::ValidationError,
+                format!("Invalid minor version number: {}", parts[1]),
+            )
+        })?;
+
+        // Check major version compatibility
+        if major > MAX_MAJOR_VERSION {
+            return Err(CostPilotError::new(
+                "HEURISTICS_COMPAT_004",
+                ErrorCategory::ValidationError,
+                format!(
+                    "Heuristics version {} is not compatible with this version of CostPilot (max major version: {})",
+                    version, MAX_MAJOR_VERSION
+                ),
+            )
+            .with_hint("Please upgrade CostPilot or use an older heuristics file"));
+        }
+
+        // Parse minimum required version
+        let min_parts: Vec<&str> = MIN_HEURISTICS_VERSION.split('.').collect();
+        let min_major: u32 = min_parts[0].parse().unwrap();
+        let min_minor: u32 = min_parts[1].parse().unwrap();
+
+        // Check if version meets minimum requirement
+        if major < min_major || (major == min_major && minor < min_minor) {
+            return Err(CostPilotError::new(
+                "HEURISTICS_COMPAT_005",
+                ErrorCategory::ValidationError,
+                format!(
+                    "Heuristics version {} is too old (minimum required: {})",
+                    version, MIN_HEURISTICS_VERSION
+                ),
+            )
+            .with_hint("Please update your heuristics file to the latest version"));
+        }
+
+        // Warn about patch version (but don't error)
+        if major == min_major && minor == min_minor && parts.len() > 2 {
+            if let Ok(patch) = parts[2].parse::<u32>() {
+                let min_patch: u32 = min_parts.get(2).and_then(|p| p.parse().ok()).unwrap_or(0);
+                if patch < min_patch {
+                    eprintln!(
+                        "⚠️  Warning: Heuristics patch version {}.{}.{} is older than recommended {}.{}.{}",
+                        major, minor, patch, min_major, min_minor, min_patch
+                    );
+                }
+            }
         }
 
         Ok(())

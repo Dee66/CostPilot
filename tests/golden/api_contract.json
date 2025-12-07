@@ -1,0 +1,281 @@
+{
+  "version": "1.0.2",
+  "description": "CostPilot API Contract - Stable Public API Surface",
+  "last_updated": "2025-12-07",
+  "breaking_change_policy": "Major version bump required for any breaking changes",
+  
+  "public_structs": {
+    "ResourceChange": {
+      "fields": [
+        "resource_id",
+        "resource_type",
+        "action",
+        "module_path",
+        "old_config",
+        "new_config",
+        "tags"
+      ],
+      "enums": {
+        "action": ["Create", "Update", "Delete", "NoOp"]
+      }
+    },
+    "Detection": {
+      "fields": [
+        "rule_id",
+        "severity",
+        "resource_id",
+        "regression_type",
+        "severity_score",
+        "message"
+      ],
+      "enums": {
+        "severity": ["Critical", "High", "Medium", "Low", "Info"],
+        "regression_type": ["Cost", "Performance", "Reliability", "Security", "Compliance"]
+      }
+    },
+    "CostEstimate": {
+      "fields": [
+        "resource_id",
+        "monthly_cost",
+        "prediction_interval_low",
+        "prediction_interval_high",
+        "confidence_score",
+        "heuristic_reference",
+        "cold_start_inference"
+      ]
+    },
+    "TotalCost": {
+      "fields": [
+        "monthly",
+        "prediction_interval_low",
+        "prediction_interval_high",
+        "confidence_score",
+        "resource_count"
+      ]
+    },
+    "AntiPattern": {
+      "fields": [
+        "pattern_id",
+        "pattern_name",
+        "description",
+        "severity",
+        "detected_in",
+        "evidence",
+        "suggested_fix",
+        "cost_impact"
+      ]
+    },
+    "Policy": {
+      "fields": [
+        "id",
+        "name",
+        "description",
+        "status",
+        "rules",
+        "metadata"
+      ],
+      "enums": {
+        "status": ["Active", "Disabled", "Testing"]
+      }
+    },
+    "SloDefinition": {
+      "fields": [
+        "id",
+        "name",
+        "description",
+        "slo_type",
+        "target",
+        "threshold",
+        "enforcement"
+      ],
+      "enums": {
+        "slo_type": ["MaxMonthlyCost", "MaxResourceCount", "MaxCostPerResource"],
+        "enforcement": ["Block", "Warn", "Monitor"]
+      }
+    },
+    "BudgetViolation": {
+      "fields": [
+        "engine",
+        "violation_type",
+        "budget_value",
+        "actual_value",
+        "action"
+      ],
+      "enums": {
+        "violation_type": ["Latency", "Memory"],
+        "action": ["PartialResults", "Error", "CircuitBreak"]
+      }
+    }
+  },
+  
+  "public_enums": {
+    "ErrorCategory": [
+      "InvalidInput",
+      "ParseError",
+      "PredictionError",
+      "PolicyViolation",
+      "SLOBreach",
+      "DriftDetected",
+      "InternalError",
+      "ConfigError",
+      "FileSystemError",
+      "Timeout",
+      "CircuitBreaker",
+      "ValidationError",
+      "IoError",
+      "NotFound",
+      "SecurityViolation"
+    ],
+    "ChangeAction": [
+      "Create",
+      "Update",
+      "Delete",
+      "NoOp"
+    ],
+    "Severity": [
+      "Critical",
+      "High",
+      "Medium",
+      "Low",
+      "Info"
+    ],
+    "RegressionType": [
+      "Cost",
+      "Performance",
+      "Reliability",
+      "Security",
+      "Compliance"
+    ]
+  },
+  
+  "public_methods": {
+    "DetectionEngine": {
+      "new": "() -> Self",
+      "with_verbose": "(bool) -> Self",
+      "detect_from_terraform_plan": "(&Path) -> Result<Vec<ResourceChange>>",
+      "detect_from_terraform_json": "(&str) -> Result<Vec<ResourceChange>>",
+      "detect": "(&[ResourceChange]) -> Result<Vec<Detection>>",
+      "detect_from_file": "(&Path) -> Result<Vec<ResourceChange>>",
+      "analyze_changes": "(&[ResourceChange], &[(String, f64, f64)]) -> Result<Vec<Detection>>"
+    },
+    "PredictionEngine": {
+      "new": "() -> Result<Self>",
+      "with_heuristics_path": "(PathBuf) -> Self",
+      "with_verbose": "(bool) -> Self",
+      "with_performance_tracking": "(PerformanceTracker) -> Self",
+      "predict": "(&mut self, &[ResourceChange]) -> Result<Vec<CostEstimate>>",
+      "predict_total_cost": "(&mut self, &[ResourceChange]) -> Result<TotalCost>",
+      "predict_resource_cost": "(&self, &ResourceChange) -> Result<CostEstimate>"
+    },
+    "ExplainEngine": {
+      "build_summary": "(&ResourceChange, Option<&CostEstimate>) -> String",
+      "build_detection_reasoning": "(&Detection, &ResourceChange, Option<&CostEstimate>) -> ReasoningChain"
+    },
+    "AutofixEngine": {
+      "generate_fixes": "(&[Detection], &[ResourceChange], &[CostEstimate]) -> AutofixResult"
+    },
+    "PolicyEngine": {
+      "new": "(Vec<Policy>) -> Self",
+      "evaluate": "(&[ResourceChange], &[CostEstimate]) -> PolicyResult"
+    },
+    "SloEngine": {
+      "new": "(Vec<SloDefinition>) -> Self",
+      "check_slo": "(&TotalCost, &[CostEstimate]) -> SloResult"
+    }
+  },
+  
+  "cli_commands": {
+    "scan": {
+      "args": ["plan-file"],
+      "flags": ["--format", "--output", "--verbose", "--show-full-config"]
+    },
+    "predict": {
+      "args": ["plan-file"],
+      "flags": ["--format", "--output", "--show-intervals"]
+    },
+    "explain": {
+      "args": ["plan-file"],
+      "flags": ["--format", "--output", "--top"]
+    },
+    "autofix": {
+      "args": ["plan-file"],
+      "flags": ["--mode", "--output", "--apply"]
+    },
+    "map": {
+      "args": ["plan-file"],
+      "flags": ["--format", "--output"]
+    },
+    "group": {
+      "args": ["plan-file"],
+      "flags": ["--by", "--format", "--output"]
+    },
+    "policy": {
+      "args": ["plan-file"],
+      "flags": ["--policy-dir", "--output"]
+    },
+    "validate": {
+      "args": ["config-file"],
+      "flags": ["--fail-fast", "--format"]
+    },
+    "init": {
+      "args": [],
+      "flags": ["--ci", "--output-dir"]
+    }
+  },
+  
+  "output_formats": {
+    "json": {
+      "mime_type": "application/json",
+      "schema_version": "1.0",
+      "deterministic": true,
+      "keys_sorted": true
+    },
+    "text": {
+      "mime_type": "text/plain",
+      "max_line_width": 80,
+      "ansi_colors": "if_tty"
+    },
+    "markdown": {
+      "mime_type": "text/markdown",
+      "max_line_width": 80,
+      "header_style": "atx"
+    }
+  },
+  
+  "error_codes": {
+    "validation": "E100-E199",
+    "policy": "E200-E299",
+    "baselines": "E300-E399",
+    "slo": "E400-E499",
+    "detection": "DETECT_xxx",
+    "prediction": "PREDICT_xxx",
+    "autofix": "AUTOFIX_xxx"
+  },
+  
+  "performance_budgets": {
+    "prediction_latency_ms": 300,
+    "mapping_latency_ms": 500,
+    "autofix_latency_ms": 400,
+    "total_scan_latency_ms": 2000,
+    "slo_eval_latency_ms": 150,
+    "wasm_memory_mb": 256
+  },
+  
+  "determinism_guarantees": [
+    "Identical inputs produce identical outputs",
+    "No network calls (zero-IAM)",
+    "No filesystem writes during analysis",
+    "Stable JSON key ordering (BTreeMap)",
+    "Stable float formatting (2 decimal places)",
+    "Stable markdown wrapping (80 chars)",
+    "Deterministic error IDs"
+  ],
+  
+  "backwards_compatibility_policy": {
+    "major_version": "Breaking changes allowed",
+    "minor_version": "New features, backwards compatible",
+    "patch_version": "Bug fixes only, no API changes",
+    "deprecation_notice": "2 minor versions before removal",
+    "error_code_stability": "Error codes never change once released"
+  }
+}
