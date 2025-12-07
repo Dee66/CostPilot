@@ -106,7 +106,7 @@ impl TrendEngine {
         
         self.svg_generator
             .generate(&history)
-            .map_err(|e| CostPilotError::GenerationError(e))
+            .map_err(|e| CostPilotError::generation_error(e))
     }
 
     /// Generate HTML file with embedded SVG

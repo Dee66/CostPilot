@@ -74,7 +74,7 @@ impl SnapshotManager {
         let filepath = self.storage_dir.join(&filename);
 
         if !filepath.exists() {
-            return Err(CostPilotError::FileNotFound(
+            return Err(CostPilotError::file_not_found(
                 filepath.to_string_lossy().to_string(),
             ));
         }
@@ -84,7 +84,7 @@ impl SnapshotManager {
         })?;
 
         let snapshot: CostSnapshot = serde_json::from_str(&contents).map_err(|e| {
-            CostPilotError::ParseError(format!("Failed to parse snapshot: {}", e))
+            CostPilotError::parse_error(format!("Failed to parse snapshot: {}", e))
         })?;
 
         Ok(snapshot)

@@ -36,7 +36,7 @@ pub struct UsageEvent {
 }
 
 /// Type of usage event
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UsageEventType {
     /// Workspace scan
     Scan,

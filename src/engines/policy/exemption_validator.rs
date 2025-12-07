@@ -34,7 +34,7 @@ impl ExemptionValidator {
         let path = path.as_ref();
         
         if !path.exists() {
-            return Err(CostPilotError::FileNotFound(
+            return Err(CostPilotError::file_not_found(
                 path.to_string_lossy().to_string(),
             ));
         }
@@ -49,7 +49,7 @@ impl ExemptionValidator {
     /// Parse exemptions from YAML string
     pub fn parse_yaml(&self, yaml: &str) -> Result<ExemptionsFile, CostPilotError> {
         let exemptions: ExemptionsFile = serde_yaml::from_str(yaml).map_err(|e| {
-            CostPilotError::ParseError(format!("Failed to parse exemptions YAML: {}", e))
+            CostPilotError::parse_error(format!("Failed to parse exemptions YAML: {}", e))
         })?;
 
         self.validate_exemptions_file(&exemptions)?;
