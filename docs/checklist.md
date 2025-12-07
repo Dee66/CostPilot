@@ -2,9 +2,9 @@
 
 ## 📊 Overall Progress
 
-<div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="88" style="width:94%; background:#e6eef0; border-radius:8px; padding:6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);">
-  <div style="width:88%; background:linear-gradient(90deg,#2e7d32,#4caf50,#66bb6a); color:#fff; padding:10px 12px; text-align:right; border-radius:6px; font-weight:700; transition:width 0.5s ease;">
-    <span style="display:inline-block; background:rgba(0,0,0,0.12); padding:4px 8px; border-radius:999px; font-size:0.95em;">88% · 627/709</span>
+<div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="89" style="width:94%; background:#e6eef0; border-radius:8px; padding:6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);">
+  <div style="width:89%; background:linear-gradient(90deg,#2e7d32,#4caf50,#66bb6a); color:#fff; padding:10px 12px; text-align:right; border-radius:6px; font-weight:700; transition:width 0.5s ease;">
+    <span style="display:inline-block; background:rgba(0,0,0,0.12); padding:4px 8px; border-radius:999px; font-size:0.95em;">89% · 631/709</span>
   </div>
 </div>
 
@@ -1011,10 +1011,10 @@
 
 ## Compatibility Enforcement
 
-- [ ] API contract golden file
-- [ ] Heuristics version check
-- [ ] Semver enforcement tests
-- [ ] Canonical output schema validation
+- [x] API contract golden file
+- [x] Heuristics version check
+- [x] Semver enforcement tests
+- [x] Canonical output schema validation
 
 ---
 
