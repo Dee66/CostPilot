@@ -142,7 +142,7 @@ impl PatchGenerator {
         }
 
         let cost_before = estimate
-            .map(|e| e.estimate)
+            .map(|e| e.monthly_cost)
             .unwrap_or(0.0);
 
         let cost_after = Self::estimate_cost_after(&anti_patterns, cost_before);
@@ -634,7 +634,7 @@ impl PatchGenerator {
     fn build_rationale(anti_patterns: &[AntiPattern], monthly_savings: f64) -> String {
         let pattern_names: Vec<String> = anti_patterns
             .iter()
-            .map(|ap| ap.name.clone())
+            .map(|ap| ap.pattern_name.clone())
             .collect();
 
         format!(
