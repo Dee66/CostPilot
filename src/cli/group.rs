@@ -147,7 +147,7 @@ fn execute_group_module(
         .filter_map(|r| {
             if let Some(cost) = r.monthly_cost {
                 if cost >= min_cost {
-                    return Some((r.address.clone(), r.resource_type.clone(), cost));
+                    return Some((r.resource_id.clone(), r.resource_type.clone(), cost));
                 }
             }
             None
@@ -201,7 +201,7 @@ fn execute_group_service(
         .filter_map(|r| {
             if let Some(cost) = r.monthly_cost {
                 if cost >= min_cost {
-                    return Some((r.address.clone(), r.resource_type.clone(), cost));
+                    return Some((r.resource_id.clone(), r.resource_type.clone(), cost));
                 }
             }
             None
@@ -255,7 +255,7 @@ fn execute_group_environment(
                     let (service, _) =
                         crate::engines::grouping::by_service::extract_service_info(&r.resource_type);
                     return Some((
-                        r.address.clone(),
+                        r.resource_id.clone(),
                         r.resource_type.clone(),
                         service,
                         r.tags.clone(),
@@ -306,7 +306,7 @@ fn execute_attribution(
         .filter_map(|r| {
             r.monthly_cost.map(|cost| {
                 (
-                    r.address.clone(),
+                    r.resource_id.clone(),
                     r.resource_type.clone(),
                     cost,
                     r.tags.clone(),
@@ -344,7 +344,7 @@ fn execute_comprehensive(
         .filter_map(|r| {
             r.monthly_cost.map(|cost| {
                 (
-                    r.address.clone(),
+                    r.resource_id.clone(),
                     r.resource_type.clone(),
                     r.tags.clone(),
                     cost,

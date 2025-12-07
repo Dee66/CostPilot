@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::engines::shared::models::{Detection, ResourceChange};
+use crate::engines::shared::models::{Detection, ResourceChange, CostEstimate};
 use crate::engines::explain::anti_patterns::AntiPattern;
 
 /// A complete patch file with metadata
