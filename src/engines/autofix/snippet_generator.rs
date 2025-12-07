@@ -1,6 +1,6 @@
 // Snippet generator - MVP deterministic, idempotent fix generation
 
-use crate::engines::shared::models::{Detection, ResourceChange};
+use crate::engines::shared::models::{Detection, ResourceChange, CostEstimate};
 use crate::engines::explain::anti_patterns::AntiPattern;
 use serde::{Deserialize, Serialize};
 
@@ -49,9 +49,9 @@ impl SnippetGenerator {
             "aws_instance" => Self::generate_ec2_snippet(detection, change, anti_patterns, estimate),
             "aws_rds_instance" => Self::generate_rds_snippet(detection, change, estimate),
             "aws_lambda_function" => Self::generate_lambda_snippet(detection, change, anti_patterns, estimate),
-            "aws_s3_bucket" => Self::generate_s3_snippet(detection, change, anti_patterns),
-            "aws_dynamodb_table" => Self::generate_dynamodb_snippet(detection, change, anti_patterns),
-            "aws_nat_gateway" => Self::generate_nat_gateway_snippet(detection, change),
+            "aws_s3_bucket" => Self::generate_s3_snippet(detection, change, anti_patterns, estimate),
+            "aws_dynamodb_table" => Self::generate_dynamodb_snippet(detection, change, anti_patterns, estimate),
+            "aws_nat_gateway" => Self::generate_nat_gateway_snippet(detection, change, estimate),
             _ => None,
         }
     }
@@ -129,6 +129,7 @@ impl SnippetGenerator {
     fn generate_rds_snippet(
         _detection: &Detection,
         change: &ResourceChange,
+        _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         let current_class = change.new_config
             .as_ref()
@@ -167,6 +168,7 @@ impl SnippetGenerator {
         _detection: &Detection,
         change: &ResourceChange,
         anti_patterns: &[AntiPattern],
+        _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         let has_unbounded = anti_patterns.iter()
             .any(|p| p.pattern_id == "UNBOUNDED_LAMBDA_CONCURRENCY");
@@ -204,6 +206,7 @@ impl SnippetGenerator {
         _detection: &Detection,
         change: &ResourceChange,
         anti_patterns: &[AntiPattern],
+        _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         let missing_lifecycle = anti_patterns.iter()
             .any(|p| p.pattern_id == "S3_MISSING_LIFECYCLE");
@@ -242,6 +245,7 @@ impl SnippetGenerator {
         _detection: &Detection,
         change: &ResourceChange,
         anti_patterns: &[AntiPattern],
+        _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         let has_pay_per_request = anti_patterns.iter()
             .any(|p| p.pattern_id == "DYNAMODB_PAY_PER_REQUEST_DEFAULT");
@@ -278,8 +282,9 @@ impl SnippetGenerator {
 
     /// Generate NAT Gateway fix snippet
     fn generate_nat_gateway_snippet(
-        detection: &Detection,
+        _detection: &Detection,
         change: &ResourceChange,
+        _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         let snippet = format!(
             "# Replace NAT Gateway with VPC Endpoints for AWS services\n\nresource \"aws_vpc_endpoint\" \"s3\" {{\n  vpc_id       = var.vpc_id\n  service_name = \"com.amazonaws.region.s3\"\n  route_table_ids = [aws_route_table.private.id]\n}}\n\nresource \"aws_vpc_endpoint\" \"dynamodb\" {{\n  vpc_id       = var.vpc_id\n  service_name = \"com.amazonaws.region.dynamodb\"\n  route_table_ids = [aws_route_table.private.id]\n}}\n\n# Remove or consolidate: {}\n# resource \"aws_nat_gateway\" ... {{}}",
