@@ -85,7 +85,7 @@ impl PolicyEngine {
     fn evaluate_budgets(&self, cost: &CostEstimate, result: &mut PolicyResult) {
         // Check global budget
         if let Some(global) = &self.config.budgets.global {
-            let monthly_cost = cost.monthly;
+            let monthly_cost = cost.monthly_cost;
 
             // Check if exceeds limit
             if monthly_cost > global.monthly_limit {
