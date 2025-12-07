@@ -55,13 +55,26 @@ impl DriftSafeEngine {
         current_cost: f64,
         proposed_cost: f64,
     ) -> DriftSafeOperation {
+        // Convert Option<Value> to HashMap
+        let current_config = current_change.new_config
+            .as_ref()
+            .and_then(|v| v.as_object())
+            .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+            .unwrap_or_default();
+        
+        let proposed_config = proposed_fix.new_config
+            .as_ref()
+            .and_then(|v| v.as_object())
+            .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+            .unwrap_or_default();
+        
         let original_state = ResourceState::new(
-            current_change.new_config.clone(),
+            current_config,
             current_cost,
         );
 
         let target_state = ResourceState::new(
-            proposed_fix.new_config.clone(),
+            proposed_config,
             proposed_cost,
         );
 

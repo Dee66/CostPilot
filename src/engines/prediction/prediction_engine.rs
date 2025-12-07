@@ -211,7 +211,7 @@ impl PredictionEngine {
     pub fn predict(&mut self, changes: &[ResourceChange]) -> Result<Vec<CostEstimate>> {
         // Check budget before starting
         if let Some(tracker) = &self.performance_tracker {
-            if let Some(violation) = tracker.check_budget() {
+            if let Err(violation) = tracker.check_budget() {
                 return self.handle_budget_violation(violation);
             }
         }
@@ -221,7 +221,7 @@ impl PredictionEngine {
         for change in changes {
             // Check budget periodically during processing
             if let Some(tracker) = &self.performance_tracker {
-                if let Some(violation) = tracker.check_budget() {
+                if let Err(violation) = tracker.check_budget() {
                     return self.handle_budget_violation_with_partial(violation, estimates);
                 }
             }

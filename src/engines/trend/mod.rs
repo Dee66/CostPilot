@@ -57,12 +57,15 @@ impl TrendEngine {
             // Estimate cost for this resource
             let resource_cost = prediction_engine.predict_resource_cost(change)
                 .unwrap_or_else(|_| crate::engines::prediction::CostEstimate {
-                    hourly: 0.0,
-                    daily: 0.0,
-                    monthly: 0.0,
-                    confidence: 0.0,
+                    resource_id: change.resource_id.clone(),
+                    monthly_cost: 0.0,
+                    prediction_interval_low: 0.0,
+                    prediction_interval_high: 0.0,
+                    confidence_score: 0.0,
+                    heuristic_reference: None,
+                    cold_start_inference: false,
                 });
-            entry.1 += resource_cost.monthly;
+            entry.1 += resource_cost.monthly_cost;
         }
         
         for (name, (count, cost)) in modules {
