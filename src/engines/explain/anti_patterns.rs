@@ -80,7 +80,7 @@ fn detect_nat_gateway_overuse(
             "Use VPC endpoints for AWS services (S3, DynamoDB) to avoid NAT Gateway data transfer. \
             Consider single NAT Gateway if high availability not critical.".to_string()
         ),
-        cost_impact: estimate.map(|e| e.estimate),
+        cost_impact: estimate.map(|e| e.monthly_cost),
     })
 }
 
@@ -110,7 +110,7 @@ fn detect_overprovisioned_ec2(
                 ];
 
                 if let Some(est) = estimate {
-                    evidence.push(format!("Monthly cost: ${:.2}", est.estimate));
+                    evidence.push(format!("Monthly cost: ${:.2}", est.monthly_cost));
                 }
 
                 return Some(AntiPattern {
@@ -124,7 +124,7 @@ fn detect_overprovisioned_ec2(
                         "Use AWS Compute Optimizer to analyze utilization patterns and recommend right-sized instances. \
                         Start with smaller instances and scale up as needed.".to_string()
                     ),
-                    cost_impact: estimate.map(|e| e.estimate),
+                    cost_impact: estimate.map(|e| e.monthly_cost),
                 });
             }
         }

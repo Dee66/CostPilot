@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use super::graph_types::*;
 use crate::engines::detection::ResourceChange;
+use crate::engines::shared::models::ChangeAction;
 use crate::engines::prediction::PredictionEngine;
 use crate::errors::CostPilotError;
 use crate::engines::performance::budgets::{PerformanceTracker, PerformanceBudgets, BudgetViolation, TimeoutAction};
@@ -39,7 +40,7 @@ impl GraphBuilder {
     pub fn build_graph(&mut self, changes: &[ResourceChange]) -> Result<DependencyGraph, CostPilotError> {
         // Check budget before starting
         if let Some(tracker) = &self.performance_tracker {
-            if let Some(violation) = tracker.check_budget() {
+            if let Err(violation) = tracker.check_budget() {
                 return self.handle_budget_violation(violation);
             }
         }
@@ -48,7 +49,7 @@ impl GraphBuilder {
         
         // First pass: Create nodes for all resources
         for change in changes {
-            if change.change_type == "delete" {
+            if change.action == ChangeAction::Delete {
                 continue; // Skip deleted resources
             }
             
@@ -57,7 +58,7 @@ impl GraphBuilder {
 
             // Check budget periodically
             if let Some(tracker) = &self.performance_tracker {
-                if let Some(violation) = tracker.check_budget() {
+                if let Err(violation) = tracker.check_budget() {
                     return self.handle_budget_violation_with_partial(violation, graph);
                 }
             }
@@ -65,7 +66,7 @@ impl GraphBuilder {
         
         // Second pass: Infer dependencies and create edges
         for change in changes {
-            if change.change_type == "delete" {
+            if change.action == ChangeAction::Delete {
                 continue;
             }
             
@@ -76,7 +77,7 @@ impl GraphBuilder {
 
             // Check budget periodically
             if let Some(tracker) = &self.performance_tracker {
-                if let Some(violation) = tracker.check_budget() {
+                if let Err(violation) = tracker.check_budget() {
                     return self.handle_budget_violation_with_partial(violation, graph);
                 }
             }
