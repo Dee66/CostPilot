@@ -88,6 +88,21 @@ impl CostPilotError {
     pub fn serialization_error(message: impl Into<String>) -> Self {
         Self::new("E_SERIALIZATION", ErrorCategory::InternalError, message)
     }
+
+    /// Create a parse error
+    pub fn parse_error(message: impl Into<String>) -> Self {
+        Self::new("E_PARSE", ErrorCategory::ParseError, message)
+    }
+
+    /// Create a file not found error
+    pub fn file_not_found(message: impl Into<String>) -> Self {
+        Self::new("E_FILE_NOT_FOUND", ErrorCategory::NotFound, message)
+    }
+
+    /// Create a generation error
+    pub fn generation_error(message: impl Into<String>) -> Self {
+        Self::new("E_GENERATION", ErrorCategory::InternalError, message)
+    }
 }
 
 impl fmt::Display for CostPilotError {
