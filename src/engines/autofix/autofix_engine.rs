@@ -81,7 +81,7 @@ impl AutofixEngine {
                     warnings.push(format!(
                         "No automated fix available for {} ({})",
                         detection.resource_id,
-                        detection.resource_type
+                        change.resource_type
                     ));
                 }
             } else {
