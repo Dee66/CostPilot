@@ -34,8 +34,8 @@ pub fn document_calculation(
         resource_id: change.resource_id.clone(),
         resource_type: change.resource_type.clone(),
         steps,
-        final_estimate: estimate.estimate,
-        confidence: estimate.confidence,
+        final_estimate: estimate.monthly_cost,
+        confidence: estimate.confidence_score,
         cold_start_used: false, // Set by caller
     }
 }

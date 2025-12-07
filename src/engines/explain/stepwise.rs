@@ -521,6 +521,12 @@ impl ReasoningChainBuilder {
         self
     }
 
+    /// Add key assumption
+    pub fn add_assumption(&mut self, assumption: String) -> &mut Self {
+        self.chain.add_assumption(assumption);
+        self
+    }
+
     /// Build the chain
     pub fn build(self) -> ReasoningChain {
         self.chain

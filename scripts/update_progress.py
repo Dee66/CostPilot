@@ -130,7 +130,7 @@ def generate_progress_bar(completed: int, total: int, width: int = 98) -> str:
         emoji = "🌱"
         status = "Just Beginning"
     
-def generate_progress_bar(completed: int, total: int, width: int = 98) -> str:
+
     """Generate a clean, functional progress bar."""
     if total == 0:
         percentage = 0.0

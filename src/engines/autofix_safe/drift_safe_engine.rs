@@ -52,15 +52,17 @@ impl DriftSafeEngine {
         fix_description: String,
         current_change: &ResourceChange,
         proposed_fix: &ResourceChange,
+        current_cost: f64,
+        proposed_cost: f64,
     ) -> DriftSafeOperation {
         let original_state = ResourceState::new(
-            current_change.config.clone(),
-            current_change.monthly_cost.unwrap_or(0.0),
+            current_change.new_config.clone(),
+            current_cost,
         );
 
         let target_state = ResourceState::new(
-            proposed_fix.config.clone(),
-            proposed_fix.monthly_cost.unwrap_or(0.0),
+            proposed_fix.new_config.clone(),
+            proposed_cost,
         );
 
         let mut operation = DriftSafeOperation::new(

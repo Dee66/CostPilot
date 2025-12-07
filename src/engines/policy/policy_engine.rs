@@ -4,6 +4,7 @@ use super::policy_types::*;
 use super::zero_network::*;
 use crate::engines::detection::ResourceChange;
 use crate::engines::prediction::CostEstimate;
+use crate::engines::shared::models::ChangeAction;
 use std::collections::HashMap;
 
 /// Policy evaluation engine with exemption support
@@ -130,7 +131,7 @@ impl PolicyEngine {
         // Track NAT gateway count
         let nat_gateway_count = changes
             .iter()
-            .filter(|c| c.resource_type == "aws_nat_gateway" && c.change_type != "delete")
+            .filter(|c| c.resource_type == "aws_nat_gateway" && c.action != ChangeAction::Delete)
             .count();
 
         // Check NAT gateway policy
@@ -155,7 +156,7 @@ impl PolicyEngine {
         // Check EC2 instance policies
         if let Some(ec2_policy) = &self.config.resources.ec2_instances {
             for change in changes {
-                if change.resource_type == "aws_instance" && change.change_type != "delete" {
+                if change.resource_type == "aws_instance" && change.action != ChangeAction::Delete {
                     if let Some(config) = &change.new_config {
                         // Check instance type family
                         if let Some(instance_type) = config.get("instance_type").and_then(|v| v.as_str()) {
@@ -208,7 +209,7 @@ impl PolicyEngine {
         if let Some(s3_policy) = &self.config.resources.s3_buckets {
             if s3_policy.require_lifecycle_rules {
                 for change in changes {
-                    if change.resource_type == "aws_s3_bucket" && change.change_type != "delete" {
+                    if change.resource_type == "aws_s3_bucket" && change.action != ChangeAction::Delete {
                         let has_lifecycle = change
                             .new_config
                             .as_ref()
@@ -236,7 +237,7 @@ impl PolicyEngine {
         if let Some(lambda_policy) = &self.config.resources.lambda_functions {
             if lambda_policy.require_concurrency_limit {
                 for change in changes {
-                    if change.resource_type == "aws_lambda_function" && change.change_type != "delete" {
+                    if change.resource_type == "aws_lambda_function" && change.action != ChangeAction::Delete {
                         let has_limit = change
                             .new_config
                             .as_ref()
@@ -264,7 +265,7 @@ impl PolicyEngine {
         if let Some(dynamo_policy) = &self.config.resources.dynamodb_tables {
             if dynamo_policy.prefer_provisioned {
                 for change in changes {
-                    if change.resource_type == "aws_dynamodb_table" && change.change_type != "delete" {
+                    if change.resource_type == "aws_dynamodb_table" && change.action != ChangeAction::Delete {
                         if let Some(config) = &change.new_config {
                             let billing_mode = config
                                 .get("billing_mode")
