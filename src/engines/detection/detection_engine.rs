@@ -185,6 +185,22 @@ impl DetectionEngine {
 
         None
     }
+
+    /// Detect cost issues from resource changes (convenience method)
+    pub fn detect(&self, changes: &[ResourceChange]) -> Result<Vec<Detection>> {
+        // For now, analyze without cost estimates (use defaults)
+        let cost_estimates: Vec<(String, f64, f64)> = changes
+            .iter()
+            .map(|c| (c.resource_id.clone(), 0.0, 0.5))
+            .collect();
+        
+        self.analyze_changes(changes, &cost_estimates)
+    }
+
+    /// Detect cost issues from a file (convenience method)
+    pub fn detect_from_file(&self, plan_path: &Path) -> Result<Vec<ResourceChange>> {
+        self.detect_from_terraform_plan(plan_path)
+    }
 }
 
 impl Default for DetectionEngine {

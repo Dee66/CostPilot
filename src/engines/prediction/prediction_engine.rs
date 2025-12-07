@@ -512,6 +512,43 @@ impl PredictionEngine {
         let explainer = PredictionExplainer::from_engine(self);
         Ok(explainer.explain(change, &estimate))
     }
+
+    /// Predict total cost for multiple resource changes (convenience method)
+    pub fn predict_total_cost(&mut self, changes: &[ResourceChange]) -> Result<crate::engines::shared::models::TotalCost> {
+        let estimates = self.predict(changes)?;
+        
+        // Calculate total
+        let total_monthly: f64 = estimates.iter().map(|e| e.monthly_cost).sum();
+        
+        // Average confidence
+        let avg_confidence = if !estimates.is_empty() {
+            estimates.iter().map(|e| e.confidence_score).sum::<f64>() / estimates.len() as f64
+        } else {
+            0.0
+        };
+
+        // Calculate prediction intervals (simple approach: sum individual intervals)
+        let total_low: f64 = estimates.iter().map(|e| e.prediction_interval_low).sum();
+        let total_high: f64 = estimates.iter().map(|e| e.prediction_interval_high).sum();
+
+        Ok(crate::engines::shared::models::TotalCost {
+            monthly: total_monthly,
+            prediction_interval_low: total_low,
+            prediction_interval_high: total_high,
+            confidence_score: avg_confidence,
+            resource_count: estimates.len(),
+        })
+    }
+
+    /// Predict cost for a single resource change (convenience method)
+    pub fn predict_resource_cost(&self, change: &ResourceChange) -> Result<CostEstimate> {
+        self.predict_resource(change)?
+            .ok_or_else(|| CostPilotError::new(
+                "PREDICT_RESOURCE_001",
+                ErrorCategory::InvalidInput,
+                format!("Cannot predict cost for unknown resource type: {}", change.resource_type),
+            ))
+    }
 }
 
 #[cfg(test)]
