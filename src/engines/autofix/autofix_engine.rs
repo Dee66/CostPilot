@@ -1,6 +1,6 @@
 // Autofix engine - orchestrates fix generation
 
-use crate::engines::shared::models::{Detection, ResourceChange};
+use crate::engines::shared::models::{Detection, ResourceChange, CostEstimate};
 use crate::engines::explain::anti_patterns::{AntiPattern, detect_anti_patterns};
 use crate::engines::autofix::snippet_generator::{FixSnippet, SnippetGenerator};
 use crate::engines::autofix::patch_generator::{PatchGenerator, PatchFile};
@@ -34,11 +34,12 @@ impl AutofixEngine {
     pub fn generate_fixes(
         detections: &[Detection],
         changes: &[ResourceChange],
+        estimates: &[CostEstimate],
         mode: AutofixMode,
     ) -> AutofixResult {
         match mode {
-            AutofixMode::Snippet => Self::generate_snippets(detections, changes),
-            AutofixMode::Patch => Self::generate_patches(detections, changes),
+            AutofixMode::Snippet => Self::generate_snippets(detections, changes, estimates),
+            AutofixMode::Patch => Self::generate_patches(detections, changes, estimates),
             AutofixMode::DriftSafe => {
                 // Beta feature - not implemented in MVP
                 AutofixResult {
@@ -56,6 +57,7 @@ impl AutofixEngine {
     fn generate_snippets(
         detections: &[Detection],
         changes: &[ResourceChange],
+        estimates: &[CostEstimate],
     ) -> AutofixResult {
         let mut fixes = Vec::new();
         let mut warnings = Vec::new();
@@ -64,13 +66,16 @@ impl AutofixEngine {
             // Find corresponding resource change
             let change = changes.iter()
                 .find(|c| c.resource_id == detection.resource_id);
+            
+            let estimate = estimates.iter()
+                .find(|e| e.resource_id == detection.resource_id);
 
             if let Some(change) = change {
                 // Detect anti-patterns for this resource
-                let anti_patterns = detect_anti_patterns(change, detection.estimated_cost.as_ref());
+                let anti_patterns = detect_anti_patterns(change, estimate);
 
                 // Generate fix snippet if applicable
-                if let Some(snippet) = SnippetGenerator::generate(detection, change, &anti_patterns) {
+                if let Some(snippet) = SnippetGenerator::generate(detection, change, &anti_patterns, estimate) {
                     fixes.push(snippet);
                 } else {
                     warnings.push(format!(
@@ -100,8 +105,9 @@ impl AutofixEngine {
     fn generate_patches(
         detections: &[Detection],
         changes: &[ResourceChange],
+        estimates: &[CostEstimate],
     ) -> AutofixResult {
-        let patch_result = PatchGenerator::generate(detections, changes);
+        let patch_result = PatchGenerator::generate(detections, changes, estimates);
 
         AutofixResult {
             mode: "patch".to_string(),

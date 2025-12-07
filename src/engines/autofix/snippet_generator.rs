@@ -42,12 +42,13 @@ impl SnippetGenerator {
         detection: &Detection,
         change: &ResourceChange,
         anti_patterns: &[AntiPattern],
+        estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         // Generate snippet based on resource type and detected issues
         match change.resource_type.as_str() {
-            "aws_instance" => Self::generate_ec2_snippet(detection, change, anti_patterns),
-            "aws_rds_instance" => Self::generate_rds_snippet(detection, change),
-            "aws_lambda_function" => Self::generate_lambda_snippet(detection, change, anti_patterns),
+            "aws_instance" => Self::generate_ec2_snippet(detection, change, anti_patterns, estimate),
+            "aws_rds_instance" => Self::generate_rds_snippet(detection, change, estimate),
+            "aws_lambda_function" => Self::generate_lambda_snippet(detection, change, anti_patterns, estimate),
             "aws_s3_bucket" => Self::generate_s3_snippet(detection, change, anti_patterns),
             "aws_dynamodb_table" => Self::generate_dynamodb_snippet(detection, change, anti_patterns),
             "aws_nat_gateway" => Self::generate_nat_gateway_snippet(detection, change),
@@ -60,6 +61,7 @@ impl SnippetGenerator {
         detection: &Detection,
         change: &ResourceChange,
         anti_patterns: &[AntiPattern],
+        estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         // Check if this is an overprovisioned instance
         let is_overprovisioned = anti_patterns.iter()
@@ -87,9 +89,8 @@ impl SnippetGenerator {
         let before = format!("instance_type = \"{}\"", current_type);
         let after = format!("instance_type = \"{}\"", suggested_type);
 
-        let estimated_savings = detection.estimated_cost
-            .as_ref()
-            .map(|e| e.estimate * 0.4) // ~40% savings from right-sizing
+        let estimated_savings = estimate
+            .map(|e| e.monthly_cost * 0.4) // ~40% savings from right-sizing
             .unwrap_or(0.0);
 
         Some(FixSnippet {

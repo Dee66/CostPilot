@@ -54,7 +54,7 @@ impl ExplainEngine {
         let detection_reasoning = Self::build_detection_reasoning(detection, change, estimate);
         let recommendations = Self::generate_recommendations(change, detection, &anti_patterns);
         let assumptions = Self::extract_assumptions(change, estimate, &calculation_steps);
-        let summary = Self::build_summary(detection, &root_cause, &anti_patterns);
+        let summary = Self::build_summary(detection, change, estimate, &root_cause, &anti_patterns);
 
         Explanation {
             resource_id: detection.resource_id.clone(),
@@ -232,18 +232,18 @@ impl ExplainEngine {
     }
 
     /// Build summary text
-    fn build_summary(detection: &Detection, root_cause: &RootCauseAnalysis, anti_patterns: &[AntiPattern]) -> String {
+    fn build_summary(detection: &Detection, change: &ResourceChange, estimate: Option<&CostEstimate>, root_cause: &RootCauseAnalysis, anti_patterns: &[AntiPattern]) -> String {
         let mut summary = format!(
             "Detected {} cost regression in {}",
             format!("{:?}", detection.regression_type).to_lowercase().replace('_', " "),
-            detection.resource_type
+            change.resource_type
         );
 
-        if let Some(estimate) = &detection.estimated_cost {
+        if let Some(est) = estimate {
             summary.push_str(&format!(
                 " with estimated impact of ${:.2}/month (confidence: {:.0}%)",
-                estimate.estimate,
-                estimate.confidence_score * 100.0
+                est.monthly_cost,
+                est.confidence_score * 100.0
             ));
         }
 
@@ -261,11 +261,10 @@ impl ExplainEngine {
 
         for detection in detections.iter().take(5) {
             let pattern = format!(
-                "• {} in {}: {} severity, ${:.2}/month estimated",
+                "• {} in {}: {} severity",
                 format!("{:?}", detection.regression_type),
-                detection.resource_type,
-                format!("{:?}", detection.severity),
-                detection.estimated_cost.as_ref().map(|e| e.estimate).unwrap_or(0.0)
+                detection.resource_id,
+                format!("{:?}", detection.severity)
             );
             patterns.push(pattern);
         }
