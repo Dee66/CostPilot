@@ -76,10 +76,10 @@ impl JsonExporter {
 
         if self.config.pretty {
             serde_json::to_string_pretty(&json_value)
-                .map_err(|e| CostPilotError::SerializationError(e.to_string()))
+                .map_err(|e| CostPilotError::serialization_error(e.to_string()))
         } else {
             serde_json::to_string(&json_value)
-                .map_err(|e| CostPilotError::SerializationError(e.to_string()))
+                .map_err(|e| CostPilotError::serialization_error(e.to_string()))
         }
     }
 
@@ -379,7 +379,7 @@ pub fn export_to_file(
     let json_string = exporter.export(graph)?;
     
     std::fs::write(path, json_string)
-        .map_err(|e| CostPilotError::IoError(e.to_string()))?;
+        .map_err(|e| CostPilotError::io_error(e.to_string()))?;
 
     Ok(())
 }

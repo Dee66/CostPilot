@@ -40,7 +40,7 @@ impl ExemptionValidator {
         }
 
         let contents = fs::read_to_string(path).map_err(|e| {
-            CostPilotError::IoError(format!("Failed to read exemptions file: {}", e))
+            CostPilotError::io_error(format!("Failed to read exemptions file: {}", e))
         })?;
 
         self.parse_yaml(&contents)
@@ -64,7 +64,7 @@ impl ExemptionValidator {
     ) -> Result<(), CostPilotError> {
         // Check version format (must be semver-like)
         if !file.version.contains('.') {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Exemptions file version must be in semver format (e.g., '1.0')".to_string(),
             ));
         }
@@ -72,7 +72,7 @@ impl ExemptionValidator {
         // Validate each exemption
         for (idx, exemption) in file.exemptions.iter().enumerate() {
             self.validate_exemption(exemption).map_err(|e| {
-                CostPilotError::ValidationError(format!(
+                CostPilotError::validation_error(format!(
                     "Invalid exemption at index {}: {}",
                     idx, e
                 ))
@@ -83,7 +83,7 @@ impl ExemptionValidator {
         let mut ids = std::collections::HashSet::new();
         for exemption in &file.exemptions {
             if !ids.insert(&exemption.id) {
-                return Err(CostPilotError::ValidationError(format!(
+                return Err(CostPilotError::validation_error(format!(
                     "Duplicate exemption ID: {}",
                     exemption.id
                 )));
@@ -100,31 +100,31 @@ impl ExemptionValidator {
     ) -> Result<(), CostPilotError> {
         // Check required fields are non-empty
         if exemption.id.is_empty() {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Exemption ID cannot be empty".to_string(),
             ));
         }
 
         if exemption.policy_name.is_empty() {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Policy name cannot be empty".to_string(),
             ));
         }
 
         if exemption.resource_pattern.is_empty() {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Resource pattern cannot be empty".to_string(),
             ));
         }
 
         if exemption.justification.is_empty() {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Justification cannot be empty".to_string(),
             ));
         }
 
         if exemption.approved_by.is_empty() {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Approved by cannot be empty".to_string(),
             ));
         }
@@ -136,7 +136,7 @@ impl ExemptionValidator {
         // Check expiration is not too far in future
         let expires = NaiveDate::parse_from_str(&exemption.expires_at, "%Y-%m-%d")
             .map_err(|_| {
-                CostPilotError::ValidationError(format!(
+                CostPilotError::validation_error(format!(
                     "Invalid expiration date format: {}",
                     exemption.expires_at
                 ))
@@ -146,14 +146,14 @@ impl ExemptionValidator {
         let duration_days = (expires - created).num_days();
 
         if duration_days > self.config.max_duration_days as i64 {
-            return Err(CostPilotError::ValidationError(format!(
+            return Err(CostPilotError::validation_error(format!(
                 "Exemption duration {} days exceeds maximum allowed {} days",
                 duration_days, self.config.max_duration_days
             )));
         }
 
         if duration_days < 0 {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Expiration date must be after creation date".to_string(),
             ));
         }
@@ -233,7 +233,7 @@ impl ExemptionValidator {
     /// Validate date format (YYYY-MM-DD)
     fn validate_date(&self, date_str: &str, field_name: &str) -> Result<(), CostPilotError> {
         NaiveDate::parse_from_str(date_str, "%Y-%m-%d").map_err(|_| {
-            CostPilotError::ValidationError(format!(
+            CostPilotError::validation_error(format!(
                 "Invalid date format for {}: expected YYYY-MM-DD, got '{}'",
                 field_name, date_str
             ))
@@ -249,7 +249,7 @@ impl ExemptionValidator {
     ) -> Result<(), CostPilotError> {
         // Simple validation - check for ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ or with +00:00)
         if !timestamp.contains('T') {
-            return Err(CostPilotError::ValidationError(format!(
+            return Err(CostPilotError::validation_error(format!(
                 "Invalid ISO 8601 timestamp for {}: expected format YYYY-MM-DDTHH:MM:SSZ",
                 field_name
             )));
@@ -261,11 +261,11 @@ impl ExemptionValidator {
     fn parse_created_date(&self, created_at: &str) -> Result<NaiveDate, CostPilotError> {
         // Extract date part from ISO 8601 timestamp (YYYY-MM-DD)
         let date_part = created_at.split('T').next().ok_or_else(|| {
-            CostPilotError::ValidationError("Invalid created_at timestamp".to_string())
+            CostPilotError::validation_error("Invalid created_at timestamp".to_string())
         })?;
 
         NaiveDate::parse_from_str(date_part, "%Y-%m-%d").map_err(|_| {
-            CostPilotError::ValidationError("Invalid created_at date format".to_string())
+            CostPilotError::validation_error("Invalid created_at date format".to_string())
         })
     }
 }

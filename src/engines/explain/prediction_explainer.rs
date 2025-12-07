@@ -591,7 +591,7 @@ impl<'a> PredictionExplainer<'a> {
             factors.push("Cold-start inference used".to_string());
         }
 
-        builder.add_confidence_scoring(estimate.confidence_score, factors);
+        builder.add_confidence_scoring(estimate.confidence_score_score, factors);
     }
 
     /// Add interval reasoning

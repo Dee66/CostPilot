@@ -51,14 +51,14 @@ impl ExplainEngine {
     ) -> Explanation {
         let anti_patterns = detect_anti_patterns(change, estimate);
         let root_cause = RootCauseAnalysis::analyze(change, detection, &anti_patterns);
-        let detection_reasoning = Self::build_detection_reasoning(detection);
+        let detection_reasoning = Self::build_detection_reasoning(detection, change, estimate);
         let recommendations = Self::generate_recommendations(change, detection, &anti_patterns);
         let assumptions = Self::extract_assumptions(change, estimate, &calculation_steps);
         let summary = Self::build_summary(detection, &root_cause, &anti_patterns);
 
         Explanation {
             resource_id: detection.resource_id.clone(),
-            resource_type: detection.resource_type.clone(),
+            resource_type: change.resource_type.clone(),
             summary,
             root_cause,
             prediction_steps: calculation_steps,
@@ -70,40 +70,40 @@ impl ExplainEngine {
     }
 
     /// Build detection reasoning with severity factors
-    fn build_detection_reasoning(detection: &Detection) -> DetectionReasoning {
+    fn build_detection_reasoning(detection: &Detection, change: &ResourceChange, estimate: Option<&CostEstimate>) -> DetectionReasoning {
         let mut factors = Vec::new();
 
         // Extract magnitude factor (45% weight)
-        if let Some(estimate) = &detection.estimated_cost {
-            let magnitude_value = estimate.estimate / 100.0; // Normalize
+        if let Some(est) = estimate {
+            let magnitude_value = est.monthly_cost / 100.0; // Normalize
             factors.push(SeverityFactor {
                 name: "Cost Magnitude".to_string(),
                 value: magnitude_value,
                 weight: 0.45,
                 contribution: (magnitude_value * 0.45 * 100.0) as i32,
-                reasoning: format!("Estimated monthly cost: ${:.2}", estimate.estimate),
+                reasoning: format!("Estimated monthly cost: ${:.2}", est.monthly_cost),
             });
         }
 
         // Confidence factor (25% weight)
-        if let Some(estimate) = &detection.estimated_cost {
+        if let Some(est) = estimate {
             factors.push(SeverityFactor {
                 name: "Confidence".to_string(),
-                value: estimate.confidence,
+                value: est.confidence_score,
                 weight: 0.25,
-                contribution: (estimate.confidence * 0.25 * 100.0) as i32,
-                reasoning: format!("Prediction confidence: {:.0}%", estimate.confidence * 100.0),
+                contribution: (est.confidence_score * 0.25 * 100.0) as i32,
+                reasoning: format!("Prediction confidence: {:.0}%", est.confidence_score * 100.0),
             });
         }
 
         // Resource importance (20% weight) - inferred from resource type
-        let importance = Self::resource_importance(&detection.resource_type);
+        let importance = Self::resource_importance(&change.resource_type);
         factors.push(SeverityFactor {
             name: "Resource Importance".to_string(),
             value: importance,
             weight: 0.20,
             contribution: (importance * 0.20 * 100.0) as i32,
-            reasoning: format!("{} is a {} importance resource type", detection.resource_type, Self::importance_label(importance)),
+            reasoning: format!("{} is a {} importance resource type", change.resource_type, Self::importance_label(importance)),
         });
 
         // Blast radius (10% weight) - based on tags and module depth
@@ -118,9 +118,9 @@ impl ExplainEngine {
 
         DetectionReasoning {
             regression_type: format!("{:?}", detection.regression_type),
-            severity_score: detection.severity as i32,
+            severity_score: detection.severity_score as i32,
             severity_factors: factors,
-            confidence: detection.estimated_cost.as_ref().map(|e| e.confidence).unwrap_or(0.5),
+            confidence: estimate.map(|e| e.confidence_score).unwrap_or(0.5),
         }
     }
 
@@ -243,7 +243,7 @@ impl ExplainEngine {
             summary.push_str(&format!(
                 " with estimated impact of ${:.2}/month (confidence: {:.0}%)",
                 estimate.estimate,
-                estimate.confidence * 100.0
+                estimate.confidence_score * 100.0
             ));
         }
 

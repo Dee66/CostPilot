@@ -338,6 +338,17 @@ pub enum ViolationType {
     CircuitBreakerOpen,
 }
 
+impl std::fmt::Display for ViolationType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ViolationType::Timeout => write!(f, "Timeout"),
+            ViolationType::MemoryExceeded => write!(f, "MemoryExceeded"),
+            ViolationType::FileSizeExceeded => write!(f, "FileSizeExceeded"),
+            ViolationType::CircuitBreakerOpen => write!(f, "CircuitBreakerOpen"),
+        }
+    }
+}
+
 impl BudgetViolation {
     pub fn format_error(&self) -> String {
         match self.violation_type {

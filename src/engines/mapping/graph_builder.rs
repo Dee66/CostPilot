@@ -106,23 +106,23 @@ impl GraphBuilder {
 
     /// Handle budget violation based on timeout action
     fn handle_budget_violation(&self, violation: BudgetViolation) -> Result<DependencyGraph, CostPilotError> {
-        match violation.timeout_action {
-            TimeoutAction::ReturnPartialResults => {
+        match violation.action {
+            TimeoutAction::PartialResults => {
                 eprintln!("⚠️  Mapping budget exceeded: {} ({}ms budget, {}ms elapsed)",
-                    violation.violation_type, violation.budget_ms, violation.actual_ms);
+                    violation.violation_type, violation.budget_value, violation.actual_value);
                 eprintln!("   Returning empty graph");
                 Ok(DependencyGraph::new())
             }
             TimeoutAction::Error => {
                 Err(CostPilotError::Timeout(format!(
                     "Mapping exceeded budget: {} ({}ms budget, {}ms elapsed)",
-                    violation.violation_type, violation.budget_ms, violation.actual_ms
+                    violation.violation_type, violation.budget_value, violation.actual_value
                 )))
             }
             TimeoutAction::CircuitBreak => {
                 Err(CostPilotError::CircuitBreaker(format!(
                     "Mapping circuit breaker triggered: {} ({}ms budget, {}ms elapsed)",
-                    violation.violation_type, violation.budget_ms, violation.actual_ms
+                    violation.violation_type, violation.budget_value, violation.actual_value
                 )))
             }
         }
@@ -130,23 +130,23 @@ impl GraphBuilder {
 
     /// Handle budget violation with partial graph
     fn handle_budget_violation_with_partial(&self, violation: BudgetViolation, partial: DependencyGraph) -> Result<DependencyGraph, CostPilotError> {
-        match violation.timeout_action {
-            TimeoutAction::ReturnPartialResults => {
+        match violation.action {
+            TimeoutAction::PartialResults => {
                 eprintln!("⚠️  Mapping budget exceeded: {} ({}ms budget, {}ms elapsed)",
-                    violation.violation_type, violation.budget_ms, violation.actual_ms);
+                    violation.violation_type, violation.budget_value, violation.actual_value);
                 eprintln!("   Returning partial graph with {} nodes", partial.nodes.len());
                 Ok(partial)
             }
             TimeoutAction::Error => {
                 Err(CostPilotError::Timeout(format!(
                     "Mapping exceeded budget: {} ({}ms budget, {}ms elapsed) - partial graph discarded",
-                    violation.violation_type, violation.budget_ms, violation.actual_ms
+                    violation.violation_type, violation.budget_value, violation.actual_value
                 )))
             }
             TimeoutAction::CircuitBreak => {
                 Err(CostPilotError::CircuitBreaker(format!(
                     "Mapping circuit breaker triggered: {} ({}ms budget, {}ms elapsed) - partial graph discarded",
-                    violation.violation_type, violation.budget_ms, violation.actual_ms
+                    violation.violation_type, violation.budget_value, violation.actual_value
                 )))
             }
         }

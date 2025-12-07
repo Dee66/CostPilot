@@ -28,6 +28,14 @@ pub enum ErrorCategory {
     Timeout,
     /// Circuit breaker triggered
     CircuitBreaker,
+    /// Validation error
+    ValidationError,
+    /// IO error
+    IoError,
+    /// Resource not found
+    NotFound,
+    /// Security violation
+    SecurityViolation,
 }
 
 /// Stable error with ID and remediation hints
@@ -64,6 +72,21 @@ impl CostPilotError {
     pub fn with_context(mut self, context: serde_json::Value) -> Self {
         self.context = Some(context);
         self
+    }
+
+    /// Create a validation error
+    pub fn validation_error(message: impl Into<String>) -> Self {
+        Self::new("E_VALIDATION", ErrorCategory::ValidationError, message)
+    }
+
+    /// Create an IO error
+    pub fn io_error(message: impl Into<String>) -> Self {
+        Self::new("E_IO", ErrorCategory::IoError, message)
+    }
+
+    /// Create a serialization error
+    pub fn serialization_error(message: impl Into<String>) -> Self {
+        Self::new("E_SERIALIZATION", ErrorCategory::InternalError, message)
     }
 }
 

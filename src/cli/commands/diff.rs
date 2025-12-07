@@ -114,8 +114,8 @@ fn print_diff_text(
     println!();
     println!("{}", "Confidence".bold());
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("  Before: {:.0}%", before.confidence * 100.0);
-    println!("  After:  {:.0}%", after.confidence * 100.0);
+    println!("  Before: {:.0}%", before.confidence_score * 100.0);
+    println!("  After:  {:.0}%", after.confidence_score * 100.0);
 
     if verbose {
         println!();
@@ -136,11 +136,11 @@ fn print_diff_json(
     let diff = json!({
         "before": {
             "monthly_cost": before.monthly,
-            "confidence": before.confidence,
+            "confidence": before.confidence_score,
         },
         "after": {
             "monthly_cost": after.monthly,
-            "confidence": after.confidence,
+            "confidence": after.confidence_score,
         },
         "delta": {
             "absolute": delta,
@@ -208,13 +208,13 @@ fn print_diff_markdown(
     println!("### Before Plan");
     println!("- Resources: {}", before_changes.len());
     println!("- Monthly Cost: ${:.2}", before.monthly);
-    println!("- Confidence: {:.0}%", before.confidence * 100.0);
+    println!("- Confidence: {:.0}%", before.confidence_score * 100.0);
     println!();
     
     println!("### After Plan");
     println!("- Resources: {}", after_changes.len());
     println!("- Monthly Cost: ${:.2}", after.monthly);
-    println!("- Confidence: {:.0}%", after.confidence * 100.0);
+    println!("- Confidence: {:.0}%", after.confidence_score * 100.0);
     println!();
     
     println!("---");

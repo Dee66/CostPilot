@@ -72,6 +72,7 @@ impl PatchGenerator {
     pub fn generate(
         detections: &[Detection],
         changes: &[ResourceChange],
+        estimates: &[CostEstimate],
     ) -> PatchResult {
         let mut patches = Vec::new();
         let mut total_savings = 0.0;
@@ -81,9 +82,12 @@ impl PatchGenerator {
         for detection in detections {
             let change = changes.iter()
                 .find(|c| c.resource_id == detection.resource_id);
+            
+            let estimate = estimates.iter()
+                .find(|e| e.resource_id == detection.resource_id);
 
             if let Some(change) = change {
-                match Self::generate_patch(detection, change) {
+                match Self::generate_patch(detection, change, estimate) {
                     Ok(patch) => {
                         total_savings += patch.metadata.monthly_savings;
                         total_changes += patch.hunks.len();
@@ -116,10 +120,11 @@ impl PatchGenerator {
     fn generate_patch(
         detection: &Detection,
         change: &ResourceChange,
+        estimate: Option<&CostEstimate>,
     ) -> Result<PatchFile, String> {
         let anti_patterns = crate::engines::explain::anti_patterns::detect_anti_patterns(
             change,
-            detection.estimated_cost.as_ref(),
+            estimate,
         );
 
         if anti_patterns.is_empty() {
@@ -136,7 +141,7 @@ impl PatchGenerator {
             return Err("No changes generated".to_string());
         }
 
-        let cost_before = detection.estimated_cost.as_ref()
+        let cost_before = estimate
             .map(|e| e.estimate)
             .unwrap_or(0.0);
 
@@ -147,10 +152,10 @@ impl PatchGenerator {
             cost_before,
             cost_after,
             monthly_savings,
-            confidence: detection.estimated_cost.as_ref()
-                .map(|e| e.confidence)
+            confidence: estimate
+                .map(|e| e.confidence_score)
                 .unwrap_or(0.5),
-            anti_patterns: anti_patterns.iter().map(|ap| ap.name.clone()).collect(),
+            anti_patterns: anti_patterns.iter().map(|ap| ap.pattern_name.clone()).collect(),
             rationale: Self::build_rationale(&anti_patterns, monthly_savings),
             simulation_required: true,
             beta: true,
@@ -158,7 +163,7 @@ impl PatchGenerator {
 
         Ok(PatchFile {
             resource_id: detection.resource_id.clone(),
-            resource_type: detection.resource_type.clone(),
+            resource_type: change.resource_type.clone(),
             filename,
             hunks,
             metadata,
@@ -189,7 +194,7 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for overprovisioned instance
-        if anti_patterns.iter().any(|ap| ap.name == "Overprovisioned EC2 instance") {
+        if anti_patterns.iter().any(|ap| ap.pattern_name == "Overprovisioned EC2 instance") {
             let old_instance = change.new_config.as_ref()
                 .and_then(|c| c.get("instance_type"))
                 .and_then(|v| v.as_str())
@@ -250,7 +255,7 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for overprovisioned RDS
-        if anti_patterns.iter().any(|ap| ap.name.contains("RDS") || ap.name.contains("oversized")) {
+        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("RDS") || ap.pattern_name.contains("oversized")) {
             let old_instance = change.new_config.as_ref()
                 .and_then(|c| c.get("instance_class"))
                 .and_then(|v| v.as_str())
@@ -307,7 +312,7 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for unbounded concurrency
-        if anti_patterns.iter().any(|ap| ap.name.contains("concurrency")) {
+        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("concurrency")) {
             hunks.push(PatchHunk {
                 old_start: 12,
                 old_count: 2,
@@ -367,7 +372,7 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for pay-per-request to provisioned conversion
-        if anti_patterns.iter().any(|ap| ap.name.contains("pay-per-request")) {
+        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("pay-per-request")) {
             hunks.push(PatchHunk {
                 old_start: 3,
                 old_count: 3,
@@ -427,7 +432,7 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for missing lifecycle
-        if anti_patterns.iter().any(|ap| ap.name.contains("lifecycle")) {
+        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("lifecycle")) {
             hunks.push(PatchHunk {
                 old_start: 10,
                 old_count: 2,
@@ -517,7 +522,7 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // NAT Gateway optimization: suggest VPC endpoints
-        if anti_patterns.iter().any(|ap| ap.name.contains("NAT")) {
+        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("NAT")) {
             hunks.push(PatchHunk {
                 old_start: 15,
                 old_count: 1,

@@ -51,11 +51,11 @@ impl HtmlGenerator {
         let html = Self::wrap_svg(svg, title);
         
         let mut file = File::create(path.as_ref()).map_err(|e| {
-            CostPilotError::IoError(format!("Failed to create HTML file: {}", e))
+            CostPilotError::io_error(format!("Failed to create HTML file: {}", e))
         })?;
 
         file.write_all(html.as_bytes()).map_err(|e| {
-            CostPilotError::IoError(format!("Failed to write HTML: {}", e))
+            CostPilotError::io_error(format!("Failed to write HTML: {}", e))
         })?;
 
         Ok(())

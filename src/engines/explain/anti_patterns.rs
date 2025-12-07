@@ -66,7 +66,7 @@ fn detect_nat_gateway_overuse(
     ];
 
     if let Some(est) = estimate {
-        evidence.push(format!("Estimated cost: ${:.2}/month", est.estimate));
+        evidence.push(format!("Estimated cost: ${:.2}/month", est.monthly_cost));
     }
 
     Some(AntiPattern {

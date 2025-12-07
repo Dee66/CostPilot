@@ -34,7 +34,7 @@ impl SnapshotManager {
     pub fn init(&self) -> Result<(), CostPilotError> {
         if !self.storage_dir.exists() {
             fs::create_dir_all(&self.storage_dir).map_err(|e| {
-                CostPilotError::IoError(format!("Failed to create storage directory: {}", e))
+                CostPilotError::io_error(format!("Failed to create storage directory: {}", e))
             })?;
         }
         Ok(())
@@ -53,16 +53,16 @@ impl SnapshotManager {
 
         // Serialize to pretty JSON
         let json = serde_json::to_string_pretty(snapshot).map_err(|e| {
-            CostPilotError::SerializationError(format!("Failed to serialize snapshot: {}", e))
+            CostPilotError::serialization_error(format!("Failed to serialize snapshot: {}", e))
         })?;
 
         // Write to file
         let mut file = File::create(&filepath).map_err(|e| {
-            CostPilotError::IoError(format!("Failed to create snapshot file: {}", e))
+            CostPilotError::io_error(format!("Failed to create snapshot file: {}", e))
         })?;
 
         file.write_all(json.as_bytes()).map_err(|e| {
-            CostPilotError::IoError(format!("Failed to write snapshot: {}", e))
+            CostPilotError::io_error(format!("Failed to write snapshot: {}", e))
         })?;
 
         Ok(filepath)
@@ -80,7 +80,7 @@ impl SnapshotManager {
         }
 
         let contents = fs::read_to_string(&filepath).map_err(|e| {
-            CostPilotError::IoError(format!("Failed to read snapshot: {}", e))
+            CostPilotError::io_error(format!("Failed to read snapshot: {}", e))
         })?;
 
         let snapshot: CostSnapshot = serde_json::from_str(&contents).map_err(|e| {
@@ -101,12 +101,12 @@ impl SnapshotManager {
 
         // Read all snapshot files
         let entries = fs::read_dir(&self.storage_dir).map_err(|e| {
-            CostPilotError::IoError(format!("Failed to read storage directory: {}", e))
+            CostPilotError::io_error(format!("Failed to read storage directory: {}", e))
         })?;
 
         for entry in entries {
             let entry = entry.map_err(|e| {
-                CostPilotError::IoError(format!("Failed to read directory entry: {}", e))
+                CostPilotError::io_error(format!("Failed to read directory entry: {}", e))
             })?;
 
             let path = entry.path();
@@ -179,7 +179,7 @@ impl SnapshotManager {
 
         if filepath.exists() {
             fs::remove_file(&filepath).map_err(|e| {
-                CostPilotError::IoError(format!("Failed to delete snapshot: {}", e))
+                CostPilotError::io_error(format!("Failed to delete snapshot: {}", e))
             })?;
         }
 
@@ -190,19 +190,19 @@ impl SnapshotManager {
     fn validate_snapshot(&self, snapshot: &CostSnapshot) -> Result<(), CostPilotError> {
         // Check ID is not empty
         if snapshot.id.is_empty() {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Snapshot ID cannot be empty".to_string(),
             ));
         }
 
         // Validate timestamp format
         snapshot.get_timestamp().map_err(|e| {
-            CostPilotError::ValidationError(format!("Invalid timestamp format: {}", e))
+            CostPilotError::validation_error(format!("Invalid timestamp format: {}", e))
         })?;
 
         // Check cost is non-negative
         if snapshot.total_monthly_cost < 0.0 {
-            return Err(CostPilotError::ValidationError(
+            return Err(CostPilotError::validation_error(
                 "Total monthly cost cannot be negative".to_string(),
             ));
         }
@@ -210,7 +210,7 @@ impl SnapshotManager {
         // Validate module costs
         for (name, module) in &snapshot.modules {
             if module.monthly_cost < 0.0 {
-                return Err(CostPilotError::ValidationError(format!(
+                return Err(CostPilotError::validation_error(format!(
                     "Module '{}' has negative cost",
                     name
                 )));
@@ -220,7 +220,7 @@ impl SnapshotManager {
         // Validate service costs
         for (service, cost) in &snapshot.services {
             if *cost < 0.0 {
-                return Err(CostPilotError::ValidationError(format!(
+                return Err(CostPilotError::validation_error(format!(
                     "Service '{}' has negative cost",
                     service
                 )));
@@ -262,12 +262,12 @@ impl SnapshotManager {
         }
 
         let entries = fs::read_dir(&self.storage_dir).map_err(|e| {
-            CostPilotError::IoError(format!("Failed to read storage directory: {}", e))
+            CostPilotError::io_error(format!("Failed to read storage directory: {}", e))
         })?;
 
         for entry in entries {
             let entry = entry.map_err(|e| {
-                CostPilotError::IoError(format!("Failed to read directory entry: {}", e))
+                CostPilotError::io_error(format!("Failed to read directory entry: {}", e))
             })?;
 
             let path = entry.path();
