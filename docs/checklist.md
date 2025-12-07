@@ -4,7 +4,7 @@
 
 <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="88" style="width:94%; background:#e6eef0; border-radius:8px; padding:6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);">
   <div style="width:88%; background:linear-gradient(90deg,#2e7d32,#4caf50,#66bb6a); color:#fff; padding:10px 12px; text-align:right; border-radius:6px; font-weight:700; transition:width 0.5s ease;">
-    <span style="display:inline-block; background:rgba(0,0,0,0.12); padding:4px 8px; border-radius:999px; font-size:0.95em;">88% · 621/709</span>
+    <span style="display:inline-block; background:rgba(0,0,0,0.12); padding:4px 8px; border-radius:999px; font-size:0.95em;">88% · 627/709</span>
   </div>
 </div>
 
@@ -782,12 +782,12 @@
 
 ## Performance Budgets
 
-- [ ] Max prediction latency: 300ms
-- [ ] Max mapping latency: 500ms
-- [ ] Max autofix generation: 400ms
-- [ ] Max total scan latency: 2000ms
-- [ ] WASM memory: 256MB
-- [ ] SLO engine max eval: 150ms
+- [x] Max prediction latency: 300ms
+- [x] Max mapping latency: 500ms
+- [x] Max autofix generation: 400ms
+- [x] Max total scan latency: 2000ms
+- [x] WASM memory: 256MB
+- [x] SLO engine max eval: 150ms
 
 ---
 
