@@ -17,8 +17,8 @@ pub struct Policy {
     pub metadata: Option<PolicyMetadata>,
     #[serde(default)]
     pub rules: Vec<PolicyRule>,
-    // #[serde(default)]
-    // pub exemptions: Vec<PolicyExemption>, // TODO: Define proper exemption structure
+    #[serde(default)]
+    pub exemptions: Vec<PolicyExemption>,
 }
 
 pub struct PolicyValidator;
@@ -167,17 +167,17 @@ impl PolicyValidator {
                 );
             }
 
-            if exemption.reason.is_empty() {
+            if exemption.justification.is_empty() {
                 report.add_warning(
-                    ValidationWarning::new("Exemption has no reason")
-                        .with_field(&format!("{}.reason", exemption_prefix))
+                    ValidationWarning::new("Exemption has no justification")
+                        .with_field(&format!("{}.justification", exemption_prefix))
                         .with_warning_code("W203")
                         .with_suggestion("Provide justification for the exemption")
                 );
             }
 
             // Validate expiry date
-            if let Some(expiry) = exemption.expires_at {
+            if let Ok(expiry) = chrono::DateTime::parse_from_rfc3339(&exemption.expires_at) {
                 let now = chrono::Utc::now();
                 if expiry < now {
                     report.add_error(

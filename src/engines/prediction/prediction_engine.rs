@@ -203,7 +203,7 @@ impl PredictionEngine {
 
     /// Enable performance tracking with budgets
     pub fn with_performance_tracking(mut self, budgets: PerformanceBudgets) -> Self {
-        self.performance_tracker = Some(PerformanceTracker::new(budgets.prediction, "Prediction".to_string()));
+        self.performance_tracker = Some(PerformanceTracker::new(budgets.prediction));
         self
     }
 
@@ -232,7 +232,7 @@ impl PredictionEngine {
         }
 
         // Mark completion and collect metrics
-        if let Some(tracker) = &mut self.performance_tracker {
+        if let Some(tracker) = self.performance_tracker.take() {
             let _metrics = tracker.complete();
             // TODO: Log or return metrics
         }

@@ -3,6 +3,14 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Cost impact details for a resource change
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CostImpact {
+    pub delta: f64,
+    pub confidence: f64,
+    pub heuristic_source: Option<String>,
+}
+
 /// Resource change detected in IaC
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceChange {
@@ -13,6 +21,15 @@ pub struct ResourceChange {
     pub old_config: Option<serde_json::Value>,
     pub new_config: Option<serde_json::Value>,
     pub tags: HashMap<String, String>,
+    /// Optional cost estimate (populated when prediction runs)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub monthly_cost: Option<f64>,
+    /// Optional config reference (deprecated, use old_config/new_config)
+    #[serde(skip)]
+    pub config: Option<serde_json::Value>,
+    /// Optional cost impact details
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cost_impact: Option<CostImpact>,
 }
 
 /// Type of change action
@@ -55,6 +72,10 @@ pub enum RegressionType {
     Provisioning,
     TrafficInferred,
     IndirectCost,
+    #[serde(alias = "traffic")]
+    Traffic,
+    #[serde(alias = "indirect")]
+    Indirect,
 }
 
 /// Severity level
@@ -75,6 +96,9 @@ pub struct Detection {
     pub regression_type: RegressionType,
     pub severity_score: u32,
     pub message: String,
+    pub fix_snippet: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub estimated_cost: Option<f64>,
 }
 
 /// Scan result containing all analysis

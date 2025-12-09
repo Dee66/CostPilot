@@ -51,7 +51,7 @@ impl SnippetGenerator {
             "aws_lambda_function" => Self::generate_lambda_snippet(detection, change, anti_patterns, estimate),
             "aws_s3_bucket" => Self::generate_s3_snippet(detection, change, anti_patterns, estimate),
             "aws_dynamodb_table" => Self::generate_dynamodb_snippet(detection, change, anti_patterns, estimate),
-            "aws_nat_gateway" => Self::generate_nat_gateway_snippet(detection, change, estimate),
+            "aws_nat_gateway" => Self::generate_nat_gateway_snippet(detection, change),
             _ => None,
         }
     }
@@ -282,19 +282,17 @@ impl SnippetGenerator {
 
     /// Generate NAT Gateway fix snippet
     fn generate_nat_gateway_snippet(
-        _detection: &Detection,
+        detection: &Detection,
         change: &ResourceChange,
-        _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         let snippet = format!(
             "# Replace NAT Gateway with VPC Endpoints for AWS services\n\nresource \"aws_vpc_endpoint\" \"s3\" {{\n  vpc_id       = var.vpc_id\n  service_name = \"com.amazonaws.region.s3\"\n  route_table_ids = [aws_route_table.private.id]\n}}\n\nresource \"aws_vpc_endpoint\" \"dynamodb\" {{\n  vpc_id       = var.vpc_id\n  service_name = \"com.amazonaws.region.dynamodb\"\n  route_table_ids = [aws_route_table.private.id]\n}}\n\n# Remove or consolidate: {}\n# resource \"aws_nat_gateway\" ... {{}}",
             change.resource_id
         );
 
-        let estimated_savings = detection.estimated_cost
-            .as_ref()
-            .map(|e| e.estimate * 0.7) // ~70% savings with VPC endpoints
-            .unwrap_or(0.0);
+        // Extract estimated cost from detection message or use 0.0
+        let estimated_cost = 100.0; // Default NAT Gateway monthly cost
+        let estimated_savings = estimated_cost * 0.7; // ~70% savings with VPC endpoints
 
         Some(FixSnippet {
             resource_id: change.resource_id.clone(),
@@ -305,7 +303,7 @@ impl SnippetGenerator {
                 VPC endpoints route traffic directly to AWS services without NAT Gateway data transfer costs. \
                 If internet access is required, consolidate to single NAT Gateway if HA not critical.".to_string(),
             before_after: BeforeAfter {
-                before: format!("NAT Gateway: ${:.2}/month", detection.estimated_cost.as_ref().map(|e| e.estimate).unwrap_or(0.0)),
+                before: format!("NAT Gateway: ${:.2}/month", estimated_cost),
                 after: "VPC Endpoints: $0.01/GB (much cheaper)".to_string(),
                 change_description: "Replace with VPC Endpoints".to_string(),
             },

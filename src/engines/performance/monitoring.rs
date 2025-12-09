@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 /// Performance monitoring system
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMonitor {
     baseline: Option<PerformanceBaseline>,
     history: Vec<PerformanceSnapshot>,

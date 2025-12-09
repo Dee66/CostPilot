@@ -2,6 +2,7 @@
 name = "costpilot"
 version = "1.0.0"
 edition = "2021"
+rust-version = "1.75"
 authors = ["GuardSuite"]
 description = "Cost analysis and prediction for infrastructure as code"
 license = "MIT"
@@ -39,18 +40,19 @@ quickcheck = "1.0"
 # Snapshot testing
 insta = { version = "1.34", features = ["json", "yaml"] }
 
-# Benchmarking
-criterion = { version = "0.5", features = ["html_reports"] }
-
 # Test utilities
 rstest = "0.18"
 test-case = "3.3"
 fake = "2.9"
 pretty_assertions = "1.4"
 
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+# Benchmarking (only for native targets)
+criterion = { version = "0.3", default-features = false, features = ["cargo_bench_support"] }
+
 [[bin]]
 name = "costpilot"
-path = "src/cli/cli_entrypoint.rs"
+path = "src/bin/costpilot.rs"
 
 [lib]
 name = "costpilot"

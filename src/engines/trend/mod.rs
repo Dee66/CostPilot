@@ -4,11 +4,13 @@ mod html_generator;
 mod snapshot_manager;
 pub mod snapshot_types;
 mod svg_generator;
+mod trend_diff;
 
 pub use html_generator::HtmlGenerator;
 pub use snapshot_manager::SnapshotManager;
 pub use snapshot_types::*;
 pub use svg_generator::{SvgConfig, SvgGenerator};
+pub use trend_diff::{TrendDiff, TrendDiffGenerator, ModuleChange, ServiceChange, ChangeType, DiffSummary, TrendDirection};
 
 use crate::engines::baselines::{BaselinesManager, BaselineViolation};
 use crate::engines::detection::ResourceChange;
@@ -40,7 +42,7 @@ impl TrendEngine {
         let id = SnapshotManager::generate_snapshot_id();
         
         // Calculate total cost
-        let prediction_engine = PredictionEngine::new();
+        let mut prediction_engine = PredictionEngine::new()?;
         let total_cost = prediction_engine.predict_total_cost(changes)?;
         
         let mut snapshot = CostSnapshot::new(id, total_cost.monthly);
@@ -78,12 +80,15 @@ impl TrendEngine {
             let service = self.extract_service_name(&change.resource_type);
             let resource_cost = prediction_engine.predict_resource_cost(change)
                 .unwrap_or_else(|_| crate::engines::prediction::CostEstimate {
-                    hourly: 0.0,
-                    daily: 0.0,
-                    monthly: 0.0,
-                    confidence: 0.0,
+                    resource_id: change.resource_id.clone(),
+                    monthly_cost: 0.0,
+                    prediction_interval_low: 0.0,
+                    prediction_interval_high: 0.0,
+                    confidence_score: 0.0,
+                    heuristic_reference: None,
+                    cold_start_inference: false,
                 });
-            *services.entry(service).or_insert(0.0) += resource_cost.monthly;
+            *services.entry(service).or_insert(0.0) += resource_cost.monthly_cost;
         }
         
         for (service, cost) in services {

@@ -41,8 +41,8 @@ impl RootCauseAnalysis {
             RegressionType::Configuration => Self::analyze_configuration(change),
             RegressionType::Scaling => Self::analyze_scaling(change),
             RegressionType::Provisioning => Self::analyze_provisioning(change),
-            RegressionType::Traffic => Self::analyze_traffic(change),
-            RegressionType::Indirect => Self::analyze_indirect(change),
+            RegressionType::TrafficInferred | RegressionType::Traffic => Self::analyze_traffic(change),
+            RegressionType::IndirectCost | RegressionType::Indirect => Self::analyze_indirect(change),
         }
     }
 

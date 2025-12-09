@@ -1,15 +1,284 @@
 name: 'CostPilot'
 description: 'Cost analysis and prediction for infrastructure as code'
 author: 'GuardSuite'
+branding:
+  icon: 'dollar-sign'
+  color: 'green'
+
 inputs:
   terraform_plan:
-    description: 'Path to terraform plan file'
+    description: 'Path to terraform plan JSON file'
     required: false
+    default: 'plan.json'
+  
   config_file:
-    description: 'Path to costpilot config file'
+    description: 'Path to CostPilot configuration file'
     required: false
+    default: 'costpilot.yml'
+  
+  mode:
+    description: 'Analysis mode: estimate, predict, baseline, policy, drift, or all'
+    required: false
+    default: 'all'
+  
+  policy_file:
+    description: 'Path to policy configuration file'
+    required: false
+  
+  baseline_file:
+    description: 'Path to baseline file for regression detection'
+    required: false
+  
+  slo_file:
+    description: 'Path to SLO configuration file'
+    required: false
+  
+  exemptions_file:
+    description: 'Path to exemptions file'
+    required: false
+  
+  fail_on_regression:
+    description: 'Fail build if cost regression detected'
+    required: false
+    default: 'true'
+  
+  fail_on_policy:
+    description: 'Fail build if policy violations found'
+    required: false
+    default: 'true'
+  
+  fail_on_drift:
+    description: 'Fail build if critical drift detected'
+    required: false
+    default: 'true'
+  
+  output_format:
+    description: 'Output format: text, json, or markdown'
+    required: false
+    default: 'markdown'
+  
+  comment_pr:
+    description: 'Post results as PR comment'
+    required: false
+    default: 'true'
+  
+  debug:
+    description: 'Enable debug logging'
+    required: false
+    default: 'false'
+  
+  version:
+    description: 'CostPilot version to use (default: latest)'
+    required: false
+    default: 'latest'
+
+outputs:
+  total_cost:
+    description: 'Total estimated monthly cost'
+    value: ${{ steps.analyze.outputs.total_cost }}
+  
+  cost_delta:
+    description: 'Cost change from baseline'
+    value: ${{ steps.analyze.outputs.cost_delta }}
+  
+  regression_detected:
+    description: 'Whether cost regression was detected'
+    value: ${{ steps.analyze.outputs.regression_detected }}
+  
+  policy_violations:
+    description: 'Number of policy violations'
+    value: ${{ steps.analyze.outputs.policy_violations }}
+  
+  drift_detected:
+    description: 'Whether drift was detected'
+    value: ${{ steps.analyze.outputs.drift_detected }}
+  
+  exit_code:
+    description: 'CostPilot exit code'
+    value: ${{ steps.analyze.outputs.exit_code }}
+
 runs:
   using: 'composite'
   steps:
-    - run: ${{ github.action_path }}/entrypoint.sh
+    - name: Setup CostPilot
+      id: setup
       shell: bash
+      run: |
+        echo "Setting up CostPilot..."
+        
+        # Determine architecture
+        ARCH=$(uname -m)
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        
+        # Map architecture names
+        case $ARCH in
+          x86_64) ARCH="x86_64" ;;
+          aarch64|arm64) ARCH="aarch64" ;;
+          *) echo "Unsupported architecture: $ARCH" && exit 1 ;;
+        esac
+        
+        # Download or use embedded binary
+        VERSION="${{ inputs.version }}"
+        if [ "$VERSION" = "latest" ]; then
+          VERSION=$(curl -s https://api.github.com/repos/Dee66/CostPilot/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+        fi
+        
+        BINARY_URL="https://github.com/Dee66/CostPilot/releases/download/${VERSION}/costpilot-${OS}-${ARCH}"
+        
+        echo "Downloading CostPilot ${VERSION} for ${OS}-${ARCH}..."
+        curl -fsSL -o costpilot "${BINARY_URL}"
+        chmod +x costpilot
+        
+        echo "CostPilot version:"
+        ./costpilot --version
+    
+    - name: Run CostPilot Analysis
+      id: analyze
+      shell: bash
+      run: |
+        echo "Running CostPilot analysis..."
+        
+        # Build command
+        CMD="./costpilot"
+        
+        # Add mode-specific flags
+        MODE="${{ inputs.mode }}"
+        case $MODE in
+          estimate) CMD="$CMD estimate" ;;
+          predict) CMD="$CMD predict" ;;
+          baseline) CMD="$CMD baseline" ;;
+          policy) CMD="$CMD policy" ;;
+          drift) CMD="$CMD drift" ;;
+          all) CMD="$CMD analyze" ;;
+          *) echo "Invalid mode: $MODE" && exit 1 ;;
+        esac
+        
+        # Add input files
+        if [ -n "${{ inputs.terraform_plan }}" ]; then
+          CMD="$CMD --plan ${{ inputs.terraform_plan }}"
+        fi
+        
+        if [ -n "${{ inputs.config_file }}" ] && [ -f "${{ inputs.config_file }}" ]; then
+          CMD="$CMD --config ${{ inputs.config_file }}"
+        fi
+        
+        if [ -n "${{ inputs.policy_file }}" ] && [ -f "${{ inputs.policy_file }}" ]; then
+          CMD="$CMD --policy ${{ inputs.policy_file }}"
+        fi
+        
+        if [ -n "${{ inputs.baseline_file }}" ] && [ -f "${{ inputs.baseline_file }}" ]; then
+          CMD="$CMD --baseline ${{ inputs.baseline_file }}"
+        fi
+        
+        if [ -n "${{ inputs.slo_file }}" ] && [ -f "${{ inputs.slo_file }}" ]; then
+          CMD="$CMD --slo ${{ inputs.slo_file }}"
+        fi
+        
+        if [ -n "${{ inputs.exemptions_file }}" ] && [ -f "${{ inputs.exemptions_file }}" ]; then
+          CMD="$CMD --exemptions ${{ inputs.exemptions_file }}"
+        fi
+        
+        # Add output format
+        CMD="$CMD --format ${{ inputs.output_format }}"
+        
+        # Add debug flag
+        if [ "${{ inputs.debug }}" = "true" ]; then
+          CMD="$CMD --debug"
+        fi
+        
+        # Add output file for parsing
+        CMD="$CMD --output costpilot-results.json --format json"
+        
+        # Run analysis
+        echo "Executing: $CMD"
+        set +e
+        eval $CMD
+        EXIT_CODE=$?
+        set -e
+        
+        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        # Parse results if JSON output exists
+        if [ -f "costpilot-results.json" ]; then
+          TOTAL_COST=$(jq -r '.total_cost // "0"' costpilot-results.json)
+          COST_DELTA=$(jq -r '.cost_delta // "0"' costpilot-results.json)
+          REGRESSION=$(jq -r '.regression_detected // "false"' costpilot-results.json)
+          VIOLATIONS=$(jq -r '.policy_violations // "0"' costpilot-results.json)
+          DRIFT=$(jq -r '.drift_detected // "false"' costpilot-results.json)
+          
+          echo "total_cost=$TOTAL_COST" >> $GITHUB_OUTPUT
+          echo "cost_delta=$COST_DELTA" >> $GITHUB_OUTPUT
+          echo "regression_detected=$REGRESSION" >> $GITHUB_OUTPUT
+          echo "policy_violations=$VIOLATIONS" >> $GITHUB_OUTPUT
+          echo "drift_detected=$DRIFT" >> $GITHUB_OUTPUT
+        fi
+        
+        # Check failure conditions
+        if [ "${{ inputs.fail_on_regression }}" = "true" ] && [ "$REGRESSION" = "true" ]; then
+          echo "❌ Cost regression detected - failing build"
+          exit 1
+        fi
+        
+        if [ "${{ inputs.fail_on_policy }}" = "true" ] && [ "$VIOLATIONS" != "0" ]; then
+          echo "❌ Policy violations found - failing build"
+          exit 1
+        fi
+        
+        if [ "${{ inputs.fail_on_drift }}" = "true" ] && [ "$DRIFT" = "true" ]; then
+          echo "❌ Critical drift detected - failing build"
+          exit 1
+        fi
+        
+        exit $EXIT_CODE
+    
+    - name: Comment on PR
+      if: inputs.comment_pr == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read results
+          let comment = '## 💰 CostPilot Analysis\n\n';
+          
+          if (fs.existsSync('costpilot-results.json')) {
+            const results = JSON.parse(fs.readFileSync('costpilot-results.json', 'utf8'));
+            
+            comment += `**Total Monthly Cost:** $${results.total_cost || '0'}\n`;
+            
+            if (results.cost_delta) {
+              const delta = parseFloat(results.cost_delta);
+              const emoji = delta > 0 ? '📈' : delta < 0 ? '📉' : '➡️';
+              comment += `**Cost Change:** ${emoji} $${Math.abs(delta)} (${delta > 0 ? '+' : ''}${delta})\n`;
+            }
+            
+            comment += '\n';
+            
+            if (results.regression_detected) {
+              comment += '⚠️ **Cost Regression Detected**\n\n';
+            }
+            
+            if (results.policy_violations > 0) {
+              comment += `❌ **Policy Violations:** ${results.policy_violations}\n\n`;
+            }
+            
+            if (results.drift_detected) {
+              comment += '🔄 **Drift Detected**\n\n';
+            }
+            
+            if (results.summary) {
+              comment += '### Summary\n\n```\n' + results.summary + '\n```\n';
+            }
+          } else {
+            comment += '_Results file not found_\n';
+          }
+          
+          comment += `\n---\n_Analysis completed at ${new Date().toISOString()}_`;
+          
+          // Post comment
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

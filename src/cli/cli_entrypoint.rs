@@ -1,5 +1,6 @@
 // CLI entrypoint for CostPilot
 
+
 use clap::{Parser, Subcommand};
 use colored::*;
 use std::path::PathBuf;
@@ -30,6 +31,10 @@ struct Cli {
     /// Output format (json, text, markdown)
     #[arg(short = 'f', long, global = true, default_value = "text")]
     format: String,
+
+    /// Enable debug mode (shows internal operations and timing)
+    #[arg(short, long, global = true)]
+    debug: bool,
 }
 
 #[derive(Subcommand)]
@@ -365,6 +370,14 @@ enum AuditCommands {
 fn main() {
     let cli = Cli::parse();
 
+    // Enable debug logging if requested
+    if cli.debug {
+        eprintln!("{}", "🔍 Debug mode enabled".bright_black());
+        eprintln!("  Verbose: {}", cli.verbose);
+        eprintln!("  Format: {}", cli.format);
+        eprintln!();
+    }
+
     // Print banner for interactive mode
     if atty::is(atty::Stream::Stdout) {
         println!("{}", BANNER.bright_cyan());
@@ -372,39 +385,77 @@ fn main() {
         println!();
     }
 
+    let start_time = if cli.debug {
+        Some(std::time::Instant::now())
+    } else {
+        None
+    };
+
     let result = match cli.command {
         Commands::Scan(scan_cmd) => {
+            if cli.debug {
+                eprintln!("🔍 Executing scan command");
+            }
             scan_cmd.execute().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
         }
         Commands::Diff { before, after } => {
+            if cli.debug {
+                eprintln!("🔍 Executing diff command");
+                eprintln!("  Before: {:?}", before);
+                eprintln!("  After: {:?}", after);
+            }
             cmd_diff(before, after, &cli.format, cli.verbose)
         }
         Commands::Autofix { mode, plan, drift_safe } => {
+            if cli.debug {
+                eprintln!("🔍 Executing autofix command");
+                eprintln!("  Mode: {}", mode);
+                eprintln!("  Drift-safe: {}", drift_safe);
+            }
             cmd_autofix(mode, plan, drift_safe, &cli.format, cli.verbose)
         }
         Commands::Init { no_ci } => {
+            if cli.debug {
+                eprintln!("🔍 Executing init command");
+                eprintln!("  No CI: {}", no_ci);
+            }
             cmd_init(no_ci, cli.verbose)
         }
         Commands::Map(map_cmd) => {
-            crate::cli::map::execute_map_command(map_cmd)
+            if cli.debug {
+                eprintln!("🔍 Executing map command");
+            }
+            crate::cli::map::execute_map_command(&map_cmd)
         }
         Commands::Slo { command } => {
+            if cli.debug {
+                eprintln!("🔍 Executing SLO command");
+            }
             cmd_slo(command, &cli.format, cli.verbose)
         }
         Commands::Policy { command } => {
+            if cli.debug {
+                eprintln!("🔍 Executing policy command");
+            }
             cmd_policy(command, &cli.format, cli.verbose)
         }
         Commands::Audit { command } => {
+            if cli.debug {
+                eprintln!("🔍 Executing audit command");
+            }
             cmd_audit(command, &cli.format, cli.verbose)
         }
         Commands::Heuristics { command } => {
+            if cli.debug {
+                eprintln!("🔍 Executing heuristics command");
+            }
             cmd_heuristics(command, &cli.format, cli.verbose)
         }
         Commands::Explain { command } => {
             cmd_explain(command, &cli.format, cli.verbose)
         }
         Commands::PolicyDsl { command } => {
-            crate::cli::policy_dsl::execute_policy_dsl_command(command)
+            crate::cli::policy_dsl::execute_policy_dsl_command(&command)
         }
         Commands::Group(group_cmd) => {
             crate::cli::group::execute_group_command(group_cmd)
@@ -419,8 +470,15 @@ fn main() {
     };
 
     if let Err(e) = result {
+        if cli.debug {
+            eprintln!("{} Error details: {:?}", "🔍".bright_black(), e);
+        }
         eprintln!("{} {}", "Error:".bright_red().bold(), e);
         process::exit(1);
+    }
+
+    if let Some(start) = start_time {
+        eprintln!("{} Command completed in {:.2?}", "⏱️".bright_black(), start.elapsed());
     }
 }
 
@@ -474,7 +532,7 @@ fn cmd_autofix(
 }
 
 fn cmd_init(no_ci: bool, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
-    use crate::cli::init;
+    use crate::cli::init::init;
     
     let ci_provider = if no_ci {
         "none"
@@ -493,7 +551,7 @@ fn cmd_init(no_ci: bool, verbose: bool) -> Result<(), Box<dyn std::error::Error>
         println!("  CI Provider: {}", ci_provider);
     }
     
-    init::init(".", ci_provider)?;
+    init(".", ci_provider)?;
     
     Ok(())
 }
@@ -519,8 +577,7 @@ fn cmd_slo(
     match command {
         Some(SloCommands::Check) => {
             println!("{}", "📋 Checking SLO compliance...".bright_blue().bold());
-            // TODO: Implement SLO check logic
-            println!("{}", "✅ SLO check complete (not yet implemented)".bright_green());
+            crate::cli::commands::slo_check::execute(None, None, format, verbose)?;
         }
         Some(SloCommands::Burn { slo, snapshots, min_snapshots, min_r_squared }) => {
             println!("{}", "🔥 Calculating burn rate...".bright_blue().bold());
@@ -535,8 +592,7 @@ fn cmd_slo(
         }
         None => {
             println!("{}", "📋 Checking SLO compliance...".bright_blue().bold());
-            // TODO: Implement SLO check logic
-            println!("{}", "✅ SLO check complete (not yet implemented)".bright_green());
+            crate::cli::commands::slo_check::execute(None, None, format, verbose)?;
         }
     }
     
@@ -661,10 +717,14 @@ fn cmd_validate(
 }
 
 fn cmd_version(detailed: bool) {
+    // Validate version matches Cargo.toml
+    let cargo_version = env!("CARGO_PKG_VERSION");
+    assert_eq!(VERSION, cargo_version, "VERSION constant must match CARGO_PKG_VERSION");
+    
     if detailed {
         println!("{}", "CostPilot".bright_cyan().bold());
         println!("Version: {}", VERSION);
-        println!("Build: {} (deterministic)", env!("CARGO_PKG_VERSION"));
+        println!("Build: {} (deterministic)", cargo_version);
         println!("Features: Zero-IAM, WASM-safe, Offline");
         println!("License: MIT");
     } else {

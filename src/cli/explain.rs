@@ -154,7 +154,7 @@ fn execute_explain_all(
     // Format output
     let mut output = String::new();
     output.push_str(&format!("🔍 Cost Explanations ({} resources)\n", explanations.len()));
-    output.push_str("=".repeat(50));
+    output.push_str(&"=".repeat(50));
     output.push_str("\n\n");
 
     for (idx, chain) in explanations.iter().enumerate() {

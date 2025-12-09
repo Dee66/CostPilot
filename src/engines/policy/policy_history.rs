@@ -134,13 +134,14 @@ impl PolicyHistory {
 
         // Generate new version number
         let new_version = Self::generate_version_number(Some(&self.current_version), is_major);
+        let content_size = serde_json::to_string(&content).unwrap().len();
 
         let version = PolicyVersion {
             version: new_version.clone(),
             content,
             metadata: VersionMetadata {
                 checksum: new_checksum.clone(),
-                size_bytes: serde_json::to_string(&content).unwrap().len(),
+                size_bytes: content_size,
                 is_major,
                 tags: Vec::new(),
             },

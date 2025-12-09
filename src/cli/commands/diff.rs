@@ -2,7 +2,7 @@
 
 use crate::engines::detection::DetectionEngine;
 use crate::engines::prediction::PredictionEngine;
-use crate::errors::CostPilotError;
+use crate::engines::shared::error_model::{CostPilotError, ErrorCategory};
 use colored::Colorize;
 use std::path::PathBuf;
 
@@ -33,7 +33,7 @@ pub fn execute(
 
     // Initialize engines
     let detection_engine = DetectionEngine::new();
-    let prediction_engine = PredictionEngine::new()
+    let mut prediction_engine = PredictionEngine::new()
         .map_err(|e| format!("Failed to initialize prediction engine: {}", e))?;
 
     // Parse both plans
@@ -44,8 +44,20 @@ pub fn execute(
     let before_cost = prediction_engine.predict_total_cost(&before_changes)?;
     let after_cost = prediction_engine.predict_total_cost(&after_changes)?;
 
-    // Calculate delta
+    // Calculate delta and ensure it's never negative when it shouldn't be
     let delta = after_cost.monthly - before_cost.monthly;
+    
+    // Validate: If after has more/larger resources, delta should not be negative
+    // This catches prediction errors or data inconsistencies
+    if after_changes.len() > before_changes.len() && delta < 0.0 {
+        return Err(format!(
+            "Cost diff validation failed: resource count increased ({} -> {}) but delta is negative (${:.2})",
+            before_changes.len(),
+            after_changes.len(),
+            delta
+        ).into());
+    }
+    
     let percentage = if before_cost.monthly > 0.0 {
         (delta / before_cost.monthly) * 100.0
     } else {

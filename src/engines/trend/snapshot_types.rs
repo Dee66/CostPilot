@@ -60,6 +60,17 @@ pub struct ModuleCost {
     /// Percentage change from previous
     #[serde(skip_serializing_if = "Option::is_none")]
     pub change_percent: Option<f64>,
+    
+    /// Service-level breakdown
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub services: Vec<ServiceCost>,
+}
+
+/// Service-level cost breakdown
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceCost {
+    pub name: String,
+    pub monthly_cost: f64,
 }
 
 /// Detected cost regression
@@ -237,6 +248,7 @@ impl CostSnapshot {
                 resource_count,
                 change_from_previous: None,
                 change_percent: None,
+                services: Vec::new(),
             },
         );
     }

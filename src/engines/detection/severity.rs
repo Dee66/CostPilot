@@ -83,7 +83,7 @@ fn calculate_resource_importance(resource_type: &str) -> f64 {
 
 /// Calculate blast radius score based on module and dependencies
 fn calculate_blast_radius(change: &ResourceChange) -> f64 {
-    let mut score = 50.0; // Base score
+    let mut score: f64 = 50.0; // Base score
 
     // Root module changes have higher blast radius
     if change.module_path.is_none() || change.module_path.as_ref().map(|s| s.is_empty()).unwrap_or(true) {

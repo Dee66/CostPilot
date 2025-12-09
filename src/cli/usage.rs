@@ -1,5 +1,6 @@
 // CLI commands for usage metering and chargeback reporting
 
+use crate::engines::shared::error_model::{CostPilotError, ErrorCategory};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -256,7 +257,7 @@ fn execute_pr_report(
     let price_per_resource = pricing.price_per_resource;
     
     let summary = tracker.get_pr_summary(pr_number, price_per_resource)
-        .ok_or_else(|| format!("PR #{} not found", pr_number))?;
+        .map_err(|e| e.message)?;
     
     Ok(format_pr_summary_text(&summary))
 }

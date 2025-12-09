@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 /// A node in the dependency graph representing a resource or service
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GraphNode {
     /// Unique stable identifier for the node
     pub id: String,
@@ -167,7 +167,7 @@ impl GraphNode {
     pub fn new_module(id: String, module_name: String) -> Self {
         Self {
             id,
-            label: module_name,
+            label: module_name.clone(),
             node_type: NodeType::Module,
             resource_type: None,
             monthly_cost: None,

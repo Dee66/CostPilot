@@ -66,7 +66,7 @@ pub fn execute(
     };
 
     // Run burn rate analysis
-    let report = calculator.analyze_all(&slo_manager.config.slos, &history.snapshots);
+    let report = calculator.analyze_all(&slo_manager.config().slos, &history.snapshots);
 
     // Output results based on format
     match format {

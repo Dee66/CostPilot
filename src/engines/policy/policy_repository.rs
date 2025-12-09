@@ -81,6 +81,37 @@ where
     pub fn clear(&mut self) {
         self.policies.clear();
     }
+
+    /// Delegate ownership of a policy to a new owner
+    pub fn delegate_ownership(
+        &mut self,
+        policy_id: &str,
+        new_owner: String,
+        new_team: Option<String>,
+    ) -> Result<(), String> {
+        let policy = self
+            .policies
+            .get_mut(policy_id)
+            .ok_or_else(|| format!("Policy not found: {}", policy_id))?;
+
+        policy.metadata.ownership.owner = new_owner;
+        if let Some(team) = new_team {
+            policy.metadata.ownership.team = Some(team);
+        }
+        policy.metadata.lifecycle.updated_at = chrono::Utc::now();
+
+        Ok(())
+    }
+
+    /// Transfer ownership to a different team
+    pub fn transfer_to_team(
+        &mut self,
+        policy_id: &str,
+        team: String,
+        new_owner: String,
+    ) -> Result<(), String> {
+        self.delegate_ownership(policy_id, new_owner, Some(team))
+    }
 }
 
 impl<T> Default for PolicyRepository<T>

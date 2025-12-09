@@ -11,19 +11,19 @@ use crate::engines::autofix::{AutofixEngine, AutofixMode};
 pub struct AutofixPatchArgs {
     /// Path to Terraform plan JSON file
     #[arg(long, value_name = "FILE")]
-    plan: PathBuf,
+    pub plan: PathBuf,
 
     /// Output file for patches (default: stdout)
     #[arg(short, long, value_name = "FILE")]
-    output: Option<PathBuf>,
+    pub output: Option<PathBuf>,
 
     /// Apply patches (simulation mode)
     #[arg(long)]
-    apply: bool,
+    pub apply: bool,
 
     /// Show detailed patch metadata
     #[arg(short, long)]
-    verbose: bool,
+    pub verbose: bool,
 }
 
 pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>> {
@@ -60,8 +60,8 @@ pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>
     
     for detection in &mut detections_with_estimates {
         if let Some(change) = changes.iter().find(|c| c.resource_id == detection.resource_id) {
-            if let Ok(estimate) = prediction_engine.predict(change) {
-                detection.estimated_cost = Some(estimate);
+            if let Ok(estimate) = prediction_engine.predict_resource_cost(change) {
+                detection.estimated_cost = Some(estimate.monthly_cost);
             }
         }
     }
@@ -69,10 +69,11 @@ pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>
     println!();
 
     // Generate patches
-    println!("{}", "Generating patches...".dimmed());
+    println!("{}", "Generating fix patches...".dimmed());
     let autofix_result = AutofixEngine::generate_fixes(
         &detections_with_estimates,
         &changes,
+        &[],  // estimates not used for patch mode
         AutofixMode::Patch,
     );
 

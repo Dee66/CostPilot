@@ -45,8 +45,8 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
     
     for detection in &mut detections_with_estimates {
         if let Some(change) = changes.iter().find(|c| c.resource_id == detection.resource_id) {
-            if let Ok(estimate) = prediction_engine.predict(change) {
-                detection.estimated_cost = Some(estimate);
+            if let Ok(estimate) = prediction_engine.predict_resource_cost(change) {
+                detection.estimated_cost = Some(estimate.monthly_cost);
             }
         }
     }
@@ -58,6 +58,7 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
     let autofix_result = AutofixEngine::generate_fixes(
         &detections_with_estimates,
         &changes,
+        &[],  // estimates not used for snippet mode
         AutofixMode::Snippet,
     );
 

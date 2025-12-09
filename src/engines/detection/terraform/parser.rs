@@ -71,6 +71,9 @@ pub fn convert_to_resource_changes(plan: &TerraformPlan) -> Result<Vec<ResourceC
                 old_config: tf_change.change.before.clone(),
                 new_config: tf_change.change.after.clone(),
                 tags,
+                monthly_cost: None,
+                config: None,
+                cost_impact: None,
             });
         }
     }
@@ -85,7 +88,8 @@ fn determine_action(actions: &[String]) -> Result<ChangeAction> {
     }
 
     // Handle common action patterns
-    match actions.as_slice() {
+    let action_strs: Vec<&str> = actions.iter().map(|s| s.as_str()).collect();
+    match action_strs.as_slice() {
         ["no-op"] => Ok(ChangeAction::NoOp),
         ["create"] => Ok(ChangeAction::Create),
         ["delete"] => Ok(ChangeAction::Delete),

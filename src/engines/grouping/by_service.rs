@@ -21,7 +21,7 @@ pub struct ServiceGroup {
 }
 
 /// AWS service category for high-level grouping
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ServiceCategory {
     Compute,
     Storage,

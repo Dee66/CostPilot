@@ -37,7 +37,7 @@ impl MappingEngine {
     }
 
     /// Build a dependency graph from infrastructure changes
-    pub fn build_graph(&self, changes: &[ResourceChange]) -> Result<DependencyGraph, CostPilotError> {
+    pub fn build_graph(&mut self, changes: &[ResourceChange]) -> Result<DependencyGraph, CostPilotError> {
         self.builder.build_graph(changes)
     }
 
@@ -52,14 +52,14 @@ impl MappingEngine {
     }
 
     /// Complete pipeline: build graph and generate Mermaid diagram
-    pub fn map_dependencies(&self, changes: &[ResourceChange]) -> Result<String, CostPilotError> {
+    pub fn map_dependencies(&mut self, changes: &[ResourceChange]) -> Result<String, CostPilotError> {
         let graph = self.build_graph(changes)?;
         self.generate_mermaid(&graph)
     }
 
     /// Complete pipeline: build graph and generate HTML
     pub fn map_dependencies_html(
-        &self,
+        &mut self,
         changes: &[ResourceChange],
         title: &str,
     ) -> Result<String, CostPilotError> {
@@ -86,7 +86,12 @@ impl MappingEngine {
     /// Export graph to JSON (standard format)
     pub fn export_json(&self, graph: &DependencyGraph) -> Result<String, CostPilotError> {
         let exporter = JsonExporter::new();
-        exporter.export(graph)
+        let json = exporter.export(graph)?;
+        
+        // Validate JSON is well-formed before returning
+        self.validate_json(&json)?;
+        
+        Ok(json)
     }
 
     /// Export graph to JSON with custom config
@@ -96,7 +101,12 @@ impl MappingEngine {
         config: JsonExportConfig,
     ) -> Result<String, CostPilotError> {
         let exporter = JsonExporter::with_config(config);
-        exporter.export(graph)
+        let json = exporter.export(graph)?;
+        
+        // Validate JSON is well-formed before returning
+        self.validate_json(&json)?;
+        
+        Ok(json)
     }
 
     /// Export graph to JSON with specific format
@@ -106,7 +116,49 @@ impl MappingEngine {
         format: JsonFormat,
     ) -> Result<String, CostPilotError> {
         let exporter = JsonExporter::new();
-        exporter.export_with_format(graph, format)
+        let json = exporter.export_with_format(graph, format)?;
+        
+        // Validate JSON is well-formed before returning
+        self.validate_json(&json)?;
+        
+        Ok(json)
+    }
+
+    /// Validate that JSON output is well-formed and contains required fields
+    fn validate_json(&self, json: &str) -> Result<(), CostPilotError> {
+        // Parse to ensure valid JSON
+        let parsed: serde_json::Value = serde_json::from_str(json)
+            .map_err(|e| CostPilotError::InvalidJson(format!("Mapping graph JSON invalid: {}", e)))?;
+        
+        // Ensure it's an object or array
+        if !parsed.is_object() && !parsed.is_array() {
+            return Err(CostPilotError::InvalidJson(
+                "Mapping graph JSON must be object or array".to_string()
+            ));
+        }
+        
+        // If it's an object, validate structure
+        if let Some(obj) = parsed.as_object() {
+            // Check for nodes array
+            if let Some(nodes) = obj.get("nodes") {
+                if !nodes.is_array() {
+                    return Err(CostPilotError::InvalidJson(
+                        "nodes field must be an array".to_string()
+                    ));
+                }
+            }
+            
+            // Check for edges array if present
+            if let Some(edges) = obj.get("edges") {
+                if !edges.is_array() {
+                    return Err(CostPilotError::InvalidJson(
+                        "edges field must be an array".to_string()
+                    ));
+                }
+            }
+        }
+        
+        Ok(())
     }
 
     /// Detect cross-service cost impacts
@@ -171,6 +223,67 @@ impl MappingEngine {
         
         impacts
     }
+
+    /// Calculate propagated cost for a resource including all downstream dependencies
+    pub fn calculate_propagated_cost(&self, graph: &DependencyGraph, node_id: &str) -> f64 {
+        let mut total_cost = 0.0;
+
+        // Get the node's direct cost
+        if let Some(node) = graph.find_node(node_id) {
+            total_cost += node.monthly_cost.unwrap_or(0.0);
+        }
+
+        // Add costs of all downstream dependencies
+        let downstream = graph.downstream_nodes(node_id);
+        for downstream_id in downstream {
+            if let Some(downstream_node) = graph.find_node(&downstream_id) {
+                total_cost += downstream_node.monthly_cost.unwrap_or(0.0);
+            }
+        }
+
+        total_cost
+    }
+
+    /// Get cost propagation report showing how costs flow through the graph
+    pub fn cost_propagation_report(&self, graph: &DependencyGraph) -> Vec<CostPropagation> {
+        let mut propagations = Vec::new();
+
+        // Analyze each node that has downstream dependencies
+        for node in &graph.nodes {
+            let downstream = graph.downstream_nodes(&node.id);
+            if !downstream.is_empty() {
+                let direct_cost = node.monthly_cost.unwrap_or(0.0);
+                let downstream_cost: f64 = downstream
+                    .iter()
+                    .filter_map(|id| graph.find_node(id))
+                    .filter_map(|n| n.monthly_cost)
+                    .sum();
+
+                propagations.push(CostPropagation {
+                    resource_id: node.id.clone(),
+                    resource_label: node.label.clone(),
+                    direct_cost,
+                    downstream_cost,
+                    total_propagated_cost: direct_cost + downstream_cost,
+                    affected_count: downstream.len(),
+                    propagation_factor: if direct_cost > 0.0 {
+                        (direct_cost + downstream_cost) / direct_cost
+                    } else {
+                        1.0
+                    },
+                });
+            }
+        }
+
+        // Sort by total propagated cost
+        propagations.sort_by(|a, b| {
+            b.total_propagated_cost
+                .partial_cmp(&a.total_propagated_cost)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        propagations
+    }
 }
 
 impl Default for MappingEngine {
@@ -202,6 +315,25 @@ pub enum ImpactSeverity {
     Low,
     Medium,
     High,
+}
+
+/// Cost propagation analysis showing how costs flow through dependencies
+#[derive(Debug, Clone)]
+pub struct CostPropagation {
+    /// Resource ID
+    pub resource_id: String,
+    /// Resource label
+    pub resource_label: String,
+    /// Direct monthly cost of the resource
+    pub direct_cost: f64,
+    /// Total cost of downstream dependencies
+    pub downstream_cost: f64,
+    /// Total propagated cost (direct + downstream)
+    pub total_propagated_cost: f64,
+    /// Number of affected downstream resources
+    pub affected_count: usize,
+    /// Propagation factor (total / direct)
+    pub propagation_factor: f64,
 }
 
 #[cfg(test)]

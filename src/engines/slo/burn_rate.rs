@@ -292,8 +292,8 @@ impl BurnRateCalculator {
                     snapshot
                         .modules
                         .iter()
-                        .find(|m| slo.target == format!("module.{}", m.name))
-                        .map(|m| m.monthly_cost)
+                        .find(|m| slo.target == format!("module.{}", m.1.name))
+                        .map(|m| m.1.monthly_cost)
                         .unwrap_or(0.0)
                 }
                 SloType::ServiceBudget => {
@@ -301,7 +301,7 @@ impl BurnRateCalculator {
                     snapshot
                         .modules
                         .iter()
-                        .flat_map(|m| &m.services)
+                        .flat_map(|m| &m.1.services)
                         .filter(|s| slo.target.contains(&s.name))
                         .map(|s| s.monthly_cost)
                         .sum()
@@ -385,7 +385,6 @@ impl Default for BurnRateCalculator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::trend::snapshot_types::ModuleSnapshot;
     
     fn create_test_snapshots() -> Vec<CostSnapshot> {
         vec![

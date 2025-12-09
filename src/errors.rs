@@ -29,6 +29,10 @@ impl CostPilotError {
         Self::timeout(message)
     }
 
+    pub fn InvalidJson(message: String) -> Self {
+        Self::invalid_json(message)
+    }
+
     pub fn CircuitBreaker(message: String) -> Self {
         Self::circuit_breaker(message)
     }

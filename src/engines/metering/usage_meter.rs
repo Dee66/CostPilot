@@ -242,6 +242,12 @@ impl UsageMeter {
         }
     }
 
+    /// Load usage meter from file
+    pub fn load_from_file(_path: &std::path::Path, pricing: PricingModel) -> Result<Self> {
+        // Stub: return new meter for now
+        Ok(Self::new(pricing))
+    }
+
     /// Record usage event
     pub fn record_event(&mut self, event: UsageEvent) -> Result<()> {
         self.events.push(event);

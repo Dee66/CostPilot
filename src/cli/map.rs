@@ -68,7 +68,7 @@ pub fn execute_map_command(cmd: &MapCommand) -> Result<(), Box<dyn std::error::E
         println!("{}", "Building dependency graph...".dimmed());
     }
     
-    let engine = MappingEngine::new();
+    let mut engine = MappingEngine::new();
     let graph = engine.build_graph(&changes)?;
 
     if cmd.verbose {

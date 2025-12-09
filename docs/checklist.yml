@@ -1,376 +1,750 @@
-version: "1.0.2"
-disclaimer: "Comprehensive implementation checklist derived directly from the CostPilot Spec. ALL items must be completed or explicitly deferred according to roadmap. Deterministic, WASM-safe, zero-IAM execution is mandatory."
-
-phases:
-  - phase: "MVP (Trust Triangle)"
-    timeline_days: "0-14"
-    objectives:
-      - "Build the Trust Triangle: Detect → Predict → Explain."
-      - "Ship snippet-based autofix (deterministic, idempotent)."
-      - "Ship core CI integration (GitHub Action + PR comments)."
-      - "Validate zero-IAM, zero-network, deterministic core."
-    must_have:
-      - cli_core_and_wasm_runtime
-      - detection_engine_minimal
-      - prediction_engine_minimal
-      - explain_engine_top_5
-      - snippet_autofix_mode
-      - cli_init_and_ci_templates
-      - basic_policy_evaluation
-      - terraform_plan_json_parsing
-      - zero_iam_security_validation
-
-  - phase: "V1 (Governance & Graph)"
-    timeline_days: "15-45"
-    objectives:
-      - "Implement full Governance layer (PAC engine + metadata)."
-      - "Ship Graph-based mapping (Mermaid first)."
-      - "Ship Trend system (SVG priority, HTML fallback)."
-      - "Introduce Drift-Safe Autofix (Beta) + rollback support."
-      - "Implement Baselines system + Regression classifier."
-    must_have:
-      - policy_as_code_full_metadata
-      - exemption_workflow_v1
-      - trend_engine_v1
-      - graph_mapping_v1
-      - drift_safe_autofix_beta
-      - slo_engine_v1
-      - artifact_support_cdk_cf
-      - zero_network_policy_enforcement
-      - baselines_system_v1
-
-  - phase: "V2+ (Enterprise & Scale)"
-    timeline_days: "45-120"
-    objectives:
-      - "Enterprise suite: Burn alerts, Audit, SSO, Escrow."
-      - "Full policy lifecycle & approval workflow."
-      - "Advanced prediction (probabilistic model)."
-      - "Usage metering + PR-based billing hooks."
-    must_have:
-      - slo_burn_alerts
-      - enterprise_policy_lifecycle_and_approval_flow
-      - audit_logs_and_tamper_proofing
-      - vs_code_extension
-      - advanced_prediction_model
-      - usage_metering_hooks
-      - software_escrow_process
-      - performance_budgets_hard_limits
-
-engines:
-
-  detection_engine:
-    checklist:
-      - parse_terraform_plan_json
-      - parse_cdk_diff_json_v1
-      - parse_cloudformation_changeset_json_v1
-      - normalize_iac_to_canonical_form
-      - handle_unknown_values_conservatively
-      - handle_computed_values_conservatively
-      - handle_taint_replace_lifecycle_impact
-      - detect_cost_smells
-      - detect_cost_risks
-      - detect_cost_explosions
-      - classify_regression_type_and_severity
-    output_contract:
-      - resource_changes
-      - old_cost_estimate
-      - new_cost_estimate
-      - estimated_monthly_delta
-      - severity_score
-      - regression_type
-      - suggested_fix_snippet
-
-  prediction_engine:
-    checklist:
-      - load_heuristics_from_cost_heuristics_json
-      - conservative_deterministic_estimates
-      - cold_start_inference
-      - predict_confidence_interval
-      - emit_prediction_metadata
-      - ensure_prediction_intervals_never_inverted
-      - enforce_zero_negative_costs
-    constraints:
-      wasm_safe: true
-      max_latency_ms: 300
-
-  explain_engine:
-    checklist:
-      - reference_cost_heuristics_file
-      - show_stepwise_reasoning_prediction
-      - show_stepwise_reasoning_detection
-      - include_all_assumptions
-      - include_regression_type
-      - include_severity_score
-      - root_cause_classification_v2
-    mvp_limitations:
-      supported_top_5_anti_patterns:
-        - nat_gateway_overuse
-        - overprovisioned_ec2
-        - s3_missing_lifecycle
-        - unbounded_lambda_concurrency
-        - dynamodb_pay_per_request_default
-
-  autofix_engine:
-    snippet_mode:
-      mvp:
-        - generate_snippet_only
-        - include_human_rationale
-        - deterministic_output
-        - idempotent_output
-
-    patch_mode:
-      pro_only:
-        - generate_full_patch_diff
-        - patch_simulation_pass_required
-        - label_beta_v1
-
-    drift_safe_autofix:
-      v1_beta:
-        - verify_no_infra_drift_prior_to_patch
-        - generate_rollback_patch
-        - limited_resource_support:
-            - ec2_instance_type
-            - s3_lifecycle_rules
-
-  policy_as_code:
-    mvp_builtin_rules:
-      - nat_gateway_limit
-      - module_monthly_budget
-      - s3_lifecycle_required
-      - compute_savings_plan_suggestion
-
-    full_engine_v1:
-      - yaml_policy_loader
-      - rule_dsl_parser
-      - policy_versioning_metadata
-      - policy_approval_required_flag
-      - policy_violation_counters
-      - exemption_workflow_schema_check
-
-    enterprise_requirements:
-      - delegated_ownership
-      - approval_workflows
-      - audit_trail
-
-  baselines_system:
-    checklist:
-      - support_baselines_json_file
-      - record_expected_cost_for_module
-      - record_last_updated_and_justification
-      - integrate_with_regression_classifier
-      - integrate_with_slo_engine
-
-  slo_engine:
-    mvp:
-      - monthly_cost_slo_check
-      - module_cost_slo_check
-    v1:
-      - slo_inheritance
-      - multi_slo_composition
-      - baseline_aware_evaluation
-    enterprise_burn_alerts_v2:
-      - burn_rate_linear_regression
-      - time_to_breach_prediction
-      - cli_command_slo_burn
-
-  mapping_engine:
-    mvp_v1:
-      - resource_to_service_mapping
-      - detect_cross_service_cost_impacts
-      - infer_downstream_services_v1
-      - implement_cycle_detection
-      - enforce_max_dependency_depth_5
-      - output_mermaid_graph
-      - stable_node_ids
-    v2:
-      - graphviz_export
-      - json_graph_export
-      - cost_propagation_logic_v2
-
-  grouping_engine:
-    checklist:
-      - group_by_module
-      - group_by_service
-      - group_by_environment
-    attribution_pipeline:
-      - extract_tags
-      - normalize_tag_casing
-      - infer_environment_if_missing
-      - generate_attribution_report
-
-  trend_engine:
-    v1:
-      - write_snapshot_json
-      - validate_snapshot_schema
-      - generate_svg_graph
-      - generate_static_html
-      - annotate_regressions
-      - annotate_slo_violations
-    trend_snapshot_lifecycle:
-      - snapshot_rotation_policy
-      - detect_snapshot_corruption
-      - generate_trend_diff
-
-cli:
-  commands:
-    - costpilot_scan_basic
-    - costpilot_scan_explain
-    - costpilot_diff
-    - costpilot_autofix_snippet
-    - costpilot_autofix_patch
-    - costpilot_init
-    - costpilot_slo_check
-    - costpilot_map_mermaid
-    - costpilot_version
-
-  ux:
-    - help_text
-    - examples
-    - autocomplete_bash_zsh_fish
-    - version_flag_validation
-    - machine_parseable_output_examples
-    - debug_mode_support
-
-zero_iam_security_and_wasm:
-  invariants:
-    - no_network_allowed
-    - no_aws_sdk_allowed
-    - wasm_sandbox_enforced
-    - redact_secrets
-    - redact_tokens
-    - enforce_max_file_size_20mb
-    - sandbox_memory_limit_256mb
-    - sandbox_timeout_2000ms
-    - stable_error_signatures
-    - safe_failure_on_corrupted_input
-
-  wasm_compile_pipeline:
-    - compile_core_engines_to_wasm
-    - validate_sandbox_limits
-    - wasm_bytecode_size_limit
-    - wasm_determinism_test_suite
-    - wasm_memory_stress_tests
-
-performance_budgets:
-  max_prediction_latency_ms: 300
-  max_mapping_latency_ms: 500
-  max_autofix_generation_ms: 400
-  max_total_scan_latency_ms: 2000
-  wasm_memory_mb: 256
-  slo_engine_max_eval_ms: 150
-
-testing_and_acceptance:
-  snapshot_tests:
-    - terraform_plan_variants
-    - cdk_diff_variants
-    - cloudformation_variants
-    - malformed_plans_fuzz_safety
-    - drift_cases_for_autofix
-  fuzz_tests:
-    - prediction_engine
-    - policy_engine
-    - mapping_engine
-    - tfplan_parsing_resilience
-  golden_file_tests:
-    - predict_output_golden
-    - explain_output_golden
-    - mapping_output_golden
-  baseline_tests:
-    - baseline_file_missing_behavior
-    - baseline_override_handling
-    - regression_classifier_uses_baseline
-    - slo_uses_baseline
-  acceptance_criteria:
-    - identical_inputs_produce_identical_outputs
-    - no_network_calls
-    - patch_autofix_requires_simulation_pass
-    - cost_diff_never_negative
-    - prediction_intervals_never_inverted
-    - mapping_graph_valid_json
-  error_model_enforcement:
-    - stable_error_ids
-    - error_category_mapping
-    - remediation_hint_generator
-    - machine_message_format_tests
-  performance_regression_suite:
-    - record_perf_baseline
-    - diff_against_previous
-    - enforce_perf_budgets
-
-compatibility_enforcement:
-  - api_contract_golden_file
-  - heuristics_version_check
-  - semver_enforcement_tests
-  - canonical_output_schema_validation
-
-config_validation_engine:
-  - validate_costpilot_yaml
-  - validate_policy_files
-  - validate_baselines_file
-  - validate_slo_files
-
-pricing_and_licensing:
-  solo:
-    - snippet_autofix
-    - limited_explain
-    - unlimited_repos
-  pro:
-    - patch_autofix
-    - drift_safe_autofix
-    - mapping_graph_export
-    - policy_as_code_lite
-  enterprise:
-    - slo_burn_alerts
-    - full_PAC_engine
-    - exemption_workflow
-    - team_cost_attribution
-    - audit_logs_and_tamper_proofing
-    - software_escrow
-
-governance_and_lifecycle:
-  checklist:
-    - policy_version_increment_on_change
-    - approval_reference_required_if_flagged
-    - expired_exemptions_block_ci
-    - drift_detection_checksum_sha256
-    - critical_drift_blocks_execution
-
-gtm:
-  assets:
-    - demo_pr_repo
-    - demo_gif_60s
-    - tco_calculator
-    - launch_day_blog
-    - product_hunt_launch
-    - hacker_news_show_launch
-  marketplace_submission:
-    - metadata_json
-    - pricing_mapping
-    - readme_action
-    - icon_assets
-  github_action_packaging:
-    - generate_action_yml
-    - embed_binary_or_fetch_script
-    - test_in_ephemeral_repo
-    - verify_action_permissions
-    - publish_versioned_releases
-  seo:
-    - docs_indexable
-    - landing_page_keywords
-    - schema_metadata
-    - example_queries:
-        - "terraform cost diff"
-        - "aws finops linter"
-
-onboarding:
-  - costpilot_init_generates_ci_template
-  - sample_policies_and_baselines
-  - mermaid_mapping_sample
-  - cli_quickstart_guide
-
-release_pipeline:
-  - tag_release
-  - generate_changelog
-  - update_spec_version
-  - rebuild_wasm
-  - publish_github_release
+metadata:
+  product_id: costpilot
+  product_version: 1.0.2
+  checklist_version: '2.1'
+  source_spec_version: '2.1'
+  created_at: '2025-12-07'
+  last_reviewed: '2025-12-07'
+  reviewer: System (AI Architect)
+  auto_generated: false
+  maintained_by: Deon Prinsloo
+  target_environment: prod
+  launch_tier: A
+execution_context:
+  automation_ready: true
+  agent_directives:
+    retry_on_fail: true
+    parallelizable: true
+    halt_on_critical_failure: true
+linked_issues: []
+structure:
+  phases:
+  - id: phase-01
+    title: Project Initialization & Spec Wiring
+    outcome: CostPilot project wired to v2.1 spec, zero-cost policy and folder layout.
+    automation_expectation: full
+  - id: phase-02
+    title: 'Core Engines: Detect, Predict, Explain'
+    outcome: Primary analysis engines implemented and deterministic.
+    automation_expectation: partial
+  - id: phase-03
+    title: Zero-Cost Runtime & Deterministic WASM Pipeline
+    outcome: Execution fully offline, zero-cost, and sandboxed with canonical outputs.
+    automation_expectation: partial
+  - id: phase-04
+    title: 'Governance: Policy-as-Code & SLO Engine'
+    outcome: Policies, exemptions and SLOs enforced with clear reports.
+    automation_expectation: partial
+  - id: phase-05
+    title: Mapping, Baselines, Trend & Attribution
+    outcome: Insight engines implemented with reproducible outputs.
+    automation_expectation: partial
+  - id: phase-06
+    title: Testing, CI, Release & Final Invariants
+    outcome: Test suites, CI pipelines and invariants validated for release.
+    automation_expectation: partial
+tasks:
+- id: task-010
+  phase: phase-01
+  title: Create CostPilot product structure
+  description: Create base directory layout and config skeleton for CostPilot.
+  automation_level: full
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies: []
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-010-1
+    action: create_structure
+    description: Create base folders (src/, tests/, .costpilot/, docs/).
+    acceptance_criteria:
+    - id: ac-010-1
+      type: file_exists
+      target: products/costpilot/src
+  - id: step-010-2
+    action: create_hidden_dirs
+    description: Create .costpilot/ for local state and artifacts.
+    acceptance_criteria:
+    - id: ac-010-2
+      type: file_exists
+      target: .costpilot
+- id: task-020
+  phase: phase-01
+  title: Install product.yml v2.1
+  description: Place the CostPilot v2.1 product spec in the correct location and validate
+    basic schema.
+  automation_level: partial
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-010
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-020-1
+    action: copy_spec
+    description: Place product.yml under products/costpilot/.
+    acceptance_criteria:
+    - id: ac-020-1
+      type: file_exists
+      target: products/costpilot/product.yml
+  - id: step-020-2
+    action: validate_spec_schema
+    description: Validate product.yml against spec schema.
+    acceptance_criteria:
+    - id: ac-020-2
+      type: command
+      command: nox -s validate_spec
+      expected_exit_code: 0
+- id: task-030
+  phase: phase-01
+  title: Implement spec loader
+  description: Implement loader that maps product.yml into internal runtime config
+    structures.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-020
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-030-1
+    action: implement_loader
+    description: Implement config loader for metadata, platform and x_capabilities.
+    acceptance_criteria:
+    - id: ac-030-1
+      type: unit_test_pass
+      test_id: test_spec_loader_roundtrip
+  - id: step-030-2
+    action: expose_zero_cost_policy
+    description: Ensure zero_cost_policy fields are exposed to runtime.
+    acceptance_criteria:
+    - id: ac-030-2
+      type: unit_test_pass
+      test_id: test_zero_cost_policy_loaded
+- id: task-040
+  phase: phase-01
+  title: Bootstrap .costpilot config files
+  description: Create initial .costpilot config files for policies, SLOs, baselines
+    and trend.
+  automation_level: partial
+  severity: medium
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-010
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-040-1
+    action: create_policies_file
+    description: Create .costpilot/policies.yml stub.
+    acceptance_criteria:
+    - id: ac-040-1
+      type: file_exists
+      target: .costpilot/policies.yml
+  - id: step-040-2
+    action: create_slo_file
+    description: Create .costpilot/slo.yml stub.
+    acceptance_criteria:
+    - id: ac-040-2
+      type: file_exists
+      target: .costpilot/slo.yml
+  - id: step-040-3
+    action: create_baselines_file
+    description: Create .costpilot/baselines.json stub.
+    acceptance_criteria:
+    - id: ac-040-3
+      type: file_exists
+      target: .costpilot/baselines.json
+- id: task-050
+  phase: phase-02
+  title: Implement Terraform plan parser
+  description: Implement parser for terraform_plan_json into an internal resource
+    graph.
+  automation_level: partial
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-030
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-050-1
+    action: implement_parser
+    description: Parse plan JSON into normalized resource structures.
+    acceptance_criteria:
+    - id: ac-050-1
+      type: unit_test_pass
+      test_id: test_parse_basic_terraform_plan
+  - id: step-050-2
+    action: handle_invalid_plans
+    description: Handle malformed plans gracefully.
+    acceptance_criteria:
+    - id: ac-050-2
+      type: unit_test_pass
+      test_id: test_parse_invalid_terraform_plan_graceful
+- id: task-060
+  phase: phase-02
+  title: Implement detect engine with builtin rules
+  description: Implement detection engine using x_capabilities.detect builtin rules.
+  automation_level: partial
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-050
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-060-1
+    action: implement_builtin_rules
+    description: Implement nat_gateway, s3_missing_lifecycle, compute_overprovision
+      rules.
+    acceptance_criteria:
+    - id: ac-060-1
+      type: unit_test_pass
+      test_id: test_builtin_detection_rules
+  - id: step-060-2
+    action: compute_severity_score
+    description: Compute deterministic severity_score per finding.
+    acceptance_criteria:
+    - id: ac-060-2
+      type: unit_test_pass
+      test_id: test_severity_scoring_deterministic
+- id: task-070
+  phase: phase-02
+  title: Implement prediction engine
+  description: Implement deterministic cost prediction using cost_heuristics.json
+    and cold-start defaults.
+  automation_level: partial
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-050
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-070-1
+    action: load_heuristics_file
+    description: Load and validate cost_heuristics.json.
+    acceptance_criteria:
+    - id: ac-070-1
+      type: unit_test_pass
+      test_id: test_load_cost_heuristics
+  - id: step-070-2
+    action: apply_cold_start_defaults
+    description: Apply cold-start defaults for missing usage.
+    acceptance_criteria:
+    - id: ac-070-2
+      type: unit_test_pass
+      test_id: test_cold_start_defaults_applied
+  - id: step-070-3
+    action: compute_prediction_interval
+    description: Compute prediction intervals using range_factor.
+    acceptance_criteria:
+    - id: ac-070-3
+      type: unit_test_pass
+      test_id: test_prediction_interval_bounds
+- id: task-080
+  phase: phase-02
+  title: Implement regression classifier
+  description: Classify cost events into configuration, provisioning, scaling, traffic_inferred
+    and indirect_cost.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-070
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-080-1
+    action: map_regression_types
+    description: Map events to classifier types deterministically.
+    acceptance_criteria:
+    - id: ac-080-1
+      type: unit_test_pass
+      test_id: test_regression_classifier_mapping
+  - id: step-080-2
+    action: snapshot_classifier_output
+    description: Ensure classifier output is deterministic via snapshot.
+    acceptance_criteria:
+    - id: ac-080-2
+      type: snapshot_hash
+      file: tests/snapshots/classifier_output.json
+- id: task-090
+  phase: phase-02
+  title: Implement explain engine
+  description: Implement explain output referencing heuristics, baselines and assumptions.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-060
+  - task-070
+  - task-080
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-090-1
+    action: generate_markdown_explain
+    description: Generate markdown_explanation for top N high-cost patterns.
+    acceptance_criteria:
+    - id: ac-090-1
+      type: unit_test_pass
+      test_id: test_explain_markdown_contains_references
+  - id: step-090-2
+    action: reference_heuristics_version
+    description: Ensure explain output references heuristics version and assumptions.
+    acceptance_criteria:
+    - id: ac-090-2
+      type: unit_test_pass
+      test_id: test_explain_references_heuristics_version
+- id: task-100
+  phase: phase-03
+  title: Implement zero-cost guard module
+  description: Implement guard module enforcing zero_cost_policy invariants across
+    CLI and engines.
+  automation_level: partial
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-030
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-100-1
+    action: implement_guard_module
+    description: Implement central guard enforcing no terraform apply/plan or cloud
+      SDK calls.
+    acceptance_criteria:
+    - id: ac-100-1
+      type: code_search_absent
+      target: products/costpilot/src
+      pattern: terraform apply
+  - id: step-100-2
+    action: wire_cli_to_guard
+    description: Ensure all CLI commands call zero-cost guard before work.
+    acceptance_criteria:
+    - id: ac-100-2
+      type: unit_test_pass
+      test_id: test_zero_cost_enforced_for_all_commands
+- id: task-110
+  phase: phase-03
+  title: Enforce offline, no-network execution
+  description: Ensure no runtime path can perform network egress or real cloud calls.
+  automation_level: partial
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-100
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-110-1
+    action: scan_for_network_calls
+    description: Scan for HTTP client usage or SDK calls and remove/guard.
+    acceptance_criteria:
+    - id: ac-110-1
+      type: code_search_absent
+      target: products/costpilot/src
+      pattern: http
+- id: task-120
+  phase: phase-03
+  title: Implement deterministic pipeline ordering
+  description: Ensure evaluation order and aggregation are deterministic and canonical.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-060
+  - task-090
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-120-1
+    action: fix_iteration_order
+    description: Enforce stable ordering for collections and outputs.
+    acceptance_criteria:
+    - id: ac-120-1
+      type: snapshot_hash
+      file: tests/snapshots/full_scan_output.json
+  - id: step-120-2
+    action: canonical_json_output
+    description: Use canonical JSON serialization with stable keys.
+    acceptance_criteria:
+    - id: ac-120-2
+      type: unit_test_pass
+      test_id: test_canonical_serialization
+- id: task-130
+  phase: phase-03
+  title: Integrate WASM runtime and limits
+  description: Configure WASM runtime with max_memory_mb and timeout_ms_per_scan and
+    validate.
+  automation_level: partial
+  severity: high
+  retry_policy: manual
+  notes: ''
+  dependencies:
+  - task-120
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-130-1
+    action: configure_wasm_limits
+    description: Configure memory/time limits per spec.
+    acceptance_criteria:
+    - id: ac-130-1
+      type: unit_test_pass
+      test_id: test_wasm_limits_configured
+  - id: step-130-2
+    action: run_stress_test
+    description: Run load tests to verify limits enforced.
+    acceptance_criteria:
+    - id: ac-130-2
+      type: perf_test_pass
+      test_id: test_wasm_limits_under_load
+- id: task-140
+  phase: phase-04
+  title: Implement policy loader and schema validation
+  description: Implement loader for .costpilot/policies.yml with schema validation.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-040
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-140-1
+    action: validate_policy_schema
+    description: Validate policy file against schema.
+    acceptance_criteria:
+    - id: ac-140-1
+      type: unit_test_pass
+      test_id: test_policy_schema_validation
+- id: task-150
+  phase: phase-04
+  title: Implement policy enforcement engine
+  description: Evaluate policies in warn/block modes and emit enforcement reports.
+  automation_level: partial
+  severity: critical
+  retry_policy: manual
+  notes: ''
+  dependencies:
+  - task-140
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-150-1
+    action: implement_warn_mode
+    description: Implement warn mode behavior for violations.
+    acceptance_criteria:
+    - id: ac-150-1
+      type: unit_test_pass
+      test_id: test_policy_warn_mode
+  - id: step-150-2
+    action: implement_block_mode
+    description: Block CI when blocking policies fail.
+    acceptance_criteria:
+    - id: ac-150-2
+      type: unit_test_pass
+      test_id: test_policy_block_mode
+- id: task-160
+  phase: phase-04
+  title: Implement exemptions workflow
+  description: Implement exemptions in .costpilot/exemptions.yml with expiry enforcement.
+  automation_level: partial
+  severity: high
+  retry_policy: manual
+  notes: ''
+  dependencies:
+  - task-150
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-160-1
+    action: load_exemptions_file
+    description: Load exemptions and associate with policy rules.
+    acceptance_criteria:
+    - id: ac-160-1
+      type: unit_test_pass
+      test_id: test_exemptions_load_and_match
+  - id: step-160-2
+    action: enforce_expired_exemptions
+    description: Ensure expired exemptions fail CI.
+    acceptance_criteria:
+    - id: ac-160-2
+      type: unit_test_pass
+      test_id: test_exemptions_expiry_enforced
+- id: task-170
+  phase: phase-04
+  title: Implement SLO evaluation engine
+  description: Implement evaluation of SLOs defined in .costpilot/slo.yml using prediction
+    outputs.
+  automation_level: partial
+  severity: critical
+  retry_policy: manual
+  notes: ''
+  dependencies:
+  - task-070
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-170-1
+    action: validate_slo_config
+    description: Load and validate SLO config schema.
+    acceptance_criteria:
+    - id: ac-170-1
+      type: unit_test_pass
+      test_id: test_slo_config_validation
+  - id: step-170-2
+    action: evaluate_slo_rules
+    description: Evaluate monthly_cost_slo and composed SLOs.
+    acceptance_criteria:
+    - id: ac-170-2
+      type: unit_test_pass
+      test_id: test_slo_evaluation_deterministic
+- id: task-180
+  phase: phase-04
+  title: Implement SLO burn prediction
+  description: Compute burn_risk and projected_cost_after_merge based on predicted
+    deltas.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-170
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-180-1
+    action: compute_burn_risk_levels
+    description: Compute burn risk levels (low, medium, high, critical).
+    acceptance_criteria:
+    - id: ac-180-1
+      type: unit_test_pass
+      test_id: test_slo_burn_risk_levels
+- id: task-190
+  phase: phase-05
+  title: Implement mapping engine
+  description: Implement mapping engine with dependency_graph.json and mermaid/graphviz
+    outputs.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-050
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-190-1
+    action: construct_dependency_graph
+    description: Build internal dependency graph from IaC resources.
+    acceptance_criteria:
+    - id: ac-190-1
+      type: unit_test_pass
+      test_id: test_mapping_graph_construction
+  - id: step-190-2
+    action: export_mermaid_and_graphviz
+    description: Export mermaid_diagram.md and graphviz.dot.
+    acceptance_criteria:
+    - id: ac-190-2
+      type: file_exists
+      target: .costpilot/mermaid_diagram.md
+- id: task-200
+  phase: phase-05
+  title: Implement baselines engine
+  description: Implement baselines loader and integration with prediction engine.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-070
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-200-1
+    action: load_baselines_file
+    description: Load .costpilot/baselines.json and index by resource_id.
+    acceptance_criteria:
+    - id: ac-200-1
+      type: unit_test_pass
+      test_id: test_baselines_load_and_map
+  - id: step-200-2
+    action: apply_baselines_to_predictions
+    description: Override small deltas based on baselines.
+    acceptance_criteria:
+    - id: ac-200-2
+      type: unit_test_pass
+      test_id: test_prediction_with_baselines
+- id: task-210
+  phase: phase-05
+  title: Implement trend engine
+  description: Implement trend.json append-only log and HTML/SVG report generation.
+  automation_level: partial
+  severity: medium
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-200
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-210-1
+    action: append_trend_entries
+    description: Append trend entries with UTC timestamps.
+    acceptance_criteria:
+    - id: ac-210-1
+      type: unit_test_pass
+      test_id: test_trend_append_only
+  - id: step-210-2
+    action: render_trend_reports
+    description: Generate trend_report.html and trend_graph.svg.
+    acceptance_criteria:
+    - id: ac-210-2
+      type: file_exists
+      target: .costpilot/trend_report.html
+- id: task-220
+  phase: phase-05
+  title: Implement attribution engine
+  description: Implement tag-based attribution and grouping outputs per tier.
+  automation_level: partial
+  severity: medium
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-070
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-220-1
+    action: resolve_tags_to_groups
+    description: Resolve tags into module/service/environment groupings.
+    acceptance_criteria:
+    - id: ac-220-1
+      type: unit_test_pass
+      test_id: test_tag_resolution
+  - id: step-220-2
+    action: emit_attribution_outputs
+    description: Emit free/pro/enterprise attribution outputs.
+    acceptance_criteria:
+    - id: ac-220-2
+      type: unit_test_pass
+      test_id: test_attribution_outputs
+- id: task-230
+  phase: phase-06
+  title: Implement core unit test suite
+  description: Implement core unit tests for detect, predict, explain, policy and
+    SLO engines.
+  automation_level: partial
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-060
+  - task-070
+  - task-090
+  - task-150
+  - task-170
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-230-1
+    action: create_core_unit_tests
+    description: Create focused tests for key engine behaviors.
+    acceptance_criteria:
+    - id: ac-230-1
+      type: coverage
+      minimum_percent: 80
+- id: task-240
+  phase: phase-06
+  title: Implement snapshot determinism tests
+  description: Implement snapshot tests to ensure deterministic full scan outputs.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-120
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-240-1
+    action: create_full_scan_snapshots
+    description: Create representative plan snapshots and hash them.
+    acceptance_criteria:
+    - id: ac-240-1
+      type: snapshot_hash
+      file: tests/snapshots/full_scan_output.json
+- id: task-250
+  phase: phase-06
+  title: Configure CI workflow
+  description: Configure .github/workflows/costpilot.yml for required jobs.
+  automation_level: partial
+  severity: critical
+  retry_policy: safe
+  notes: ''
+  dependencies:
+  - task-230
+  - task-240
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-250-1
+    action: create_ci_workflow_file
+    description: Define validate_schema, unit, integration, snapshot, wasm, self_test,
+      verify, perf_regression jobs.
+    acceptance_criteria:
+    - id: ac-250-1
+      type: file_exists
+      target: .github/workflows/costpilot.yml
+- id: task-260
+  phase: phase-06
+  title: Run full suite and verify invariants
+  description: Run full suite and confirm zero-cost, determinism and policy invariants.
+  automation_level: partial
+  severity: critical
+  retry_policy: manual
+  notes: ''
+  dependencies:
+  - task-100
+  - task-120
+  - task-130
+  - task-180
+  - task-200
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-260-1
+    action: run_full_test_suite
+    description: Run full test/CI suite locally.
+    acceptance_criteria:
+    - id: ac-260-1
+      type: command
+      command: nox -s full
+      expected_exit_code: 0
+  - id: step-260-2
+    action: manual_invariant_review
+    description: Manual review of invariants checklist (zero-cost, determinism, governance).
+    acceptance_criteria:
+    - id: ac-260-2
+      type: manual_review
+      reviewer: Deon Prinsloo

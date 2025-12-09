@@ -112,7 +112,9 @@ pub fn cmd_audit_view(
             return Ok(());
         }
 
-        for entry in entries {
+        let entries_len = entries.len();
+        
+        for entry in &entries {
             let severity_color = match entry.event.severity {
                 AuditSeverity::Critical => "critical".red().bold(),
                 AuditSeverity::High => "high".bright_red(),
@@ -152,7 +154,7 @@ pub fn cmd_audit_view(
         }
 
         println!("{}", "━".repeat(80).bright_black());
-        println!("Total entries: {}", entries.len());
+        println!("Total entries: {}", entries_len);
     }
 
     Ok(())
