@@ -98,7 +98,7 @@ pub fn cmd_approve(
     manager.submit_for_approval(&policy_id, "author".to_string())?;
 
     // Record approval
-    let result = manager.approve(&policy_id, approver.clone(), comment.clone())?;
+    let result = manager.approve(&policy_id, approver.clone(), "APPROVAL-001".to_string(), comment.clone())?;
 
     match format {
         "json" => {

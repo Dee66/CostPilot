@@ -42,6 +42,11 @@ pub struct SeverityFactor {
 pub struct ExplainEngine;
 
 impl ExplainEngine {
+    /// Create new ExplainEngine
+    pub fn new() -> Self {
+        Self
+    }
+
     /// Generate full explanation for a detection
     pub fn explain(
         detection: &Detection,
@@ -270,6 +275,31 @@ impl ExplainEngine {
         }
 
         patterns
+    }
+
+    /// Generate detection reasoning summary for display
+    pub fn explain_detection_reasoning(detection: &Detection, change: &ResourceChange, estimate: Option<&CostEstimate>) -> String {
+        let reasoning = Self::build_detection_reasoning(detection, change, estimate);
+        let mut output = String::new();
+
+        output.push_str(&format!("Detection Reasoning for {}:\n", detection.resource_id));
+        output.push_str(&format!("  Regression Type: {}\n", reasoning.regression_type));
+        output.push_str(&format!("  Severity Score: {}/100\n", reasoning.severity_score));
+        output.push_str(&format!("  Confidence: {:.0}%\n\n", reasoning.confidence * 100.0));
+
+        output.push_str("Severity Factor Breakdown:\n");
+        for factor in &reasoning.severity_factors {
+            output.push_str(&format!(
+                "  • {} (weight: {:.0}%): {:.2} → {} points\n",
+                factor.name,
+                factor.weight * 100.0,
+                factor.value,
+                factor.contribution
+            ));
+            output.push_str(&format!("    Reasoning: {}\n", factor.reasoning));
+        }
+
+        output
     }
 }
 

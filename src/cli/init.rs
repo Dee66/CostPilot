@@ -134,13 +134,14 @@ fn generate_github_action(project_dir: &Path) -> Result<(), String> {
     
     let workflow_path = workflows_dir.join("costpilot.yml");
     
-    let workflow_content = r#"name: CostPilot
+    let workflow_content = r#"name: CostPilot Cost Analysis
 
 on:
   pull_request:
     paths:
       - '**.tf'
       - '**.tfvars'
+      - 'terraform/**'
       - 'infrastructure/**'
       - '.github/workflows/costpilot.yml'
 
@@ -151,6 +152,7 @@ permissions:
 jobs:
   cost-analysis:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -162,54 +164,34 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./infrastructure
+        working-directory: ./terraform
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan.binary
-        working-directory: ./infrastructure
-
-      - name: Convert plan to JSON
-        run: terraform show -json tfplan.binary > tfplan.json
-        working-directory: ./infrastructure
-
-      - name: Install CostPilot
         run: |
-          # TODO: Replace with actual installation method
-          # curl -sSL https://costpilot.dev/install.sh | bash
-          echo "CostPilot installation placeholder"
+          terraform plan -out=plan.tfplan
+          terraform show -json plan.tfplan > plan.json
+        working-directory: ./terraform
 
-      - name: Run CostPilot Scan
-        id: costpilot
-        run: |
-          costpilot scan \
-            --plan=infrastructure/tfplan.json \
-            --explain \
-            --autofix=snippet \
-            --format=markdown \
-            > cost-report.md
-        continue-on-error: true
-
-      - name: Comment PR
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
+      - name: Run CostPilot Analysis
+        uses: Dee66/CostPilot@v1
         with:
-          script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('cost-report.md', 'utf8');
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            });
+          terraform_plan: terraform/plan.json
+          policy_file: .costpilot/policy.yml
+          baseline_file: .costpilot/baseline.json
+          mode: all
+          fail_on_regression: true
+          fail_on_policy: true
+          comment_pr: true
 
-      - name: Check Cost Thresholds
-        run: |
-          costpilot scan \
-            --plan=infrastructure/tfplan.json \
-            --format=json \
-            --fail-on-critical
+      - name: Upload Cost Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cost-analysis-report
+          path: |
+            terraform/plan.json
+            cost-report.md
+          retention-days: 30
 "#;
 
     write_file(&workflow_path, workflow_content)?;
@@ -230,35 +212,48 @@ fn generate_gitlab_ci(project_dir: &Path) -> Result<(), String> {
 stages:
   - validate
   - cost-analysis
+  - deploy
 
 terraform-plan:
   stage: validate
   image: hashicorp/terraform:1.6
   script:
-    - cd infrastructure
+    - cd terraform
     - terraform init
-    - terraform plan -out=tfplan.binary
-    - terraform show -json tfplan.binary > tfplan.json
+    - terraform plan -out=plan.tfplan
+    - terraform show -json plan.tfplan > plan.json
   artifacts:
     paths:
-      - infrastructure/tfplan.json
+      - terraform/plan.json
     expire_in: 1 day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
-costpilot-scan:
+costpilot-analysis:
   stage: cost-analysis
   image: ubuntu:22.04
   dependencies:
     - terraform-plan
-  script:
+  before_script:
     - apt-get update && apt-get install -y curl
-    # TODO: Replace with actual installation method
-    # - curl -sSL https://costpilot.dev/install.sh | bash
-    - echo "CostPilot installation placeholder"
-    - costpilot scan --plan=infrastructure/tfplan.json --explain --autofix=snippet > cost-report.md
+    - curl -fsSL https://costpilot.dev/install.sh | bash
+  script:
+    - |
+      costpilot analyze \
+        --plan terraform/plan.json \
+        --policy .costpilot/policy.yml \
+        --baseline .costpilot/baseline.json \
+        --mode all \
+        --format markdown > cost-report.md
   artifacts:
     reports:
       markdown: cost-report.md
-  allow_failure: true
+    paths:
+      - cost-report.md
+    expire_in: 30 days
+  allow_failure: false
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 "#
     };
 
@@ -270,76 +265,138 @@ costpilot-scan:
 fn generate_example_policy(costpilot_dir: &Path) -> Result<(), String> {
     let policy_path = costpilot_dir.join("policy.yml");
     
-    let policy_content = r#"# CostPilot Policy Configuration (Phase 2)
-version: 1.0.0
+    let policy_content = r#"# CostPilot Policy Configuration
+version: "1.0"
 
 # Budget policies
-budgets:
-  # Global monthly budget
-  global:
-    monthly_limit: 1000  # USD
-    warning_threshold: 0.8  # 80%
-  
-  # Per-module budgets
-  modules:
-    - name: compute
-      monthly_limit: 500
-    - name: storage
-      monthly_limit: 200
-    - name: networking
-      monthly_limit: 100
-
-# Resource policies
-resources:
-  # NAT Gateway limits
-  nat_gateways:
-    max_count: 2
-    require_justification: true
-  
-  # EC2 instance policies
-  ec2_instances:
-    allowed_families:
-      - t3
-      - t3a
-      - m5
-      - c5
-    max_size: xlarge  # Require approval for 2xlarge+
-  
-  # S3 bucket policies
-  s3_buckets:
-    require_lifecycle_rules: true
-    require_encryption: true
-  
-  # Lambda function policies
-  lambda_functions:
-    require_concurrency_limit: true
-    max_memory_mb: 3008
-  
-  # DynamoDB table policies
-  dynamodb_tables:
-    prefer_provisioned: true  # Warn on PAY_PER_REQUEST
-
-# SLO policies (Phase 2)
-slos:
-  - name: monthly_cost_under_budget
-    type: cost_threshold
-    value: 1000
+policies:
+  - name: "Production Budget Limit"
+    rule: "monthly_cost <= 5000"
+    action: block
     severity: CRITICAL
+    tags:
+      - environment: production
+    
+  - name: "Development Budget Warning"
+    rule: "monthly_cost > 1000"
+    action: warn
+    severity: MEDIUM
+    tags:
+      - environment: development
   
-  - name: no_critical_anti_patterns
-    type: pattern_detection
-    patterns:
-      - nat_gateway_overuse
-      - unbounded_lambda_concurrency
+  - name: "Instance Type Restrictions"
+    rule: "instance_type in ['t3.micro', 't3.small', 't3.medium', 't3.large']"
+    action: require_approval
+    severity: HIGH
+    resources:
+      - aws_instance
+      - aws_autoscaling_group
+  
+  - name: "NAT Gateway Limit"
+    rule: "resource_count <= 2"
+    action: block
+    severity: HIGH
+    resources:
+      - aws_nat_gateway
+  
+  - name: "Lambda Concurrency Limit"
+    rule: "reserved_concurrent_executions != null"
+    action: warn
+    severity: MEDIUM
+    resources:
+      - aws_lambda_function
+  
+  - name: "S3 Lifecycle Rules Required"
+    rule: "lifecycle_rule != null"
+    action: warn
+    severity: LOW
+    resources:
+      - aws_s3_bucket
+  
+  - name: "Cost Regression Threshold"
+    rule: "cost_increase_percent <= 20"
+    action: require_approval
     severity: HIGH
 
-# Enforcement
-enforcement:
-  mode: advisory  # advisory, blocking
-  block_on_critical: false  # Set true to fail CI on critical issues
+# Exemptions
+exemptions:
+  - id: EXP-001
+    policy: "Production Budget Limit"
+    resource: "module.analytics.aws_emr_cluster"
+    justification: "Q4 data processing spike - temporary"
+    expires_at: "2026-03-31"
+    approved_by: "tech-lead@company.com"
+    ticket_ref: "JIRA-1234"
+
+# Approval workflows
+approval_workflows:
+  require_approval_for:
+    - cost_increase_percent: 30  # Require approval for 30%+ increases
+    - monthly_cost: 10000        # Require approval for $10k+ changes
+    - instance_types:            # Require approval for large instances
+        - "*.2xlarge"
+        - "*.4xlarge"
+        - "*.8xlarge"
+  
+  approvers:
+    - email: "tech-lead@company.com"
+      slack: "@tech-lead"
+    - email: "finops@company.com"
+      slack: "@finops-team"
+
+# Baseline configuration
+baseline:
+  file: ".costpilot/baseline.json"
+  auto_update: false  # Set true to auto-update on main branch
+  regression_threshold: 10  # Percent increase to flag as regression
+
+# SLO configuration
+slo:
+  file: ".costpilot/slo.json"
+  check_on_pr: true
+  fail_on_breach: true
 "#;
 
     write_file(&policy_path, policy_content)?;
+    
+    // Also generate baseline.json template
+    let baseline_path = costpilot_dir.join("baseline.json");
+    let baseline_content = r#"{
+  "version": "1.0",
+  "timestamp": "2025-12-07T00:00:00Z",
+  "total_monthly_cost": 0.0,
+  "resources": {},
+  "metadata": {
+    "terraform_version": "1.6.0",
+    "provider_versions": {}
+  }
+}
+"#;
+    write_file(&baseline_path, baseline_content)?;
+    
+    // Generate SLO template
+    let slo_path = costpilot_dir.join("slo.json");
+    let slo_content = r#"{
+  "version": "1.0",
+  "slos": [
+    {
+      "name": "Monthly Cost Budget",
+      "target": 5000.0,
+      "error_budget_percent": 10,
+      "window_days": 30,
+      "breach_action": "alert"
+    },
+    {
+      "name": "Cost Stability",
+      "target_volatility_percent": 15,
+      "window_days": 7,
+      "breach_action": "warn"
+    }
+  ]
+}
+"#;
+    write_file(&slo_path, slo_content)?;
+    
     Ok(())
 }
 

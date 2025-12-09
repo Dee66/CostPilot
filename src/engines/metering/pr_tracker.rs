@@ -93,6 +93,7 @@ pub struct PrUsageSummary {
 }
 
 /// CI/CD usage tracker
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CiUsageTracker {
     /// Tracked PRs
     prs: HashMap<u32, PrUsageTracker>,

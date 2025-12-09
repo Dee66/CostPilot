@@ -202,6 +202,12 @@ impl AttributionReport {
         }
     }
 
+    /// Convert report to JSON string
+    pub fn to_json(&self) -> Result<String, String> {
+        serde_json::to_string_pretty(self)
+            .map_err(|e| format!("Failed to serialize AttributionReport: {}", e))
+    }
+
     pub fn add_allocation(&mut self, attribution: Attribution) {
         self.total_cost += attribution.monthly_cost;
 

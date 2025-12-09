@@ -79,7 +79,7 @@ pub enum PolicyCategory {
 }
 
 /// Severity level for policy violations
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum Severity {
     /// Informational only, no action required
@@ -113,7 +113,7 @@ impl Severity {
 }
 
 /// Policy status in lifecycle
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum PolicyStatus {
     /// Policy is in draft and not enforced

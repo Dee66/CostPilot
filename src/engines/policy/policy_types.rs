@@ -56,6 +56,8 @@ pub struct ResourcePolicies {
     pub lambda_functions: Option<LambdaPolicy>,
     #[serde(default)]
     pub dynamodb_tables: Option<DynamoDbPolicy>,
+    #[serde(default)]
+    pub s3_lifecycle_required: bool,
 }
 
 /// NAT Gateway policy

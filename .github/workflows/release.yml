@@ -3,12 +3,222 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  discussions: write
 
 jobs:
-  release:
+  test:
+    name: Test Before Release
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v3
-      - name: Create release
-        run: ./scripts/release.sh
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          components: clippy
+      
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache Cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Run tests
+        run: cargo test --all-features --verbose
+      
+      - name: Run clippy
+        run: cargo clippy --all-features -- -D warnings
+      
+      - name: Check formatting
+        run: cargo fmt -- --check
+      
+      - name: Run security audit
+        run: |
+          cargo install cargo-audit
+          cargo audit
+  
+  build:
+    name: Build Release Binaries
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: costpilot-linux-x86_64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact: costpilot-linux-aarch64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: costpilot-macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: costpilot-macos-aarch64
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          target: ${{ matrix.target }}
+          override: true
+      
+      - name: Install cross-compilation tools (Linux ARM64)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+      
+      - name: Build release binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.target }} --verbose
+      
+      - name: Strip binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
+            aarch64-linux-gnu-strip target/${{ matrix.target }}/release/costpilot
+          else
+            strip target/${{ matrix.target }}/release/costpilot
+          fi
+      
+      - name: Create archive
+        run: |
+          mkdir -p artifacts
+          cp target/${{ matrix.target }}/release/costpilot artifacts/${{ matrix.artifact }}
+          cd artifacts
+          tar -czf ${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
+          sha256sum ${{ matrix.artifact }}.tar.gz > ${{ matrix.artifact }}.tar.gz.sha256
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifacts/*
+          retention-days: 1
+  
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      
+      - name: Flatten artifacts directory
+        run: |
+          mkdir -p release-artifacts
+          find artifacts -type f -exec cp {} release-artifacts/ \;
+          ls -lah release-artifacts/
+      
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
+      
+      - name: Generate release notes from changelog
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          if [ -f CHANGELOG.md ]; then
+            awk "/## \[${VERSION#v}\]/,/## \[/" CHANGELOG.md | head -n -1 > release_notes.md
+            
+            if [ ! -s release_notes.md ]; then
+              echo "Release $VERSION" > release_notes.md
+              echo "" >> release_notes.md
+              echo "See [CHANGELOG.md](CHANGELOG.md) for details." >> release_notes.md
+            fi
+          else
+            echo "Release $VERSION" > release_notes.md
+            echo "" >> release_notes.md
+            echo "See commit history for changes." >> release_notes.md
+          fi
+          
+          cat >> release_notes.md << 'EOF'
+          
+          ## Installation
+          
+          ### Linux (x86_64)
+          ```bash
+          curl -L https://github.com/Dee66/CostPilot/releases/download/${{ steps.version.outputs.version }}/costpilot-linux-x86_64.tar.gz | tar xz
+          sudo mv costpilot /usr/local/bin/
+          costpilot --version
+          ```
+          
+          ### macOS (Apple Silicon)
+          ```bash
+          curl -L https://github.com/Dee66/CostPilot/releases/download/${{ steps.version.outputs.version }}/costpilot-macos-aarch64.tar.gz | tar xz
+          sudo mv costpilot /usr/local/bin/
+          costpilot --version
+          ```
+          
+          ### GitHub Action
+          ```yaml
+          - uses: Dee66/CostPilot@${{ steps.version.outputs.version }}
+          ```
+          EOF
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: CostPilot ${{ steps.version.outputs.version }}
+          body_path: release_notes.md
+          files: release-artifacts/*
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update major version tag
+        if: ${{ !contains(steps.version.outputs.version, '-') }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
+          
+          git tag -d "$MAJOR_VERSION" 2>/dev/null || true
+          git push origin ":refs/tags/$MAJOR_VERSION" 2>/dev/null || true
+          
+          git tag "$MAJOR_VERSION"
+          git push origin "$MAJOR_VERSION"

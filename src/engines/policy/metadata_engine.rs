@@ -208,18 +208,25 @@ impl MetadataPolicyEngine {
         // Get all policies that should be enforced
         let enforceable = self.repository.get_enforceable();
         
-        for policy in enforceable {
-            let policy_id = policy.metadata.id.clone();
+        // Collect violations first without mutating repository
+        let mut policy_violations: Vec<(String, Vec<MetadataPolicyViolation>)> = Vec::new();
+        
+        for policy in &enforceable {
             let violations = self.evaluate_policy(policy, changes, total_cost);
-            
-            // Record evaluation in metrics
-            if let Some(policy_mut) = self.repository.get_mut(&policy_id) {
+            if !violations.is_empty() {
+                policy_violations.push((policy.metadata.id.clone(), violations));
+            }
+        }
+        
+        // Now update metrics with mutable access
+        for (policy_id, violations) in &policy_violations {
+            if let Some(policy_mut) = self.repository.get_mut(policy_id) {
                 policy_mut.metadata.metrics.record_evaluation(!violations.is_empty());
             }
             
             // Add violations to result
             for violation in violations {
-                result.add_violation(violation);
+                result.add_violation(violation.clone());
             }
         }
         
@@ -289,7 +296,7 @@ impl MetadataPolicyEngine {
                 let module_cost: f64 = changes
                     .iter()
                     .filter(|c| c.resource_id.starts_with(&format!("module.{}", module_name)))
-                    .map(|c| c.cost_impact.monthly_change)
+                    .filter_map(|c| c.cost_impact.as_ref().map(|ci| ci.delta))
                     .sum();
                 
                 if module_cost > *monthly_limit {

@@ -81,10 +81,10 @@ pub fn execute_policy_dsl_command(command: &PolicyDslCommand) -> Result<(), Box<
             execute_test(policy, resource_type, *monthly_cost, *verbose)
         }
         PolicyDslSubcommand::Stats { path } => {
-            execute_stats(path.as_deref())
+            execute_stats(path.as_ref())
         }
         PolicyDslSubcommand::Example { output, format } => {
-            execute_example(output.as_deref(), format)
+            execute_example(output.as_ref(), format)
         }
     }
 }

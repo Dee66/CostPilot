@@ -1,0 +1,12 @@
+/home/dee/workspace/AI/GuardSuite/CostPilot/target/release/deps/libanstyle-86fcbd21edc5ce8c.rmeta: /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/lib.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/macros.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/color.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/effect.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/reset.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/style.rs
+
+/home/dee/workspace/AI/GuardSuite/CostPilot/target/release/deps/libanstyle-86fcbd21edc5ce8c.rlib: /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/lib.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/macros.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/color.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/effect.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/reset.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/style.rs
+
+/home/dee/workspace/AI/GuardSuite/CostPilot/target/release/deps/anstyle-86fcbd21edc5ce8c.d: /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/lib.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/macros.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/color.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/effect.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/reset.rs /home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/style.rs
+
+/home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/lib.rs:
+/home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/macros.rs:
+/home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/color.rs:
+/home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/effect.rs:
+/home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/reset.rs:
+/home/dee/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.13/src/style.rs:

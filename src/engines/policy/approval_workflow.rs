@@ -5,6 +5,30 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Approval reference required for flagged policies
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApprovalReference {
+    /// Unique approval reference ID (e.g., "APPR-2024-001")
+    pub reference_id: String,
+    
+    /// Policy ID requiring approval
+    pub policy_id: String,
+    
+    /// Approver who granted approval
+    pub approver: String,
+    
+    /// Timestamp when approval was granted
+    pub approved_at: String,
+    
+    /// Optional approval comment/justification
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    
+    /// Expiration timestamp (if temporary approval)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
+}
+
 /// Manages approval workflows across multiple policies
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApprovalWorkflowManager {
@@ -16,6 +40,9 @@ pub struct ApprovalWorkflowManager {
     
     /// Role-based approver assignments
     role_assignments: HashMap<String, Vec<String>>,
+    
+    /// Stored approval references
+    approval_references: HashMap<String, ApprovalReference>,
 }
 
 impl ApprovalWorkflowManager {
@@ -25,6 +52,7 @@ impl ApprovalWorkflowManager {
             workflows: HashMap::new(),
             default_config: ApprovalConfig::default(),
             role_assignments: HashMap::new(),
+            approval_references: HashMap::new(),
         }
     }
 
@@ -34,6 +62,7 @@ impl ApprovalWorkflowManager {
             workflows: HashMap::new(),
             default_config: config,
             role_assignments: HashMap::new(),
+            approval_references: HashMap::new(),
         }
     }
 
@@ -70,15 +99,24 @@ impl ApprovalWorkflowManager {
         policy_id: &str,
         submitter: String,
     ) -> Result<Vec<String>, WorkflowError> {
+        // Get required approvers based on policy's approval config
+        let approvers = {
+            let lifecycle = self
+                .workflows
+                .get(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
+            self.resolve_approvers(&lifecycle.approval_config)?
+        };
+
+        // Now mutate the lifecycle
         let lifecycle = self
             .workflows
             .get_mut(policy_id)
             .ok_or_else(|| WorkflowError::PolicyNotFound {
                 policy_id: policy_id.to_string(),
             })?;
-
-        // Get required approvers based on roles
-        let approvers = self.resolve_approvers(&lifecycle.approval_config)?;
 
         lifecycle
             .submit_for_review(submitter, approvers.clone())
@@ -90,13 +128,34 @@ impl ApprovalWorkflowManager {
         Ok(approvers)
     }
 
-    /// Approve a policy
+    /// Approve a policy with approval reference
     pub fn approve(
         &mut self,
         policy_id: &str,
         approver: String,
+        approval_reference: String,
         comment: Option<String>,
     ) -> Result<ApprovalResult, WorkflowError> {
+        // Validate approval reference format
+        Self::validate_approval_reference(&approval_reference)?;
+
+        // Verify approver is authorized (read-only check)
+        {
+            let lifecycle = self
+                .workflows
+                .get(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
+                
+            if !self.is_authorized_approver(&approver, &lifecycle.approval_config) {
+                return Err(WorkflowError::UnauthorizedApprover {
+                    approver: approver.clone(),
+                });
+            }
+        }
+
+        // Now mutate the lifecycle
         let lifecycle = self
             .workflows
             .get_mut(policy_id)
@@ -104,19 +163,23 @@ impl ApprovalWorkflowManager {
                 policy_id: policy_id.to_string(),
             })?;
 
-        // Verify approver is authorized
-        if !self.is_authorized_approver(&approver, &lifecycle.approval_config) {
-            return Err(WorkflowError::UnauthorizedApprover {
-                approver: approver.clone(),
-            });
-        }
-
         lifecycle
-            .record_approval(approver.clone(), true, comment)
+            .record_approval(approver.clone(), true, comment.clone())
             .map_err(|e| WorkflowError::LifecycleError {
                 policy_id: policy_id.to_string(),
                 error: e.to_string(),
             })?;
+
+        // Store approval reference
+        let reference = ApprovalReference {
+            reference_id: approval_reference.clone(),
+            policy_id: policy_id.to_string(),
+            approver: approver.clone(),
+            approved_at: Utc::now().to_rfc3339(),
+            comment,
+            expires_at: None,
+        };
+        self.approval_references.insert(approval_reference, reference);
 
         // Check if we have sufficient approvals to auto-transition
         let sufficient = lifecycle.has_sufficient_approvals();
@@ -130,6 +193,40 @@ impl ApprovalWorkflowManager {
         Ok(result)
     }
 
+    /// Validate approval reference format
+    /// Accepts: JIRA tickets (PROJ-123), GitHub PR (#456), ServiceNow (INC0012345), custom (APPR-2024-001)
+    fn validate_approval_reference(reference: &str) -> Result<(), WorkflowError> {
+        if reference.trim().is_empty() {
+            return Err(WorkflowError::MissingApprovalReference);
+        }
+
+        // Check for valid patterns
+        let valid = reference.contains('-') // PROJ-123, APPR-2024-001, INC0012345
+            || reference.starts_with('#') // GitHub PR #456
+            || reference.len() >= 5; // Minimum length for custom refs
+
+        if !valid {
+            return Err(WorkflowError::InvalidApprovalReference {
+                reference: reference.to_string(),
+            });
+        }
+
+        Ok(())
+    }
+
+    /// Get approval reference by ID
+    pub fn get_approval_reference(&self, reference_id: &str) -> Option<&ApprovalReference> {
+        self.approval_references.get(reference_id)
+    }
+
+    /// List approval references for a policy
+    pub fn list_policy_references(&self, policy_id: &str) -> Vec<&ApprovalReference> {
+        self.approval_references
+            .values()
+            .filter(|r| r.policy_id == policy_id)
+            .collect()
+    }
+
     /// Reject a policy
     pub fn reject(
         &mut self,
@@ -137,19 +234,29 @@ impl ApprovalWorkflowManager {
         approver: String,
         reason: String,
     ) -> Result<ApprovalResult, WorkflowError> {
+        // Verify approver is authorized (read-only check)
+        {
+            let lifecycle = self
+                .workflows
+                .get(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
+
+            if !self.is_authorized_approver(&approver, &lifecycle.approval_config) {
+                return Err(WorkflowError::UnauthorizedApprover {
+                    approver: approver.clone(),
+                });
+            }
+        }
+
+        // Now mutate the lifecycle
         let lifecycle = self
             .workflows
             .get_mut(policy_id)
             .ok_or_else(|| WorkflowError::PolicyNotFound {
                 policy_id: policy_id.to_string(),
             })?;
-
-        // Verify approver is authorized
-        if !self.is_authorized_approver(&approver, &lifecycle.approval_config) {
-            return Err(WorkflowError::UnauthorizedApprover {
-                approver: approver.clone(),
-            });
-        }
 
         lifecycle
             .record_approval(approver.clone(), false, Some(reason))
@@ -439,6 +546,12 @@ pub enum WorkflowError {
     #[error("Approver not authorized: {approver}")]
     UnauthorizedApprover { approver: String },
 
+    #[error("Approval reference is required but missing")]
+    MissingApprovalReference,
+
+    #[error("Invalid approval reference format: {reference}")]
+    InvalidApprovalReference { reference: String },
+
     #[error("Lifecycle error for policy {policy_id}: {error}")]
     LifecycleError { policy_id: String, error: String },
 }
@@ -497,12 +610,18 @@ mod tests {
         let result = manager.approve(
             "test-policy",
             "alice@example.com".to_string(),
+            "APPR-2024-001".to_string(),
             Some("Looks good".to_string()),
         ).unwrap();
         
         assert!(result.approved);
         assert!(result.sufficient_approvals);
         assert_eq!(result.remaining_approvals, 0);
+        
+        // Verify approval reference was stored
+        let reference = manager.get_approval_reference("APPR-2024-001").unwrap();
+        assert_eq!(reference.policy_id, "test-policy");
+        assert_eq!(reference.approver, "alice@example.com");
     }
 
     #[test]
@@ -599,8 +718,13 @@ mod tests {
         // Submit
         manager.submit_for_approval("test-policy", "author@example.com".to_string()).unwrap();
         
-        // Approve
-        manager.approve("test-policy", "alice@example.com".to_string(), None).unwrap();
+        // Approve with reference
+        manager.approve(
+            "test-policy",
+            "alice@example.com".to_string(),
+            "PROJ-456".to_string(),
+            None,
+        ).unwrap();
         
         // Transition to approved (would normally be done after sufficient approvals)
         let lifecycle = manager.get_lifecycle_mut("test-policy").unwrap();

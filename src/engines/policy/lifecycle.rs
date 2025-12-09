@@ -369,7 +369,7 @@ impl PolicyLifecycle {
         if let Some(last_transition) = self.state_history.last() {
             if let Ok(requested) = DateTime::parse_from_rfc3339(&last_transition.timestamp) {
                 let now = Utc::now();
-                let days_elapsed = (now - requested).num_days();
+                let days_elapsed = (now.signed_duration_since(requested.with_timezone(&Utc))).num_days();
                 return days_elapsed > self.approval_config.review_expiration_days as i64;
             }
         }

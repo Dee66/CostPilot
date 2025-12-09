@@ -15,6 +15,14 @@ pub struct SloManager {
 }
 
 impl SloManager {
+    /// Create new SloManager with config
+    pub fn new(config: SloConfig) -> Self {
+        Self {
+            config,
+            baselines: None,
+        }
+    }
+
     /// Load SLO configuration from JSON file
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, String> {
         let content = fs::read_to_string(path.as_ref())
@@ -27,6 +35,11 @@ impl SloManager {
             config,
             baselines: None,
         })
+    }
+    
+    /// Get reference to SLO configuration
+    pub fn config(&self) -> &SloConfig {
+        &self.config
     }
 
     /// Create from existing config
@@ -340,11 +353,6 @@ impl SloManager {
     /// Get blocking violations from report
     pub fn get_blocking_violations<'a>(&self, report: &'a SloReport) -> Vec<&'a SloEvaluation> {
         report.blocking_violations(&self.config)
-    }
-
-    /// Get SLO configuration
-    pub fn config(&self) -> &SloConfig {
-        &self.config
     }
 
     /// Get baselines manager if loaded

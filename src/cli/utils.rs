@@ -80,5 +80,8 @@ fn parse_resource_change(resource: &Value) -> Result<ResourceChange, Box<dyn std
         old_config: before,
         new_config: after,
         tags: HashMap::new(),
+        monthly_cost: None,
+        config: None,
+        cost_impact: None,
     })
 }

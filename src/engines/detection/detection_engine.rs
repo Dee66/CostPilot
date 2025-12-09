@@ -128,6 +128,8 @@ impl DetectionEngine {
                     "NAT Gateway cost increase of ${:.2}/month. Consider using VPC endpoints or reducing NAT gateway count.",
                     cost_delta
                 ),
+                fix_snippet: None,
+                estimated_cost: None,
             });
         }
 
@@ -146,6 +148,8 @@ impl DetectionEngine {
                                 "Large EC2 instance type '{}' with ${:.2}/month cost. Consider rightsizing.",
                                 instance_type, cost_delta
                             ),
+                            fix_snippet: None,
+                            estimated_cost: None,
                         });
                     }
                 }
@@ -163,6 +167,8 @@ impl DetectionEngine {
                         regression_type: regression_type.clone(),
                         severity_score,
                         message: "S3 bucket without lifecycle rules. Consider adding policies to transition old data to cheaper storage.".to_string(),
+                        fix_snippet: None,
+                        estimated_cost: None,
                     });
                 }
             }
@@ -180,6 +186,8 @@ impl DetectionEngine {
                     "Significant cost increase of ${:.2}/month detected for {}",
                     cost_delta, change.resource_type
                 ),
+                fix_snippet: None,
+                estimated_cost: None,
             });
         }
 

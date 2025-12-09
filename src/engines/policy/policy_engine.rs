@@ -152,6 +152,9 @@ impl PolicyEngine {
                 }
             }
         }
+        
+        // Check compute savings plan eligibility
+        self.evaluate_compute_savings_plan(changes, result);
 
         // Check EC2 instance policies
         if let Some(ec2_policy) = &self.config.resources.ec2_instances {
@@ -303,6 +306,64 @@ impl PolicyEngine {
             _ => false,
         }
     }
+    
+    /// Evaluate compute savings plan eligibility
+    fn evaluate_compute_savings_plan(&self, changes: &[ResourceChange], result: &mut PolicyResult) {
+        // Collect EC2 and Lambda resources that could benefit from savings plans
+        let mut ec2_instances = Vec::new();
+        let mut lambda_functions = Vec::new();
+        
+        for change in changes {
+            if change.action != ChangeAction::Delete {
+                match change.resource_type.as_str() {
+                    "aws_instance" => ec2_instances.push(change),
+                    "aws_lambda_function" => {
+                        if let Some(config) = &change.new_config {
+                            // Check if Lambda has provisioned concurrency
+                            if config.get("reserved_concurrent_executions").is_some() {
+                                lambda_functions.push(change);
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        
+        // Suggest compute savings plan if >= 3 EC2 instances or high Lambda usage
+        if ec2_instances.len() >= 3 || lambda_functions.len() >= 5 {
+            let resource_ids: Vec<String> = ec2_instances.iter()
+                .chain(lambda_functions.iter())
+                .map(|c| c.resource_id.clone())
+                .collect();
+            
+            let message = if ec2_instances.len() >= 3 && lambda_functions.is_empty() {
+                format!(
+                    "Consider a Compute Savings Plan: {} EC2 instances detected. Savings plans can reduce costs by 17-54% for 1-year commitment",
+                    ec2_instances.len()
+                )
+            } else if lambda_functions.len() >= 5 && ec2_instances.is_empty() {
+                format!(
+                    "Consider a Compute Savings Plan: {} Lambda functions with provisioned concurrency. Savings plans can reduce Lambda costs by 17%",
+                    lambda_functions.len()
+                )
+            } else {
+                format!(
+                    "Consider a Compute Savings Plan: {} EC2 instances and {} Lambda functions detected. Savings plans can reduce costs by 17-54%",
+                    ec2_instances.len(), lambda_functions.len()
+                )
+            };
+            
+            result.add_violation(PolicyViolation {
+                policy_name: "compute_savings_plan_suggestion".to_string(),
+                severity: "INFO".to_string(),
+                resource_id: resource_ids.join(", "),
+                message,
+                actual_value: format!("{} compute resources", ec2_instances.len() + lambda_functions.len()),
+                expected_value: "Consider savings plan commitment".to_string(),
+            });
+        }
+    }
 }
 
 #[cfg(test)]
@@ -432,10 +493,101 @@ mod tests {
             .iter()
             .any(|v| v.policy_name == "lambda_concurrency_required"));
     }
+    
+    #[test]
+    fn test_compute_savings_plan_suggestion() {
+        let config = PolicyConfig {
+            version: "1.0.0".to_string(),
+            budgets: BudgetPolicies::default(),
+            resources: ResourcePolicies::default(),
+            slos: vec![],
+            enforcement: EnforcementConfig::default(),
+        };
+        
+        let engine = PolicyEngine::new(config);
+        
+        // Test with 3 EC2 instances
+        let changes = vec![
+            ResourceChange {
+                resource_id: "aws_instance.web_1".to_string(),
+                resource_type: "aws_instance".to_string(),
+                action: ChangeAction::Create,
+                old_config: None,
+                new_config: Some(json!({"instance_type": "t3.medium"})),
+            },
+            ResourceChange {
+                resource_id: "aws_instance.web_2".to_string(),
+                resource_type: "aws_instance".to_string(),
+                action: ChangeAction::Create,
+                old_config: None,
+                new_config: Some(json!({"instance_type": "t3.medium"})),
+            },
+            ResourceChange {
+                resource_id: "aws_instance.web_3".to_string(),
+                resource_type: "aws_instance".to_string(),
+                action: ChangeAction::Create,
+                old_config: None,
+                new_config: Some(json!({"instance_type": "t3.large"})),
+            },
+        ];
+        
+        let cost = CostEstimate {
+            hourly: 0.5,
+            daily: 12.0,
+            monthly: 360.0,
+            confidence: 0.95,
+        };
+        
+        let result = engine.evaluate(&changes, &cost);
+        
+        // Should have savings plan suggestion
+        assert!(result.violations.iter().any(|v| 
+            v.policy_name == "compute_savings_plan_suggestion" &&
+            v.severity == "INFO"
+        ));
+    }
+    
+    #[test]
+    fn test_compute_savings_plan_not_suggested_for_few_resources() {
+        let config = PolicyConfig {
+            version: "1.0.0".to_string(),
+            budgets: BudgetPolicies::default(),
+            resources: ResourcePolicies::default(),
+            slos: vec![],
+            enforcement: EnforcementConfig::default(),
+        };
+        
+        let engine = PolicyEngine::new(config);
+        
+        // Test with only 1 EC2 instance
+        let changes = vec![
+            ResourceChange {
+                resource_id: "aws_instance.single".to_string(),
+                resource_type: "aws_instance".to_string(),
+                action: ChangeAction::Create,
+                old_config: None,
+                new_config: Some(json!({"instance_type": "t3.medium"})),
+            },
+        ];
+        
+        let cost = CostEstimate {
+            hourly: 0.1,
+            daily: 2.4,
+            monthly: 72.0,
+            confidence: 0.95,
+        };
+        
+        let result = engine.evaluate(&changes, &cost);
+        
+        // Should NOT have savings plan suggestion
+        assert!(!result.violations.iter().any(|v| 
+            v.policy_name == "compute_savings_plan_suggestion"
+        ));
+    }
 
     #[test]
     fn test_exemption_filters_violation() {
-        use super::exemption_types::*;
+        use crate::engines::policy::exemption_types::*;
 
         let config = PolicyConfig {
             version: "1.0.0".to_string(),

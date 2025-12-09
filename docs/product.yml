@@ -1,631 +1,632 @@
-id: costpilot
-version: "1.0.2"
-spec_type: "product_specification"
-generated_at: "2025-12-05T00:00:00Z"
+metadata:
+  product_id: "costpilot"
+  product_name: "CostPilot"
+  spec_version: "2.1"
+  spec_state: "approved"        # draft | approved | deprecated
+  version: "1.0.2"
+  version_strategy: "semver:api_breaking"
+  owner: "CostPilot Founder"
+  created_at: "2025-12-05"
+  launch_tier: "A"
+  source_path: "products/costpilot/"
 
-# ---------------------------------------------------------------------------
-# PRODUCT OVERVIEW
-# ---------------------------------------------------------------------------
+zero_cost_policy:
+  allowed_modes:
+    - safe
+    - simulate
+  default_mode: "safe"
+  invariants:
+    - "No command or code path may incur real cloud cost."
+    - "No IAM permissions are ever required to run CostPilot."
+    - "terraform apply is forbidden; terraform plan may be parsed but never executed."
+    - "No SDK calls to AWS/GCP/Azure are performed at runtime."
+    - "All cost analysis is based on static artifacts only."
+    - "No outbound network traffic is allowed by default."
+    - "Any step that could create or modify real infrastructure must be blocked."
+  forbidden_actions:
+    - terraform_apply
+    - terraform_plan_execute
+    - cloud_resource_create
+    - cloud_resource_modify
+    - cloud_resource_delete
+    - chargeable_api_call
+    - real_deployment
+    - network_call_external
+    - invoke_lambda
+    - create_vm
+    - allocate_gpu
+  simulation_rules:
+    terraform:
+      simulate_plan: true
+      allow_apply: false
+    cloud_sdks:
+      simulate: true
+      forbid_real_calls: true
+    network:
+      outbound_enabled: false
+    deployment:
+      dry_run_only: true
 
-product:
-  name: "CostPilot"
-  tagline: "Detect, predict, and automatically fix AWS cost issues before deploy — Zero IAM required."
+overview:
+  description:
+    short: "GitHub-native, zero-IAM FinOps engine for Terraform & CDK."
+    long: >
+      CostPilot is a zero-permission, GitHub-native FinOps engine that analyzes
+      Terraform, CDK, and CloudFormation IaC to detect cost regressions, estimate
+      AWS spend, generate autofix patches and snippets, enforce cost SLOs and
+      policies, and visualize resource impact via static dependency graphs.
+      It runs locally, uses WASM sandboxing, deterministic heuristics, and
+      auditable explanations, and never requires IAM or network access.
+  problem_statement: >
+    Engineering teams and solo builders ship AWS changes without clear visibility
+    into cost impact, causing unexpected bill spikes and slow FinOps feedback loops.
+  value_proposition: >
+    Catch cost regressions pre-merge, in CI, without IAM, external services, or
+    complex FinOps setups. CostPilot runs locally on IaC plans, predicts impact,
+    explains reasoning, and can auto-generate safe remediation patches.
+  target_customers:
+    enterprise: true
+    startups: true
+    individual_devs: true
+  primary_use_cases:
+    items:
+      - id: "uc-01"
+        title: "Pre-merge cost regression detection for Terraform plans"
+        description: "Detect and block expensive IaC changes directly in PR CI."
+      - id: "uc-02"
+        title: "Deterministic cost prediction for changed resources"
+        description: "Estimate monthly AWS spend impact from IaC diffs using static heuristics."
+      - id: "uc-03"
+        title: "Cost guardrails with policy-as-code and SLOs"
+        description: "Enforce budget and growth constraints using policies and SLOs in CI."
+      - id: "uc-04"
+        title: "Autofix snippets and patches for high-cost misconfigurations"
+        description: "Generate deterministic code fixes or patches for cost issues."
+      - id: "uc-05"
+        title: "Local trend visualization without a backend"
+        description: "Track cost evolution in repo-local artifacts and static visualizations."
+
+market:
+  tam: "Teams using AWS with Terraform/CDK who want cost control without full FinOps teams."
+  demand_drivers:
+    - "Rising AWS bills and cloud waste."
+    - "FinOps pressure to shift cost visibility left into CI."
+    - "Security and procurement friction around IAM and SaaS agents."
+  competition:
+    - name: "Generic SaaS FinOps tools"
+      differentiation: "CostPilot runs locally, requires zero IAM, and is GitHub-native."
+    - name: "In-house scripts and ad-hoc checks"
+      differentiation: "CostPilot provides deterministic heuristics, explainability, and governance."
+  competitive_advantage:
+    - "Zero IAM and zero network by design."
+    - "Deterministic, auditable heuristics and explainability."
+    - "Local-only, WASM sandboxed execution suitable for enterprises."
+    - "Policy-as-code and SLO enforcement built directly into CI."
+    - "Static mapping and trend artifacts that can be embedded and shared."
+  risk_profile:
+    technical_risk: "Medium — requires robust IaC parsing and deterministic heuristics."
+    market_risk: "Medium — many FinOps tools exist, but few are zero-IAM/local-first."
+    legal_risk: "Low — no customer data or credentials required by default."
+
+product_marketing:
   hero_metric: "Catch 90% of AWS cost regressions before they hit your bill."
-  description: >
-    CostPilot is a zero-permission, GitHub-native FinOps engine that analyzes
-    Terraform, CDK, and CloudFormation IaC to detect cost regressions, model
-    predicted AWS spend, generate autofix patches, enforce cost guardrails,
-    evaluate cost SLOs, and visualize resource impact using static Mermaid/Graphviz
-    dependency graphs. Designed to maximize trust, transparency, and
-    developer ergonomics, CostPilot functions entirely offline with WASM sandboxing,
-    deterministic heuristics, and auditable reasoning output.
+  shareable_artifact: "Static cost trend and mapping visualizations embeddable in PRs and docs."
+  differentiators:
+    - "Zero IAM required — runs entirely on local IaC artifacts."
+    - "Deterministic heuristics with auditable explain output."
+    - "Patch and snippet autofix with rollback artifacts."
+    - "Policy-as-code and SLO burn detection in CI."
+  keywords:
+    - "FinOps"
+    - "Terraform"
+    - "AWS cost"
+    - "cost governance"
+    - "policy as code"
+    - "SLO"
+    - "IaC analysis"
 
-  target_users:
-    - individual_developers
-    - indie_hackers
-    - DevOps_engineers
-    - platform_teams
-    - FinOps_teams
-    - CTOs_and_head_of_engineering
+platform:
+  runtime: "wasm_sandbox"
+  orchestrator: "local_cli"
+  deployable_unit: "signed_cli_binary_plus_wasm"
+  cost_mode: "safe"
+  core_components:
+    cli:
+      language: "tbd"
+      framework: "native_cli"
+      responsibilities:
+        - "Expose scan, map, slo, autofix, init, explain commands."
+        - "Manage input artifact loading and output serialization."
+    analysis_engine:
+      language: "tbd"
+      framework: "internal"
+      responsibilities:
+        - "Parse IaC artifacts and derive resource graph."
+        - "Run detection, prediction, SLO evaluation, and policy checks."
+    wasm_runtime:
+      language: "tbd"
+      framework: "wasm_vm"
+      responsibilities:
+        - "Execute deterministic rules within memory and time limits."
+    datastore:
+      type: "filesystem"
+      responsibilities:
+        - "Persist baselines, policies, SLOs, trends, and artifacts under .costpilot/."
+  architecture_invariants:
+    - "All execution must remain deterministic for identical inputs."
+    - "No IAM or cloud credentials are ever required or used."
+    - "No network egress is allowed by default."
+    - "Heuristics and classifiers must be pure functions over input artifacts."
+    - "CLI output must conform to documented schemas."
+    - "Trend and mapping artifacts must be reproducible."
+  capabilities:
+    scanning: true
+    patching: true
+    ai_generation: false           # uses deterministic heuristics and templates, not LLM at runtime
+    metrics_output: true
+    wasm_safe: true
+    deterministic: true
+    offline_mode: true
 
-  primary_value_props:
-    - zero_IAM_required
-    - autofix_prs
-    - deterministic_prediction
-    - policy_as_code_governance
-    - cost_SLO_enforcement
-    - trend_visualization_without_backend
-    - enterprise_ready_auditability
+semantics:
+  evaluator:
+    deterministic: true
+    stable_schema: true
+    safe_defaults: true
+  cost_prediction:
+    conservative: true
+    uses_cold_start_fallbacks: true
+    explicit_assumptions_required: true
+  governance:
+    policy_as_code: true
+    slo_enforcement: true
+    exemptions_audited: true
 
-# ---------------------------------------------------------------------------
-# NON-FUNCTIONAL PRINCIPLES
-# ---------------------------------------------------------------------------
+validation_rules:
+  config:
+    - id: "vr-01"
+      rule: "All .costpilot/*.yml and .json files must validate against internal schemas."
+    - id: "vr-02"
+      rule: "SLO and policy files must define owners and version metadata."
+  api:
+    - id: "vr-03"
+      rule: "CLI JSON outputs must match canonical schemas."
+  outputs:
+    - id: "vr-04"
+      rule: "All timestamps must be UTC ISO-8601."
+    - id: "vr-05"
+      rule: "Severity scores must be within defined numeric bounds."
+    - id: "vr-06"
+      rule: "Trend and mapping outputs must be stable between runs."
 
-non_functional:
-  zero_network_default: true
-  zero_data_retention: true
-  wasm_sandboxed_execution: true
-  deterministic_output: true
-  timestamps_normalized: true
-  build_reproducible: true
+features:
+  must_have:
+    auto_gen: false
+    automation_level: "partial"
+    items:
+      - id: "f-01"
+        title: "Terraform plan JSON parsing and detection"
+        description: "Parse terraform_plan_json and detect built-in cost issues."
+      - id: "f-02"
+        title: "Deterministic cost prediction"
+        description: "Estimate monthly cost deltas using static heuristics and baselines."
+      - id: "f-03"
+        title: "Explain output"
+        description: "Explain predictions with explicit heuristic and assumption references."
+      - id: "f-04"
+        title: "Autofix snippets"
+        description: "Generate manual-apply snippets to remediate common cost regressions."
+      - id: "f-05"
+        title: "SLO evaluation and burn detection"
+        description: "Evaluate cost SLOs and predict burn risk from IaC changes."
+      - id: "f-06"
+        title: "Policy-as-code enforcement"
+        description: "Enforce built-in and user-defined cost policies in CI."
+      - id: "f-07"
+        title: "Mapping and trend reporting"
+        description: "Produce static dependency maps and trend reports from local data."
+  should_have:
+    auto_gen: false
+    items:
+      - id: "f-08"
+        title: "GitHub Marketplace integration"
+        description: "One-click CI installation and billing via Marketplace."
+      - id: "f-09"
+        title: "VS Code extension"
+        description: "Inline feedback on cost effects while editing IaC."
+  future:
+    auto_gen: false
+    items:
+      - id: "f-10"
+        title: "Full policy language and UI"
+        description: "Interactive policy editor and rich governance UI for enterprises."
+      - id: "f-11"
+        title: "Multi-SLO burn alerting"
+        description: "Push notifications for predicted SLO burns (e.g., Slack)."
 
-  performance:
-    max_predict_latency_ms: 300
-    max_scan_latency_ms: 1500
-    max_mapping_latency_ms: 2000
-    max_slo_eval_ms: 150
-    wasm:
-      max_memory_mb: 256
-      timeout_ms_per_rule: 400
+data_contracts:
+  input_schema: "Static IaC artifacts (Terraform plan JSON, CDK diff, CloudFormation changeset) plus optional usage hints."
+  output_schema: "Structured JSON and static artifacts (trend, mapping, reports) with canonical keys."
+  internal_state_schema: "Baselines, SLOs, policies, trends, and mapping metadata stored under .costpilot/."
 
-  file_limits:
-    max_tf_plan_size_mb: 20
-    max_cf_changeset_mb: 10
+api:
+  base_path: ""          # CLI-first; no HTTP API in v1.
+  endpoints: []          # Reserved for future HTTP service mode.
+  error_contract:
+    format: "canonical"
+    fields:
+      - code
+      - message
+      - context
+      - trace_id
 
-  compatibility_contract:
-    heuristics_changes_require_minor_release: true
-    policy_set_changes_require_major_release: true
+state_machine:
+  states:
+    - "INIT"
+    - "LOADED"
+    - "VALIDATED"
+    - "EVALUATED"
+    - "CANONICALIZED"
+    - "VERIFIED"
+    - "EMITTED"
+  transitions:
+    - id: "sm-01"
+      from: "INIT"
+      to: "LOADED"
+      reason: "Input artifacts loaded."
+    - id: "sm-02"
+      from: "LOADED"
+      to: "VALIDATED"
+      reason: "Schemas validated."
+    - id: "sm-03"
+      from: "VALIDATED"
+      to: "EVALUATED"
+      reason: "Detection, prediction, SLO and policy checks executed."
+    - id: "sm-04"
+      from: "EVALUATED"
+      to: "CANONICALIZED"
+      reason: "Outputs normalized and serialized."
+    - id: "sm-05"
+      from: "CANONICALIZED"
+      to: "VERIFIED"
+      reason: "Determinism and invariants verified."
+    - id: "sm-06"
+      from: "VERIFIED"
+      to: "EMITTED"
+      reason: "Artifacts emitted to console and .costpilot/."
+  events: []
+  diagram_id: "costpilot-lifecycle"
 
-# ---------------------------------------------------------------------------
-# INPUT ARTIFACTS
-# ---------------------------------------------------------------------------
+security:
+  authentication: "none"
+  authorization: "local_only"
+  secrets_policy: "no_secrets_in_logs"
+  secrets_backend: "none"
+  path_whitelist:
+    - "."
+    - ".costpilot/"
+  size_limits:
+    max_payload_kb: 25600   # ~25MB plans
+  invariants:
+    - "No IAM credentials are required or used."
+    - "No external API calls are ever performed by default."
+    - "Telemetry, if enabled, must be opt-in and anonymized."
 
-inputs:
-  terraform:
-    supported: true
-    plan_json_required: true
-    notes: "Primary, most stable input format for prediction."
-  cdk:
-    supported: true
-    diff_required: true
-  cloudformation:
-    supported: true
-    changeset_supported: true
+patching_policy:
+  atomic: true
+  temp_dir: ".costpilot/.tmp"
+  backup_dir: ".costpilot/.backup"
+  validations:
+    - "syntax"
+    - "schema"
+  rollback_guarantees:
+    - "Every patchable change must have a rollback artifact."
+    - "Rollback must leave IaC in a syntactically valid state."
 
-  metadata_required:
-    - module_path
-    - resource_id
-    - resource_type
-    - tags
+testing:
+  unit_tests: true
+  integration_tests: true
+  e2e_tests: true
+  validation_tags:
+    - "lint"
+    - "regression"
+    - "snapshot"
+    - "perf"
+  required_test_scenarios:
+    - id: "t-01"
+      title: "Deterministic prediction across platforms"
+      steps:
+        - "Run prediction on sample plans on ubuntu, debian, macOS."
+        - "Verify identical JSON output and hashes."
+    - id: "t-02"
+      title: "Policy enforcement in warn and block modes"
+      steps:
+        - "Run CLI with builtin and user policies in both modes."
+        - "Verify exit codes and JSON reports."
+    - id: "t-03"
+      title: "Autofix patch and rollback flow"
+      steps:
+        - "Generate patch and rollback for supported resources."
+        - "Apply patch + rollback in simulation and verify invariants."
 
-# ---------------------------------------------------------------------------
-# CORE CAPABILITIES
-# ---------------------------------------------------------------------------
+ci_cd:
+  workflow_file: ".github/workflows/costpilot.yml"
+  steps:
+    - "validate_schema"
+    - "unit"
+    - "integration"
+    - "snapshot"
+    - "wasm"
+    - "self_test"
+    - "verify"
+    - "perf_regression"
+  invariants:
+    - "verify must pass before merge to main."
+    - "snapshot determinism enforced across CI images."
+    - "WASM artifacts must be signed."
+    - "CI must never execute commands that incur real cloud cost."
 
-capabilities:
+observability:
+  logs:
+    enabled: true
+    retention_days: 30
+  metrics:
+    enabled: true
+    endpoint: "/metrics/local"    # local-only or internal
+    required_metrics:
+      - "scan_count"
+      - "error_rate"
+      - "latency_p95"
+      - "zero_cost_policy_violations"
+  tracing:
+    enabled: false
+  events:
+    emit_product_events: true
+    event_prefix: "costpilot"
 
-  # -------------------------------------------------------------------------
-  # DETECT
-  # -------------------------------------------------------------------------
+deployment_profiles:
+  dev:
+    base_image: "local-cli"
+    secrets_backend: "env"
+    cost_safe: true
+  prod:
+    base_image: "signed-binary"
+    secrets_backend: "none"
+    cost_safe: true
+
+pricing:
+  tiers:
+    - name: "solo"
+      price: 29
+      limits:
+        - "Single user."
+        - "Snippet autofix mode."
+    - name: "solo_lifetime"
+      price: 199
+      limits:
+        - "One-time license."
+        - "Same features as solo monthly."
+    - name: "pro"
+      price: 99
+      limits:
+        - "Patch autofix mode."
+        - "Rollback artifacts."
+        - "Extended reporting."
+    - name: "enterprise"
+      price: "custom"
+      limits:
+        - "SSO, exemptions workflow, drift-safe autofix, business unit attribution."
+        - "Escrow, audit logging, custom billing."
+
+acquisition:
+  channels:
+    primary:
+      - "hacker_news"
+      - "product_hunt"
+      - "github_marketplace"
+      - "technical_blogs"
+      - "terraform_registry"
+    secondary:
+      - "community_forums"
+      - "FinOps_slack"
+  launch_assets:
+    - "landing_page"
+    - "demo_repo"
+    - "60s_demo_gif"
+    - "github_readme"
+
+acceptance_criteria:
+  - id: "ac-01"
+    description: "MVP delivers deterministic detect → predict → explain → snippet autofix flow."
+  - id: "ac-02"
+    description: "Terraform plan fuzz tests pass without crashes and with bounded performance."
+  - id: "ac-03"
+    description: "Policy-as-code and SLO burn checks operate in warn and block modes."
+  - id: "ac-04"
+    description: "All outputs are deterministic across supported OS configurations."
+
+release_plan:
+  mvp_days: 14
+  full_launch_days: 45
+  expected_time_to_revenue: 7
+
+support_load:
+  per_100_users:
+    tickets_per_month: 2
+    notes: "Most load expected around IaC parser edge cases and CI integration."
+
+changelog:
+  - version: "0.1.0"
+    notes: "MVP: detect + predict + explain (top-5) + snippet autofix + CLI/init + GH Action demo."
+  - version: "1.0.0"
+    notes: "Mermaid mapping, repo snapshots, SLO burn, pro patch autofix, marketplace launch."
+  - version: "1.0.1"
+    notes: "Builtin policy enforcement (limited), explain expansion, static trend report."
+  - version: "2.0.0"
+    notes: "Exemptions workflow, policy versioning, drift-safe autofix (beta), Terraform provider."
+  - version: "3.0.0"
+    notes: "Full policy-as-code, multi-SLO composition, GuardSuite integrations."
+
+x_capabilities:
   detect:
-    description: "Identify cost smells, cost risks, and cost explosions in IaC."
+    description: "Identify cost smells, risks, and explosions in IaC."
     categories:
-      - smell
-      - risk
-      - explosion
+      - "smell"
+      - "risk"
+      - "explosion"
     detection_rules:
-      - unused_nat_gateway
-      - overprovisioned_rds
-      - excessive_lambda_concurrency
-      - s3_missing_lifecycle
-      - iam_overpermissioned
-      - compute_overprovision
+      - "unused_nat_gateway"
+      - "overprovisioned_rds"
+      - "excessive_lambda_concurrency"
+      - "s3_missing_lifecycle"
+      - "compute_overprovision"
     outputs:
-      - rule_id
-      - severity
-      - resource_id
-      - regression_type
-      - severity_score
-
+      - "rule_id"
+      - "severity"
+      - "resource_id"
+      - "regression_type"
+      - "severity_score"
     regression_classifier:
       types:
-        - configuration
-        - scaling
-        - provisioning
-        - traffic_inferred
-        - indirect_cost
-
-  # -------------------------------------------------------------------------
-  # PREDICT
-  # -------------------------------------------------------------------------
+        - "configuration"
+        - "scaling"
+        - "provisioning"
+        - "traffic_inferred"
+        - "indirect_cost"
   predict:
     description: "Deterministic, conservative AWS cost estimation for changed resources."
     heuristics_source: "cost_heuristics.json"
     cold_start_inference:
+      enabled: true
       defaults:
-        dynamodb_unknown_capacity:
-          rcu: 15
-          wcu: 15
-        default_lambda_invocations: 10000
-        default_nat_gb_transferred: 10
+        dynamodb_rcu: 15
+        dynamodb_wcu: 15
+        lambda_requests: 1000000
+        s3_monthly_gb: 50
+        ec2_utilization_pct: 40
     prediction_intervals:
       enabled: true
       range_factor: 0.25
     outputs:
-      - estimated_monthly_cost
-      - prediction_interval_low
-      - prediction_interval_high
-      - heuristic_reference
-      - confidence_score
-
-  # -------------------------------------------------------------------------
-  # EXPLAINABILITY
-  # -------------------------------------------------------------------------
-  explain:
-    description: "Human-readable, auditable reasoning with exact heuristic references."
-    top_n_rules_mvp: 5
-    output:
-      - reasoning_steps
-      - referenced_heuristics
-      - regression_type
-      - confidence
-      - likely_root_cause
-      - estimated_fix_effort
-      - error_category
-
-  # -------------------------------------------------------------------------
-  # AUTOFIX
-  # -------------------------------------------------------------------------
-  autofix:
-    description: "Generate AI-assisted IaC corrections."
-    modes:
-      snippet: "Default mode — safe autofix recommendations."
-      patch: "Pro/Enterprise mode — applies patch automatically."
-    drift_safe_autofix:
-      enabled: true
-      beta: true
-      required:
-        drift_check_before_autofix: true
-        rollback_patch_artifact: true
-      high_confidence_resources:
-        - ec2_instance_type
-        - s3_lifecycle
-        - lambda_concurrency
-        - dynamodb_billing_mode
-
-  # -------------------------------------------------------------------------
-  # SLO & GOVERNANCE
-  # -------------------------------------------------------------------------
-  slo:
-    description: "Cost Service Level Objectives evaluated in CI."
-    support:
-      monthly_cost_slo: true
-      composed_slo: true
-      inheritance: true
-    slo_examples:
-      - name: "team_budget_guardrail"
-        rules:
-          - monthly_cost < 500
-      - name: "stable_cost_growth"
-        composed:
-          - monthly_cost < 300
-          - month_over_month_growth < 10%
-
-    outputs:
-      - burn_risk
-      - next_period_prediction
-      - slo_compliance_status
-
-  # -------------------------------------------------------------------------
-  # POLICY-AS-CODE
-  # -------------------------------------------------------------------------
-  policy_as_code:
-    enabled: true
-    versioning_required: true
-    enforcement_modes:
-      - warn
-      - block
-    metadata_required:
-      - version
-      - created_by
-      - created_at
-      - last_modified
-      - approval_required
-      - approval_reference
-      - owner_team
-    exemption_workflow:
-      enabled: true
-      schema:
-        rule: string
-        justification: string
-        owner: string
-        expires: date
-
-    initial_builtin_rules:
-      - nat_gateway_limit
-      - module_monthly_budget
-      - enforce_s3_lifecycle
-      - detect_ondemand_compute_without_savings_plan
-      - iam_least_privilege_required
-
-  # -------------------------------------------------------------------------
-  # BASELINES
-  # -------------------------------------------------------------------------
-  baselines:
-    enabled: true
-    file: ".costpilot/baselines.json"
-    fields:
-      - resource_id
-      - expected_cost
-      - last_updated_at
-      - justification
-
-  # -------------------------------------------------------------------------
-  # MAPPING ENGINE
-  # -------------------------------------------------------------------------
-  mapping:
-    description: "Cross-service impact analysis and dependency visualization."
-    supported_formats:
-      - mermaid
-      - graphviz
-    max_dependency_depth: 5
-    cycle_detection_required: true
-    outputs:
-      - upstream_dependencies
-      - downstream_cost_drivers
-      - propagation_paths
-
-  # -------------------------------------------------------------------------
-  # GROUPING & ATTRIBUTION
-  # -------------------------------------------------------------------------
-  grouping:
-    by:
-      - module
-      - service
-      - environment
-
-  attribution:
-    pro_output: resource_tag_mapping
-    enterprise_output: business_unit_cost_attribution
-
-# ---------------------------------------------------------------------------
-# CLI CONTRACT
-# ---------------------------------------------------------------------------
-
-cli:
-  commands:
-
-    - name: scan
-      flags:
-        - --explain
-        - --format=json
-      output: "detection + prediction + severity scoring"
-
-    - name: autofix
-      modes:
-        - snippet
-        - patch
-      beta_flags:
-        - --drift-safe
-
-    - name: init
-      description: "Creates .costpilot/, sample policies, baseline file, CI template."
-      creates:
-        - ".costpilot/policies.yml"
-        - ".costpilot/baselines.json"
-        - ".github/workflows/costpilot.yml"
-
-    - name: map
-      flags:
-        - --format=mermaid
-        - --format=graphviz
-
-    - name: slo
-      subcommands:
-        - burn
-        - evaluate
-
-    - name: debug
-      output:
-        - bootstrap_context
-        - heuristics_version
-        - drift_hash
-        - policy_set_version
-
-    - name: tui
-      enabled: true
-      description: "Interactive UI for debugging predictions."
-
-  predict:
-    description: >
-      Deterministic, conservative cost forecasting engine using static heuristics,
-      cold-start inference, baselines, and regression classification. Produces
-      auditable numeric estimates and confidence scores suitable for CI gating.
-    inputs:
-      - terraform_plan_json
-      - cdk_diff_output
-      - cloudformation_changeset
-      - optional_usage_hints (e.g., expected_reads, expected_requests)
-      - baselines_file: ".costpilot/baselines.json"
-      - heuristics_file: "cost_heuristics.json"
-    outputs:
-      predicted_monthly_cost_delta: float
-      prediction_interval:
-        low: float
-        high: float
-      confidence_score: float
-      regression_type:
-        enum:
-          - configuration
-          - provisioning
-          - scaling
-          - traffic_inferred
-          - indirect_cost
-      cold_start_inference_used: boolean
-      baseline_reference:
-        module: string?
-        expected_cost: float?
-        last_updated_at: string?
+      - "estimated_monthly_cost"
+      - "prediction_interval_low"
+      - "prediction_interval_high"
+      - "heuristic_reference"
+      - "confidence_score"
     invariants:
-      - must_use_deterministic_heuristics_only
-      - prediction_interval_low >= 0
-      - baselines_overrides_apply_when_present
-      - cold_start_required_if_no_historical_signal
-      - explain_output_must_reference_heuristics_file
-    cold_start:
-      enabled: true
-      fallback_assumptions:
-        dynamodb_default_rcu: 15
-        dynamodb_default_wcu: 15
-        lambda_default_requests: 1_000_000
-        s3_default_monthly_gb: 50
-        ec2_default_utilization: 40
-      invariants:
-        - cold_start_costs_must_be_flagged
-        - explain_output_must_show_assumptions
-    baselines:
-      enabled: true
-      file: ".costpilot/baselines.json"
-      structure:
-        - resource_id
-        - expected_cost
-        - last_updated_at
-        - justification
-      invariants:
-        - baseline_must_override_prediction_if_delta < threshold
-        - baseline_inconsistency_flagged
-    regression_classifier:
-      enabled: true
-      classification_rules:
-        configuration: >
-          Billing mode changes, lifecycle rule changes, encryption changes.
-        provisioning: >
-          Instance type increases, replica count increases, new resources.
-        scaling: >
-          Autoscaling settings, concurrency increases.
-        traffic_inferred: >
-          Expected usage hints increased.
-        indirect_cost: >
-          Logging, monitoring, networking side-effects.
-      invariants:
-        - classifier_must_be_deterministic
-        - classifier_must_provide_explanation_string
-
+      - "Heuristics must be deterministic and versioned."
+      - "prediction_interval_low >= 0."
+      - "cold_start assumptions must be flagged in output."
+  explain:
+    description: "Human-readable, auditable reasoning with heuristic references."
+    modes:
+      default: "top_5_high_cost_patterns"
+      verbose: "full_breakdown"
+    outputs:
+      - "reasoning_steps"
+      - "referenced_heuristics"
+      - "referenced_baselines"
+      - "regression_type"
+      - "confidence"
+      - "estimated_fix_effort"
+    invariants:
+      - "Explanation must reference heuristics file and version."
+      - "Sentence ordering must be deterministic."
   autofix:
-    description: >
-      Produces deterministic, testable remediation snippets or full patches.
-      Patch mode gated to Pro/Enterprise tiers. Drift-safe patch mode available
-      in V1 (Beta) for limited resource classes.
+    description: "Generate deterministic remediation snippets or patches with rollback."
     modes:
       snippet:
-        description: >
-          Generates minimal text snippets the developer can manually apply.
+        description: "Minimal snippets for manual application."
         availability:
-          - free
-          - solo
-          - pro
-          - enterprise
+          - "free"
+          - "solo"
+          - "pro"
+          - "enterprise"
       patch:
-        description: >
-          Generates fully-formed patch files (.patch). Requires explicit gating.
+        description: "Full patch files (.patch) gated by tier."
         availability:
-          - pro
-          - enterprise
+          - "pro"
+          - "enterprise"
       drift_safe_patch:
-        description: >
-          Runs a drift check before generating patch; only enabled for high-confidence
-          resource categories (EC2 type change, S3 lifecycle rules).
-        status: beta
+        description: "Patch mode that runs drift checks for high-confidence resources."
+        status: "beta"
         availability:
-          - enterprise
-    outputs:
-      - snippet_fix
-      - patch_file
-      - rollback_patch
-      - fix_explanation
-    invariants:
-      - fixes_must_be_idempotent
-      - patch_generation_requires_drift_check_if_enabled
-      - autofix_must_reference_regression_class
-      - rollback_patch_must_be_structurally_valid
+          - "enterprise"
     safety:
       drift_check_before_autofix: true
       supported_resources_for_beta:
-        - aws_instance.instance_type
-        - aws_s3_bucket.lifecycle_rules
+        - "aws_instance.instance_type"
+        - "aws_s3_bucket.lifecycle_rules"
       safeguards:
-        - no_patch_if_drifts_detected
-        - block_patch_if_policy_version_missing
-
-  trend:
-    description: >
-      Local repo-stored trend data used for zero-backend cost evolution analysis.
-      Generates static HTML (V1) and SVG (V2) visualizations for virality.
-    storage:
-      file: ".costpilot/trend.json"
-      format: json
-    visualization:
-      v1: html
-      v2: svg
-      embed_support: true
-    invariants:
-      - trending_data_must_be_append_only
-      - timestamps_utc_only
-      - visualization_must_be_deterministic
+        - "no_patch_if_drift_detected"
+        - "block_patch_if_policy_version_missing"
     outputs:
-      - trend_report.html
-      - trend_graph.svg
-
-  policy_as_code:
-    description: >
-      Governance rules enforced during CI. MVP provides a small built-in set of
-      high-leverage policies; V1 adds user-defined policy files; V2 adds full
-      approval workflow and version tracking.
-    initial_builtin_rules:
-      - nat_gateway_limit
-      - module_monthly_budget
-      - s3_lifecycle_required
-      - spot_instance_recommendation
-    user_policy_file: ".costpilot/policies.yml"
-    enforcement_modes:
-      - warn
-      - block
-    policy_metadata:
-      versioning:
-        required: true
-        fields:
-          - version
-          - created_by
-          - created_at
-          - last_modified
-      owner:
-        required: true
-        format:
-          - team_name
-          - email
-      approval:
-        required_for_blocking_policies: true
-        reference_format: "ticket-xxxxx"
-    exemptions:
-      file: ".costpilot/exemptions.yml"
-      schema:
-        - rule
-        - justification
-        - owner
-        - expires
-      invariants:
-        - expired_exemptions_must_fail_ci
-    invariants:
-      - missing_policy_version_is_critical_failure
-      - approval_required_for_blocking_policies
-      - exemptions_must_reference_existing_policy
-      - policies_must_be_deterministic
-    outputs:
-      - enforcement_report.json
-      - policy_violation_summary
-
-  explain:
-    description: >
-      Human-readable stepwise model showing how CostPilot reached predictions,
-      referencing heuristics, baselines, assumptions, and regression classifier.
-    outputs:
-      - markdown_explanation
-      - referenced_heuristics
-      - referenced_baselines
-      - confidence_notes
-    modes:
-      default: top_5_high_cost_patterns
-      verbose: full breakdown
-    invariants:
-      - explanation_must_reference_heuristics_file
-      - deterministic_sentence_ordering
-      - must_show_all_cost_drivers
-
-  mapping:
-    description: >
-      Analyzes IaC resource relationships to understand downstream cost impact.
-      Used for PR context, prediction propagation, and enterprise reporting.
-    outputs:
-      - dependency_graph.json
-      - mermaid_diagram.md
-      - graphviz.dot
-    formats:
-      - mermaid
-      - graphviz
-      - json
-    mapping_engine:
-      max_dependency_depth: 5
-      cycle_detection_required: true
-      infer_cross_stack_relationships: true
-      indirect_cost_propagation_enabled: true
-    invariants:
-      - no_cycles_allowed
-      - depth_limit_strict_enforced
-      - mapping_graph_must_be_stable_between_runs
-
+      - "snippet_fix"
+      - "patch_file"
+      - "rollback_patch"
+      - "fix_explanation"
   slo:
-    description: >
-      Cost Service-Level Objectives (SLOs) used to enforce budget guardrails
-      and detect burn trends before deployment. Core MVP supports simple
-      monthly-cost SLOs; V1 adds inheritance and composition; V2 adds
-      multi-dimensional rules and automated burn alerts.
-    slo_file: ".costpilot/slo.yml"
-    structure:
-      monthly_cost_slo:
-        type: float
-        description: monthly expected spend limit
-      composed_slo:
-        description: multi-rule composition including growth %
-        example:
-          - name: stable_cost_growth
-            rules:
-              - monthly_cost < 250
-              - month_over_month_growth < 10%
-      inheritance:
-        enabled: true
-        defaults:
-          monthly_cost_slo: 200
-        modules:
-          app_stack:
-            monthly_cost_slo: 300
+    description: "Cost SLO definition, evaluation, and burn prediction."
+    file: ".costpilot/slo.yml"
     enforcement_modes:
-      - warn
-      - block
+      - "warn"
+      - "block"
     slo_burn:
-      description: >
-        Predictive SLO burn detection — determines if the PR will cause the
-        team/service to exceed its budget within the current billing cycle.
       enabled: true
       outputs:
-        - burn_risk: low | medium | high | critical
-        - projected_cost_after_merge
-        - estimated_days_to_burn
-    performance:
-      max_eval_ms: 150
+        - "burn_risk"
+        - "projected_cost_after_merge"
+        - "estimated_days_to_burn"
     invariants:
-      - slo_must_be_deterministic
-      - composed_slo_rules_must_all_pass_when_blocking
-      - inheritance_always_overrides_defaults
-      - slo_burn_requires_prediction_engine_output
+      - "SLO evaluation must be deterministic."
+      - "Inheritance and composition must be explicit and stable."
+  policy_as_code:
+    description: "Governance rules enforced in CI via policies and exemptions."
+    user_policy_file: ".costpilot/policies.yml"
+    enforcement_modes:
+      - "warn"
+      - "block"
+    exemptions_file: ".costpilot/exemptions.yml"
+    invariants:
+      - "Blocking policies require approval metadata."
+      - "Exemptions must include rule, justification, owner, and expiry."
+      - "Expired exemptions must fail CI."
+  mapping:
+    description: "Cross-service impact analysis and dependency visualization."
+    formats:
+      - "mermaid"
+      - "graphviz"
+      - "json"
+    max_dependency_depth: 5
+    cycle_detection_required: true
     outputs:
-      - slo_report.json
-      - slo_burn_summary
-
+      - "dependency_graph.json"
+      - "mermaid_diagram.md"
+      - "graphviz.dot"
+    invariants:
+      - "No cycles allowed."
+      - "Graph must be stable between runs."
   baselines:
-    description: >
-      Historical cost expectations used to prevent false positives, improve
-      prediction stability, and enhance regression classification. Baselines
-      allow CostPilot to determine whether a PR meaningfully deviates from the
-      historical norm.
-    enabled: true
+    description: "Historical cost expectations used to stabilize prediction."
     file: ".costpilot/baselines.json"
     fields:
-      - resource_id
-      - expected_cost
-      - last_updated_at
-      - justification
+      - "resource_id"
+      - "expected_cost"
+      - "last_updated_at"
+      - "justification"
     invariants:
-      - baselines_override_small_prediction_deltas
-      - baseline_missing_for_critical_resource_warns
-      - baseline_timestamp_must_be_utc
+      - "Baselines override small prediction deltas."
+      - "Missing baselines for critical resources should warn."
+  trend:
+    description: "Local trend data and static visualizations for cost evolution."
+    file: ".costpilot/trend.json"
     outputs:
-      - baseline_report.json
-
+      - "trend_report.html"
+      - "trend_graph.svg"
+    invariants:
+      - "Data append-only, timestamps UTC, visualizations deterministic."
   regression_severity:
-    description: >
-      A normalized numeric score used for prioritization, alerts, reporting,
-      and enterprise dashboards. Severity is calculated from delta size,
-      confidence, resource class, and blast radius.
+    description: "Normalized numeric severity score for prioritization and reporting."
     score:
       min: 0
       max: 100
@@ -635,522 +636,111 @@ cli:
       resource_type_importance: 0.20
       blast_radius: 0.10
     invariants:
-      - severity_score_must_be_deterministic
-      - score_must_be_within_bounds
-    outputs:
-      - severity_score
-
+      - "Severity score must be deterministic."
+      - "Score must stay within [0, 100]."
   attribution:
-    description: >
-      Tag-based cost attribution. Pro users see tag mappings; Enterprise
-      users receive full aggregation, reporting, and business-unit cost
-      allocation.
-    free:
-      outputs:
-        - minimal_resource_trace_id
-    pro:
-      outputs:
-        - tag_resolution_map
-    enterprise:
-      outputs:
-        - business_unit_cost_breakdown
-        - service_cost_breakdown
-        - environment_grouping
-        - owner_team_report
+    description: "Tag-based cost attribution and grouping."
     grouping:
       enabled: true
       by:
-        - module
-        - service
-        - environment
-    invariants:
-      - tag_keys_must_be_normalized
-      - grouping_must_be_stable
-
-  non_functional:
-    deterministic_execution: true
-    zero_iam_required: true
-    zero_network_default: true
-    wasm_sandbox:
-      enabled: true
-      max_memory_mb: 256
-      timeout_ms_per_scan: 2000
-      deterministic_io_only: true
-    performance_budgets:
-      max_parse_ms: 150
-      max_predict_ms: 300
-      max_autofix_ms: 200
-      max_slo_eval_ms: 150
-    file_limits:
-      max_plan_size_mb: 20
-    fuzz_resilience:
-      terraform_plan_fuzzing_required: true
-      invalid_json_recovery: graceful
-    invariants:
-      - no_external_api_calls_allowed
-      - predictions_must_not_use_randomness
-      - all_timestamps_utc
-
-  cli:
-    verbs:
-      - scan
-      - explain
-      - map
-      - autofix
-      - slo
-      - init
-    flags:
-      - --json
-      - --explain
-      - --graph
-      - --interactive
-      - --policy
-      - --mode <warn|block>
-    commands:
-      scan:
-        description: run detection, prediction, severity scoring
-      explain:
-        description: markdown reasoning breakdown
-      map:
-        description: output mermaid/graphviz dependency map
-      autofix:
-        description: generate snippet/patch/rollback
-      slo:
-        description: check SLOs and burn predictions
-        subcommands:
-          burn: predict SLO burn
-      init:
-        description: create starter config files
-        generates:
-          - .costpilot/policies.yml
-          - .costpilot/slo.yml
-          - .costpilot/baselines.json
-          - .github/workflows/costpilot.yml
-        invariants:
-          - idempotent_generation
-    exit_codes:
-      SUCCESS: 0
-      POLICY_BLOCK: 2
-      SLO_BURN: 3
-      INVALID_PLAN: 4
-      INTERNAL_ERROR: 5
-      DRIFT_DETECTED: 6
-    invariants:
-      - cli_output_must_conform_to_schema
-      - json_output_stable_keys
-
-  terraform_provider:
-    description: >
-      Optional integration allowing teams to validate cost rules during
-      terraform validate via a custom FinOps provider.
-    finops_provider_enabled: true
-    invariants:
-      - provider_must_be_pure_function
-      - no_network_egress
-      - validation_must_mirror_cli_scan
-
-  integrations:
-    github_actions: supported
-    gitlab_ci: supported
-    bitbucket: planned
-    terraform_registry_module: supported
-    opentofu: supported
-    vscode_extension: planned
-    invariants:
-      - integrations_must_not_require_iam
-
-  acceptance_criteria:
-    must:
-      - parse_terraform_plan_reliably
-      - detect_all_builtin_rules
-      - produce_prediction_interval_deterministically
-      - generate_autofix_snippets_correctly
-      - provide_explain_output_referencing_heuristics
-      - generate_mermaid_map
-      - enforce_builtin_policies
-      - run_slo_burn_check
-      - produce_trend_artifacts_deterministically
-      - pass_wasm_sandbox_limits
-    should:
-      - pass fuzz tests
-      - complete scan in < 700ms end-to-end
-    enterprise_must:
-      - enforce_policy_versioning
-      - enforce_exemptions
-      - evaluate_composed_slo_rules
-      - generate_business_unit_attribution
-
-  gtm:
-    positioning:
-      headline: "Catch 90% of AWS cost regressions before they hit your bill — Zero IAM required."
-      subhead: "A GitHub-native FinOps engine for Terraform & CDK. Detect → Predict → Autofix → Govern."
-    channels:
-      - hacker_news
-      - product_hunt
-      - github_marketplace
-      - technical_blogs
-      - terraform_registry
-    lead_magnets:
-      - tco_calculator
-      - example_pr_repository
-      - 60_second_demo_gif
-    pricing:
-      solo:
-        monthly: 29
-        lifetime: 199
+        - "module"
+        - "service"
+        - "environment"
+    tiers:
+      free:
+        outputs:
+          - "minimal_resource_trace_id"
       pro:
-        monthly: 99
-        lifetime_limited_launch_offer: 299
-        lifetime_availability: "first_100_customers_only"
+        outputs:
+          - "tag_resolution_map"
       enterprise:
-        monthly_base: 299
-        savings_share_pct: 5
-        features:
-          - sso
-          - exemption_workflow
-          - drift_safe_autofix
-          - business_unit_cost_attribution
-          - audit_logging
-          - software_escrow
-    messaging_focus:
-      - dollar_savings
-      - developer_time_saved
-      - zero_permissions_required
-      - explainability
-      - deterministic_governance
+        outputs:
+          - "business_unit_cost_breakdown"
+          - "service_cost_breakdown"
+          - "environment_grouping"
+          - "owner_team_report"
+    invariants:
+      - "Tag keys must be normalized."
+      - "Grouping must be stable between runs."
 
-roadmap:
-  overview: >
-    Pragmatic, revenue-first sequencing focused on fastest route-to-cash for a
-    solo founder while preserving enterprise-upgrade paths. MVP emphasizes the
-    "Trust Triangle" (Detect → Predict → Explain) + lightweight Autofix Snippet.
-  milestones:
-    mvp:
-      version: 0.1.0
-      timeline_days: 7-14
-      goals:
-        - reliable terraform_plan_json parsing
-        - detect builtin rules (nat_gateway, s3_lifecycle, oversized_instances)
-        - deterministic prediction heuristics via cost_heuristics.json
-        - explain output (--explain) for top-5 anti-patterns
-        - autofix: snippet mode (free/solo) + patch preview (pro gated, "experimental")
-        - cli init + simple GH Action wrapper
-        - demo repo + 60s GIF
-      acceptance:
-        - demo PR shows cost diff + snippet in < 60s
-        - single-run deterministic output across ubuntu/debian/macos
-    v1_0_0:
-      version: 1.0.0
-      timeline_days: 30-45
-      goals:
-        - mermaid mapping (map → mermaid) + repo-local trend snapshots (.costpilot/snapshots/)
-        - slo: monthly_cost_slo + slo_burn CLI support
-        - baselines support and baseline file generation
-        - pro tier: patch autofix gated, experimental rollback artifact
-        - solo + pro lifetime SKU launch window
-        - GitHub Marketplace listing + HN launch
-      acceptance:
-        - 10 paying customers (solo/pro) or 100 lifetime sales in launch window
-        - snapshot visualization available as embeddable SVG/HTML
-    v1_0_1:
-      version: 1.0.1
-      timeline_days: 60
-      goals:
-        - limited policy-as-code enforcement (builtin rules only)
-        - explain mode expanded to top-20 heuristics
-        - trend static html report generator
-        - performance tuning to meet perf budgets
-      acceptance:
-        - policy enforcement operates in warn and block modes
-        - trend artifacts render in README via embed
-    v2_0_0:
-      version: 2.0.0
-      timeline_days: 90-180
-      goals:
-        - exemption workflow + policy versioning metadata
-        - drift_safe_autofix (beta, limited resource classes)
-        - terraform provider integration + terraform registry publishing
-        - usage metering hooks (pr_scans, rule_executions)
-        - review of Pro Lifetime SKU availability (close or limit)
-      acceptance:
-        - enterprise pilot with escrow + SSO enabled
-        - automated drift checks enabled for beta autofix
-    v3_0_0:
-      version: 3.0.0
-      timeline_days: 180+
-      goals:
-        - full policy-as-code language + UI/editor (enterprise)
-        - multi-SLO composition and burn-alerting (push/Slack)
-        - advanced regression classifier + model-backed predictive uplift
-        - integrations: GuardBoard / GuardScore / centralized GuardSuite telemetry
-      acceptance:
-        - enterprise customers on contract with savings-share billing
-
-lifecycle:
-  states:
-    - INIT
-    - LOADED
-    - VALIDATED
-    - EVALUATED
-    - CANONICALIZED
-    - VERIFIED
-    - EMITTED
-  transitions:
-    - 'INIT -> LOADED : load_input'
-    - 'LOADED -> VALIDATED : validate_schema'
-    - 'VALIDATED -> EVALUATED : run_rules_and_predict'
-    - 'EVALUATED -> CANONICALIZED : canonicalize_output'
-    - 'CANONICALIZED -> VERIFIED : strict_mode_verify'
-    - 'VERIFIED -> EMITTED : emit_output'
-  invariants:
-    - stages_execute_in_order_unless_explicitly_skipped
-    - each_stage_must_log_inputs_and_outputs
-    - snapshots_written_with_canonical_serialization
-
-ci_contract:
-  required_jobs:
-    - validate_schema
-    - unit
-    - integration
-    - snapshot
-    - wasm
-    - self_test
-    - verify
-    - perf_regression
-  pipelines:
-    pr_pipeline:
-      triggers: [pull_request]
-      jobs: [validate_schema, unit, integration, snapshot, wasm]
-    release_pipeline:
-      triggers: [tag_push]
-      jobs: [unit, integration, snapshot, wasm, verify, perf_regression]
-  invariants:
-    - verify_must_pass_before_merge_to_main
-    - snapshot_determinism_enforced_across_ci_images
-    - wasm_artifacts_must_be_signed
-
-telemetry_and_observability:
-  local_first: true
-  telemetry_hooks:
-    - evaluator_start
-    - evaluator_end
-    - rule_fired
-    - fixpack_loaded
-    - plan_loaded
-    - explain_generated
-    - autofix_generated
-  telemetry_schema:
-    - event_type: string
-    - timestamp_utc: string
-    - rule_id: string?
-    - pillar_id: string?
-    - severity: string?
-    - duration_ms: integer?
-    - metadata: object?
-    - error_signature: string?
-  privacy:
-    - default_redact_patterns:
-      - .*secret.*
-      - .*token.*
-    - max_event_payload_bytes: 64000
-    - max_events_per_rule_execution: 10
-    - local_storage_only_by_default: true
-  export:
-    - repo-local json snapshots
-    - optional enterprise forwarder (push-only, no pull, opt-in)
-  invariants:
-    - telemetry_must_be_opt_in_for_enterprise
-    - sensitive_fields_must_be_redacted_before_emission
-
-audit_and_compliance:
-  audit_log:
-    enabled: true
-    retention_days: 365
-    records:
-      - inputs_used
-      - SOT_citations
-      - drift_events
-      - ambiguity_triggers
-      - halted_executions
-      - override_tokens_used
-      - policy_changes
-    export_formats:
-      - ndjson
-      - csv
-  policy_versioning:
-    required: true
-    metadata_fields:
-      - version
-      - created_by
-      - created_at
-      - last_modified
-      - approval_reference
-  exemptions:
-    workflow:
-      enabled: true
-      structure:
-        - rule
-        - justification
-        - owner
-        - expires
+x_cli_contract:
+  verbs:
+    - "scan"
+    - "explain"
+    - "map"
+    - "autofix"
+    - "slo"
+    - "init"
+  flags:
+    - "--json"
+    - "--explain"
+    - "--graph"
+    - "--interactive"
+    - "--policy"
+    - "--mode <warn|block>"
+  commands:
+    scan:
+      description: "Run detection, prediction, severity scoring."
+    explain:
+      description: "Produce markdown reasoning breakdown."
+    map:
+      description: "Output mermaid/graphviz dependency map."
+    autofix:
+      description: "Generate snippet/patch/rollback."
+    slo:
+      description: "Check SLOs and burn predictions."
+      subcommands:
+        - "burn"
+    init:
+      description: "Create starter config files."
+      generates:
+        - ".costpilot/policies.yml"
+        - ".costpilot/slo.yml"
+        - ".costpilot/baselines.json"
+        - ".github/workflows/costpilot.yml"
       invariants:
-        - exemptions_must_be_audited
-        - exemptions_require_owner_and_reason
-  software_escrow:
-    offered: true
-    providers:
-      - NCC_Group
-      - Ironclad (example)
-    notes: >
-      Offered as an enterprise add-on to mitigate bus-factor procurement risk.
-
-ops_and_support:
-  support_tiers:
-    - community: free, community_channel
-    - solo: email, community_support
-    - pro: email + limited_priority
-    - enterprise: sla_24x7 + dedicated_onboarding
-  incident_response:
-    - error_signature_collection_required
-    - reproducible_minimal_plan_required
-    - rollback_artifact_mandatory_for_autofix_issues
-  ops_runbooks:
-    - upgrading_binary_abi
-    - wasm_sandbox_hard_restart
-    - revoke_override_token
-  billing_and_license:
-    - solo_lifetime: one-time SKU
-    - pro_lifetime_limited: promotional_limited
-    - recurring_subscriptions: stripe/lemon_squeezy/paddle
-    - enterprise_contracts: custom_billing + savings_share
-
-security:
-  principles:
-    - least_privilege_design
-    - zero_iam_default
-    - deterministic_reproducibility
-  wasm_safety:
-    - no_dynamic_imports
-    - deterministic_io_only
-    - sandbox_runtime_limits
-  secrets_handling:
-    - never_write_secrets_to_repo
-    - redact_patterns_enforced
-  data_retention:
-    - default_keep_nothing
-    - opt_in_enterprise_forwarders_allowed
-  vulnerability_management:
-    - dependency_scan_on_release
-    - scheduled_security_reviews
+        - "Idempotent generation."
+  exit_codes:
+    SUCCESS: 0
+    POLICY_BLOCK: 2
+    SLO_BURN: 3
+    INVALID_PLAN: 4
+    INTERNAL_ERROR: 5
+    DRIFT_DETECTED: 6
   invariants:
-    - no_cleartext_credentials_in_artifacts
-    - policy_files_must_be_versioned
+    - "CLI output must conform to schemas."
+    - "JSON output must use stable key ordering."
 
-legal_and_pricing_policy:
-  pricing_policy:
-    - solo_monthly: 29
-    - solo_lifetime: 199
-    - pro_monthly: 99
-    - pro_lifetime_limited_launch: 299 (first_100_only)
-    - enterprise_base_monthly: 299 + savings_share_pct
-  refunds:
-    - lifetime_sku_refund_window_days: 7
-  enterprise_terms:
-    - sso_required_for_enterprise
-    - software_escrow_available
-    - data_processing_addendum_available
-
-acceptance_and_testing:
-  test_types:
-    - unit
-    - integration
-    - fuzz
-    - snapshot_determinism
-    - policy_stress
-    - wasm_sandbox_limits
-  key_tests:
-    - parse_variety_of_terraform_plans
-    - regression_fuzzer_job (randomized plan mutations)
-    - policy_stress_test (1000 policies within perf budgets)
-    - autofix_simulation_suite (patch/rollback)
-    - slo_burn_accuracy_check (heuristics vs baseline)
-  pass_criteria:
-    - percent_pass: 100 for must-tests
-    - snapshot_hash_identical_across_platforms: true
-
-changelog:
-  0.1.0:
-    - initial_mvp: detect + predict heuristics + explain (top-5) + snippet autofix + CLI/init + GH action demo
-  1.0.0:
-    - mermaid mapping + repo snapshots + slo_burn + pro patch autofix (experimental) + marketplace launch
-  1.0.1:
-    - builtin_policy_enforcement (limited set) + explain expansion + static trend report
-  2.0.0:
-    - exemption workflow + policy versioning + drift_safe_autofix (beta) + terraform provider
-  3.0.0:
-    - full policy-as-code + multi-slo composition + GuardSuite integrations
-
-versions_and_metadata:
-  id: costpilot
-  product_name: CostPilot
-  spec_version: 1.0.1
-  runtime_api: '2025.12'
-  schema_version: 1.1.0
-  min_runtime: '2025.12'
-  created: "2025-12-05"
-  updated: "2025-12-XX"
-  owner: "Your Team / You"
-  summary: >
-    CostPilot — GitHub-native, zero-IAM FinOps engine for Terraform & CDK.
-    Detect → Predict → Autofix → Govern. Designed for solo-to-enterprise adoption.
-
-ci_tests:
-  - zar_enforcement_test
-  - drift_detection_test
-  - proposal_contract_test
-  - whitelist_violation_test
-  - hard_stop_payload_test
-  - guardtemplate_determinism_framework_test
-  - guardtemplate_pillar_dependency_test
-  - costpilot_policy_stress_test
-  - costpilot_fuzz_regression_test
-
-developer_experience:
-  demo_assets:
-    - demo_repo: github.com/you/costpilot-demo
-    - 60s_gif: assets/gif/demo_pr.gif
-    - example_pr: example/PR-42.md
-  onboarding:
-    - costpilot init
-    - quickstart_readme.md
-    - ci_example.yml
-  docs:
-    - api_reference.md
-    - policies_guidelines.md
-    - troubleshooting.md
-  community:
-    - discourse_forum
-    - github_issues_for_bugs
-    - community_chat_channel
-
-deployment_and_distribution:
-  primary_channels:
-    - github_marketplace
-    - npm_cli (if packaged)
-    - pip (if packaged)
-    - terraform_registry
-  distribution_artifacts:
-    - cli_binary (signed)
-    - wasm_modules (signed)
-    - docker_runner (optional, non-default)
-  packaging:
-    - release_signature_required
-    - abi_compatibility_matrix_included
-
-final_invariants:
-  - zero_iam_default_must_never_change
-  - wasm_sandbox_limits_hard_enforced
-  - explain_must_reference_cost_heuristics_version
-  - autofix_patch_must_include_rollback_artifact
-  - all_outputs_must_be_deterministic
-
+x_roadmap:
+  mvp:
+    version: "0.1.0"
+    goals:
+      - "Terraform plan parsing and built-in detection."
+      - "Deterministic prediction and explain for top-5 patterns."
+      - "Snippet autofix and init flow."
+      - "Demo repo and 60s PR GIF."
+  v1_0_0:
+    version: "1.0.0"
+    goals:
+      - "Mermaid mapping and repo snapshots."
+      - "SLO monthly_cost_slo and slo_burn CLI support."
+      - "Baselines support and generation."
+      - "Pro patch autofix with rollback preview."
+  v1_0_1:
+    version: "1.0.1"
+    goals:
+      - "Limited policy-as-code enforcement."
+      - "Explain mode expansion."
+      - "Trend HTML report."
+  v2_0_0:
+    version: "2.0.0"
+    goals:
+      - "Exemption workflow and policy metadata."
+      - "Drift-safe autofix (beta)."
+      - "Terraform provider integration."
+  v3_0_0:
+    version: "3.0.0"
+    goals:
+      - "Full policy language + UI."
+      - "Multi-SLO composition and burn alerting."
+      - "GuardSuite telemetry integrations."

@@ -1,0 +1,98 @@
+name: CostPilot CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'products/costpilot/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'products/costpilot/**'
+
+jobs:
+  test:
+    name: Test CostPilot
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          components: rustfmt, clippy
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: products/costpilot/target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Run tests
+        run: |
+          cd products/costpilot
+          cargo test --verbose
+      
+      - name: Run clippy
+        run: |
+          cd products/costpilot
+          cargo clippy --all-targets --all-features -- -D warnings
+      
+      - name: Check formatting
+        run: |
+          cd products/costpilot
+          cargo fmt -- --check
+      
+      - name: Build release
+        run: |
+          cd products/costpilot
+          cargo build --release --verbose
+      
+      - name: Validate zero-cost policy
+        run: |
+          cd products/costpilot
+          ./target/release/costpilot validate
+
+  wasm:
+    name: Build WASM
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          target: wasm32-wasi
+      
+      - name: Build WASM module
+        run: |
+          cd products/costpilot
+          cargo build --target wasm32-wasi --release
+      
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: costpilot-wasm
+          path: products/costpilot/target/wasm32-wasi/release/costpilot.wasm

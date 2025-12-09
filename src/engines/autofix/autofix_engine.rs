@@ -30,6 +30,11 @@ pub struct AutofixResult {
 pub struct AutofixEngine;
 
 impl AutofixEngine {
+    /// Create new AutofixEngine
+    pub fn new() -> Self {
+        Self
+    }
+
     /// Generate fixes for detections (MVP: snippet mode only)
     pub fn generate_fixes(
         detections: &[Detection],

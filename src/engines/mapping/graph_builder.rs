@@ -32,7 +32,7 @@ impl GraphBuilder {
 
     /// Enable performance tracking with budgets
     pub fn with_performance_tracking(mut self, budgets: PerformanceBudgets) -> Self {
-        self.performance_tracker = Some(PerformanceTracker::new(budgets.mapping, "Mapping".to_string()));
+        self.performance_tracker = Some(PerformanceTracker::new(budgets.mapping));
         self
     }
 
@@ -97,7 +97,7 @@ impl GraphBuilder {
         graph.update_metadata();
 
         // Mark completion and collect metrics
-        if let Some(tracker) = &mut self.performance_tracker {
+        if let Some(tracker) = self.performance_tracker.take() {
             let _metrics = tracker.complete();
             // TODO: Log or return metrics
         }
@@ -170,9 +170,10 @@ impl GraphBuilder {
         }
         
         // Add cost estimate
-        let prediction_engine = PredictionEngine::new();
-        if let Ok(estimate) = prediction_engine.predict_resource_cost(change) {
-            node = node.with_cost(estimate.monthly);
+        if let Ok(prediction_engine) = PredictionEngine::new() {
+            if let Ok(estimate) = prediction_engine.predict_resource_cost(change) {
+                node = node.with_cost(estimate.monthly_cost);
+            }
         }
         
         Ok(node)

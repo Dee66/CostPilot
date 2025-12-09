@@ -230,7 +230,7 @@ Examples:
     parser.add_argument(
         '--file',
         type=Path,
-        default=Path('checklist.md'),
+        default=Path('docs/checklist.md'),
         help='Path to the checklist.md file (default: checklist.md)'
     )
     
