@@ -12,10 +12,10 @@ pub fn make_test_cost_estimate(resource_id: &str, monthly_cost: f64) -> CostEsti
     CostEstimate {
         resource_id: resource_id.to_string(),
         monthly_cost,
-        prediction_interval_low: monthly_cost * 0.8,
-        prediction_interval_high: monthly_cost * 1.2,
-        confidence_score: 0.85,
-        heuristic_reference: Some("test_heuristic".to_string()),
+        prediction_interval_low: monthly_cost * 0.9,
+        prediction_interval_high: monthly_cost * 1.1,
+        confidence_score: 0.95,
+        heuristic_reference: Some("test-default".to_string()),
         cold_start_inference: false,
     }
 }
@@ -29,10 +29,10 @@ pub fn make_test_cost_estimate_with_confidence(
     CostEstimate {
         resource_id: resource_id.to_string(),
         monthly_cost,
-        prediction_interval_low: monthly_cost * 0.8,
-        prediction_interval_high: monthly_cost * 1.2,
+        prediction_interval_low: monthly_cost * 0.9,
+        prediction_interval_high: monthly_cost * 1.1,
         confidence_score: confidence,
-        heuristic_reference: Some("test_heuristic".to_string()),
+        heuristic_reference: Some("test-default".to_string()),
         cold_start_inference: false,
     }
 }
@@ -47,7 +47,9 @@ pub fn make_test_resource_change(
         .resource_id(resource_id)
         .resource_type(resource_type)
         .action(action)
-        .new_config(json!({"type": resource_type}))
+        .old_config(json!({}))
+        .new_config(json!({}))
+        .monthly_cost(0.0)
         .tags(HashMap::new())
         .build()
 }
@@ -91,7 +93,8 @@ pub fn make_test_detection(
             Severity::Medium => 50,
             Severity::Low => 30,
         })
-        .message(format!("Test detection for {}", resource_id))
+        .message("test".to_string())
+        .estimated_cost(0.0)
         .build()
 }
 
@@ -143,4 +146,46 @@ pub fn make_test_scan_result(
         total_monthly_delta,
         metadata: make_test_scan_metadata(),
     }
+}
+
+/// Create a test EditionContext with Premium capabilities (test-only)
+#[cfg(test)]
+pub fn test_edition_premium() -> costpilot::edition::EditionContext {
+    costpilot::edition::EditionContext {
+        edition: costpilot::edition::Edition::Premium,
+        allow_policy_enforce: true,
+        max_mapping_depth: 10,
+        allow_advanced_prediction: true,
+        allow_trend_analysis: true,
+    }
+}
+
+/// Create a basic CostEstimate helper
+pub fn make_cost_estimate(monthly_cost: f64) -> CostEstimate {
+    CostEstimate {
+        resource_id: "test-resource".to_string(),
+        monthly_cost,
+        prediction_interval_low: monthly_cost * 0.9,
+        prediction_interval_high: monthly_cost * 1.1,
+        confidence_score: 0.95,
+        heuristic_reference: Some("test-default".to_string()),
+        cold_start_inference: false,
+    }
+}
+
+/// Create a ResourceChange helper with optional monthly cost
+pub fn make_resource_change(action: ChangeAction, monthly: Option<f64>) -> ResourceChange {
+    let mut builder = ResourceChange::builder()
+        .resource_id("test-resource")
+        .resource_type("test-type")
+        .action(action)
+        .old_config(serde_json::Value::Null)
+        .new_config(serde_json::Value::Null)
+        .tags(HashMap::new());
+    
+    if let Some(cost) = monthly {
+        builder = builder.monthly_cost(cost);
+    }
+    
+    builder.build()
 }

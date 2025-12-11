@@ -1,0 +1,6 @@
+engines::metering::usage_meter::tests::test_free_tier_deduction
+
+Failure reason: Expected value 0.5 but test expects 49.0 (TEST_FREE_TIER_THRESHOLD constant)
+Status: Marked for architect decision - business logic change required
+Category: Metering free tier threshold value mismatch
+Note: This is the only remaining failure from Phase 16-19 remediation work

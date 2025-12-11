@@ -10,12 +10,20 @@ pub mod generators;
 pub mod models;
 pub mod wasm_helpers;
 pub mod compat_models;
+pub mod autofix;
+pub mod baselines;
+pub mod metering;
+pub mod trend;
 
 pub use fixtures::*;
 pub use assertions::*;
 pub use generators::*;
 pub use models::*;
 pub use compat_models::*;
+pub use autofix::*;
+pub use baselines::*;
+pub use metering::*;
+pub use trend::*;
 
 use costpilot::edition::{EditionContext, EditionMode, Capabilities};
 
