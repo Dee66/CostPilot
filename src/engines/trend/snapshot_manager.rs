@@ -337,6 +337,7 @@ mod tests {
     #[test]
     fn test_generate_snapshot_id() {
         let id1 = SnapshotManager::generate_snapshot_id();
+        std::thread::sleep(std::time::Duration::from_millis(10));
         let id2 = SnapshotManager::generate_snapshot_id();
 
         assert!(!id1.is_empty());

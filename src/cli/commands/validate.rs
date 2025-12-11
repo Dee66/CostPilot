@@ -111,11 +111,28 @@ mod tests {
     #[test]
     fn test_execute_valid_file() {
         let yaml = r#"
-version: "1.0.0"
-default_region: us-east-1
-edition: free
+id: test_policy
+name: Test Policy
+description: Test policy for validation
+category: budget
+severity: warning
+owner: test
+author: test
+rules:
+  - name: Budget rule
+    description: Enforce budget limits
+    enabled: true
+    severity: Medium
+    conditions:
+      - condition_type:
+          type: monthly_cost
+        operator: greater_than
+        value: 1000.0
+    action:
+      type: warn
+      message: "Budget exceeded"
 "#;
-        let mut file = NamedTempFile::with_suffix(".costpilot.yaml").unwrap();
+        let mut file = NamedTempFile::with_suffix(".yaml").unwrap();
         file.write_all(yaml.as_bytes()).unwrap();
 
         // This would exit(0) on success, so we can't test directly

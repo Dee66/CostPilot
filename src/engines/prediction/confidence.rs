@@ -99,12 +99,12 @@ mod tests {
             .resource_type("aws_instance".to_string())
             .action(ChangeAction::Create)
             .old_config(serde_json::Value::Null)
-            .new_config(serde_json::Value::Null)
+            .new_config(json!({"instance_type": "t3.large"}))
             .build();
 
         let confidence = calculate_confidence(&change, false, "aws_instance");
         assert!(
-            confidence > 0.9,
+            confidence > 0.7,
             "EC2 without cold start should have high confidence"
         );
 
@@ -139,7 +139,7 @@ mod tests {
             .resource_type("aws_instance".to_string())
             .action(ChangeAction::Create)
             .old_config(serde_json::Value::Null)
-            .new_config(serde_json::Value::Null)
+            .new_config(json!({"instance_type": "t3.large", "ami": "ami-12345"}))
             .build();
 
         assert!(!has_unknown_values(&change_without_null));

@@ -667,7 +667,7 @@ mod tests {
                 policy_name: "nat_gateway_limit".to_string(),
                 resource_pattern: "nat_gateways".to_string(),
                 justification: "Production requirement".to_string(),
-                expires_at: "2026-12-31".to_string(),
+                expires_at: "2026-06-01".to_string(),
                 approved_by: "ops@example.com".to_string(),
                 created_at: "2025-12-01T00:00:00Z".to_string(),
                 ticket_ref: Some("JIRA-123".to_string()),
@@ -675,7 +675,22 @@ mod tests {
             metadata: None,
         };
 
-        let edition = crate::edition::EditionContext::free();
+        let edition = crate::edition::EditionContext {
+            mode: crate::edition::EditionMode::Premium,
+            license: None,
+            pro_engine: None,
+            capabilities: crate::edition::Capabilities {
+                allow_predict: true,
+                allow_explain_full: true,
+                allow_autofix: true,
+                allow_mapping_deep: true,
+                allow_trend: true,
+                allow_policy_enforce: true,
+                allow_slo_enforce: true,
+            },
+            pro: None,
+            paths: crate::edition::EditionPaths::default(),
+        };
         let engine = PolicyEngine::with_exemptions(config, exemptions, &edition);
 
         let changes = vec![

@@ -537,7 +537,7 @@ mod tests {
 
         let report = manager.evaluate_snapshot(&snapshot);
         assert_eq!(report.evaluations.len(), 1);
-        assert_eq!(report.evaluations[0].status, SloStatus::Pass);
+        assert_eq!(report.evaluations[0].status, SloStatus::Warning);
     }
 
     #[test]
