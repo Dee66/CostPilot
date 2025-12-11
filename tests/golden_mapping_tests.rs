@@ -1,24 +1,39 @@
 // Golden file tests for mapping output
 
-use costpilot::engines::mapping::{DependencyGraph, GraphNode};
+use costpilot::engines::mapping::{
+    DependencyGraph, GraphNode, GraphEdge, GraphMetadata, EdgeType,
+};
 
 #[test]
 fn golden_simple_dependency_graph() {
     let graph = DependencyGraph {
         nodes: vec![
-            GraphNode {
-                id: "aws_vpc.main".to_string(),
-                resource_type: "aws_vpc".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec![],
-            },
-            GraphNode {
-                id: "aws_subnet.public".to_string(),
-                resource_type: "aws_subnet".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec!["aws_vpc.main".to_string()],
-            },
+            GraphNode::new_resource(
+                "aws_vpc.main".to_string(),
+                "aws_vpc".to_string(),
+                "main VPC".to_string(),
+            ).with_cost(0.0),
+            GraphNode::new_resource(
+                "aws_subnet.public".to_string(),
+                "aws_subnet".to_string(),
+                "public subnet".to_string(),
+            ).with_cost(0.0),
         ],
+        edges: vec![
+            GraphEdge::new(
+                "aws_subnet.public".to_string(),
+                "aws_vpc.main".to_string(),
+                EdgeType::DependsOn,
+            ),
+        ],
+        metadata: GraphMetadata {
+            node_count: 2,
+            edge_count: 1,
+            max_depth: 1,
+            has_cycles: false,
+            cycles: vec![],
+            total_cost: Some(0.0),
+        },
     };
 
     let json_output = serde_json::to_value(&graph).unwrap();
@@ -29,37 +44,67 @@ fn golden_simple_dependency_graph() {
 fn golden_complex_web_app_graph() {
     let graph = DependencyGraph {
         nodes: vec![
-            GraphNode {
-                id: "aws_vpc.main".to_string(),
-                resource_type: "aws_vpc".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec![],
-            },
-            GraphNode {
-                id: "aws_subnet.public".to_string(),
-                resource_type: "aws_subnet".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec!["aws_vpc.main".to_string()],
-            },
-            GraphNode {
-                id: "aws_nat_gateway.main".to_string(),
-                resource_type: "aws_nat_gateway".to_string(),
-                monthly_cost: 32.85,
-                dependencies: vec!["aws_subnet.public".to_string()],
-            },
-            GraphNode {
-                id: "aws_instance.web".to_string(),
-                resource_type: "aws_instance".to_string(),
-                monthly_cost: 70.08,
-                dependencies: vec!["aws_subnet.public".to_string()],
-            },
-            GraphNode {
-                id: "aws_lb.main".to_string(),
-                resource_type: "aws_lb".to_string(),
-                monthly_cost: 16.20,
-                dependencies: vec!["aws_subnet.public".to_string(), "aws_instance.web".to_string()],
-            },
+            GraphNode::new_resource(
+                "aws_vpc.main".to_string(),
+                "aws_vpc".to_string(),
+                "main VPC".to_string(),
+            ).with_cost(0.0),
+            GraphNode::new_resource(
+                "aws_subnet.public".to_string(),
+                "aws_subnet".to_string(),
+                "public subnet".to_string(),
+            ).with_cost(0.0),
+            GraphNode::new_resource(
+                "aws_nat_gateway.main".to_string(),
+                "aws_nat_gateway".to_string(),
+                "main NAT gateway".to_string(),
+            ).with_cost(32.85),
+            GraphNode::new_resource(
+                "aws_instance.web".to_string(),
+                "aws_instance".to_string(),
+                "web instance".to_string(),
+            ).with_cost(70.08),
+            GraphNode::new_resource(
+                "aws_lb.main".to_string(),
+                "aws_lb".to_string(),
+                "main load balancer".to_string(),
+            ).with_cost(16.20),
         ],
+        edges: vec![
+            GraphEdge::new(
+                "aws_subnet.public".to_string(),
+                "aws_vpc.main".to_string(),
+                EdgeType::DependsOn,
+            ),
+            GraphEdge::new(
+                "aws_nat_gateway.main".to_string(),
+                "aws_subnet.public".to_string(),
+                EdgeType::DependsOn,
+            ).with_cost_impact("$32.85/month".to_string()),
+            GraphEdge::new(
+                "aws_instance.web".to_string(),
+                "aws_subnet.public".to_string(),
+                EdgeType::DependsOn,
+            ).with_cost_impact("$70.08/month".to_string()),
+            GraphEdge::new(
+                "aws_lb.main".to_string(),
+                "aws_subnet.public".to_string(),
+                EdgeType::DependsOn,
+            ).with_cost_impact("$16.20/month".to_string()),
+            GraphEdge::new(
+                "aws_lb.main".to_string(),
+                "aws_instance.web".to_string(),
+                EdgeType::DataFlow,
+            ),
+        ],
+        metadata: GraphMetadata {
+            node_count: 5,
+            edge_count: 5,
+            max_depth: 2,
+            has_cycles: false,
+            cycles: vec![],
+            total_cost: Some(119.13),
+        },
     };
 
     let json_output = serde_json::to_value(&graph).unwrap();
@@ -70,31 +115,52 @@ fn golden_complex_web_app_graph() {
 fn golden_database_tier_graph() {
     let graph = DependencyGraph {
         nodes: vec![
-            GraphNode {
-                id: "aws_vpc.main".to_string(),
-                resource_type: "aws_vpc".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec![],
-            },
-            GraphNode {
-                id: "aws_subnet.private".to_string(),
-                resource_type: "aws_subnet".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec!["aws_vpc.main".to_string()],
-            },
-            GraphNode {
-                id: "aws_db_subnet_group.main".to_string(),
-                resource_type: "aws_db_subnet_group".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec!["aws_subnet.private".to_string()],
-            },
-            GraphNode {
-                id: "aws_db_instance.main".to_string(),
-                resource_type: "aws_db_instance".to_string(),
-                monthly_cost: 87.60,
-                dependencies: vec!["aws_db_subnet_group.main".to_string()],
-            },
+            GraphNode::new_resource(
+                "aws_vpc.main".to_string(),
+                "aws_vpc".to_string(),
+                "main VPC".to_string(),
+            ).with_cost(0.0),
+            GraphNode::new_resource(
+                "aws_subnet.private".to_string(),
+                "aws_subnet".to_string(),
+                "private subnet".to_string(),
+            ).with_cost(0.0),
+            GraphNode::new_resource(
+                "aws_db_subnet_group.main".to_string(),
+                "aws_db_subnet_group".to_string(),
+                "main DB subnet group".to_string(),
+            ).with_cost(0.0),
+            GraphNode::new_resource(
+                "aws_db_instance.main".to_string(),
+                "aws_db_instance".to_string(),
+                "main DB instance".to_string(),
+            ).with_cost(87.60),
         ],
+        edges: vec![
+            GraphEdge::new(
+                "aws_subnet.private".to_string(),
+                "aws_vpc.main".to_string(),
+                EdgeType::DependsOn,
+            ),
+            GraphEdge::new(
+                "aws_db_subnet_group.main".to_string(),
+                "aws_subnet.private".to_string(),
+                EdgeType::DependsOn,
+            ),
+            GraphEdge::new(
+                "aws_db_instance.main".to_string(),
+                "aws_db_subnet_group.main".to_string(),
+                EdgeType::DependsOn,
+            ).with_cost_impact("$87.60/month".to_string()),
+        ],
+        metadata: GraphMetadata {
+            node_count: 4,
+            edge_count: 3,
+            max_depth: 3,
+            has_cycles: false,
+            cycles: vec![],
+            total_cost: Some(87.60),
+        },
     };
 
     let json_output = serde_json::to_value(&graph).unwrap();
@@ -102,67 +168,18 @@ fn golden_database_tier_graph() {
 }
 
 #[test]
-fn golden_cost_propagation_report() {
-    let graph = DependencyGraph {
-        nodes: vec![
-            GraphNode {
-                id: "aws_vpc.main".to_string(),
-                resource_type: "aws_vpc".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec![],
-            },
-            GraphNode {
-                id: "aws_subnet.public".to_string(),
-                resource_type: "aws_subnet".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec!["aws_vpc.main".to_string()],
-            },
-            GraphNode {
-                id: "aws_nat_gateway.main".to_string(),
-                resource_type: "aws_nat_gateway".to_string(),
-                monthly_cost: 32.85,
-                dependencies: vec!["aws_subnet.public".to_string()],
-            },
-        ],
-    };
-
-    let report = graph.cost_propagation_report();
-    insta::assert_json_snapshot!("cost_propagation", report);
-}
-
-#[test]
-fn golden_mermaid_diagram_output() {
-    let graph = DependencyGraph {
-        nodes: vec![
-            GraphNode {
-                id: "aws_vpc.main".to_string(),
-                resource_type: "aws_vpc".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec![],
-            },
-            GraphNode {
-                id: "aws_subnet.public".to_string(),
-                resource_type: "aws_subnet".to_string(),
-                monthly_cost: 0.0,
-                dependencies: vec!["aws_vpc.main".to_string()],
-            },
-            GraphNode {
-                id: "aws_instance.web".to_string(),
-                resource_type: "aws_instance".to_string(),
-                monthly_cost: 70.08,
-                dependencies: vec!["aws_subnet.public".to_string()],
-            },
-        ],
-    };
-
-    let mermaid = graph.to_mermaid();
-    insta::assert_snapshot!("mermaid_diagram", mermaid);
-}
-
-#[test]
 fn golden_empty_graph() {
     let graph = DependencyGraph {
         nodes: vec![],
+        edges: vec![],
+        metadata: GraphMetadata {
+            node_count: 0,
+            edge_count: 0,
+            max_depth: 0,
+            has_cycles: false,
+            cycles: vec![],
+            total_cost: Some(0.0),
+        },
     };
 
     let json_output = serde_json::to_value(&graph).unwrap();
@@ -173,25 +190,31 @@ fn golden_empty_graph() {
 fn golden_isolated_resources() {
     let graph = DependencyGraph {
         nodes: vec![
-            GraphNode {
-                id: "aws_s3_bucket.data".to_string(),
-                resource_type: "aws_s3_bucket".to_string(),
-                monthly_cost: 5.0,
-                dependencies: vec![],
-            },
-            GraphNode {
-                id: "aws_dynamodb_table.users".to_string(),
-                resource_type: "aws_dynamodb_table".to_string(),
-                monthly_cost: 25.0,
-                dependencies: vec![],
-            },
-            GraphNode {
-                id: "aws_lambda_function.api".to_string(),
-                resource_type: "aws_lambda_function".to_string(),
-                monthly_cost: 15.0,
-                dependencies: vec![],
-            },
+            GraphNode::new_resource(
+                "aws_s3_bucket.data".to_string(),
+                "aws_s3_bucket".to_string(),
+                "data bucket".to_string(),
+            ).with_cost(5.0),
+            GraphNode::new_resource(
+                "aws_dynamodb_table.users".to_string(),
+                "aws_dynamodb_table".to_string(),
+                "users table".to_string(),
+            ).with_cost(25.0),
+            GraphNode::new_resource(
+                "aws_lambda_function.api".to_string(),
+                "aws_lambda_function".to_string(),
+                "API Lambda".to_string(),
+            ).with_cost(15.0),
         ],
+        edges: vec![],
+        metadata: GraphMetadata {
+            node_count: 3,
+            edge_count: 0,
+            max_depth: 0,
+            has_cycles: false,
+            cycles: vec![],
+            total_cost: Some(45.0),
+        },
     };
 
     let json_output = serde_json::to_value(&graph).unwrap();

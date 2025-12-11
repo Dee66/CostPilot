@@ -23,7 +23,7 @@ fn test_drift_case_resource_deleted_outside_terraform() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -50,7 +50,7 @@ fn test_drift_case_resource_modified_outside_terraform() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -77,7 +77,7 @@ fn test_drift_case_state_file_out_of_sync() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -104,7 +104,7 @@ fn test_drift_case_force_replacement_due_to_drift() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -129,7 +129,7 @@ fn test_drift_case_tainted_resource() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -169,7 +169,7 @@ fn test_drift_case_dependency_chain_broken() {
             }
         ]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -194,7 +194,7 @@ fn test_drift_case_import_existing_resource() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -223,7 +223,7 @@ fn test_drift_case_partial_configuration_drift() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -268,7 +268,7 @@ fn test_drift_case_multiple_resources_drifted() {
             }
         ]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -300,7 +300,7 @@ fn test_drift_case_manual_tag_changes() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -327,7 +327,7 @@ fn test_drift_case_lifecycle_ignore_changes() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -357,7 +357,7 @@ fn test_drift_case_security_group_rules_modified() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -382,7 +382,7 @@ fn test_drift_case_iam_policy_drift() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -411,7 +411,7 @@ fn test_drift_case_autoscaling_desired_capacity() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -440,7 +440,7 @@ fn test_drift_case_database_parameter_group() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -471,7 +471,7 @@ fn test_drift_case_s3_bucket_lifecycle_rules() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -498,7 +498,7 @@ fn test_drift_case_cloudwatch_alarm_threshold() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -532,7 +532,7 @@ fn test_drift_case_lambda_environment_variables() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -559,7 +559,7 @@ fn test_drift_case_route53_record_ttl() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -590,7 +590,7 @@ fn test_drift_case_elb_health_check_parameters() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -615,7 +615,7 @@ fn test_drift_case_eks_cluster_version() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -640,7 +640,7 @@ fn test_drift_case_kms_key_policy() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -665,7 +665,7 @@ fn test_drift_case_elasticache_node_count() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -690,7 +690,7 @@ fn test_drift_case_rds_backup_retention() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -714,7 +714,7 @@ fn test_drift_case_vpc_flow_logs_enabled() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -741,7 +741,7 @@ fn test_drift_case_dynamodb_billing_mode() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -766,7 +766,7 @@ fn test_drift_case_ecs_task_count() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -791,7 +791,7 @@ fn test_drift_case_cloudfront_price_class() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -816,7 +816,7 @@ fn test_drift_case_kinesis_shard_count() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -841,7 +841,7 @@ fn test_drift_case_sqs_message_retention() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -872,7 +872,7 @@ fn test_drift_case_api_gateway_throttling() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -897,7 +897,7 @@ fn test_drift_case_sns_topic_subscription() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -920,7 +920,7 @@ fn test_drift_case_ecr_lifecycle_policy() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -949,7 +949,7 @@ fn test_drift_case_secrets_manager_rotation() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -978,7 +978,7 @@ fn test_drift_case_waf_rule_priority() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -1010,7 +1010,7 @@ fn test_drift_case_codepipeline_stage_added() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -1035,7 +1035,7 @@ fn test_drift_case_config_rule_modified() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -1060,7 +1060,7 @@ fn test_drift_case_glue_crawler_schedule() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -1089,7 +1089,7 @@ fn test_drift_case_batch_compute_environment() {
             }
         }]
     });
-    
+
     assert_json_snapshot!(plan);
 }
 
@@ -1121,6 +1121,6 @@ fn test_drift_case_mixed_create_update_delete() {
             }
         ]
     });
-    
+
     assert_json_snapshot!(plan);
 }

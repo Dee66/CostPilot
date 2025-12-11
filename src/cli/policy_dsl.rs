@@ -1,9 +1,9 @@
 // Policy DSL CLI commands
 
+use crate::engines::policy::parser::{EvaluationContext, PolicyRuleLoader, RuleEvaluator};
 use clap::Args;
-use std::path::PathBuf;
 use colored::Colorize;
-use crate::engines::policy::parser::{DslParser, PolicyRuleLoader, RuleEvaluator, EvaluationContext};
+use std::path::PathBuf;
 
 #[derive(Debug, Args)]
 pub struct PolicyDslCommand {
@@ -18,7 +18,7 @@ pub enum PolicyDslSubcommand {
         /// Show disabled rules
         #[arg(long)]
         all: bool,
-        
+
         /// Filter by severity
         #[arg(long)]
         severity: Option<String>,
@@ -69,27 +69,27 @@ pub enum PolicyDslSubcommand {
     },
 }
 
-pub fn execute_policy_dsl_command(command: &PolicyDslCommand) -> Result<(), Box<dyn std::error::Error>> {
+pub fn execute_policy_dsl_command(
+    command: &PolicyDslCommand,
+) -> Result<(), Box<dyn std::error::Error>> {
     match &command.command {
-        PolicyDslSubcommand::List { all, severity } => {
-            execute_list(*all, severity.as_deref())
-        }
-        PolicyDslSubcommand::Validate { path } => {
-            execute_validate(path)
-        }
-        PolicyDslSubcommand::Test { policy, resource_type, monthly_cost, verbose } => {
-            execute_test(policy, resource_type, *monthly_cost, *verbose)
-        }
-        PolicyDslSubcommand::Stats { path } => {
-            execute_stats(path.as_ref())
-        }
-        PolicyDslSubcommand::Example { output, format } => {
-            execute_example(output.as_ref(), format)
-        }
+        PolicyDslSubcommand::List { all, severity } => execute_list(*all, severity.as_deref()),
+        PolicyDslSubcommand::Validate { path } => execute_validate(path),
+        PolicyDslSubcommand::Test {
+            policy,
+            resource_type,
+            monthly_cost,
+            verbose,
+        } => execute_test(policy, resource_type, *monthly_cost, *verbose),
+        PolicyDslSubcommand::Stats { path } => execute_stats(path.as_ref()),
+        PolicyDslSubcommand::Example { output, format } => execute_example(output.as_ref(), format),
     }
 }
 
-fn execute_list(show_all: bool, severity_filter: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+fn execute_list(
+    show_all: bool,
+    severity_filter: Option<&str>,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "Policy Rules".bold().cyan());
     println!();
 
@@ -105,7 +105,8 @@ fn execute_list(show_all: bool, severity_filter: Option<&str>) -> Result<(), Box
         return Ok(());
     }
 
-    let filtered_rules: Vec<_> = rules.iter()
+    let filtered_rules: Vec<_> = rules
+        .iter()
         .filter(|r| show_all || r.enabled)
         .filter(|r| {
             if let Some(sev) = severity_filter {
@@ -117,7 +118,11 @@ fn execute_list(show_all: bool, severity_filter: Option<&str>) -> Result<(), Box
         .collect();
 
     for (idx, rule) in filtered_rules.iter().enumerate() {
-        let status = if rule.enabled { "✓".green() } else { "✗".red() };
+        let status = if rule.enabled {
+            "✓".green()
+        } else {
+            "✗".red()
+        };
         let severity_color = match rule.severity {
             crate::engines::policy::parser::RuleSeverity::Critical => "Critical".red(),
             crate::engines::policy::parser::RuleSeverity::High => "High".yellow(),
@@ -129,18 +134,21 @@ fn execute_list(show_all: bool, severity_filter: Option<&str>) -> Result<(), Box
         println!("{} {} [{}]", status, rule.name.bold(), severity_color);
         println!("   {}", rule.description.dimmed());
         println!("   Conditions: {}", rule.conditions.len());
-        
+
         if !rule.metadata.is_empty() {
             println!("   Metadata: {} keys", rule.metadata.len());
         }
-        
+
         if idx < filtered_rules.len() - 1 {
             println!();
         }
     }
 
     println!();
-    println!("{}", format!("Total: {} rules", filtered_rules.len()).dimmed());
+    println!(
+        "{}",
+        format!("Total: {} rules", filtered_rules.len()).dimmed()
+    );
 
     Ok(())
 }
@@ -180,9 +188,8 @@ fn execute_test(
     println!();
 
     let evaluator = RuleEvaluator::new(rules);
-    
-    let mut context = EvaluationContext::new()
-        .with_resource_type(resource_type.to_string());
+
+    let mut context = EvaluationContext::new().with_resource_type(resource_type.to_string());
 
     if let Some(cost) = monthly_cost {
         context = context.with_monthly_cost(cost);
@@ -195,7 +202,10 @@ fn execute_test(
         return Ok(());
     }
 
-    println!("{}", format!("Found {} matching rules:", result.matches.len()).yellow());
+    println!(
+        "{}",
+        format!("Found {} matching rules:", result.matches.len()).yellow()
+    );
     println!();
 
     for rule_match in &result.matches {
@@ -207,18 +217,26 @@ fn execute_test(
             crate::engines::policy::parser::RuleSeverity::Info => "INFO".white(),
         };
 
-        println!("{} {} [{}]", "•".bold(), rule_match.rule_name.bold(), severity_str);
+        println!(
+            "{} {} [{}]",
+            "•".bold(),
+            rule_match.rule_name.bold(),
+            severity_str
+        );
         println!("  {}", rule_match.message);
-        
+
         if verbose {
             println!("  Action: {:?}", rule_match.action);
         }
-        
+
         println!();
     }
 
     if result.has_blocks() {
-        println!("{}", "⚠️  Some rules would BLOCK this resource".red().bold());
+        println!(
+            "{}",
+            "⚠️  Some rules would BLOCK this resource".red().bold()
+        );
     } else if result.requires_approval() {
         println!("{}", "⚠️  Some rules require APPROVAL".yellow().bold());
     }
@@ -240,14 +258,17 @@ fn execute_stats(path: Option<&PathBuf>) -> Result<(), Box<dyn std::error::Error
     };
 
     let stats = loader.get_statistics(&rules);
-    
+
     println!();
     println!("{}", stats.format_text());
 
     Ok(())
 }
 
-fn execute_example(output: Option<&PathBuf>, format: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn execute_example(
+    output: Option<&PathBuf>,
+    format: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let example = if format == "json" {
         generate_example_json()
     } else {
@@ -256,7 +277,11 @@ fn execute_example(output: Option<&PathBuf>, format: &str) -> Result<(), Box<dyn
 
     if let Some(output_path) = output {
         std::fs::write(output_path, &example)?;
-        println!("{} Example written to {}", "✓".green(), output_path.display());
+        println!(
+            "{} Example written to {}",
+            "✓".green(),
+            output_path.display()
+        );
     } else {
         println!("{}", example);
     }
@@ -332,7 +357,8 @@ fn generate_example_yaml() -> String {
   action:
     type: block
     message: "Only t3, t4g, or m6i instance families are allowed"
-"#.to_string()
+"#
+    .to_string()
 }
 
 fn generate_example_json() -> String {
@@ -359,5 +385,6 @@ fn generate_example_json() -> String {
                 "message": "EC2 instance exceeds monthly budget of $1000"
             }
         }
-    ])).unwrap_or_default()
+    ]))
+    .unwrap_or_default()
 }

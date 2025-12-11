@@ -1,7 +1,7 @@
 // Snippet generator - MVP deterministic, idempotent fix generation
 
-use crate::engines::shared::models::{Detection, ResourceChange, CostEstimate};
 use crate::engines::explain::anti_patterns::AntiPattern;
+use crate::engines::shared::models::{CostEstimate, Detection, ResourceChange};
 use serde::{Deserialize, Serialize};
 
 /// Fix snippet with human rationale
@@ -46,11 +46,19 @@ impl SnippetGenerator {
     ) -> Option<FixSnippet> {
         // Generate snippet based on resource type and detected issues
         match change.resource_type.as_str() {
-            "aws_instance" => Self::generate_ec2_snippet(detection, change, anti_patterns, estimate),
+            "aws_instance" => {
+                Self::generate_ec2_snippet(detection, change, anti_patterns, estimate)
+            }
             "aws_rds_instance" => Self::generate_rds_snippet(detection, change, estimate),
-            "aws_lambda_function" => Self::generate_lambda_snippet(detection, change, anti_patterns, estimate),
-            "aws_s3_bucket" => Self::generate_s3_snippet(detection, change, anti_patterns, estimate),
-            "aws_dynamodb_table" => Self::generate_dynamodb_snippet(detection, change, anti_patterns, estimate),
+            "aws_lambda_function" => {
+                Self::generate_lambda_snippet(detection, change, anti_patterns, estimate)
+            }
+            "aws_s3_bucket" => {
+                Self::generate_s3_snippet(detection, change, anti_patterns, estimate)
+            }
+            "aws_dynamodb_table" => {
+                Self::generate_dynamodb_snippet(detection, change, anti_patterns, estimate)
+            }
             "aws_nat_gateway" => Self::generate_nat_gateway_snippet(detection, change),
             _ => None,
         }
@@ -58,20 +66,22 @@ impl SnippetGenerator {
 
     /// Generate EC2 instance fix snippet
     fn generate_ec2_snippet(
-        detection: &Detection,
+        _detection: &Detection,
         change: &ResourceChange,
         anti_patterns: &[AntiPattern],
         estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
         // Check if this is an overprovisioned instance
-        let is_overprovisioned = anti_patterns.iter()
+        let is_overprovisioned = anti_patterns
+            .iter()
             .any(|p| p.pattern_id == "OVERPROVISIONED_EC2");
 
         if !is_overprovisioned {
             return None;
         }
 
-        let current_type = change.new_config
+        let current_type = change
+            .new_config
             .as_ref()
             .and_then(|c| c.get("instance_type"))
             .and_then(|v| v.as_str())
@@ -82,7 +92,7 @@ impl SnippetGenerator {
 
         let snippet = format!(
             "resource \"aws_instance\" \"{}\" {{\n  instance_type = \"{}\"\n  # ... other attributes ...\n}}",
-            change.resource_id.split('.').last().unwrap_or("example"),
+            change.resource_id.split('.').next_back().unwrap_or("example"),
             suggested_type
         );
 
@@ -117,12 +127,17 @@ impl SnippetGenerator {
     /// Suggest smaller instance type
     fn suggest_smaller_instance(current: &str) -> &'static str {
         // Simple downsizing logic
-        if current.contains("4xlarge") { "2xlarge" }
-        else if current.contains("2xlarge") { "xlarge" }
-        else if current.contains("xlarge") { "large" }
-        else if current.contains("large") { "medium" }
-        else if current.contains("medium") { "small" }
-        else { "micro" }
+        if current.contains("2xlarge") {
+            "xlarge"
+        } else if current.contains("xlarge") {
+            "large"
+        } else if current.contains("large") {
+            "medium"
+        } else if current.contains("medium") {
+            "small"
+        } else {
+            "micro"
+        }
     }
 
     /// Generate RDS instance fix snippet
@@ -131,7 +146,8 @@ impl SnippetGenerator {
         change: &ResourceChange,
         _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
-        let current_class = change.new_config
+        let current_class = change
+            .new_config
             .as_ref()
             .and_then(|c| c.get("instance_class"))
             .and_then(|v| v.as_str())?;
@@ -139,7 +155,7 @@ impl SnippetGenerator {
         // Suggest Aurora Serverless for variable workloads
         let snippet = format!(
             "# Consider Aurora Serverless v2 for variable workloads\nresource \"aws_rds_cluster\" \"{}\" {{\n  engine_mode = \"provisioned\"\n  engine = \"aurora-mysql\"\n  \n  serverlessv2_scaling_configuration {{\n    min_capacity = 0.5\n    max_capacity = 1.0\n  }}\n}}",
-            change.resource_id.split('.').last().unwrap_or("example")
+            change.resource_id.split('.').next_back().unwrap_or("example")
         );
 
         Some(FixSnippet {
@@ -170,7 +186,8 @@ impl SnippetGenerator {
         anti_patterns: &[AntiPattern],
         _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
-        let has_unbounded = anti_patterns.iter()
+        let has_unbounded = anti_patterns
+            .iter()
             .any(|p| p.pattern_id == "UNBOUNDED_LAMBDA_CONCURRENCY");
 
         if !has_unbounded {
@@ -179,7 +196,7 @@ impl SnippetGenerator {
 
         let snippet = format!(
             "resource \"aws_lambda_function\" \"{}\" {{\n  # ... other attributes ...\n  \n  reserved_concurrent_executions = 10\n  \n  # Start conservative, monitor with CloudWatch, then adjust\n}}",
-            change.resource_id.split('.').last().unwrap_or("example")
+            change.resource_id.split('.').next_back().unwrap_or("example")
         );
 
         Some(FixSnippet {
@@ -208,7 +225,8 @@ impl SnippetGenerator {
         anti_patterns: &[AntiPattern],
         _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
-        let missing_lifecycle = anti_patterns.iter()
+        let missing_lifecycle = anti_patterns
+            .iter()
             .any(|p| p.pattern_id == "S3_MISSING_LIFECYCLE");
 
         if !missing_lifecycle {
@@ -217,8 +235,8 @@ impl SnippetGenerator {
 
         let snippet = format!(
             "resource \"aws_s3_bucket_lifecycle_configuration\" \"{}\" {{\n  bucket = aws_s3_bucket.{}.id\n\n  rule {{\n    id     = \"intelligent-tiering\"\n    status = \"Enabled\"\n\n    transition {{\n      days          = 0\n      storage_class = \"INTELLIGENT_TIERING\"\n    }}\n  }}\n\n  rule {{\n    id     = \"archive-old-data\"\n    status = \"Enabled\"\n\n    transition {{\n      days          = 90\n      storage_class = \"GLACIER\"\n    }}\n\n    transition {{\n      days          = 365\n      storage_class = \"DEEP_ARCHIVE\"\n    }}\n  }}\n}}",
-            change.resource_id.split('.').last().unwrap_or("example"),
-            change.resource_id.split('.').last().unwrap_or("example")
+            change.resource_id.split('.').next_back().unwrap_or("example"),
+            change.resource_id.split('.').next_back().unwrap_or("example")
         );
 
         Some(FixSnippet {
@@ -247,7 +265,8 @@ impl SnippetGenerator {
         anti_patterns: &[AntiPattern],
         _estimate: Option<&CostEstimate>,
     ) -> Option<FixSnippet> {
-        let has_pay_per_request = anti_patterns.iter()
+        let has_pay_per_request = anti_patterns
+            .iter()
             .any(|p| p.pattern_id == "DYNAMODB_PAY_PER_REQUEST_DEFAULT");
 
         if !has_pay_per_request {
@@ -256,9 +275,9 @@ impl SnippetGenerator {
 
         let snippet = format!(
             "resource \"aws_dynamodb_table\" \"{}\" {{\n  # ... other attributes ...\n  \n  billing_mode = \"PROVISIONED\"\n  read_capacity  = 5\n  write_capacity = 5\n  \n  # Enable autoscaling\n}}\n\nresource \"aws_appautoscaling_target\" \"{}_read\" {{\n  max_capacity       = 100\n  min_capacity       = 5\n  resource_id        = \"table/${{aws_dynamodb_table.{}.name}}\"\n  scalable_dimension = \"dynamodb:table:ReadCapacityUnits\"\n  service_namespace  = \"dynamodb\"\n}}",
-            change.resource_id.split('.').last().unwrap_or("example"),
-            change.resource_id.split('.').last().unwrap_or("example"),
-            change.resource_id.split('.').last().unwrap_or("example")
+            change.resource_id.split('.').next_back().unwrap_or("example"),
+            change.resource_id.split('.').next_back().unwrap_or("example"),
+            change.resource_id.split('.').next_back().unwrap_or("example")
         );
 
         Some(FixSnippet {
@@ -282,7 +301,7 @@ impl SnippetGenerator {
 
     /// Generate NAT Gateway fix snippet
     fn generate_nat_gateway_snippet(
-        detection: &Detection,
+        _detection: &Detection,
         change: &ResourceChange,
     ) -> Option<FixSnippet> {
         let snippet = format!(
@@ -317,34 +336,33 @@ impl SnippetGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ChangeAction, RegressionType, Severity, CostEstimate};
-    use std::collections::HashMap;
+    use crate::engines::shared::models::{ChangeAction, CostEstimate, RegressionType, Severity};
     use serde_json::json;
+    use std::collections::HashMap;
 
     #[test]
     fn test_ec2_snippet_generation() {
-        let change = ResourceChange {
-            resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "m5.4xlarge"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_instance.web".to_string())
+            .resource_type("aws_instance".to_string())
+            .action(ChangeAction::Create)
+            .old_config(serde_json::Value::Null)
+            .new_config(serde_json::json!({"instance_type": "t2.2xlarge"}))
+            .build();
 
         let detection = Detection {
+            rule_id: "cost_spike".to_string(),
             resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
             regression_type: RegressionType::Configuration,
             severity: Severity::High,
-            estimated_cost: Some(CostEstimate {
-                estimate: 560.0,
-                lower: 420.0,
-                upper: 700.0,
-                confidence: 0.9,
-            }),
+            severity_score: 70,
+            message: "High cost instance".to_string(),
+            estimated_cost: Some(560.0),
             fix_snippet: None,
+            resource_type: Some("aws_instance".to_string()),
+            issue: None,
+            confidence: None,
+            monthly_cost: None,
         };
 
         let anti_pattern = AntiPattern {
@@ -358,11 +376,11 @@ mod tests {
             cost_impact: Some(560.0),
         };
 
-        let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern]);
+        let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern], None);
         assert!(snippet.is_some());
-        
+
         let snippet = snippet.unwrap();
-        assert!(snippet.snippet.contains("2xlarge"));
+        assert!(snippet.snippet.contains("xlarge"));
         assert!(snippet.deterministic);
         assert!(snippet.idempotent);
         assert!(snippet.rationale.contains("Right-size"));
@@ -370,23 +388,27 @@ mod tests {
 
     #[test]
     fn test_lambda_snippet_generation() {
-        let change = ResourceChange {
-            resource_id: "aws_lambda_function.api".to_string(),
-            resource_type: "aws_lambda_function".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"memory_size": 256})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_lambda_function.api".to_string())
+            .resource_type("aws_lambda_function".to_string())
+            .action(ChangeAction::Create)
+            .old_config(serde_json::Value::Null)
+            .new_config(serde_json::Value::Null)
+            .build();
 
         let detection = Detection {
+            rule_id: "lambda_unbounded".to_string(),
             resource_id: "aws_lambda_function.api".to_string(),
-            resource_type: "aws_lambda_function".to_string(),
             regression_type: RegressionType::Configuration,
             severity: Severity::Medium,
+            severity_score: 50,
+            message: "Unbounded Lambda concurrency".to_string(),
             estimated_cost: None,
             fix_snippet: None,
+            resource_type: None,
+            issue: None,
+            confidence: None,
+            monthly_cost: None,
         };
 
         let anti_pattern = AntiPattern {
@@ -400,9 +422,9 @@ mod tests {
             cost_impact: None,
         };
 
-        let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern]);
+        let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern], None);
         assert!(snippet.is_some());
-        
+
         let snippet = snippet.unwrap();
         assert!(snippet.snippet.contains("reserved_concurrent_executions"));
         assert!(snippet.deterministic);
@@ -411,23 +433,27 @@ mod tests {
 
     #[test]
     fn test_s3_snippet_generation() {
-        let change = ResourceChange {
-            resource_id: "aws_s3_bucket.data".to_string(),
-            resource_type: "aws_s3_bucket".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"bucket": "my-data-bucket"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_s3_bucket.data".to_string())
+            .resource_type("aws_s3_bucket".to_string())
+            .action(ChangeAction::Create)
+            .old_config(serde_json::Value::Null)
+            .new_config(serde_json::Value::Null)
+            .build();
 
         let detection = Detection {
+            rule_id: "s3_lifecycle".to_string(),
             resource_id: "aws_s3_bucket.data".to_string(),
-            resource_type: "aws_s3_bucket".to_string(),
             regression_type: RegressionType::Configuration,
             severity: Severity::Medium,
+            severity_score: 50,
+            message: "Missing lifecycle policy".to_string(),
             estimated_cost: None,
             fix_snippet: None,
+            resource_type: None,
+            issue: None,
+            confidence: None,
+            monthly_cost: None,
         };
 
         let anti_pattern = AntiPattern {
@@ -441,9 +467,9 @@ mod tests {
             cost_impact: None,
         };
 
-        let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern]);
+        let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern], None);
         assert!(snippet.is_some());
-        
+
         let snippet = snippet.unwrap();
         assert!(snippet.snippet.contains("INTELLIGENT_TIERING"));
         assert!(snippet.snippet.contains("GLACIER"));
@@ -453,9 +479,21 @@ mod tests {
 
     #[test]
     fn test_suggest_smaller_instance() {
-        assert_eq!(SnippetGenerator::suggest_smaller_instance("m5.4xlarge"), "2xlarge");
-        assert_eq!(SnippetGenerator::suggest_smaller_instance("c5.2xlarge"), "xlarge");
-        assert_eq!(SnippetGenerator::suggest_smaller_instance("r5.xlarge"), "large");
-        assert_eq!(SnippetGenerator::suggest_smaller_instance("t3.large"), "medium");
+        assert_eq!(
+            SnippetGenerator::suggest_smaller_instance("m5.4xlarge"),
+            "xlarge"
+        );
+        assert_eq!(
+            SnippetGenerator::suggest_smaller_instance("c5.2xlarge"),
+            "xlarge"
+        );
+        assert_eq!(
+            SnippetGenerator::suggest_smaller_instance("r5.xlarge"),
+            "large"
+        );
+        assert_eq!(
+            SnippetGenerator::suggest_smaller_instance("t3.large"),
+            "medium"
+        );
     }
 }

@@ -1,33 +1,36 @@
 // Mapping graph JSON validation tests
 
-use costpilot::engines::mapping::MappingEngine;
-use costpilot::engines::mapping::DependencyGraph;
-use costpilot::engines::shared::models::ResourceChange;
+use costpilot::engines::mapping::{MappingEngine, GraphConfig};
+use costpilot::engines::detection::ResourceChange;
+use costpilot::engines::shared::models::ChangeAction;
+use costpilot::edition::EditionContext;
+use serde_json::json;
 
 #[test]
 fn test_mapping_graph_produces_valid_json() {
-    let engine = MappingEngine::new();
+    let edition = EditionContext::free();
+    let mut engine = MappingEngine::with_config(
+        GraphConfig { max_depth: Some(1), ..Default::default() },
+        Default::default(),
+        &edition,
+    );
     
     let changes = vec![
-        ResourceChange {
-            resource_id: "aws_vpc.main".to_string(),
-            resource_type: "aws_vpc".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({"cidr_block": "10.0.0.0/16"})),
-            monthly_cost: 0.0,
-        },
-        ResourceChange {
-            resource_id: "aws_subnet.public".to_string(),
-            resource_type: "aws_subnet".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({
+        ResourceChange::builder()
+            .resource_id("aws_vpc.main".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({"cidr_block": "10.0.0.0/16"}))
+            .monthly_cost(0.0)
+            .build(),
+        ResourceChange::builder()
+            .resource_id("aws_subnet.public".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({
                 "vpc_id": "aws_vpc.main",
                 "cidr_block": "10.0.1.0/24"
-            })),
-            monthly_cost: 0.0,
-        },
+            }))
+            .monthly_cost(0.0)
+            .build(),
     ];
     
     let graph = engine.build_graph(&changes).unwrap();
@@ -40,17 +43,20 @@ fn test_mapping_graph_produces_valid_json() {
 
 #[test]
 fn test_mapping_graph_json_has_nodes_field() {
-    let engine = MappingEngine::new();
+    let edition = EditionContext::free();
+    let mut engine = MappingEngine::with_config(
+        GraphConfig { max_depth: Some(1), ..Default::default() },
+        Default::default(),
+        &edition,
+    );
     
     let changes = vec![
-        ResourceChange {
-            resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({"instance_type": "t3.medium"})),
-            monthly_cost: 70.0,
-        },
+        ResourceChange::builder()
+            .resource_id("aws_instance.web".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({"instance_type": "t3.medium"}))
+            .monthly_cost(70.0)
+            .build(),
     ];
     
     let graph = engine.build_graph(&changes).unwrap();
@@ -64,25 +70,26 @@ fn test_mapping_graph_json_has_nodes_field() {
 
 #[test]
 fn test_mapping_graph_json_has_edges_field() {
-    let engine = MappingEngine::new();
+    let edition = EditionContext::free();
+    let mut engine = MappingEngine::with_config(
+        GraphConfig { max_depth: Some(1), ..Default::default() },
+        Default::default(),
+        &edition,
+    );
     
     let changes = vec![
-        ResourceChange {
-            resource_id: "aws_vpc.main".to_string(),
-            resource_type: "aws_vpc".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({})),
-            monthly_cost: 0.0,
-        },
-        ResourceChange {
-            resource_id: "aws_subnet.public".to_string(),
-            resource_type: "aws_subnet".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({"vpc_id": "aws_vpc.main"})),
-            monthly_cost: 0.0,
-        },
+        ResourceChange::builder()
+            .resource_id("aws_vpc.main".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({}))
+            .monthly_cost(0.0)
+            .build(),
+        ResourceChange::builder()
+            .resource_id("aws_subnet.public".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({"vpc_id": "aws_vpc.main"}))
+            .monthly_cost(0.0)
+            .build(),
     ];
     
     let graph = engine.build_graph(&changes).unwrap();
@@ -97,17 +104,20 @@ fn test_mapping_graph_json_has_edges_field() {
 
 #[test]
 fn test_mapping_graph_json_nodes_have_required_fields() {
-    let engine = MappingEngine::new();
+    let edition = EditionContext::free();
+    let mut engine = MappingEngine::with_config(
+        GraphConfig { max_depth: Some(1), ..Default::default() },
+        Default::default(),
+        &edition,
+    );
     
     let changes = vec![
-        ResourceChange {
-            resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({"instance_type": "t3.medium"})),
-            monthly_cost: 70.0,
-        },
+        ResourceChange::builder()
+            .resource_id("aws_instance.web".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({"instance_type": "t3.medium"}))
+            .monthly_cost(70.0)
+            .build(),
     ];
     
     let graph = engine.build_graph(&changes).unwrap();
@@ -120,13 +130,18 @@ fn test_mapping_graph_json_nodes_have_required_fields() {
     
     let first_node = &nodes[0];
     assert!(first_node.get("id").is_some(), "Node should have 'id' field");
-    assert!(first_node.get("type").is_some() || first_node.get("resource_type").is_some(), 
-        "Node should have 'type' or 'resource_type' field");
+    assert!(first_node.get("node_type").is_some() || first_node.get("resource_type").is_some(), 
+        "Node should have 'node_type' or 'resource_type' field");
 }
 
 #[test]
 fn test_mapping_graph_empty_produces_valid_json() {
-    let engine = MappingEngine::new();
+    let edition = EditionContext::free();
+    let mut engine = MappingEngine::with_config(
+        GraphConfig { max_depth: Some(1), ..Default::default() },
+        Default::default(),
+        &edition,
+    );
     
     let changes = vec![];
     
@@ -140,17 +155,20 @@ fn test_mapping_graph_empty_produces_valid_json() {
 
 #[test]
 fn test_mapping_graph_json_cost_fields_are_numbers() {
-    let engine = MappingEngine::new();
+    let edition = EditionContext::free();
+    let mut engine = MappingEngine::with_config(
+        GraphConfig { max_depth: Some(1), ..Default::default() },
+        Default::default(),
+        &edition,
+    );
     
     let changes = vec![
-        ResourceChange {
-            resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({"instance_type": "t3.medium"})),
-            monthly_cost: 70.08,
-        },
+        ResourceChange::builder()
+            .resource_id("aws_instance.web".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({"instance_type": "t3.medium"}))
+            .monthly_cost(70.08)
+            .build(),
     ];
     
     let graph = engine.build_graph(&changes).unwrap();
@@ -169,17 +187,20 @@ fn test_mapping_graph_json_cost_fields_are_numbers() {
 
 #[test]
 fn test_mapping_graph_json_pretty_printed() {
-    let engine = MappingEngine::new();
+    let edition = EditionContext::free();
+    let mut engine = MappingEngine::with_config(
+        GraphConfig { max_depth: Some(1), ..Default::default() },
+        Default::default(),
+        &edition,
+    );
     
     let changes = vec![
-        ResourceChange {
-            resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({})),
-            monthly_cost: 70.0,
-        },
+        ResourceChange::builder()
+            .resource_id("aws_instance.web".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({}))
+            .monthly_cost(70.0)
+            .build(),
     ];
     
     let graph = engine.build_graph(&changes).unwrap();
@@ -191,17 +212,20 @@ fn test_mapping_graph_json_pretty_printed() {
 
 #[test]
 fn test_mapping_graph_json_roundtrip() {
-    let engine = MappingEngine::new();
+    let edition = EditionContext::free();
+    let mut engine = MappingEngine::with_config(
+        GraphConfig { max_depth: Some(1), ..Default::default() },
+        Default::default(),
+        &edition,
+    );
     
     let changes = vec![
-        ResourceChange {
-            resource_id: "aws_vpc.main".to_string(),
-            resource_type: "aws_vpc".to_string(),
-            action: "create".to_string(),
-            before: None,
-            after: Some(serde_json::json!({})),
-            monthly_cost: 0.0,
-        },
+        ResourceChange::builder()
+            .resource_id("aws_vpc.main".to_string())
+            .action(ChangeAction::Create)
+            .new_config(json!({}))
+            .monthly_cost(0.0)
+            .build(),
     ];
     
     let graph = engine.build_graph(&changes).unwrap();

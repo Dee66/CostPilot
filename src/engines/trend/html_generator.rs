@@ -17,7 +17,11 @@ impl HtmlGenerator {
         writeln!(&mut html, "<html lang=\"en\">").unwrap();
         writeln!(&mut html, "<head>").unwrap();
         writeln!(&mut html, "  <meta charset=\"UTF-8\">").unwrap();
-        writeln!(&mut html, "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">").unwrap();
+        writeln!(
+            &mut html,
+            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+        )
+        .unwrap();
         writeln!(&mut html, "  <title>{}</title>", Self::escape_html(title)).unwrap();
         writeln!(&mut html, "  <style>").unwrap();
         writeln!(&mut html, "{}", Self::get_styles()).unwrap();
@@ -27,7 +31,11 @@ impl HtmlGenerator {
         writeln!(&mut html, "  <div class=\"container\">").unwrap();
         writeln!(&mut html, "    <header>").unwrap();
         writeln!(&mut html, "      <h1>{}</h1>", Self::escape_html(title)).unwrap();
-        writeln!(&mut html, "      <p class=\"subtitle\">Cost trend visualization</p>").unwrap();
+        writeln!(
+            &mut html,
+            "      <p class=\"subtitle\">Cost trend visualization</p>"
+        )
+        .unwrap();
         writeln!(&mut html, "    </header>").unwrap();
         writeln!(&mut html, "    <div class=\"graph-container\">").unwrap();
         writeln!(&mut html, "{}", svg).unwrap();
@@ -49,14 +57,12 @@ impl HtmlGenerator {
         title: &str,
     ) -> Result<(), CostPilotError> {
         let html = Self::wrap_svg(svg, title);
-        
-        let mut file = File::create(path.as_ref()).map_err(|e| {
-            CostPilotError::io_error(format!("Failed to create HTML file: {}", e))
-        })?;
 
-        file.write_all(html.as_bytes()).map_err(|e| {
-            CostPilotError::io_error(format!("Failed to write HTML: {}", e))
-        })?;
+        let mut file = File::create(path.as_ref())
+            .map_err(|e| CostPilotError::io_error(format!("Failed to create HTML file: {}", e)))?;
+
+        file.write_all(html.as_bytes())
+            .map_err(|e| CostPilotError::io_error(format!("Failed to write HTML: {}", e)))?;
 
         Ok(())
     }
@@ -163,7 +169,7 @@ mod tests {
     fn test_wrap_svg() {
         let svg = r#"<svg><circle cx="50" cy="50" r="40"/></svg>"#;
         let html = HtmlGenerator::wrap_svg(svg, "Test Graph");
-        
+
         assert!(html.contains("<!DOCTYPE html>"));
         assert!(html.contains("<title>Test Graph</title>"));
         assert!(html.contains(svg));
@@ -174,7 +180,7 @@ mod tests {
     fn test_escape_html() {
         let text = "<script>alert('xss')</script>";
         let escaped = HtmlGenerator::escape_html(text);
-        
+
         assert!(!escaped.contains("<script>"));
         assert!(escaped.contains("&lt;script&gt;"));
     }
@@ -183,10 +189,10 @@ mod tests {
     fn test_generate_file() {
         let temp_file = NamedTempFile::new().unwrap();
         let svg = r#"<svg><circle cx="50" cy="50" r="40"/></svg>"#;
-        
+
         let result = HtmlGenerator::generate_file(temp_file.path(), svg, "Test");
         assert!(result.is_ok());
-        
+
         let contents = std::fs::read_to_string(temp_file.path()).unwrap();
         assert!(contents.contains("<!DOCTYPE html>"));
         assert!(contents.contains(svg));
@@ -196,7 +202,7 @@ mod tests {
     fn test_styles_included() {
         let svg = r#"<svg></svg>"#;
         let html = HtmlGenerator::wrap_svg(svg, "Test");
-        
+
         assert!(html.contains("<style>"));
         assert!(html.contains("font-family"));
         assert!(html.contains(".container"));

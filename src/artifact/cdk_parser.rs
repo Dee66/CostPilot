@@ -1,7 +1,6 @@
 use super::artifact_types::*;
 use super::cloudformation_parser::CloudFormationParser;
 use serde_json::Value;
-use std::collections::HashMap;
 use std::path::Path;
 
 /// Parser for AWS CDK synthesized output
@@ -17,41 +16,37 @@ impl CdkParser {
             cfn_parser: CloudFormationParser::new(),
         }
     }
-    
+
     /// Parse CDK output directory (cdk.out/)
     pub fn parse_cdk_output(&self, output_dir: &str) -> ArtifactResult<Vec<Artifact>> {
         let manifest_path = format!("{}/manifest.json", output_dir);
-        
+
         // Read CDK manifest
         let manifest_content = std::fs::read_to_string(&manifest_path)
-            .map_err(|e| ArtifactError::IoError(
-                format!("Failed to read CDK manifest: {}", e)
-            ))?;
-        
+            .map_err(|e| ArtifactError::IoError(format!("Failed to read CDK manifest: {}", e)))?;
+
         let manifest: Value = serde_json::from_str(&manifest_content)?;
-        
+
         // Extract artifacts from manifest
         let mut artifacts = Vec::new();
-        
+
         if let Some(artifacts_obj) = manifest.get("artifacts").and_then(|v| v.as_object()) {
             for (artifact_id, artifact_def) in artifacts_obj {
                 if let Some(artifact_type) = artifact_def.get("type").and_then(|v| v.as_str()) {
                     if artifact_type == "aws:cloudformation:stack" {
-                        if let Ok(artifact) = self.parse_cdk_stack(
-                            output_dir,
-                            artifact_id,
-                            artifact_def,
-                        ) {
+                        if let Ok(artifact) =
+                            self.parse_cdk_stack(output_dir, artifact_id, artifact_def)
+                        {
                             artifacts.push(artifact);
                         }
                     }
                 }
             }
         }
-        
+
         Ok(artifacts)
     }
-    
+
     /// Parse a single CDK stack from the output
     fn parse_cdk_stack(
         &self,
@@ -64,22 +59,25 @@ impl CdkParser {
             .get("properties")
             .and_then(|p| p.get("templateFile"))
             .and_then(|t| t.as_str())
-            .ok_or_else(|| ArtifactError::MissingField(
-                "CDK stack missing templateFile".to_string()
-            ))?;
-        
+            .ok_or_else(|| {
+                ArtifactError::MissingField("CDK stack missing templateFile".to_string())
+            })?;
+
         let template_path = format!("{}/{}", output_dir, template_file);
-        
+
         // Parse the CloudFormation template
         let mut artifact = self.cfn_parser.parse_file(&template_path)?;
-        
+
         // Override format to CDK
         artifact.format = ArtifactFormat::Cdk;
-        
+
         // Enhance metadata with CDK-specific info
         artifact.metadata.stack_name = Some(stack_id.to_string());
-        artifact.metadata.tags.insert("cdk_stack_id".to_string(), stack_id.to_string());
-        
+        artifact
+            .metadata
+            .tags
+            .insert("cdk_stack_id".to_string(), stack_id.to_string());
+
         // Extract stack tags if present
         if let Some(tags_obj) = stack_def
             .get("properties")
@@ -88,55 +86,59 @@ impl CdkParser {
         {
             for (key, value) in tags_obj {
                 if let Some(v) = value.as_str() {
-                    artifact.metadata.tags.insert(format!("cdk_tag_{}", key), v.to_string());
+                    artifact
+                        .metadata
+                        .tags
+                        .insert(format!("cdk_tag_{}", key), v.to_string());
                 }
             }
         }
-        
+
         // Extract environment info
-        if let Some(env) = stack_def
-            .get("environment")
-            .and_then(|e| e.as_str())
-        {
+        if let Some(env) = stack_def.get("environment").and_then(|e| e.as_str()) {
             // Environment format: aws://account/region
-            if let Some(region) = env.split('/').last() {
+            if let Some(region) = env.split('/').next_back() {
                 artifact.metadata.region = Some(region.to_string());
             }
         }
-        
+
         // Extract CDK metadata from resources
         self.enhance_with_cdk_metadata(&mut artifact);
-        
+
         Ok(artifact)
     }
-    
+
     /// Enhance artifact with CDK-specific metadata from resources
     fn enhance_with_cdk_metadata(&self, artifact: &mut Artifact) {
         for resource in &mut artifact.resources {
             // CDK adds metadata to resources
             if let Some(cdk_path) = resource.metadata.get("aws:cdk:path") {
-                resource.metadata.insert("cdk_construct_path".to_string(), cdk_path.clone());
+                resource
+                    .metadata
+                    .insert("cdk_construct_path".to_string(), cdk_path.clone());
             }
-            
+
             // Extract logical ID mapping
             if let Some(logical_id) = resource.metadata.get("aws:cdk:logicalId") {
-                resource.metadata.insert("original_logical_id".to_string(), logical_id.clone());
+                resource
+                    .metadata
+                    .insert("original_logical_id".to_string(), logical_id.clone());
             }
         }
     }
-    
+
     /// Parse CDK assembly metadata
     pub fn parse_assembly_metadata(&self, output_dir: &str) -> ArtifactResult<CdkAssemblyMetadata> {
         let manifest_path = format!("{}/manifest.json", output_dir);
         let manifest_content = std::fs::read_to_string(&manifest_path)?;
         let manifest: Value = serde_json::from_str(&manifest_content)?;
-        
+
         let version = manifest
             .get("version")
             .and_then(|v| v.as_str())
             .unwrap_or("unknown")
             .to_string();
-        
+
         let runtime = manifest
             .get("runtime")
             .and_then(|r| r.as_object())
@@ -149,11 +151,8 @@ impl CdkParser {
                     .join(", ")
             })
             .unwrap_or_else(|| "unknown".to_string());
-        
-        Ok(CdkAssemblyMetadata {
-            version,
-            runtime,
-        })
+
+        Ok(CdkAssemblyMetadata { version, runtime })
     }
 }
 
@@ -171,7 +170,7 @@ impl ArtifactParser for CdkParser {
         artifact.format = ArtifactFormat::Cdk;
         Ok(artifact)
     }
-    
+
     fn format(&self) -> ArtifactFormat {
         ArtifactFormat::Cdk
     }
@@ -193,11 +192,11 @@ pub fn is_cdk_output_dir(path: &str) -> bool {
 /// Find all stack template files in CDK output
 pub fn find_cdk_templates(output_dir: &str) -> std::io::Result<Vec<String>> {
     let mut templates = Vec::new();
-    
+
     for entry in std::fs::read_dir(output_dir)? {
         let entry = entry?;
         let path = entry.path();
-        
+
         if path.is_file() {
             if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
                 if filename.ends_with(".template.json") || filename.ends_with(".template.yaml") {
@@ -208,7 +207,7 @@ pub fn find_cdk_templates(output_dir: &str) -> std::io::Result<Vec<String>> {
             }
         }
     }
-    
+
     Ok(templates)
 }
 
@@ -237,13 +236,13 @@ mod tests {
                 }
             }
         }"#;
-        
+
         let parser = CdkParser::new();
         let artifact = parser.parse(template).unwrap();
-        
+
         assert_eq!(artifact.format, ArtifactFormat::Cdk);
         assert_eq!(artifact.resource_count(), 1);
-        
+
         let resource = artifact.get_resource("MyFunction").unwrap();
         assert_eq!(resource.resource_type, "AWS::Lambda::Function");
     }
@@ -264,12 +263,12 @@ mod tests {
                 }
             }
         }"#;
-        
+
         let parser = CdkParser::new();
         let artifact = parser.parse(template).unwrap();
-        
+
         assert_eq!(artifact.format, ArtifactFormat::Cdk);
-        
+
         let nested = artifact.get_resource("NestedStack").unwrap();
         assert_eq!(nested.resource_type, "AWS::CloudFormation::Stack");
     }
@@ -296,12 +295,12 @@ mod tests {
                 }
             }
         }"#;
-        
+
         let parser = CdkParser::new();
         let mut artifact = parser.parse(template).unwrap();
-        
+
         parser.enhance_with_cdk_metadata(&mut artifact);
-        
+
         let resource = artifact.get_resource("MyBucket").unwrap();
         assert!(resource.metadata.contains_key("cdk_construct_path"));
     }
@@ -327,10 +326,10 @@ mod tests {
                 }
             }
         }"#;
-        
+
         let parser = CdkParser::new();
         let artifact = parser.parse(template).unwrap();
-        
+
         let function = artifact.get_resource("MyFunction").unwrap();
         assert!(function.has_property("Code"));
         assert!(function.has_property("Runtime"));
@@ -367,12 +366,12 @@ mod tests {
                 }
             }
         }"#;
-        
+
         let parser = CdkParser::new();
         let artifact = parser.parse(template).unwrap();
-        
+
         assert_eq!(artifact.resource_count(), 2);
-        
+
         let scaling = artifact.get_resource("TableReadScaling").unwrap();
         assert_eq!(scaling.depends_on.len(), 1);
         assert_eq!(scaling.depends_on[0], "Table");

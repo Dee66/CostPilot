@@ -1,18 +1,18 @@
 // Engines module exports
 
-pub mod detection;
-pub mod prediction;
-pub mod explain;
+pub mod attribution;
 pub mod autofix;
 pub mod autofix_safe;
-pub mod policy;
-pub mod mapping;
-pub mod slo;
 pub mod baselines;
-pub mod trend;
-pub mod attribution;
-pub mod grouping;
-pub mod shared;
-pub mod performance;
+pub mod detection;
 pub mod escrow;
+pub mod explain;
+pub mod grouping;
+pub mod mapping;
 pub mod metering;
+pub mod performance;
+pub mod policy;
+pub mod prediction;
+pub mod shared;
+pub mod slo;
+pub mod trend;

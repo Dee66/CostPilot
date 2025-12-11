@@ -1,13 +1,15 @@
 /// Tests for zero-network enforcement
-/// 
+///
 /// These tests verify that policy evaluation never makes network calls
 /// and can run safely in WASM/sandboxed environments.
 
 #[cfg(test)]
 mod zero_network_tests {
-    use crate::engines::detection::{ChangeType, ResourceChange};
-    use crate::engines::policy::*;
-    use crate::engines::prediction::CostEstimate;
+    use costpilot::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate, CostImpact, Severity};
+    use costpilot::engines::policy::{*, Severity as PolicySeverity};
+    use costpilot::edition::EditionContext;
+    use chrono;
+    use serde_json::json;
     use std::collections::HashMap;
 
     #[test]
@@ -26,21 +28,21 @@ mod zero_network_tests {
             enforcement: EnforcementConfig::default(),
         };
 
-        let engine = PolicyEngine::new(config);
+        let engine = PolicyEngine::new(config, &EditionContext::free());
         let token = ZeroNetworkToken::new();
 
-        let cost = CostEstimate {
-            monthly: 500.0,
-            yearly: 6000.0,
-            one_time: 0.0,
-            breakdown: HashMap::new(),
-        };
+        let cost = CostEstimate::builder()
+            .prediction_interval_low(450.0)
+            .prediction_interval_high(550.0)
+            .heuristic_reference("monthly".to_string())
+            .confidence_score(0.9)
+            .build();
 
         // Test zero-network evaluation
         let result = engine.evaluate_zero_network(&[], &cost, token);
         assert!(result.is_ok());
         let policy_result = result.unwrap();
-        assert!(policy_result.passed());
+        assert!(policy_result.passed);
     }
 
     #[test]
@@ -52,13 +54,32 @@ mod zero_network_tests {
             metadata: PolicyMetadata {
                 id: "test_budget".to_string(),
                 name: "Test Budget Policy".to_string(),
-                description: Some("Test policy for zero-network".to_string()),
+                description: "Test policy for zero-network".to_string(),
                 category: PolicyCategory::Budget,
                 severity: PolicySeverity::Error,
                 status: PolicyStatus::Active,
-                ..Default::default()
+                version: "1.0.0".to_string(),
+                ownership: PolicyOwnership {
+                    author: "test".to_string(),
+                    owner: "test".to_string(),
+                    team: None,
+                    contact: None,
+                    reviewers: vec![],
+                },
+                lifecycle: MetadataLifecycle {
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    effective_from: None,
+                    effective_until: None,
+                    deprecation: None,
+                    revisions: vec![],
+                },
+                tags: Default::default(),
+                links: Default::default(),
+                metrics: Default::default(),
+                custom: Default::default(),
             },
-            spec: PolicyRule::BudgetLimit {
+            spec: MetadataPolicyRule::BudgetLimit {
                 monthly_limit: 1000.0,
                 warning_threshold: 0.8,
             },
@@ -67,18 +88,18 @@ mod zero_network_tests {
         engine.add_policy(policy);
 
         let token = ZeroNetworkToken::new();
-        let cost = CostEstimate {
-            monthly: 500.0,
-            yearly: 6000.0,
-            one_time: 0.0,
-            breakdown: HashMap::new(),
-        };
+        let cost = CostEstimate::builder()
+            .prediction_interval_low(450.0)
+            .prediction_interval_high(550.0)
+            .heuristic_reference("monthly".to_string())
+            .confidence_score(0.9)
+            .build();
 
         // Test zero-network evaluation
         let result = engine.evaluate_zero_network(&[], &cost, token);
         assert!(result.is_ok());
         let policy_result = result.unwrap();
-        assert!(!policy_result.has_violations());
+        assert!(policy_result.violations.is_empty());
     }
 
     #[test]
@@ -97,22 +118,23 @@ mod zero_network_tests {
             enforcement: EnforcementConfig::default(),
         };
 
-        let engine = PolicyEngine::new(config);
+        let engine = PolicyEngine::new(config, &EditionContext::free());
         let token = ZeroNetworkToken::new();
 
         // Cost that exceeds limit
-        let cost = CostEstimate {
-            monthly: 1500.0,
-            yearly: 18000.0,
-            one_time: 0.0,
-            breakdown: HashMap::new(),
-        };
+        let cost = CostEstimate::builder()
+            .prediction_interval_low(1400.0)
+            .prediction_interval_high(1600.0)
+            .monthly_cost(1500.0)
+            .confidence_score(0.9)
+            .heuristic_reference("monthly".to_string())
+            .build();
 
         let result = engine.evaluate_zero_network(&[], &cost, token);
         assert!(result.is_ok());
         let policy_result = result.unwrap();
-        assert!(!policy_result.passed());
-        assert_eq!(policy_result.violations().len(), 1);
+        assert!(!policy_result.passed);
+        assert_eq!(policy_result.violations.len(), 1);
     }
 
     #[test]
@@ -121,54 +143,58 @@ mod zero_network_tests {
             version: "1.0.0".to_string(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies {
-                nat_gateways: Some(NatGatewayPolicy { max_count: 2 }),
+                nat_gateways: Some(NatGatewayPolicy { 
+                    max_count: 2,
+                    require_justification: false,
+                }),
                 ..Default::default()
             },
             slos: vec![],
             enforcement: EnforcementConfig::default(),
         };
 
-        let engine = PolicyEngine::new(config);
+        let engine = PolicyEngine::new(config, &EditionContext::free());
         let token = ZeroNetworkToken::new();
 
         // Create resource changes
         let changes = vec![
-            ResourceChange {
-                resource_type: "aws_nat_gateway".to_string(),
-                resource_id: "nat_1".to_string(),
-                change_type: ChangeType::Create,
-                cost_impact: crate::engines::prediction::CostImpact {
-                    monthly_change: 45.0,
+            ResourceChange::builder()
+                .resource_type("aws_nat_gateway")
+                .resource_id("nat_1")
+                .action(ChangeAction::Create)
+                .cost_impact(CostImpact {
+                    delta: 45.0,
                     confidence: 0.9,
-                },
-                old_config: serde_json::Value::Null,
-                new_config: serde_json::json!({"subnet_id": "subnet-123"}),
-            },
-            ResourceChange {
-                resource_type: "aws_nat_gateway".to_string(),
-                resource_id: "nat_2".to_string(),
-                change_type: ChangeType::Create,
-                cost_impact: crate::engines::prediction::CostImpact {
-                    monthly_change: 45.0,
+                    heuristic_source: None,
+                })
+                .new_config(json!({"subnet_id": "subnet-123"}))
+                .build(),
+            ResourceChange::builder()
+                .resource_type("aws_nat_gateway")
+                .resource_id("nat_2")
+                .action(ChangeAction::Create)
+                .cost_impact(CostImpact {
+                    delta: 45.0,
                     confidence: 0.9,
-                },
-                old_config: serde_json::Value::Null,
-                new_config: serde_json::json!({"subnet_id": "subnet-456"}),
-            },
+                    heuristic_source: None,
+                })
+                .new_config(json!({"subnet_id": "subnet-456"}))
+                .build(),
         ];
 
-        let cost = CostEstimate {
-            monthly: 90.0,
-            yearly: 1080.0,
-            one_time: 0.0,
-            breakdown: HashMap::new(),
-        };
+        let cost = CostEstimate::builder()
+            .prediction_interval_low(85.0)
+            .prediction_interval_high(95.0)
+            .monthly_cost(90.0)
+            .confidence_score(0.9)
+            .heuristic_reference("monthly".to_string())
+            .build();
 
         // Test zero-network evaluation with resources
         let result = engine.evaluate_zero_network(&changes, &cost, token);
         assert!(result.is_ok());
         let policy_result = result.unwrap();
-        assert!(policy_result.passed()); // 2 NAT gateways is within limit
+        assert!(policy_result.passed); // 2 NAT gateways is within limit
     }
 
     #[test]
@@ -192,20 +218,21 @@ mod zero_network_tests {
                 enforcement: EnforcementConfig::default(),
             };
 
-            let engine = PolicyEngine::new(config);
-            let cost = CostEstimate {
-                monthly: 500.0,
-                yearly: 6000.0,
-                one_time: 0.0,
-                breakdown: HashMap::new(),
-            };
+            let engine = PolicyEngine::new(config, &EditionContext::free());
+            let cost = CostEstimate::builder()
+                .prediction_interval_low(450.0)
+                .prediction_interval_high(550.0)
+                .monthly_cost(500.0)
+                .confidence_score(0.9)
+                .heuristic_reference("monthly".to_string())
+                .build();
 
             engine.evaluate_zero_network(&[], &cost, token)
         });
 
         assert!(result.is_ok());
         let policy_result = result.unwrap();
-        assert!(policy_result.passed());
+        assert!(policy_result.passed);
     }
 
     #[test]
@@ -224,15 +251,16 @@ mod zero_network_tests {
             enforcement: EnforcementConfig::default(),
         };
 
-        let engine = PolicyEngine::new(config);
+        let engine = PolicyEngine::new(config, &EditionContext::free());
         let token = ZeroNetworkToken::new();
 
-        let cost = CostEstimate {
-            monthly: 1200.0,
-            yearly: 14400.0,
-            one_time: 0.0,
-            breakdown: HashMap::new(),
-        };
+        let cost = CostEstimate::builder()
+            .prediction_interval_low(1150.0)
+            .prediction_interval_high(1250.0)
+            .monthly_cost(1200.0)
+            .confidence_score(0.9)
+            .heuristic_reference("monthly".to_string())
+            .build();
 
         // Run evaluation multiple times - should be deterministic
         let result1 = engine.evaluate_zero_network(&[], &cost, token);
@@ -248,10 +276,10 @@ mod zero_network_tests {
         let r3 = result3.unwrap();
 
         // All results should be identical
-        assert_eq!(r1.passed(), r2.passed());
-        assert_eq!(r2.passed(), r3.passed());
-        assert_eq!(r1.violations().len(), r2.violations().len());
-        assert_eq!(r2.violations().len(), r3.violations().len());
+        assert_eq!(r1.passed, r2.passed);
+        assert_eq!(r2.passed, r3.passed);
+        assert_eq!(r1.violations.len(), r2.violations.len());
+        assert_eq!(r2.violations.len(), r3.violations.len());
     }
 
     #[test]
@@ -270,23 +298,20 @@ mod zero_network_tests {
             enforcement: EnforcementConfig::default(),
         };
 
-        let enforced_engine = ZeroNetworkEnforced::new(PolicyEngine::new(config));
+        let enforced_engine = ZeroNetworkEnforced::new(PolicyEngine::new(config, &EditionContext::free()));
 
-        let cost = CostEstimate {
-            monthly: 500.0,
-            yearly: 6000.0,
-            one_time: 0.0,
-            breakdown: HashMap::new(),
-        };
+        let cost = CostEstimate::builder()
+            .prediction_interval_low(450.0)
+            .prediction_interval_high(550.0)
+            .monthly_cost(500.0)
+            .confidence_score(0.9)
+            .heuristic_reference("monthly".to_string())
+            .build();
 
-        // Use the enforced wrapper
-        let result = enforced_engine.with_zero_network(|engine, token| {
-            engine.evaluate_zero_network(&[], &cost, token)
-        });
-
+        let result = enforced_engine.inner().evaluate_zero_network(&[], &cost, enforced_engine.token());
         assert!(result.is_ok());
         let policy_result = result.unwrap();
-        assert!(policy_result.passed());
+        assert!(policy_result.passed);
     }
 
     #[test]

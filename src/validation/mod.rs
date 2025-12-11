@@ -12,20 +12,20 @@
 // - Helpful error messages with remediation hints
 // - File path and line number tracking for errors
 
-pub mod config;
-pub mod policy;
 pub mod baselines;
-pub mod slo;
+pub mod config;
 pub mod error;
+pub mod policy;
+pub mod slo;
 
-pub use config::ConfigValidator;
-pub use policy::PolicyValidator;
 pub use baselines::BaselinesValidator;
-pub use slo::SloValidator;
+pub use config::ConfigValidator;
 pub use error::{ValidationError, ValidationResult, ValidationWarning};
+pub use policy::PolicyValidator;
+pub use slo::SloValidator;
 
-use std::path::Path;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 /// Validation severity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -82,9 +82,12 @@ impl ValidationReport {
         use colored::Colorize;
 
         let mut output = String::new();
-        
+
         // Header
-        output.push_str(&format!("📋 Validation Report: {}\n", self.file_path.bright_cyan()));
+        output.push_str(&format!(
+            "📋 Validation Report: {}\n",
+            self.file_path.bright_cyan()
+        ));
         output.push_str(&format!("   Type: {:?}\n\n", self.file_type));
 
         // Status
@@ -96,7 +99,11 @@ impl ValidationReport {
 
         // Errors
         if !self.errors.is_empty() {
-            output.push_str(&format!("🔴 {} Errors ({})\n", "Validation".bold(), self.errors.len()));
+            output.push_str(&format!(
+                "🔴 {} Errors ({})\n",
+                "Validation".bold(),
+                self.errors.len()
+            ));
             for error in &self.errors {
                 output.push_str(&format!("\n{}\n", error.format()));
             }
@@ -105,7 +112,11 @@ impl ValidationReport {
 
         // Warnings
         if !self.warnings.is_empty() {
-            output.push_str(&format!("🟡 {} Warnings ({})\n", "Validation".bold(), self.warnings.len()));
+            output.push_str(&format!(
+                "🟡 {} Warnings ({})\n",
+                "Validation".bold(),
+                self.warnings.len()
+            ));
             for warning in &self.warnings {
                 output.push_str(&format!("\n{}\n", warning.format()));
             }
@@ -148,10 +159,10 @@ pub enum FileType {
 /// Validate any supported configuration file
 pub fn validate_file(path: impl AsRef<Path>) -> ValidationResult<ValidationReport> {
     let path = path.as_ref();
-    
+
     // Detect file type from name/extension
     let file_type = detect_file_type(path)?;
-    
+
     match file_type {
         FileType::Config => ConfigValidator::validate_file(path),
         FileType::Policy => PolicyValidator::validate_file(path),
@@ -167,17 +178,22 @@ fn detect_file_type(path: &Path) -> ValidationResult<FileType> {
         .and_then(|n| n.to_str())
         .ok_or_else(|| ValidationError::new("Invalid file path"))?;
 
-    if file_name == "costpilot.yaml" || file_name == "costpilot.yml" || file_name == ".costpilot.yaml" {
+    if file_name == "costpilot.yaml"
+        || file_name == "costpilot.yml"
+        || file_name == ".costpilot.yaml"
+    {
         Ok(FileType::Config)
     } else if file_name == "baselines.json" {
         Ok(FileType::Baselines)
-    } else if file_name.starts_with("slo") && (file_name.ends_with(".yaml") || file_name.ends_with(".yml")) {
+    } else if file_name.starts_with("slo")
+        && (file_name.ends_with(".yaml") || file_name.ends_with(".yml"))
+    {
         Ok(FileType::Slo)
     } else if file_name.ends_with(".yaml") || file_name.ends_with(".yml") {
         // Assume policy file
         Ok(FileType::Policy)
     } else {
-        Err(ValidationError::new(&format!(
+        Err(ValidationError::new(format!(
             "Could not detect file type for: {}. Supported: costpilot.yaml, baselines.json, slo.yaml, *.yaml (policies)",
             file_name
         )))

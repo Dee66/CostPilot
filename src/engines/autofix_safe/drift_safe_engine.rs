@@ -8,10 +8,10 @@ use std::collections::HashMap;
 pub struct DriftSafeEngine {
     /// Policy engine for validation
     policy_engine: Option<PolicyEngine>,
-    
+
     /// SLO manager for budget checks
     slo_manager: Option<SloManager>,
-    
+
     /// Enable strict safety mode
     strict_mode: bool,
 }
@@ -56,27 +56,23 @@ impl DriftSafeEngine {
         proposed_cost: f64,
     ) -> DriftSafeOperation {
         // Convert Option<Value> to HashMap
-        let current_config = current_change.new_config
+        let current_config = current_change
+            .new_config
             .as_ref()
             .and_then(|v| v.as_object())
             .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
             .unwrap_or_default();
-        
-        let proposed_config = proposed_fix.new_config
-            .as_ref()
-            .and_then(|v| v.as_object())
-            .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
-            .unwrap_or_default();
-        
-        let original_state = ResourceState::new(
-            current_config,
-            current_cost,
-        );
 
-        let target_state = ResourceState::new(
-            proposed_config,
-            proposed_cost,
-        );
+        let proposed_config = proposed_fix
+            .new_config
+            .as_ref()
+            .and_then(|v| v.as_object())
+            .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+            .unwrap_or_default();
+
+        let original_state = ResourceState::new(current_config, current_cost);
+
+        let target_state = ResourceState::new(proposed_config, proposed_cost);
 
         let mut operation = DriftSafeOperation::new(
             resource_id,
@@ -156,7 +152,7 @@ impl DriftSafeEngine {
         } else {
             HashMap::new()
         };
-        
+
         let restore_step = RollbackStep {
             order: 1,
             description: format!(
@@ -223,8 +219,8 @@ impl DriftSafeEngine {
     fn assess_drift_impact(
         &self,
         key: &str,
-        expected: &serde_json::Value,
-        actual: &serde_json::Value,
+        _expected: &serde_json::Value,
+        _actual: &serde_json::Value,
     ) -> String {
         // Cost-impacting attributes
         if key.contains("instance_type")
@@ -245,10 +241,7 @@ impl DriftSafeEngine {
         }
 
         // Availability-impacting attributes
-        if key.contains("availability_zone")
-            || key.contains("multi_az")
-            || key.contains("backup")
-        {
+        if key.contains("availability_zone") || key.contains("multi_az") || key.contains("backup") {
             return "Availability impact - reliability change".to_string();
         }
 
@@ -314,13 +307,11 @@ impl DriftSafeEngine {
         }
 
         // Log failed checks after iteration
-        for (name, message) in failed_checks {
-            operation.log(
-                LogLevel::Error,
-                format!("Safety check failed: {}", name),
-            );
-            return Err(format!("Safety check '{}' failed: {}", 
-                name, 
+        if let Some((name, message)) = failed_checks.into_iter().next() {
+            operation.log(LogLevel::Error, format!("Safety check failed: {}", name));
+            return Err(format!(
+                "Safety check '{}' failed: {}",
+                name,
                 message.as_ref().unwrap_or(&"Unknown error".to_string())
             ));
         }
@@ -333,13 +324,11 @@ impl DriftSafeEngine {
         }
     }
 
-    /// Check for drift
-    fn check_no_drift(&self, operation: &DriftSafeOperation, check: &mut SafetyCheck) {
+    /// Check for drift (Premium drift-safe feature)
+    #[allow(dead_code)]
+    fn _check_no_drift(&self, operation: &DriftSafeOperation, check: &mut SafetyCheck) {
         // Simulate drift check - in real implementation would query actual state
-        let drift = self.detect_drift(
-            &operation.original_state,
-            &operation.original_state.config,
-        );
+        let drift = self.detect_drift(&operation.original_state, &operation.original_state.config);
 
         if drift.is_blocking() {
             check.mark_failed(format!(
@@ -351,15 +340,17 @@ impl DriftSafeEngine {
         }
     }
 
-    /// Check resource exists
-    fn check_resource_exists(&self, operation: &DriftSafeOperation, check: &mut SafetyCheck) {
+    /// Check resource exists (Premium drift-safe feature)
+    #[allow(dead_code)]
+    fn _check_resource_exists(&self, operation: &DriftSafeOperation, check: &mut SafetyCheck) {
         // Simulate existence check - in real implementation would query cloud provider
         // For now, always pass
         check.mark_passed(format!("Resource {} exists", operation.resource_id));
     }
 
-    /// Check config hash
-    fn check_config_hash(&self, operation: &DriftSafeOperation, check: &mut SafetyCheck) {
+    /// Check config hash (Premium drift-safe feature)
+    #[allow(dead_code)]
+    fn _check_config_hash(&self, operation: &DriftSafeOperation, check: &mut SafetyCheck) {
         if operation.original_state.verify_hash() {
             check.mark_passed("Configuration hash verified".to_string());
         } else {
@@ -367,8 +358,9 @@ impl DriftSafeEngine {
         }
     }
 
-    /// Check cost impact
-    fn check_cost_impact(&self, operation: &DriftSafeOperation, check: &mut SafetyCheck) {
+    /// Check cost impact (Premium drift-safe feature)
+    #[allow(dead_code)]
+    fn _check_cost_impact(&self, operation: &DriftSafeOperation, check: &mut SafetyCheck) {
         let original_cost = operation.original_state.estimated_cost;
         let target_cost = operation.target_state.estimated_cost;
         let savings = original_cost - target_cost;
@@ -379,23 +371,23 @@ impl DriftSafeEngine {
                 "Cost reduction: ${:.2} ({:.1}% savings)",
                 savings, savings_percent
             ));
+        } else if self.strict_mode {
+            check.mark_failed(format!(
+                "Cost increase: ${:.2} ({:.1}%)",
+                -savings, -savings_percent
+            ));
         } else {
-            if self.strict_mode {
-                check.mark_failed(format!(
-                    "Cost increase: ${:.2} ({:.1}%)",
-                    -savings, -savings_percent
-                ));
-            } else {
-                check.mark_passed(format!(
-                    "Cost change acceptable: ${:.2} ({:.1}%)",
-                    -savings, -savings_percent
-                ));
-            }
+            check.mark_passed(format!(
+                "Cost change acceptable: ${:.2} ({:.1}%)",
+                -savings, -savings_percent
+            ));
         }
     }
 
     /// Check policies
-    fn check_policies(&self, _operation: &DriftSafeOperation, check: &mut SafetyCheck) {
+    /// Check policies (Premium drift-safe feature)
+    #[allow(dead_code)]
+    fn _check_policies(&self, _operation: &DriftSafeOperation, check: &mut SafetyCheck) {
         if let Some(_policy_engine) = &self.policy_engine {
             // In real implementation, would validate against policies
             check.mark_passed("No policy violations detected".to_string());
@@ -405,7 +397,9 @@ impl DriftSafeEngine {
     }
 
     /// Check SLOs
-    fn check_slos(&self, _operation: &DriftSafeOperation, check: &mut SafetyCheck) {
+    /// Check SLOs (Premium drift-safe feature)
+    #[allow(dead_code)]
+    fn _check_slos(&self, _operation: &DriftSafeOperation, check: &mut SafetyCheck) {
         if let Some(_slo_manager) = &self.slo_manager {
             // In real implementation, would validate against SLOs
             check.mark_passed("No SLO violations detected".to_string());
@@ -416,7 +410,7 @@ impl DriftSafeEngine {
 
     /// Apply operation (simulated)
     pub fn apply_operation(&self, operation: &mut DriftSafeOperation) -> Result<(), String> {
-        if !operation.can_proceed() {
+        if !operation.all_safety_checks_passed() {
             return Err("Operation cannot proceed - safety checks not passed".to_string());
         }
 
@@ -439,7 +433,7 @@ impl DriftSafeEngine {
 
         // Extract rollback steps to avoid borrow conflict
         let steps = operation.rollback_plan.steps.clone();
-        
+
         // Execute rollback steps in order
         for step in &steps {
             operation.log(
@@ -465,23 +459,16 @@ impl Default for DriftSafeEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::ChangeAction;
+    use crate::engines::shared::models::{ResourceChange, ChangeAction};
 
     fn create_test_change(monthly_cost: f64) -> ResourceChange {
-        let mut config = HashMap::new();
-        config.insert(
-            "instance_type".to_string(),
-            serde_json::json!("t3.large"),
-        );
-
-        ResourceChange {
-            resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Update,
-            config,
-            monthly_cost: Some(monthly_cost),
-            warnings: Vec::new(),
-        }
+        ResourceChange::builder()
+            .resource_id("aws_instance.web")
+            .resource_type("aws_instance")
+            .action(ChangeAction::Update)
+            .new_config(serde_json::json!({"instance_type": "t3.large"}))
+            .monthly_cost(monthly_cost)
+            .build()
     }
 
     #[test]
@@ -503,6 +490,8 @@ mod tests {
             "Downsize to t3.medium".to_string(),
             &current,
             &proposed,
+            100.0,
+            50.0,
         );
 
         assert_eq!(operation.resource_id, "aws_instance.web");
@@ -548,6 +537,8 @@ mod tests {
             "Downsize".to_string(),
             &current,
             &proposed,
+            100.0,
+            50.0,
         );
 
         let result = engine.run_safety_checks(&mut operation);
@@ -567,6 +558,8 @@ mod tests {
             "Downsize".to_string(),
             &current,
             &proposed,
+            100.0,
+            50.0,
         );
 
         // Run safety checks first
@@ -590,6 +583,8 @@ mod tests {
             "Downsize".to_string(),
             &current,
             &proposed,
+            100.0,
+            50.0,
         );
 
         // Simulate failure

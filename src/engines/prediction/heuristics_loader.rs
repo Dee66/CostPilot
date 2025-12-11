@@ -1,9 +1,9 @@
 // Heuristics loader with fallback strategies and validation
 
+use super::prediction_engine::CostHeuristics;
+use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
-use super::prediction_engine::CostHeuristics;
 
 /// Minimum required heuristics version (semantic versioning)
 const MIN_HEURISTICS_VERSION: &str = "1.0.0";
@@ -52,7 +52,9 @@ impl HeuristicsLoader {
 
         // 4. System-wide config
         paths.push(PathBuf::from("/etc/costpilot/cost_heuristics.json"));
-        paths.push(PathBuf::from("/usr/local/share/costpilot/cost_heuristics.json"));
+        paths.push(PathBuf::from(
+            "/usr/local/share/costpilot/cost_heuristics.json",
+        ));
 
         paths
     }
@@ -63,14 +65,18 @@ impl HeuristicsLoader {
 
         for path in &self.search_paths {
             tried_paths.push(path.display().to_string());
-            
+
             if path.exists() {
                 match self.load_from_file(path) {
                     Ok(heuristics) => {
                         return Ok(heuristics);
                     }
                     Err(e) => {
-                        eprintln!("⚠️  Failed to load heuristics from {}: {}", path.display(), e);
+                        eprintln!(
+                            "⚠️  Failed to load heuristics from {}: {}",
+                            path.display(),
+                            e
+                        );
                         continue;
                     }
                 }
@@ -142,7 +148,10 @@ impl HeuristicsLoader {
                 return Err(CostPilotError::new(
                     "HEURISTICS_006",
                     ErrorCategory::ValidationError,
-                    format!("Invalid hourly cost for {}: ${}", instance_type, cost.hourly),
+                    format!(
+                        "Invalid hourly cost for {}: ${}",
+                        instance_type, cost.hourly
+                    ),
                 ));
             }
         }
@@ -176,7 +185,10 @@ impl HeuristicsLoader {
             return Err(CostPilotError::new(
                 "HEURISTICS_COMPAT_001",
                 ErrorCategory::ValidationError,
-                format!("Invalid version format: {} (expected major.minor.patch)", version),
+                format!(
+                    "Invalid version format: {} (expected major.minor.patch)",
+                    version
+                ),
             ));
         }
 
@@ -307,9 +319,17 @@ impl HeuristicsStats {
             if self.lambda_configured { "✓" } else { "✗" },
             self.rds_mysql_count,
             self.rds_postgres_count,
-            if self.dynamodb_configured { "✓" } else { "✗" },
+            if self.dynamodb_configured {
+                "✓"
+            } else {
+                "✗"
+            },
             self.ebs_types_count,
-            if self.nat_gateway_configured { "✓" } else { "✗" },
+            if self.nat_gateway_configured {
+                "✓"
+            } else {
+                "✗"
+            },
         )
     }
 }
@@ -322,9 +342,12 @@ mod tests {
     fn test_default_search_paths() {
         let loader = HeuristicsLoader::new();
         assert!(!loader.search_paths.is_empty());
-        
+
         // Should include current directory
-        assert!(loader.search_paths.iter().any(|p| p.to_string_lossy().contains("cost_heuristics.json")));
+        assert!(loader
+            .search_paths
+            .iter()
+            .any(|p| p.to_string_lossy().contains("cost_heuristics.json")));
     }
 
     #[test]
@@ -333,15 +356,15 @@ mod tests {
             PathBuf::from("/custom/path/heuristics.json"),
             PathBuf::from("/another/path/heuristics.json"),
         ];
-        
+
         let loader = HeuristicsLoader::with_paths(custom_paths.clone());
         assert_eq!(loader.search_paths, custom_paths);
     }
 
     #[test]
     fn test_validate_version_format() {
-        let loader = HeuristicsLoader::new();
-        
+        let _loader = HeuristicsLoader::new();
+
         // Valid version would pass (can't test without full heuristics object)
         // This test demonstrates the validation logic exists
     }

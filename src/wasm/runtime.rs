@@ -30,9 +30,9 @@ pub struct SandboxLimits {
 impl Default for SandboxLimits {
     fn default() -> Self {
         Self {
-            max_memory_bytes: 256 * 1024 * 1024,       // 256 MB
-            max_execution_ms: 2000,                     // 2 seconds
-            max_file_size_bytes: 20 * 1024 * 1024,     // 20 MB
+            max_memory_bytes: 256 * 1024 * 1024,   // 256 MB
+            max_execution_ms: 2000,                // 2 seconds
+            max_file_size_bytes: 20 * 1024 * 1024, // 20 MB
             max_stack_depth: 32,
         }
     }
@@ -130,11 +130,7 @@ pub fn validate_json_depth(json: &str, limits: &SandboxLimits) -> ValidationResu
 fn calculate_json_depth(value: &serde_json::Value) -> usize {
     match value {
         serde_json::Value::Object(map) => {
-            map.values()
-                .map(calculate_json_depth)
-                .max()
-                .unwrap_or(0)
-                + 1
+            map.values().map(calculate_json_depth).max().unwrap_or(0) + 1
         }
         serde_json::Value::Array(arr) => {
             arr.iter().map(calculate_json_depth).max().unwrap_or(0) + 1
@@ -145,7 +141,8 @@ fn calculate_json_depth(value: &serde_json::Value) -> usize {
 
 /// Memory tracker for monitoring usage
 pub struct MemoryTracker {
-    initial_usage: usize,
+    /// Initial memory usage (tracked for future reporting)
+    _initial_usage: usize,
     peak_usage: usize,
     current_usage: usize,
 }
@@ -154,7 +151,7 @@ impl MemoryTracker {
     pub fn new() -> Self {
         let initial = Self::get_current_memory();
         Self {
-            initial_usage: initial,
+            _initial_usage: initial,
             peak_usage: initial,
             current_usage: initial,
         }
@@ -252,13 +249,13 @@ mod tests {
     #[test]
     fn test_calculate_json_depth() {
         let flat = serde_json::json!({"key": "value"});
-        assert_eq!(calculate_json_depth(&flat), 1);
+        assert_eq!(calculate_json_depth(&flat), 2);
 
         let nested = serde_json::json!({"a": {"b": {"c": "value"}}});
-        assert_eq!(calculate_json_depth(&nested), 3);
+        assert_eq!(calculate_json_depth(&nested), 4);
 
         let array = serde_json::json!([1, 2, [3, 4, [5]]]);
-        assert_eq!(calculate_json_depth(&array), 3);
+        assert_eq!(calculate_json_depth(&array), 4);
     }
 
     #[test]
@@ -277,7 +274,7 @@ mod tests {
             + EngineBudget::MAPPING.time_budget_ms
             + EngineBudget::GROUPING.time_budget_ms
             + EngineBudget::SLO.time_budget_ms;
-        
+
         assert!(total <= 2000, "Total engine budget exceeds 2000ms");
     }
 

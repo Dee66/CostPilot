@@ -1,0 +1,336 @@
+COSTPILOT — FREE VS PREMIUM FUNCTIONAL SPECIFICATION
+(Detailed, enforceable, architecture-ready version)
+FREE COSTPILOT (Community Edition)
+Purpose:
+
+A high-value but bounded cost scanning tool that builds trust, warms the market, and directs serious users toward the paid version—all while protecting the commercial IP that ultimately funds GuardSuite.
+
+1. Allowed Capabilities (Free)
+1.1 Deterministic Cost Scanning (Core Engine)
+
+Free version provides:
+
+Full static analysis of Terraform / CloudFormation / CDK plans.
+
+Deterministic output: same input → same output → same hashes.
+
+Basic cost aggregation:
+
+resource-level monthly cost
+
+simple service grouping
+
+basic cost breakdowns
+
+1.2 Available CLI Commands
+
+Free CLI exposes the following commands:
+
+Command	Included	Behavior
+scan	Yes	Basic detection + cost numbers (static heuristics only)
+detect	Yes	Uses minimal, embedded static rule-set
+predict	Yes	Basic resource-level forecasts
+explain	Yes	Generates simple explainability (no deep heuristics)
+map	Yes	Visual dependency graph (depth capped at 1)
+version	Yes	Reports free edition version
+init	Yes	Creates config directory (limited features)
+
+Everything else is not included.
+
+1.3 Zero Network, Zero IAM
+
+Enforced at runtime:
+
+No AWS SDK imports
+
+No outbound sockets at all
+
+No IAM credentials read
+
+No STS calls
+
+No telemetry
+
+Your free version becomes a security selling point:
+“We run entirely offline—your plans never leave your machine.”
+
+1.4 Minimal Static Rule Engine (Embedded)
+
+Free version ships with:
+
+A tiny, static, JSON-embedded rule set containing:
+
+Basic EC2 cost heuristics
+
+Basic S3 tiers
+
+Basic RDS tiers
+
+Basic Lambda cost structure
+
+No ML-based heuristics.
+No dynamic rule updates.
+No encrypted rule bundles.
+No premium heuristics features.
+
+1.5 No Premium Features
+
+The following are explicitly blocked or absent:
+
+Feature	Free	Premium
+Autofix	❌	✔
+Patch Engine	❌	✔
+Drift Detection	❌	✔
+Cost Anomaly Detection	❌	✔
+Economic Attack Detection	❌	✔
+SLO Enforcement	❌	✔
+Full Heuristics Engine	❌	✔
+WASM Pro Engine	❌	✔
+Multi-depth Mapping (>1)	❌	✔
+Marketplace Installation	❌	✔
+License Token Support	❌	✔
+1.6 Limited Explainability
+
+Free explainability:
+
+Only simple text guidance
+
+No advanced heuristics
+
+No premium reasoning chains
+
+No cost-optimization paths
+
+1.7 Strategic Purpose of Free Version
+
+The free version is intentionally designed to:
+
+Be useful, so people trust it.
+
+Be limited, so serious teams upgrade.
+
+Ensure no commercial IP is exposed.
+
+Free version must not:
+
+Contain the advanced heuristics file.
+
+Be able to load Pro WASM bundles.
+
+Contain any Pro engine modules.
+
+Accidentally expose internals via debug flags.
+
+You already have 1500 tests. Free version must remain bulletproof without leaking anything proprietary.
+
+PREMIUM COSTPILOT — “Founding Engineer Edition” ($29)
+Purpose:
+
+Deliver unmistakable value, protect the advanced heuristics engine, and monetise the serious users while maintaining a frictionless upgrade path.
+
+2. Premium Capabilities (Pro Engine)
+2.1 Autofix + Patch Safety Engine
+
+Premium users get:
+
+Patch generation for Terraform/Cfn/CDK diffs
+
+Strict patch validation
+
+Patch conflict detection
+
+Patch rollback
+
+Economic safety guards (no cost regressions worse than threshold)
+
+This is the feature that sells the product.
+
+2.2 Drift Detection Engine
+
+Detects:
+
+Cost drift
+
+Structural drift
+
+Resource-level anomalies
+
+Unexpected provider or region changes
+
+Uses advanced heuristics + cross-plan comparison.
+
+2.3 Full Heuristics Engine (Licensed, Encrypted)
+
+Premium heuristics engine includes:
+
+Deep resource pricing models
+
+Feature usage models
+
+Cross-resource interaction heuristics
+
+Temporal cost models
+
+Predictive usage curves
+
+Workload classification heuristics
+
+Discounts, RI/SP heuristics
+
+The heuristics bundle is:
+
+Encrypted
+
+Signed
+
+Integrity-checked
+
+Loaded only by Pro Engine
+
+Versioned and pinned
+
+This is your IP moat.
+
+2.4 Mapping Depth >1
+
+Premium mapping includes:
+
+Full dependency traversal
+
+Multi-hop graph analysis
+
+Accurate cost allocation trees
+
+Impact path prediction
+
+Allows “if this resource changes, these 19 resources are affected.”
+
+2.5 SLO Mode (Premium-only)
+
+Allows users to define:
+
+Cost ceilings
+
+Drift tolerances
+
+Budget guardrails
+
+Team-level allocations
+
+SLO violations cause CLI failures or warnings.
+
+2.6 Cost Anomaly Detection
+
+Premium engine detects:
+
+Abrupt cost spikes
+
+Hidden cost multipliers
+
+Region misconfigurations
+
+Mis-specified storage tiers
+
+2.7 “Economic Threat” Detection
+
+This is the unique GuardSuite upsell hook.
+
+Detects “economic attacks” such as:
+
+Resource explosion
+
+Network egress bombs
+
+Misconfigured autoscaling loops
+
+Hidden attack vectors in IaC
+
+Supply-chain dependent cost escalation
+
+This strongly ties CostPilot Premium → GuardSuite Enterprise.
+
+2.8 Pro WASM Engine
+
+All premium logic lives inside:
+
+Encrypted
+
+Signed
+
+Tamper-resistant
+
+License-validated
+
+Offline-capable
+
+The free CLI physically cannot load this engine.
+
+2.9 Commercial Protections
+
+Premium includes:
+
+License token verification
+
+Offline license expiry
+
+Binary signing
+
+Anti-tamper build process
+
+Integrity checks on heuristics bundle
+
+Signature rotation support
+
+Anti-patching / anti-hooking guards
+
+Enforced syscall sandbox boundary
+
+2.10 Marketplace Support
+
+Premium includes installers for:
+
+Homebrew
+
+NPM package wrapper
+
+Downloadable binaries
+
+GitHub Marketplace (future)
+
+3. Strategic Role of Premium Edition
+
+Premium edition:
+
+Funds your GuardSuite runway
+
+Funds further CostPilot development
+
+Attracts enterprise professionals
+
+Demonstrates engineering quality
+
+Provides a teaser of GuardSuite’s threat-analysis models
+
+Builds trust that your paid tools outclass free alternatives
+
+It also becomes the premium funnel for GuardSuite.
+
+4. Summary Table (Final, Authoritative)
+Feature	Free	Premium
+Deterministic scan	✔	✔
+detect/predict/explain	✔ (basic)	✔ (advanced)
+map output	✔ (depth=1)	✔ (unlimited)
+Zero IAM / Zero Network	✔	✔
+Telemetry	None	Opt-in
+Heuristics engine	Minimal static	Full encrypted engine
+Autofix	❌	✔
+Patch safety engine	❌	✔
+Drift detection	❌	✔
+Anomaly detection	❌	✔
+Economic attack detection	❌	✔
+SLO mode	❌	✔
+PR comment integration	❌	Future ✔
+WASM Pro engine	❌	✔
+License token	❌	✔
+Marketplace installers	❌	✔
+Price	Free	$29

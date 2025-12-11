@@ -60,29 +60,19 @@ fn has_unknown_values(change: &ResourceChange) -> bool {
 fn get_resource_predictability(resource_type: &str) -> f64 {
     match resource_type {
         // High predictability (well-defined pricing)
-        "aws_instance" |
-        "aws_rds_instance" |
-        "aws_nat_gateway" |
-        "aws_lb" |
-        "aws_alb" => 0.95,
+        "aws_instance" | "aws_rds_instance" | "aws_nat_gateway" | "aws_lb" | "aws_alb" => 0.95,
 
         // Medium-high predictability
-        "aws_dynamodb_table" |
-        "aws_elasticache_cluster" |
-        "aws_elasticsearch_domain" => 0.85,
+        "aws_dynamodb_table" | "aws_elasticache_cluster" | "aws_elasticsearch_domain" => 0.85,
 
         // Medium predictability (usage-dependent)
-        "aws_lambda_function" |
-        "aws_s3_bucket" => 0.70,
+        "aws_lambda_function" | "aws_s3_bucket" => 0.70,
 
         // Lower predictability (complex pricing)
-        "aws_ecs_service" |
-        "aws_eks_cluster" |
-        "aws_cloudfront_distribution" => 0.60,
+        "aws_ecs_service" | "aws_eks_cluster" | "aws_cloudfront_distribution" => 0.60,
 
         // Very low predictability (data transfer heavy)
-        "aws_vpc_endpoint" |
-        "aws_api_gateway_rest_api" => 0.50,
+        "aws_vpc_endpoint" | "aws_api_gateway_rest_api" => 0.50,
 
         // Default for unknown types
         _ => 0.65,
@@ -99,26 +89,30 @@ pub fn calculate_interval_width(confidence: f64, base_interval: f64) -> f64 {
 mod tests {
     use super::*;
     use crate::engines::shared::models::ChangeAction;
-    use std::collections::HashMap;
     use serde_json::json;
+    use std::collections::HashMap;
 
     #[test]
     fn test_confidence_calculation() {
-        let change = ResourceChange {
-            resource_id: "aws_instance.test".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "t3.micro"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("test".to_string())
+            .resource_type("aws_instance".to_string())
+            .action(ChangeAction::Create)
+            .old_config(serde_json::Value::Null)
+            .new_config(serde_json::Value::Null)
+            .build();
 
         let confidence = calculate_confidence(&change, false, "aws_instance");
-        assert!(confidence > 0.9, "EC2 without cold start should have high confidence");
+        assert!(
+            confidence > 0.9,
+            "EC2 without cold start should have high confidence"
+        );
 
         let confidence_with_cold_start = calculate_confidence(&change, true, "aws_instance");
-        assert!(confidence_with_cold_start < confidence, "Cold start should reduce confidence");
+        assert!(
+            confidence_with_cold_start < confidence,
+            "Cold start should reduce confidence"
+        );
     }
 
     #[test]
@@ -130,27 +124,23 @@ mod tests {
 
     #[test]
     fn test_has_unknown_values() {
-        let change_with_null = ResourceChange {
-            resource_id: "test".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": null})),
-            tags: HashMap::new(),
-        };
+        let change_with_null = ResourceChange::builder()
+            .resource_id("test".to_string())
+            .resource_type("aws_instance".to_string())
+            .action(ChangeAction::Create)
+            .old_config(serde_json::Value::Null)
+            .new_config(serde_json::Value::Null)
+            .build();
 
         assert!(has_unknown_values(&change_with_null));
 
-        let change_without_null = ResourceChange {
-            resource_id: "test".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "t3.micro"})),
-            tags: HashMap::new(),
-        };
+        let change_without_null = ResourceChange::builder()
+            .resource_id("test".to_string())
+            .resource_type("aws_instance".to_string())
+            .action(ChangeAction::Create)
+            .old_config(serde_json::Value::Null)
+            .new_config(serde_json::Value::Null)
+            .build();
 
         assert!(!has_unknown_values(&change_without_null));
     }

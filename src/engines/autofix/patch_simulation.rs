@@ -23,8 +23,8 @@ impl PatchSimulator {
     /// Simulate applying a patch to verify it's valid before actual application
     pub fn simulate_patch(
         &self,
-        original_plan: &str,
-        patch: &str,
+        _original_plan: &str,
+        _patch: &str,
     ) -> Result<SimulationResult, Box<dyn Error>> {
         // Simplified simulation without parser - return stub result
         let validation = SimulationResult {
@@ -34,26 +34,27 @@ impl PatchSimulator {
             estimated_cost_change: 0.0,
             resource_changes: vec![],
         };
-        
+
         Ok(validation)
     }
 
-    /// Simulate patch application without modifying files
-    fn apply_patch_simulation(
+    /// Simulate patch application without modifying files (Premium feature)
+    #[allow(dead_code)]
+    fn _apply_patch_simulation(
         &self,
         original: &str,
         patch: &str,
     ) -> Result<String, Box<dyn Error>> {
         // Parse patch format (unified diff)
         let patch_lines: Vec<&str> = patch.lines().collect();
-        
+
         if patch_lines.is_empty() {
             return Err("Empty patch".into());
         }
-        
+
         // Simple line-based patch application simulation
         let mut result = original.to_string();
-        
+
         for line in patch_lines {
             if line.starts_with("@@") {
                 // Line range marker - skip
@@ -69,19 +70,21 @@ impl PatchSimulator {
                 result.push('\n');
             }
         }
-        
+
         Ok(result)
     }
 
     /// Validate that the patched plan is structurally sound
-    fn validate_patched_plan(
+    /// Validate the patched plan structure (Premium feature)
+    #[allow(dead_code)]
+    fn _validate_patched_plan(
         &self,
         original: &[ResourceChange],
         patched: &[ResourceChange],
     ) -> Result<SimulationResult, Box<dyn Error>> {
-        let mut errors = Vec::new();
+        let errors = Vec::new();
         let mut warnings = Vec::new();
-        
+
         // Check resource count didn't change unexpectedly
         if original.len() != patched.len() {
             warnings.push(format!(
@@ -90,15 +93,15 @@ impl PatchSimulator {
                 patched.len()
             ));
         }
-        
+
         // Calculate cost impact
         let original_cost: f64 = original.iter().filter_map(|r| r.monthly_cost).sum();
         let patched_cost: f64 = patched.iter().filter_map(|r| r.monthly_cost).sum();
         let cost_change = patched_cost - original_cost;
-        
+
         // Validate JSON structure is intact
         let valid = errors.is_empty();
-        
+
         Ok(SimulationResult {
             valid,
             errors,
@@ -114,21 +117,16 @@ impl PatchSimulator {
         if !patch.contains("---") || !patch.contains("+++") {
             return Ok(false);
         }
-        
+
         // Check for dangerous operations
-        let dangerous_patterns = [
-            "delete all",
-            "rm -rf",
-            "destroy",
-            "force_destroy = true",
-        ];
-        
+        let dangerous_patterns = ["delete all", "rm -rf", "destroy", "force_destroy = true"];
+
         for pattern in &dangerous_patterns {
             if patch.to_lowercase().contains(pattern) {
                 return Ok(false);
             }
         }
-        
+
         Ok(true)
     }
 
@@ -142,10 +140,10 @@ impl PatchSimulator {
         if !self.verify_patch_safety(patch)? {
             return Err("Patch failed safety verification".into());
         }
-        
+
         // Run simulation
         let simulation = self.simulate_patch(original_plan, patch)?;
-        
+
         // Require simulation to pass
         if !simulation.valid {
             return Err(format!(
@@ -155,12 +153,12 @@ impl PatchSimulator {
             )
             .into());
         }
-        
+
         // Check for breaking changes
         if !simulation.warnings.is_empty() {
             eprintln!("Warnings: {}", simulation.warnings.join(", "));
         }
-        
+
         Ok(())
     }
 }
@@ -180,7 +178,7 @@ mod tests {
         let simulator = PatchSimulator::new();
         let original = r#"{"resources": []}"#;
         let patch = "--- a/plan.json\n+++ b/plan.json\n";
-        
+
         let result = simulator.require_simulation_pass(original, patch);
         assert!(result.is_ok());
     }
@@ -189,7 +187,7 @@ mod tests {
     fn test_unsafe_patch_rejected() {
         let simulator = PatchSimulator::new();
         let patch = "--- a/plan.json\n+++ b/plan.json\n+ force_destroy = true";
-        
+
         let safe = simulator.verify_patch_safety(patch).unwrap();
         assert!(!safe);
     }
@@ -198,7 +196,7 @@ mod tests {
     fn test_invalid_patch_format_rejected() {
         let simulator = PatchSimulator::new();
         let patch = "not a valid patch";
-        
+
         let safe = simulator.verify_patch_safety(patch).unwrap();
         assert!(!safe);
     }

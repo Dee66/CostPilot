@@ -22,21 +22,24 @@ mod tests {
     #[ignore] // Only run after building WASM
     fn test_wasm_size_limit() {
         let path = Path::new(WASM_FILE_PATH);
-        
+
         if !path.exists() {
             panic!("WASM file not found. Build first.");
         }
-        
+
         let metadata = std::fs::metadata(path).expect("Failed to read WASM file metadata");
         let size = metadata.len() as usize;
         let size_mb = size as f64 / (1024.0 * 1024.0);
-        
+
         println!("WASM module size: {:.2} MB ({} bytes)", size_mb, size);
-        
+
         if size > WARN_SIZE_BYTES {
-            println!("⚠️  WARNING: WASM size exceeds warning threshold of {} MB", WARN_SIZE_BYTES / 1024 / 1024);
+            println!(
+                "⚠️  WARNING: WASM size exceeds warning threshold of {} MB",
+                WARN_SIZE_BYTES / 1024 / 1024
+            );
         }
-        
+
         assert!(
             size <= MAX_SIZE_BYTES,
             "WASM module size ({:.2} MB) exceeds maximum of {} MB. Consider optimizations.",
@@ -50,25 +53,30 @@ mod tests {
     fn test_wasm_optimized_size() {
         // Check if optimized version exists
         let opt_path = Path::new("target/wasm32-unknown-unknown/release/costpilot_opt.wasm");
-        
+
         if !opt_path.exists() {
-            println!("ℹ️  Optimized WASM not found. Build with: ./scripts/build_wasm.sh --optimize");
+            println!(
+                "ℹ️  Optimized WASM not found. Build with: ./scripts/build_wasm.sh --optimize"
+            );
             return;
         }
-        
+
         let opt_metadata = std::fs::metadata(opt_path).expect("Failed to read optimized WASM");
         let opt_size = opt_metadata.len() as usize;
         let opt_size_mb = opt_size as f64 / (1024.0 * 1024.0);
-        
-        println!("Optimized WASM module size: {:.2} MB ({} bytes)", opt_size_mb, opt_size);
-        
+
+        println!(
+            "Optimized WASM module size: {:.2} MB ({} bytes)",
+            opt_size_mb, opt_size
+        );
+
         // Optimized version should be smaller
         if let Ok(metadata) = std::fs::metadata(WASM_FILE_PATH) {
             let orig_size = metadata.len() as usize;
             let reduction = ((orig_size - opt_size) as f64 / orig_size as f64) * 100.0;
-            
+
             println!("Size reduction: {:.1}%", reduction);
-            
+
             assert!(
                 opt_size < orig_size,
                 "Optimized WASM should be smaller than unoptimized"
@@ -79,28 +87,28 @@ mod tests {
     #[test]
     fn test_compilation_size_estimate() {
         // Estimate module sizes to detect bloat
-        
+
         // These are rough estimates based on typical sizes
         let estimated_sizes = vec![
-            ("Prediction Engine", 500 * 1024),    // ~500 KB
-            ("Detection Engine", 400 * 1024),     // ~400 KB
-            ("Policy Engine", 300 * 1024),        // ~300 KB
-            ("Mapping Engine", 600 * 1024),       // ~600 KB
-            ("Grouping Engine", 500 * 1024),      // ~500 KB
-            ("SLO Engine", 200 * 1024),           // ~200 KB
-            ("Parser", 400 * 1024),               // ~400 KB
-            ("Core/Runtime", 1000 * 1024),        // ~1 MB
+            ("Prediction Engine", 500 * 1024), // ~500 KB
+            ("Detection Engine", 400 * 1024),  // ~400 KB
+            ("Policy Engine", 300 * 1024),     // ~300 KB
+            ("Mapping Engine", 600 * 1024),    // ~600 KB
+            ("Grouping Engine", 500 * 1024),   // ~500 KB
+            ("SLO Engine", 200 * 1024),        // ~200 KB
+            ("Parser", 400 * 1024),            // ~400 KB
+            ("Core/Runtime", 1000 * 1024),     // ~1 MB
         ];
-        
+
         let total_estimate: usize = estimated_sizes.iter().map(|(_, size)| size).sum();
         let total_estimate_mb = total_estimate as f64 / (1024.0 * 1024.0);
-        
+
         println!("Estimated component sizes:");
         for (name, size) in &estimated_sizes {
             println!("  {}: {:.1} KB", name, *size as f64 / 1024.0);
         }
         println!("\nTotal estimated size: {:.2} MB", total_estimate_mb);
-        
+
         assert!(
             total_estimate <= MAX_SIZE_BYTES,
             "Estimated size ({:.2} MB) exceeds limit",
@@ -112,7 +120,7 @@ mod tests {
     fn test_feature_flag_sizes() {
         // Verify feature flags reduce size
         // This is informational - actual sizes depend on build
-        
+
         println!("Feature flag size impact (estimated):");
         println!("  --no-default-features: Saves ~2-3 MB");
         println!("  --features prediction: ~500 KB");
@@ -121,7 +129,7 @@ mod tests {
         println!("  --features mapping: ~600 KB");
         println!("  --features grouping: ~500 KB");
         println!("  --features slo: ~200 KB");
-        
+
         // Feature builds should be smaller than full build
         // This can be validated with actual builds
     }
@@ -129,7 +137,7 @@ mod tests {
     #[test]
     fn test_dependency_sizes() {
         // Check for large dependencies that might bloat WASM
-        
+
         // These dependencies should be reasonable
         let known_dependencies = vec![
             "serde",
@@ -139,18 +147,18 @@ mod tests {
             "thiserror",
             "wasm-bindgen",
         ];
-        
+
         println!("Known dependencies:");
         for dep in &known_dependencies {
             println!("  - {}", dep);
         }
-        
+
         // Large dependencies to avoid in WASM:
         // - tokio (async runtime not needed)
         // - reqwest (network not allowed)
         // - image processing (bloats binary)
         // - heavy compression libraries
-        
+
         println!("\nDependencies to avoid in WASM:");
         println!("  - tokio (use native async instead)");
         println!("  - reqwest (network not allowed)");
@@ -160,7 +168,7 @@ mod tests {
     #[test]
     fn test_optimization_levels() {
         // Document optimization strategies
-        
+
         println!("Optimization strategies for size:");
         println!("  1. opt-level = 'z' (optimize for size)");
         println!("  2. lto = true (link-time optimization)");
@@ -175,27 +183,30 @@ mod tests {
     #[test]
     fn test_size_regression_detection() {
         // This test helps detect size regressions
-        
+
         const BASELINE_SIZE_MB: f64 = 5.0; // Baseline size
         const REGRESSION_THRESHOLD: f64 = 0.2; // 20% increase is a regression
-        
+
         println!("Size regression detection:");
         println!("  Baseline: {:.2} MB", BASELINE_SIZE_MB);
-        println!("  Regression threshold: {}%", (REGRESSION_THRESHOLD * 100.0) as i32);
-        
+        println!(
+            "  Regression threshold: {}%",
+            (REGRESSION_THRESHOLD * 100.0) as i32
+        );
+
         // In CI, compare against baseline
         // If size increases by more than threshold, flag as regression
-        
+
         let max_acceptable = BASELINE_SIZE_MB * (1.0 + REGRESSION_THRESHOLD);
         println!("  Max acceptable: {:.2} MB", max_acceptable);
-        
+
         // This would be checked against actual built size in CI
     }
 
     #[test]
     fn test_compression_potential() {
         // WASM files compress well with gzip/brotli
-        
+
         println!("Compression potential:");
         println!("  gzip: typically 30-40% reduction");
         println!("  brotli: typically 40-50% reduction");
@@ -207,7 +218,7 @@ mod tests {
     #[test]
     fn test_size_monitoring() {
         // Document size monitoring strategy
-        
+
         println!("Size monitoring strategy:");
         println!("  1. Track size in each PR");
         println!("  2. Fail CI if size exceeds limit");
@@ -220,7 +231,7 @@ mod tests {
     #[test]
     fn test_lazy_loading_strategy() {
         // For browser use, consider lazy loading
-        
+
         println!("Lazy loading strategies:");
         println!("  1. Split engines into separate WASM modules");
         println!("  2. Load only required engines");

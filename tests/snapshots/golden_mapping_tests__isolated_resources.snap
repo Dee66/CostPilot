@@ -1,0 +1,38 @@
+---
+source: tests/golden_mapping_tests.rs
+assertion_line: 221
+expression: json_output
+---
+{
+  "edges": [],
+  "metadata": {
+    "edge_count": 0,
+    "has_cycles": false,
+    "max_depth": 0,
+    "node_count": 3,
+    "total_cost": 45.0
+  },
+  "nodes": [
+    {
+      "id": "aws_s3_bucket.data",
+      "label": "data bucket",
+      "monthly_cost": 5.0,
+      "node_type": "resource",
+      "resource_type": "aws_s3_bucket"
+    },
+    {
+      "id": "aws_dynamodb_table.users",
+      "label": "users table",
+      "monthly_cost": 25.0,
+      "node_type": "resource",
+      "resource_type": "aws_dynamodb_table"
+    },
+    {
+      "id": "aws_lambda_function.api",
+      "label": "API Lambda",
+      "monthly_cost": 15.0,
+      "node_type": "resource",
+      "resource_type": "aws_lambda_function"
+    }
+  ]
+}

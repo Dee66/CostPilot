@@ -1,10 +1,10 @@
 // Terraform plan JSON parser
 
+use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
+use crate::engines::shared::models::{ChangeAction, ResourceChange};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use crate::engines::shared::models::{ResourceChange, ChangeAction};
-use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
 
 /// Terraform plan JSON structure
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -55,7 +55,7 @@ pub fn convert_to_resource_changes(plan: &TerraformPlan) -> Result<Vec<ResourceC
     if let Some(resource_changes) = &plan.resource_changes {
         for tf_change in resource_changes {
             let action = determine_action(&tf_change.change.actions)?;
-            
+
             // Skip no-op changes
             if action == ChangeAction::NoOp {
                 continue;
@@ -74,6 +74,8 @@ pub fn convert_to_resource_changes(plan: &TerraformPlan) -> Result<Vec<ResourceC
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
+                before: None,
+                after: None,
             });
         }
     }
@@ -139,9 +141,7 @@ pub fn handle_unknown_values(value: &Value) -> Value {
             }
             Value::Object(new_obj)
         }
-        Value::Array(arr) => {
-            Value::Array(arr.iter().map(handle_unknown_values).collect())
-        }
+        Value::Array(arr) => Value::Array(arr.iter().map(handle_unknown_values).collect()),
         // Unknown values are represented as null in our conservative approach
         Value::String(s) if s == "(known after apply)" => Value::Null,
         other => other.clone(),
@@ -178,18 +178,18 @@ mod tests {
 
         let result = parse_terraform_plan(plan_json);
         assert!(result.is_ok());
-        
+
         let plan = result.unwrap();
         assert_eq!(plan.format_version, "1.2");
     }
 
     #[test]
     fn test_action_determination() {
-        assert_eq!(determine_action(&["create"]).unwrap(), ChangeAction::Create);
-        assert_eq!(determine_action(&["delete"]).unwrap(), ChangeAction::Delete);
-        assert_eq!(determine_action(&["update"]).unwrap(), ChangeAction::Update);
+        assert_eq!(determine_action(&["create".to_string()]).unwrap(), ChangeAction::Create);
+        assert_eq!(determine_action(&["delete".to_string()]).unwrap(), ChangeAction::Delete);
+        assert_eq!(determine_action(&["update".to_string()]).unwrap(), ChangeAction::Update);
         assert_eq!(
-            determine_action(&["delete", "create"]).unwrap(),
+            determine_action(&["delete".to_string(), "create".to_string()]).unwrap(),
             ChangeAction::Replace
         );
     }

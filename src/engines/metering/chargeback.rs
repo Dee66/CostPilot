@@ -1,9 +1,11 @@
 // Chargeback reporting for team cost attribution
 
+use crate::engines::metering::usage_meter::{TeamUsageSummary, UserUsage, ProjectUsage, UsageContext};
+use crate::engines::shared::error_model::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::engines::metering::usage_meter::{TeamUsageSummary, UserUsage, ProjectUsage};
-use crate::engines::shared::error_model::Result;
+use std::time::Duration;
+use chrono::Utc;
 
 /// Chargeback report for organization
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -11,19 +13,19 @@ pub struct ChargebackReport {
     /// Report period
     pub period_start: u64,
     pub period_end: u64,
-    
+
     /// Organization identifier
     pub org_id: String,
-    
+
     /// Total charge for organization
     pub total_charge: f64,
-    
+
     /// Team breakdowns
     pub team_charges: Vec<TeamChargeback>,
-    
+
     /// Cost center breakdowns
     pub cost_center_charges: HashMap<String, f64>,
-    
+
     /// Top cost drivers
     pub top_cost_drivers: Vec<CostDriver>,
 }
@@ -33,34 +35,34 @@ pub struct ChargebackReport {
 pub struct TeamChargeback {
     /// Team identifier
     pub team_id: String,
-    
+
     /// Team name
     pub team_name: String,
-    
+
     /// Cost center
     pub cost_center: Option<String>,
-    
+
     /// Total charge for team
     pub charge: f64,
-    
+
     /// Percentage of total org charge
     pub percentage_of_org: f64,
-    
+
     /// Resources analyzed
     pub resources_analyzed: u32,
-    
+
     /// Events performed
     pub events: u32,
-    
+
     /// Cost impact detected (value delivered)
     pub value_delivered: f64,
-    
+
     /// ROI (value delivered / charge)
     pub roi: f64,
-    
+
     /// Top users in team
     pub top_users: Vec<UserChargeback>,
-    
+
     /// Top projects
     pub top_projects: Vec<ProjectChargeback>,
 }
@@ -70,19 +72,19 @@ pub struct TeamChargeback {
 pub struct UserChargeback {
     /// User identifier
     pub user_id: String,
-    
+
     /// User name
     pub user_name: String,
-    
+
     /// Resources analyzed
     pub resources_analyzed: u32,
-    
+
     /// Events
     pub events: u32,
-    
+
     /// Allocated charge
     pub charge: f64,
-    
+
     /// Percentage of team charge
     pub percentage_of_team: f64,
 }
@@ -92,16 +94,16 @@ pub struct UserChargeback {
 pub struct ProjectChargeback {
     /// Project identifier
     pub project_id: String,
-    
+
     /// Project name
     pub project_name: String,
-    
+
     /// Resources analyzed
     pub resources_analyzed: u32,
-    
+
     /// Allocated charge
     pub charge: f64,
-    
+
     /// Cost impact detected
     pub cost_impact: f64,
 }
@@ -111,16 +113,16 @@ pub struct ProjectChargeback {
 pub struct CostDriver {
     /// Driver type (team, user, project, resource_type)
     pub driver_type: String,
-    
+
     /// Driver identifier
     pub driver_id: String,
-    
+
     /// Charge amount
     pub charge: f64,
-    
+
     /// Percentage of total
     pub percentage: f64,
-    
+
     /// Description
     pub description: String,
 }
@@ -151,9 +153,7 @@ impl ChargebackReportBuilder {
 
     /// Build chargeback report
     pub fn build(self) -> Result<ChargebackReport> {
-        let total_charge: f64 = self.team_summaries.iter()
-            .map(|s| s.estimated_charge)
-            .sum();
+        let total_charge: f64 = self.team_summaries.iter().map(|s| s.estimated_charge).sum();
 
         // Build team chargebacks
         let mut team_charges = Vec::new();
@@ -171,7 +171,9 @@ impl ChargebackReportBuilder {
             };
 
             // Convert user usage to user chargeback
-            let top_users = summary.top_users.iter()
+            let top_users = summary
+                .top_users
+                .iter()
                 .map(|u| {
                     let user_charge = (u.percentage_of_team / 100.0) * summary.estimated_charge;
                     UserChargeback {
@@ -186,11 +188,15 @@ impl ChargebackReportBuilder {
                 .collect();
 
             // Convert project usage to project chargeback
-            let total_project_resources: u32 = summary.top_projects.iter()
+            let total_project_resources: u32 = summary
+                .top_projects
+                .iter()
                 .map(|p| p.resources_analyzed)
                 .sum();
 
-            let top_projects = summary.top_projects.iter()
+            let top_projects = summary
+                .top_projects
+                .iter()
                 .map(|p| {
                     let project_percentage = if total_project_resources > 0 {
                         (p.resources_analyzed as f64 / total_project_resources as f64) * 100.0
@@ -232,7 +238,7 @@ impl ChargebackReportBuilder {
 
         // Identify top cost drivers
         let mut top_cost_drivers = Vec::new();
-        
+
         // Top teams by charge
         for (i, team) in team_charges.iter().take(5).enumerate() {
             top_cost_drivers.push(CostDriver {
@@ -260,49 +266,51 @@ impl ChargebackReport {
     /// Format report as human-readable text
     pub fn format_text(&self) -> String {
         let mut output = String::new();
-        
+
         output.push_str("💰 Chargeback Report\n");
         output.push_str("====================\n\n");
-        
+
         output.push_str(&format!("Organization: {}\n", self.org_id));
-        output.push_str(&format!("Period: {} - {}\n\n", self.period_start, self.period_end));
-        
+        output.push_str(&format!(
+            "Period: {} - {}\n\n",
+            self.period_start, self.period_end
+        ));
+
         output.push_str(&format!("Total Charge: ${:.2}\n\n", self.total_charge));
-        
+
         output.push_str("Team Breakdown:\n");
         for team in &self.team_charges {
             output.push_str(&format!(
                 "  {} - ${:.2} ({:.1}%)\n",
-                team.team_name,
-                team.charge,
-                team.percentage_of_org
+                team.team_name, team.charge, team.percentage_of_org
             ));
             output.push_str(&format!("    Resources: {}\n", team.resources_analyzed));
             output.push_str(&format!("    Events: {}\n", team.events));
-            output.push_str(&format!("    Value Delivered: ${:.2}\n", team.value_delivered));
+            output.push_str(&format!(
+                "    Value Delivered: ${:.2}\n",
+                team.value_delivered
+            ));
             output.push_str(&format!("    ROI: {:.1}x\n\n", team.roi));
         }
-        
+
         output.push_str("Top Cost Drivers:\n");
         for driver in &self.top_cost_drivers {
             output.push_str(&format!(
                 "  {} - ${:.2} ({:.1}%)\n",
-                driver.description,
-                driver.charge,
-                driver.percentage
+                driver.description, driver.charge, driver.percentage
             ));
         }
-        
+
         output
     }
 
     /// Export to CSV format
     pub fn to_csv(&self) -> String {
         let mut csv = String::new();
-        
+
         // Header
         csv.push_str("Team,Charge,Percentage,Resources,Events,Value Delivered,ROI\n");
-        
+
         // Data rows
         for team in &self.team_charges {
             csv.push_str(&format!(
@@ -316,48 +324,54 @@ impl ChargebackReport {
                 team.roi
             ));
         }
-        
+
         csv
     }
 
     /// Generate invoice-style report
     pub fn generate_invoice(&self, team_id: &str) -> Option<String> {
-        let team = self.team_charges.iter()
-            .find(|t| t.team_id == team_id)?;
+        let team = self.team_charges.iter().find(|t| t.team_id == team_id)?;
 
         let mut invoice = String::new();
-        
+
         invoice.push_str("┌────────────────────────────────────────────┐\n");
         invoice.push_str("│           CostPilot Invoice                │\n");
         invoice.push_str("└────────────────────────────────────────────┘\n\n");
-        
+
         invoice.push_str(&format!("Organization: {}\n", self.org_id));
         invoice.push_str(&format!("Team: {}\n", team.team_name));
-        invoice.push_str(&format!("Period: {} - {}\n\n", self.period_start, self.period_end));
-        
+        invoice.push_str(&format!(
+            "Period: {} - {}\n\n",
+            self.period_start, self.period_end
+        ));
+
         invoice.push_str("Usage Summary:\n");
-        invoice.push_str(&format!("  Resources Analyzed: {}\n", team.resources_analyzed));
+        invoice.push_str(&format!(
+            "  Resources Analyzed: {}\n",
+            team.resources_analyzed
+        ));
         invoice.push_str(&format!("  Events Performed: {}\n\n", team.events));
-        
+
         invoice.push_str("Charges:\n");
         invoice.push_str(&format!("  Total: ${:.2}\n\n", team.charge));
-        
+
         invoice.push_str("Value Delivered:\n");
-        invoice.push_str(&format!("  Cost Issues Detected: ${:.2}\n", team.value_delivered));
+        invoice.push_str(&format!(
+            "  Cost Issues Detected: ${:.2}\n",
+            team.value_delivered
+        ));
         invoice.push_str(&format!("  ROI: {:.1}x return on investment\n\n", team.roi));
-        
+
         if !team.top_users.is_empty() {
             invoice.push_str("Top Users:\n");
             for user in team.top_users.iter().take(5) {
                 invoice.push_str(&format!(
                     "  {} - {} resources (${:.2})\n",
-                    user.user_name,
-                    user.resources_analyzed,
-                    user.charge
+                    user.user_name, user.resources_analyzed, user.charge
                 ));
             }
         }
-        
+
         Some(invoice)
     }
 }
@@ -377,32 +391,24 @@ mod tests {
             cost_impact_detected: charge * 100.0, // High ROI
             billable_units: resources,
             estimated_charge: charge,
-            top_users: vec![
-                UserUsage {
-                    user_id: "user1".to_string(),
-                    events: 5,
-                    resources_analyzed: resources / 2,
-                    percentage_of_team: 50.0,
-                },
-            ],
-            top_projects: vec![
-                ProjectUsage {
-                    project_id: "proj1".to_string(),
-                    events: 10,
-                    resources_analyzed: resources,
-                    cost_impact: charge * 100.0,
-                },
-            ],
+            top_users: vec![UserUsage {
+                user_id: "user1".to_string(),
+                events: 5,
+                resources_analyzed: resources / 2,
+                percentage_of_team: 50.0,
+            }],
+            top_projects: vec![ProjectUsage {
+                project_id: "proj1".to_string(),
+                events: 10,
+                resources_analyzed: resources,
+                cost_impact: charge * 100.0,
+            }],
         }
     }
 
     #[test]
     fn test_chargeback_report() {
-        let mut builder = ChargebackReportBuilder::new(
-            "org1".to_string(),
-            0,
-            1000,
-        );
+        let mut builder = ChargebackReportBuilder::new("org1".to_string(), 0, 1000);
 
         builder.add_team(create_test_summary("team1", 100.0, 1000));
         builder.add_team(create_test_summary("team2", 200.0, 2000));
@@ -411,10 +417,10 @@ mod tests {
 
         assert_eq!(report.total_charge, 300.0);
         assert_eq!(report.team_charges.len(), 2);
-        
+
         // Team 2 should be first (higher charge)
         assert_eq!(report.team_charges[0].team_id, "team2");
-        assert_eq!(report.team_charges[0].percentage_of_org, 66.66666666666667);
+        assert!((report.team_charges[0].percentage_of_org - 66.66666666666667).abs() < 1e-6);
     }
 
     #[test]

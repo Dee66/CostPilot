@@ -1,9 +1,8 @@
 // Compliance reporting and audit analysis
 
-use super::audit_log::{AuditEvent, AuditEventType, AuditLog, AuditLogEntry, AuditSeverity};
+use super::audit_log::{AuditEventType, AuditLog, AuditLogEntry, AuditSeverity};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use thiserror::Error;
 
 /// Compliance framework
@@ -28,7 +27,7 @@ impl ComplianceFramework {
         match self {
             ComplianceFramework::Soc2 => 365,
             ComplianceFramework::Iso27001 => 365,
-            ComplianceFramework::Gdpr => 2190, // 6 years
+            ComplianceFramework::Gdpr => 2190,  // 6 years
             ComplianceFramework::Hipaa => 2190, // 6 years
             ComplianceFramework::PciDss => 365,
         }
@@ -257,9 +256,7 @@ impl ComplianceAnalyzer {
                 access_control_events.len()
             )],
             recommendations: if access_control_events.is_empty() {
-                Some(vec![
-                    "Enable access logging for all resources".to_string()
-                ])
+                Some(vec!["Enable access logging for all resources".to_string()])
             } else {
                 None
             },
@@ -641,9 +638,10 @@ mod tests {
         log.append(event2).unwrap();
 
         // Query by event type
-        let results = AuditQuery::new(&log)
-            .with_event_type(AuditEventType::PolicyActivated)
-            .execute();
+        let log_ref = &log;
+        let query = AuditQuery::new(log_ref)
+            .with_event_type(AuditEventType::PolicyActivated);
+        let results = query.execute();
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].event.event_type, AuditEventType::PolicyActivated);
@@ -662,11 +660,12 @@ mod tests {
         );
         log.append(event).unwrap();
 
-        let results = AuditQuery::new(&log)
+        let log_ref = &log;
+        let query = AuditQuery::new(log_ref)
             .with_event_type(AuditEventType::PolicyActivated)
             .with_actor("admin".to_string())
-            .with_severity(AuditSeverity::High)
-            .execute();
+            .with_severity(AuditSeverity::High);
+        let results = query.execute();
 
         assert_eq!(results.len(), 1);
     }

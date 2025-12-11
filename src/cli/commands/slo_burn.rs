@@ -1,7 +1,7 @@
 // SLO burn rate command implementation
 
 use colored::*;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::engines::slo::burn_rate::{BurnRateCalculator, BurnReport, BurnRisk};
 use crate::engines::slo::SloManager;
@@ -15,6 +15,7 @@ pub fn execute(
     min_snapshots: Option<usize>,
     min_r_squared: Option<f64>,
     verbose: bool,
+    edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Default paths
     let slo_path = slo_path.unwrap_or_else(|| PathBuf::from(".costpilot/slo.json"));
@@ -26,7 +27,7 @@ pub fn execute(
     }
 
     // Load SLO configuration
-    let slo_manager = SloManager::load_from_file(&slo_path)
+    let slo_manager = SloManager::load_from_file(&slo_path, edition)
         .map_err(|e| format!("Failed to load SLO config: {}", e))?;
 
     // Validate SLOs
@@ -40,7 +41,8 @@ pub fn execute(
 
     // Load historical snapshots
     let snapshot_manager = SnapshotManager::new(&snapshots_dir);
-    let history = snapshot_manager.load_history()
+    let history = snapshot_manager
+        .load_history()
         .map_err(|e| format!("Failed to load snapshots: {}", e))?;
 
     if history.snapshots.is_empty() {
@@ -106,22 +108,23 @@ fn output_text(report: &BurnReport) -> Result<(), Box<dyn std::error::Error>> {
         };
 
         // Risk color
-        let risk_color = match analysis.risk {
+        let _risk_color = match analysis.risk {
             BurnRisk::Low => "GREEN",
             BurnRisk::Medium => "YELLOW",
             BurnRisk::High => "YELLOW",
             BurnRisk::Critical => "RED",
         };
 
-        println!("{} {} (${:.2}/month)", 
-            risk_indicator, 
+        println!(
+            "{} {} (${:.2}/month)",
+            risk_indicator,
             analysis.slo_name.bright_white().bold(),
             analysis.slo_limit
         );
 
         println!("  Burn Rate:      ${:.2}/day", analysis.burn_rate);
         println!("  Projected Cost: ${:.2}/month", analysis.projected_cost);
-        
+
         if let Some(days) = analysis.days_to_breach {
             let days_str = format!("{:.1} days", days);
             let colored_days = match analysis.risk {
@@ -143,8 +146,9 @@ fn output_text(report: &BurnReport) -> Result<(), Box<dyn std::error::Error>> {
             BurnRisk::Low => risk_text.green(),
         };
         println!("  Risk Level:     {}", colored_risk);
-        
-        println!("  Confidence:     {:.0}% (R² = {:.3})", 
+
+        println!(
+            "  Confidence:     {:.0}% (R² = {:.3})",
             analysis.confidence * 100.0,
             analysis.r_squared
         );
@@ -159,7 +163,7 @@ fn output_text(report: &BurnReport) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "Summary".bright_white().bold());
     println!("  Total SLOs:     {}", report.total_slos);
     println!("  At Risk:        {}", report.slos_at_risk);
-    
+
     let overall_risk_text = format!("{:?}", report.overall_risk);
     let colored_overall = match report.overall_risk {
         BurnRisk::Critical => overall_risk_text.bright_red().bold(),
@@ -174,19 +178,21 @@ fn output_text(report: &BurnReport) -> Result<(), Box<dyn std::error::Error>> {
     // Action recommendations
     if report.requires_action() {
         println!("{}", "⚠️  Action Required".bright_yellow().bold());
-        
+
         let critical = report.critical_slos();
         if !critical.is_empty() {
             println!();
             println!("{}", "Critical SLOs:".bright_red().bold());
             for analysis in critical {
                 if let Some(days) = analysis.days_to_breach {
-                    println!("  • {} - {:.1} days to breach", 
+                    println!(
+                        "  • {} - {:.1} days to breach",
                         analysis.slo_name.bright_white(),
                         days
                     );
                 } else {
-                    println!("  • {} - Already exceeded", 
+                    println!(
+                        "  • {} - Already exceeded",
                         analysis.slo_name.bright_white()
                     );
                 }
@@ -242,7 +248,8 @@ fn output_markdown(report: &BurnReport) -> Result<(), Box<dyn std::error::Error>
             "No breach".to_string()
         };
 
-        println!("| {} {} | ${:.2}/day | ${:.2} | {} | {:?} | {:.0}% |",
+        println!(
+            "| {} {} | ${:.2}/day | ${:.2} | {} | {:?} | {:.0}% |",
             risk_emoji,
             analysis.slo_name,
             analysis.burn_rate,

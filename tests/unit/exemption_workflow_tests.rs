@@ -1,3 +1,4 @@
+use std::time::Duration;
 //! Comprehensive exemption workflow tests
 //!
 //! Tests exemption lifecycle, approval workflows, expiration handling,

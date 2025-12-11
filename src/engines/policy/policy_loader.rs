@@ -40,7 +40,10 @@ impl PolicyLoader {
                 ErrorCategory::ValidationError,
                 format!("Failed to parse policy YAML: {}", e),
             )
-            .with_hint("Check that the policy file is valid YAML and follows the expected schema".to_string())
+            .with_hint(
+                "Check that the policy file is valid YAML and follows the expected schema"
+                    .to_string(),
+            )
         })
     }
 

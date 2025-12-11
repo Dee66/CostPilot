@@ -1,17 +1,23 @@
 // Autofix snippet command implementation - Generate fix snippets (MVP)
 
-use std::path::PathBuf;
-use colored::Colorize;
+use crate::engines::autofix::{AutofixEngine, AutofixMode};
 use crate::engines::detection::DetectionEngine;
 use crate::engines::prediction::PredictionEngine;
-use crate::engines::autofix::{AutofixEngine, AutofixMode};
+use colored::Colorize;
+use std::path::PathBuf;
 
 pub struct AutofixSnippetArgs {
     pub plan: PathBuf,
     pub verbose: bool,
 }
 
-pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub fn execute(
+    args: &AutofixSnippetArgs,
+    edition: &crate::edition::EditionContext,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Require Premium for autofix
+    crate::edition::require_premium(edition, "Autofix")?;
+
     println!("{}", "🔧 CostPilot Autofix - Snippet Mode".bold().cyan());
     println!();
 
@@ -29,7 +35,7 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
     println!("{}", "Detecting cost regressions...".dimmed());
     let detection_engine = DetectionEngine::new();
     let detections = detection_engine.detect(&changes)?;
-    
+
     if detections.is_empty() {
         println!("   {} No cost issues detected", "✓".green());
         return Ok(());
@@ -40,11 +46,14 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
 
     // Generate predictions
     println!("{}", "Estimating costs...".dimmed());
-    let prediction_engine = PredictionEngine::new()?;
+    let prediction_engine = PredictionEngine::new_with_edition(edition)?;
     let mut detections_with_estimates = detections;
-    
+
     for detection in &mut detections_with_estimates {
-        if let Some(change) = changes.iter().find(|c| c.resource_id == detection.resource_id) {
+        if let Some(change) = changes
+            .iter()
+            .find(|c| c.resource_id == detection.resource_id)
+        {
             if let Ok(estimate) = prediction_engine.predict_resource_cost(change) {
                 detection.estimated_cost = Some(estimate.monthly_cost);
             }
@@ -58,7 +67,7 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
     let autofix_result = AutofixEngine::generate_fixes(
         &detections_with_estimates,
         &changes,
-        &[],  // estimates not used for snippet mode
+        &[], // estimates not used for snippet mode
         AutofixMode::Snippet,
     );
 
@@ -79,9 +88,14 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
 
     // Display snippets
     for (idx, fix) in autofix_result.fixes.iter().enumerate() {
-        println!("{}", format!("Fix #{} - {}", idx + 1, fix.resource_id).bold().green());
+        println!(
+            "{}",
+            format!("Fix #{} - {}", idx + 1, fix.resource_id)
+                .bold()
+                .green()
+        );
         println!("{}", "─".repeat(60));
-        
+
         if args.verbose {
             println!("Resource Type: {}", fix.resource_type);
             println!("Format: {:?}", fix.format);
@@ -91,7 +105,7 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
             println!("{}", fix.impact);
             println!();
         }
-        
+
         println!("{}", "Before:".yellow());
         println!("{}", fix.before_after.before);
         println!();
@@ -101,10 +115,13 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
         println!("{}", "Change:".cyan());
         println!("{}", fix.before_after.change_description);
         println!();
-        
+
         if args.verbose {
             println!("Properties:");
-            println!("  • Deterministic: {}", if fix.deterministic { "✓" } else { "✗" });
+            println!(
+                "  • Deterministic: {}",
+                if fix.deterministic { "✓" } else { "✗" }
+            );
             println!("  • Idempotent: {}", if fix.idempotent { "✓" } else { "✗" });
             println!();
         }
@@ -113,7 +130,7 @@ pub fn execute(args: &AutofixSnippetArgs) -> Result<(), Box<dyn std::error::Erro
     // Summary
     println!("{}", "Summary".bold());
     println!("Total fixes: {}", autofix_result.fixes.len());
-    
+
     if !autofix_result.warnings.is_empty() {
         println!();
         println!("{}", "Warnings:".yellow());

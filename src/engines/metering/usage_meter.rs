@@ -1,36 +1,36 @@
 // Usage metering and attribution system for team chargeback and billing
 
+use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
 
 /// Usage event representing a CostPilot analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsageEvent {
     /// Unique event ID
     pub event_id: String,
-    
+
     /// Timestamp (Unix epoch)
     pub timestamp: u64,
-    
+
     /// Event type
     pub event_type: UsageEventType,
-    
+
     /// User/team attribution
     pub attribution: Attribution,
-    
+
     /// Resources analyzed
     pub resources_analyzed: u32,
-    
+
     /// Total estimated cost impact
     pub cost_impact: f64,
-    
+
     /// Analysis duration in milliseconds
     pub duration_ms: u64,
-    
+
     /// Repository/project context
     pub context: UsageContext,
-    
+
     /// Metadata
     pub metadata: HashMap<String, String>,
 }
@@ -40,25 +40,25 @@ pub struct UsageEvent {
 pub enum UsageEventType {
     /// Workspace scan
     Scan,
-    
+
     /// Terraform plan analysis
     PlanAnalysis,
-    
+
     /// Policy evaluation
     PolicyCheck,
-    
+
     /// SLO compliance check
     SloCheck,
-    
+
     /// Autofix generation
     AutofixGeneration,
-    
+
     /// Dependency mapping
     DependencyMap,
-    
+
     /// Trend analysis
     TrendAnalysis,
-    
+
     /// Advanced prediction (probabilistic)
     AdvancedPrediction,
 }
@@ -68,16 +68,16 @@ pub enum UsageEventType {
 pub struct Attribution {
     /// User identifier (email, username, etc.)
     pub user_id: String,
-    
+
     /// Team identifier
     pub team_id: Option<String>,
-    
+
     /// Organization identifier
     pub org_id: Option<String>,
-    
+
     /// Cost center or department
     pub cost_center: Option<String>,
-    
+
     /// Project identifier
     pub project_id: Option<String>,
 }
@@ -87,19 +87,19 @@ pub struct Attribution {
 pub struct UsageContext {
     /// Repository URL or identifier
     pub repository: String,
-    
+
     /// Branch name
     pub branch: Option<String>,
-    
+
     /// Commit SHA
     pub commit: Option<String>,
-    
+
     /// PR number (if applicable)
     pub pr_number: Option<u32>,
-    
+
     /// CI/CD system (GitHub Actions, GitLab CI, etc.)
     pub ci_system: Option<String>,
-    
+
     /// Environment (dev, staging, prod)
     pub environment: Option<String>,
 }
@@ -110,25 +110,25 @@ pub struct UsageMetrics {
     /// Time period for metrics
     pub period_start: u64,
     pub period_end: u64,
-    
+
     /// Total events
     pub total_events: u32,
-    
+
     /// Events by type
     pub events_by_type: HashMap<UsageEventType, u32>,
-    
+
     /// Total resources analyzed
     pub total_resources: u32,
-    
+
     /// Total cost impact detected
     pub total_cost_impact: f64,
-    
+
     /// Average analysis duration
     pub avg_duration_ms: u64,
-    
+
     /// Unique users
     pub unique_users: u32,
-    
+
     /// Unique teams
     pub unique_teams: u32,
 }
@@ -138,32 +138,32 @@ pub struct UsageMetrics {
 pub struct TeamUsageSummary {
     /// Team identifier
     pub team_id: String,
-    
+
     /// Team name
     pub team_name: String,
-    
+
     /// Time period
     pub period_start: u64,
     pub period_end: u64,
-    
+
     /// Total events
     pub total_events: u32,
-    
+
     /// Resources analyzed
     pub resources_analyzed: u32,
-    
+
     /// Cost impact detected
     pub cost_impact_detected: f64,
-    
+
     /// Billable units (based on pricing model)
     pub billable_units: u32,
-    
+
     /// Estimated charge
     pub estimated_charge: f64,
-    
+
     /// Top users by usage
     pub top_users: Vec<UserUsage>,
-    
+
     /// Top projects by usage
     pub top_projects: Vec<ProjectUsage>,
 }
@@ -191,19 +191,19 @@ pub struct ProjectUsage {
 pub struct PricingModel {
     /// Pricing tier
     pub tier: PricingTier,
-    
+
     /// Price per resource analyzed
     pub price_per_resource: f64,
-    
+
     /// Price per scan event
     pub price_per_scan: f64,
-    
+
     /// Price per advanced analysis
     pub price_per_advanced: f64,
-    
+
     /// Monthly minimum charge
     pub monthly_minimum: f64,
-    
+
     /// Free tier included resources
     pub free_tier_resources: u32,
 }
@@ -213,13 +213,13 @@ pub struct PricingModel {
 pub enum PricingTier {
     /// Free tier - limited usage
     Free,
-    
+
     /// Solo tier - individual developers
     Solo,
-    
+
     /// Pro tier - small teams
     Pro,
-    
+
     /// Enterprise tier - large organizations
     Enterprise,
 }
@@ -228,7 +228,7 @@ pub enum PricingTier {
 pub struct UsageMeter {
     /// Storage backend for events
     events: Vec<UsageEvent>,
-    
+
     /// Pricing model
     pricing: PricingModel,
 }
@@ -256,7 +256,9 @@ impl UsageMeter {
 
     /// Get metrics for time period
     pub fn get_metrics(&self, start: u64, end: u64) -> UsageMetrics {
-        let period_events: Vec<_> = self.events.iter()
+        let period_events: Vec<_> = self
+            .events
+            .iter()
             .filter(|e| e.timestamp >= start && e.timestamp <= end)
             .collect();
 
@@ -300,11 +302,13 @@ impl UsageMeter {
 
     /// Generate team usage summary for chargeback
     pub fn team_summary(&self, team_id: &str, start: u64, end: u64) -> Result<TeamUsageSummary> {
-        let team_events: Vec<_> = self.events.iter()
+        let team_events: Vec<_> = self
+            .events
+            .iter()
             .filter(|e| {
-                e.timestamp >= start 
-                && e.timestamp <= end 
-                && e.attribution.team_id.as_deref() == Some(team_id)
+                e.timestamp >= start
+                    && e.timestamp <= end
+                    && e.attribution.team_id.as_deref() == Some(team_id)
             })
             .collect();
 
@@ -319,7 +323,9 @@ impl UsageMeter {
         // Aggregate by user
         let mut user_stats: HashMap<String, (u32, u32)> = HashMap::new();
         for event in &team_events {
-            let entry = user_stats.entry(event.attribution.user_id.clone()).or_insert((0, 0));
+            let entry = user_stats
+                .entry(event.attribution.user_id.clone())
+                .or_insert((0, 0));
             entry.0 += 1; // events
             entry.1 += event.resources_analyzed; // resources
         }
@@ -340,10 +346,12 @@ impl UsageMeter {
         let total_cost_impact: f64 = team_events.iter().map(|e| e.cost_impact).sum();
 
         // Calculate billable units and charge
-        let (billable_units, estimated_charge) = self.calculate_charge(total_resources, total_events);
+        let (billable_units, estimated_charge) =
+            self.calculate_charge(total_resources, total_events);
 
         // Top users
-        let mut top_users: Vec<_> = user_stats.into_iter()
+        let mut top_users: Vec<_> = user_stats
+            .into_iter()
             .map(|(user_id, (events, resources))| UserUsage {
                 user_id,
                 events,
@@ -355,13 +363,16 @@ impl UsageMeter {
         top_users.truncate(10);
 
         // Top projects
-        let mut top_projects: Vec<_> = project_stats.into_iter()
-            .map(|(project_id, (events, resources, cost_impact))| ProjectUsage {
-                project_id,
-                events,
-                resources_analyzed: resources,
-                cost_impact,
-            })
+        let mut top_projects: Vec<_> = project_stats
+            .into_iter()
+            .map(
+                |(project_id, (events, resources, cost_impact))| ProjectUsage {
+                    project_id,
+                    events,
+                    resources_analyzed: resources,
+                    cost_impact,
+                },
+            )
             .collect();
         top_projects.sort_by(|a, b| b.resources_analyzed.cmp(&a.resources_analyzed));
         top_projects.truncate(10);
@@ -385,7 +396,7 @@ impl UsageMeter {
     fn calculate_charge(&self, resources: u32, events: u32) -> (u32, f64) {
         // Apply free tier
         let billable_resources = resources.saturating_sub(self.pricing.free_tier_resources);
-        
+
         // Calculate charge
         let resource_charge = billable_resources as f64 * self.pricing.price_per_resource;
         let event_charge = events as f64 * self.pricing.price_per_scan;
@@ -396,7 +407,9 @@ impl UsageMeter {
 
     /// Export usage data for external billing systems
     pub fn export_billing_data(&self, start: u64, end: u64) -> Result<BillingExport> {
-        let period_events: Vec<_> = self.events.iter()
+        let period_events: Vec<_> = self
+            .events
+            .iter()
             .filter(|e| e.timestamp >= start && e.timestamp <= end)
             .cloned()
             .collect();
@@ -412,7 +425,8 @@ impl UsageMeter {
         }
 
         for (team_id, resources) in &team_resources {
-            let events_count = period_events.iter()
+            let events_count = period_events
+                .iter()
                 .filter(|e| e.attribution.team_id.as_deref() == Some(team_id))
                 .count() as u32;
             let (_, charge) = self.calculate_charge(*resources, events_count);
@@ -446,10 +460,10 @@ impl Default for PricingModel {
         // Default Pro tier pricing
         Self {
             tier: PricingTier::Pro,
-            price_per_resource: 0.01, // $0.01 per resource
-            price_per_scan: 0.05,     // $0.05 per scan
-            price_per_advanced: 0.10, // $0.10 per advanced analysis
-            monthly_minimum: 49.0,    // $49/month minimum
+            price_per_resource: 0.01,  // $0.01 per resource
+            price_per_scan: 0.05,      // $0.05 per scan
+            price_per_advanced: 0.10,  // $0.10 per advanced analysis
+            monthly_minimum: 49.0,     // $49/month minimum
             free_tier_resources: 1000, // 1000 resources free
         }
     }
@@ -491,8 +505,12 @@ mod tests {
         let pricing = PricingModel::default();
         let mut meter = UsageMeter::new(pricing);
 
-        meter.record_event(create_test_event("user1", Some("team1"), 100)).unwrap();
-        meter.record_event(create_test_event("user2", Some("team1"), 200)).unwrap();
+        meter
+            .record_event(create_test_event("user1", Some("team1"), 100))
+            .unwrap();
+        meter
+            .record_event(create_test_event("user2", Some("team1"), 200))
+            .unwrap();
 
         let metrics = meter.get_metrics(0, 2000);
         assert_eq!(metrics.total_events, 2);
@@ -505,9 +523,15 @@ mod tests {
         let pricing = PricingModel::default();
         let mut meter = UsageMeter::new(pricing);
 
-        meter.record_event(create_test_event("user1", Some("team1"), 500)).unwrap();
-        meter.record_event(create_test_event("user2", Some("team1"), 700)).unwrap();
-        meter.record_event(create_test_event("user3", Some("team2"), 300)).unwrap();
+        meter
+            .record_event(create_test_event("user1", Some("team1"), 500))
+            .unwrap();
+        meter
+            .record_event(create_test_event("user2", Some("team1"), 700))
+            .unwrap();
+        meter
+            .record_event(create_test_event("user3", Some("team2"), 300))
+            .unwrap();
 
         let summary = meter.team_summary("team1", 0, 2000).unwrap();
         assert_eq!(summary.total_events, 2);

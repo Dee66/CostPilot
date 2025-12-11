@@ -2,7 +2,6 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Policy lifecycle state
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -54,7 +53,11 @@ impl PolicyState {
     pub fn valid_transitions(&self) -> Vec<PolicyState> {
         match self {
             PolicyState::Draft => vec![PolicyState::Review, PolicyState::Archived],
-            PolicyState::Review => vec![PolicyState::Draft, PolicyState::Approved, PolicyState::Archived],
+            PolicyState::Review => vec![
+                PolicyState::Draft,
+                PolicyState::Approved,
+                PolicyState::Archived,
+            ],
             PolicyState::Approved => vec![PolicyState::Active, PolicyState::Archived],
             PolicyState::Active => vec![PolicyState::Deprecated, PolicyState::Archived],
             PolicyState::Deprecated => vec![PolicyState::Archived, PolicyState::Active],
@@ -73,16 +76,16 @@ impl PolicyState {
 pub struct PolicyLifecycle {
     /// Policy ID
     pub policy_id: String,
-    
+
     /// Current state
     pub current_state: PolicyState,
-    
+
     /// State history
     pub state_history: Vec<StateTransition>,
-    
+
     /// Approval requirements
     pub approval_config: ApprovalConfig,
-    
+
     /// Current approvals (only valid in Review state)
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub pending_approvals: Vec<ApprovalRequest>,
@@ -93,20 +96,20 @@ pub struct PolicyLifecycle {
 pub struct StateTransition {
     /// From state
     pub from_state: PolicyState,
-    
+
     /// To state
     pub to_state: PolicyState,
-    
+
     /// Who performed the transition
     pub actor: String,
-    
+
     /// When the transition occurred
     pub timestamp: String,
-    
+
     /// Reason for transition
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
-    
+
     /// Approval IDs if transition required approvals
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub approval_ids: Vec<String>,
@@ -117,19 +120,19 @@ pub struct StateTransition {
 pub struct ApprovalConfig {
     /// Minimum number of approvals required
     pub min_approvals: usize,
-    
+
     /// Required approver roles
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub required_roles: Vec<String>,
-    
+
     /// Allowed approvers (emails or IDs)
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub allowed_approvers: Vec<String>,
-    
+
     /// Auto-approve from these roles
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub auto_approve_roles: Vec<String>,
-    
+
     /// Review expiration (days)
     #[serde(default = "default_review_expiration")]
     pub review_expiration_days: u32,
@@ -156,24 +159,24 @@ impl Default for ApprovalConfig {
 pub struct ApprovalRequest {
     /// Unique approval ID
     pub id: String,
-    
+
     /// Approver identifier
     pub approver: String,
-    
+
     /// Approver role
     #[serde(skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
-    
+
     /// Approval status
     pub status: ApprovalStatus,
-    
+
     /// When requested
     pub requested_at: String,
-    
+
     /// When responded
     #[serde(skip_serializing_if = "Option::is_none")]
     pub responded_at: Option<String>,
-    
+
     /// Comment from approver
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
@@ -232,14 +235,13 @@ impl PolicyLifecycle {
         }
 
         // Check approval requirements for certain transitions
-        if target_state == PolicyState::Approved && self.current_state == PolicyState::Review {
-            if !self.has_sufficient_approvals() {
+        if target_state == PolicyState::Approved && self.current_state == PolicyState::Review
+            && !self.has_sufficient_approvals() {
                 return Err(LifecycleError::InsufficientApprovals {
                     required: self.approval_config.min_approvals,
                     received: self.count_approvals(),
                 });
             }
-        }
 
         // Record transition
         let transition = StateTransition {
@@ -369,7 +371,8 @@ impl PolicyLifecycle {
         if let Some(last_transition) = self.state_history.last() {
             if let Ok(requested) = DateTime::parse_from_rfc3339(&last_transition.timestamp) {
                 let now = Utc::now();
-                let days_elapsed = (now.signed_duration_since(requested.with_timezone(&Utc))).num_days();
+                let days_elapsed =
+                    (now.signed_duration_since(requested.with_timezone(&Utc))).num_days();
                 return days_elapsed > self.approval_config.review_expiration_days as i64;
             }
         }
@@ -386,7 +389,11 @@ impl PolicyLifecycle {
             });
         }
 
-        self.transition(PolicyState::Active, actor, Some("Policy activated".to_string()))
+        self.transition(
+            PolicyState::Active,
+            actor,
+            Some("Policy activated".to_string()),
+        )
     }
 
     /// Deprecate an active policy
@@ -446,10 +453,7 @@ pub struct LifecycleSummary {
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum LifecycleError {
     #[error("Invalid state transition from {from:?} to {to:?}")]
-    InvalidTransition {
-        from: PolicyState,
-        to: PolicyState,
-    },
+    InvalidTransition { from: PolicyState, to: PolicyState },
 
     #[error("Operation '{operation}' not allowed in state {current:?}")]
     InvalidState {
@@ -458,15 +462,10 @@ pub enum LifecycleError {
     },
 
     #[error("Insufficient approvals: required {required}, received {received}")]
-    InsufficientApprovals {
-        required: usize,
-        received: usize,
-    },
+    InsufficientApprovals { required: usize, received: usize },
 
     #[error("Approval not found for approver: {approver}")]
-    ApprovalNotFound {
-        approver: String,
-    },
+    ApprovalNotFound { approver: String },
 }
 
 #[cfg(test)]
@@ -479,7 +478,7 @@ mod tests {
         assert!(PolicyState::Review.can_transition_to(PolicyState::Approved));
         assert!(PolicyState::Approved.can_transition_to(PolicyState::Active));
         assert!(PolicyState::Active.can_transition_to(PolicyState::Deprecated));
-        
+
         // Invalid transitions
         assert!(!PolicyState::Draft.can_transition_to(PolicyState::Active));
         assert!(!PolicyState::Archived.can_transition_to(PolicyState::Active));
@@ -495,8 +494,11 @@ mod tests {
     #[test]
     fn test_submit_for_review() {
         let mut lifecycle = PolicyLifecycle::new("test-policy".to_string());
-        let approvers = vec!["alice@example.com".to_string(), "bob@example.com".to_string()];
-        
+        let approvers = vec![
+            "alice@example.com".to_string(),
+            "bob@example.com".to_string(),
+        ];
+
         let result = lifecycle.submit_for_review("author@example.com".to_string(), approvers);
         assert!(result.is_ok());
         assert_eq!(lifecycle.current_state, PolicyState::Review);
@@ -507,25 +509,34 @@ mod tests {
     fn test_record_approval() {
         let mut lifecycle = PolicyLifecycle::new("test-policy".to_string());
         lifecycle.approval_config.min_approvals = 2;
-        
-        let approvers = vec!["alice@example.com".to_string(), "bob@example.com".to_string()];
-        lifecycle.submit_for_review("author@example.com".to_string(), approvers).unwrap();
-        
-        // First approval
-        lifecycle.record_approval(
+
+        let approvers = vec![
             "alice@example.com".to_string(),
-            true,
-            Some("Looks good".to_string()),
-        ).unwrap();
+            "bob@example.com".to_string(),
+        ];
+        lifecycle
+            .submit_for_review("author@example.com".to_string(), approvers)
+            .unwrap();
+
+        // First approval
+        lifecycle
+            .record_approval(
+                "alice@example.com".to_string(),
+                true,
+                Some("Looks good".to_string()),
+            )
+            .unwrap();
         assert_eq!(lifecycle.count_approvals(), 1);
         assert!(!lifecycle.has_sufficient_approvals());
-        
+
         // Second approval
-        lifecycle.record_approval(
-            "bob@example.com".to_string(),
-            true,
-            Some("Approved".to_string()),
-        ).unwrap();
+        lifecycle
+            .record_approval(
+                "bob@example.com".to_string(),
+                true,
+                Some("Approved".to_string()),
+            )
+            .unwrap();
         assert_eq!(lifecycle.count_approvals(), 2);
         assert!(lifecycle.has_sufficient_approvals());
     }
@@ -534,14 +545,18 @@ mod tests {
     fn test_approval_rejection() {
         let mut lifecycle = PolicyLifecycle::new("test-policy".to_string());
         let approvers = vec!["alice@example.com".to_string()];
-        lifecycle.submit_for_review("author@example.com".to_string(), approvers).unwrap();
-        
-        lifecycle.record_approval(
-            "alice@example.com".to_string(),
-            false,
-            Some("Needs changes".to_string()),
-        ).unwrap();
-        
+        lifecycle
+            .submit_for_review("author@example.com".to_string(), approvers)
+            .unwrap();
+
+        lifecycle
+            .record_approval(
+                "alice@example.com".to_string(),
+                false,
+                Some("Needs changes".to_string()),
+            )
+            .unwrap();
+
         assert!(lifecycle.has_rejections());
         assert!(!lifecycle.has_sufficient_approvals());
     }
@@ -550,47 +565,50 @@ mod tests {
     fn test_full_lifecycle() {
         let mut lifecycle = PolicyLifecycle::new("test-policy".to_string());
         lifecycle.approval_config.min_approvals = 1;
-        
+
         // Draft -> Review
-        lifecycle.submit_for_review(
-            "author@example.com".to_string(),
-            vec!["approver@example.com".to_string()],
-        ).unwrap();
+        lifecycle
+            .submit_for_review(
+                "author@example.com".to_string(),
+                vec!["approver@example.com".to_string()],
+            )
+            .unwrap();
         assert_eq!(lifecycle.current_state, PolicyState::Review);
-        
+
         // Record approval
-        lifecycle.record_approval(
-            "approver@example.com".to_string(),
-            true,
-            None,
-        ).unwrap();
-        
+        lifecycle
+            .record_approval("approver@example.com".to_string(), true, None)
+            .unwrap();
+
         // Review -> Approved
-        lifecycle.transition(
-            PolicyState::Approved,
-            "approver@example.com".to_string(),
-            Some("Policy approved".to_string()),
-        ).unwrap();
+        lifecycle
+            .transition(
+                PolicyState::Approved,
+                "approver@example.com".to_string(),
+                Some("Policy approved".to_string()),
+            )
+            .unwrap();
         assert_eq!(lifecycle.current_state, PolicyState::Approved);
-        
+
         // Approved -> Active
         lifecycle.activate("admin@example.com".to_string()).unwrap();
         assert_eq!(lifecycle.current_state, PolicyState::Active);
-        
+
         // Active -> Deprecated
-        lifecycle.deprecate(
-            "admin@example.com".to_string(),
-            "Replaced by v2".to_string(),
-        ).unwrap();
+        lifecycle
+            .deprecate(
+                "admin@example.com".to_string(),
+                "Replaced by v2".to_string(),
+            )
+            .unwrap();
         assert_eq!(lifecycle.current_state, PolicyState::Deprecated);
-        
+
         // Deprecated -> Archived
-        lifecycle.archive(
-            "admin@example.com".to_string(),
-            "End of life".to_string(),
-        ).unwrap();
+        lifecycle
+            .archive("admin@example.com".to_string(), "End of life".to_string())
+            .unwrap();
         assert_eq!(lifecycle.current_state, PolicyState::Archived);
-        
+
         // Verify history
         assert_eq!(lifecycle.state_history.len(), 5);
     }
@@ -599,21 +617,22 @@ mod tests {
     fn test_insufficient_approvals_blocks_approval() {
         let mut lifecycle = PolicyLifecycle::new("test-policy".to_string());
         lifecycle.approval_config.min_approvals = 2;
-        
-        lifecycle.submit_for_review(
-            "author@example.com".to_string(),
-            vec!["alice@example.com".to_string()],
-        ).unwrap();
-        
-        lifecycle.record_approval("alice@example.com".to_string(), true, None).unwrap();
-        
+
+        lifecycle
+            .submit_for_review(
+                "author@example.com".to_string(),
+                vec!["alice@example.com".to_string()],
+            )
+            .unwrap();
+
+        lifecycle
+            .record_approval("alice@example.com".to_string(), true, None)
+            .unwrap();
+
         // Try to approve without sufficient approvals
-        let result = lifecycle.transition(
-            PolicyState::Approved,
-            "alice@example.com".to_string(),
-            None,
-        );
-        
+        let result =
+            lifecycle.transition(PolicyState::Approved, "alice@example.com".to_string(), None);
+
         assert!(result.is_err());
         assert_eq!(lifecycle.current_state, PolicyState::Review);
     }
@@ -621,11 +640,13 @@ mod tests {
     #[test]
     fn test_lifecycle_summary() {
         let mut lifecycle = PolicyLifecycle::new("test-policy".to_string());
-        lifecycle.submit_for_review(
-            "author@example.com".to_string(),
-            vec!["approver@example.com".to_string()],
-        ).unwrap();
-        
+        lifecycle
+            .submit_for_review(
+                "author@example.com".to_string(),
+                vec!["approver@example.com".to_string()],
+            )
+            .unwrap();
+
         let summary = lifecycle.summary();
         assert_eq!(summary.current_state, PolicyState::Review);
         assert!(summary.requires_approval);

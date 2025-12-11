@@ -1,7 +1,7 @@
 // Error model with stable error IDs and categorization
 
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Serialize, Deserialize};
 
 /// Error categories for CostPilot
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -110,12 +110,22 @@ impl CostPilotError {
             .with_hint("Check JSON syntax and structure")
     }
 
+    /// Create an upgrade required error
+    pub fn upgrade_required(message: impl Into<String>) -> Self {
+        Self::new(
+            "E_UPGRADE_REQUIRED",
+            ErrorCategory::ValidationError,
+            message,
+        )
+        .with_hint("This feature requires CostPilot Premium. Visit https://costpilot.dev/upgrade")
+    }
+
     /// Create a policy violation error
     pub fn policy_violation(policy_id: impl Into<String>, message: impl Into<String>) -> Self {
         Self::new(
             format!("E_POLICY_{}", policy_id.into()),
             ErrorCategory::PolicyViolation,
-            message
+            message,
         )
         .with_hint("Review policy configuration and resource settings")
     }
@@ -125,7 +135,7 @@ impl CostPilotError {
         Self::new(
             format!("E_SLO_{}", slo_name.into().to_uppercase().replace(' ', "_")),
             ErrorCategory::SLOBreach,
-            message
+            message,
         )
         .with_hint("Review SLO thresholds and current metrics")
     }
@@ -155,27 +165,52 @@ impl CostPilotError {
         }
 
         match self.category {
-            ErrorCategory::InvalidInput => "Check input format and ensure it's valid JSON/YAML".to_string(),
-            ErrorCategory::ParseError => "Verify the file is a valid Terraform/CDK/CloudFormation document".to_string(),
-            ErrorCategory::PredictionError => "Check resource configuration and ensure heuristics are up to date".to_string(),
-            ErrorCategory::PolicyViolation => "Review policy rules and adjust resource configuration".to_string(),
-            ErrorCategory::SLOBreach => "Check SLO thresholds and current metrics, consider adjusting targets".to_string(),
-            ErrorCategory::DriftDetected => "Review drift and use autofix to reconcile state".to_string(),
-            ErrorCategory::InternalError => "This is an internal error, please report it with context".to_string(),
-            ErrorCategory::ConfigError => "Check configuration file syntax and required fields".to_string(),
+            ErrorCategory::InvalidInput => {
+                "Check input format and ensure it's valid JSON/YAML".to_string()
+            }
+            ErrorCategory::ParseError => {
+                "Verify the file is a valid Terraform/CDK/CloudFormation document".to_string()
+            }
+            ErrorCategory::PredictionError => {
+                "Check resource configuration and ensure heuristics are up to date".to_string()
+            }
+            ErrorCategory::PolicyViolation => {
+                "Review policy rules and adjust resource configuration".to_string()
+            }
+            ErrorCategory::SLOBreach => {
+                "Check SLO thresholds and current metrics, consider adjusting targets".to_string()
+            }
+            ErrorCategory::DriftDetected => {
+                "Review drift and use autofix to reconcile state".to_string()
+            }
+            ErrorCategory::InternalError => {
+                "This is an internal error, please report it with context".to_string()
+            }
+            ErrorCategory::ConfigError => {
+                "Check configuration file syntax and required fields".to_string()
+            }
             ErrorCategory::FileSystemError => "Verify file permissions and disk space".to_string(),
-            ErrorCategory::Timeout => "Operation exceeded time budget, try reducing input size or complexity".to_string(),
-            ErrorCategory::CircuitBreaker => "Service is unavailable due to repeated failures, retry later".to_string(),
-            ErrorCategory::ValidationError => "Input validation failed, check data types and constraints".to_string(),
+            ErrorCategory::Timeout => {
+                "Operation exceeded time budget, try reducing input size or complexity".to_string()
+            }
+            ErrorCategory::CircuitBreaker => {
+                "Service is unavailable due to repeated failures, retry later".to_string()
+            }
+            ErrorCategory::ValidationError => {
+                "Input validation failed, check data types and constraints".to_string()
+            }
             ErrorCategory::IoError => "Check file permissions, paths, and disk space".to_string(),
             ErrorCategory::NotFound => "Verify the resource or file path exists".to_string(),
-            ErrorCategory::SecurityViolation => "Review security policies and access controls".to_string(),
+            ErrorCategory::SecurityViolation => {
+                "Review security policies and access controls".to_string()
+            }
         }
     }
 
     /// Convert to machine-readable format (JSON)
     pub fn to_machine_format(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| format!(r#"{{"id":"{}","message":"{}"}}"#, self.id, self.message))
+        serde_json::to_string(self)
+            .unwrap_or_else(|_| format!(r#"{{"id":"{}","message":"{}"}}"#, self.id, self.message))
     }
 }
 

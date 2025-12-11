@@ -1,6 +1,6 @@
 // Approval workflow manager for policy lifecycle
 
-use super::lifecycle::{ApprovalConfig, ApprovalRequest, ApprovalStatus, PolicyLifecycle, PolicyState};
+use super::lifecycle::{ApprovalConfig, ApprovalStatus, PolicyLifecycle, PolicyState};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,20 +10,20 @@ use std::collections::HashMap;
 pub struct ApprovalReference {
     /// Unique approval reference ID (e.g., "APPR-2024-001")
     pub reference_id: String,
-    
+
     /// Policy ID requiring approval
     pub policy_id: String,
-    
+
     /// Approver who granted approval
     pub approver: String,
-    
+
     /// Timestamp when approval was granted
     pub approved_at: String,
-    
+
     /// Optional approval comment/justification
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    
+
     /// Expiration timestamp (if temporary approval)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<String>,
@@ -34,13 +34,13 @@ pub struct ApprovalReference {
 pub struct ApprovalWorkflowManager {
     /// Active workflows by policy ID
     workflows: HashMap<String, PolicyLifecycle>,
-    
+
     /// Global approval configuration
     default_config: ApprovalConfig,
-    
+
     /// Role-based approver assignments
     role_assignments: HashMap<String, Vec<String>>,
-    
+
     /// Stored approval references
     approval_references: HashMap<String, ApprovalReference>,
 }
@@ -101,22 +101,22 @@ impl ApprovalWorkflowManager {
     ) -> Result<Vec<String>, WorkflowError> {
         // Get required approvers based on policy's approval config
         let approvers = {
-            let lifecycle = self
-                .workflows
-                .get(policy_id)
-                .ok_or_else(|| WorkflowError::PolicyNotFound {
-                    policy_id: policy_id.to_string(),
-                })?;
+            let lifecycle =
+                self.workflows
+                    .get(policy_id)
+                    .ok_or_else(|| WorkflowError::PolicyNotFound {
+                        policy_id: policy_id.to_string(),
+                    })?;
             self.resolve_approvers(&lifecycle.approval_config)?
         };
 
         // Now mutate the lifecycle
-        let lifecycle = self
-            .workflows
-            .get_mut(policy_id)
-            .ok_or_else(|| WorkflowError::PolicyNotFound {
-                policy_id: policy_id.to_string(),
-            })?;
+        let lifecycle =
+            self.workflows
+                .get_mut(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
 
         lifecycle
             .submit_for_review(submitter, approvers.clone())
@@ -141,13 +141,13 @@ impl ApprovalWorkflowManager {
 
         // Verify approver is authorized (read-only check)
         {
-            let lifecycle = self
-                .workflows
-                .get(policy_id)
-                .ok_or_else(|| WorkflowError::PolicyNotFound {
-                    policy_id: policy_id.to_string(),
-                })?;
-                
+            let lifecycle =
+                self.workflows
+                    .get(policy_id)
+                    .ok_or_else(|| WorkflowError::PolicyNotFound {
+                        policy_id: policy_id.to_string(),
+                    })?;
+
             if !self.is_authorized_approver(&approver, &lifecycle.approval_config) {
                 return Err(WorkflowError::UnauthorizedApprover {
                     approver: approver.clone(),
@@ -156,12 +156,12 @@ impl ApprovalWorkflowManager {
         }
 
         // Now mutate the lifecycle
-        let lifecycle = self
-            .workflows
-            .get_mut(policy_id)
-            .ok_or_else(|| WorkflowError::PolicyNotFound {
-                policy_id: policy_id.to_string(),
-            })?;
+        let lifecycle =
+            self.workflows
+                .get_mut(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
 
         lifecycle
             .record_approval(approver.clone(), true, comment.clone())
@@ -179,7 +179,8 @@ impl ApprovalWorkflowManager {
             comment,
             expires_at: None,
         };
-        self.approval_references.insert(approval_reference, reference);
+        self.approval_references
+            .insert(approval_reference, reference);
 
         // Check if we have sufficient approvals to auto-transition
         let sufficient = lifecycle.has_sufficient_approvals();
@@ -187,7 +188,10 @@ impl ApprovalWorkflowManager {
             approved: true,
             approver,
             sufficient_approvals: sufficient,
-            remaining_approvals: lifecycle.approval_config.min_approvals.saturating_sub(lifecycle.count_approvals()),
+            remaining_approvals: lifecycle
+                .approval_config
+                .min_approvals
+                .saturating_sub(lifecycle.count_approvals()),
         };
 
         Ok(result)
@@ -236,12 +240,12 @@ impl ApprovalWorkflowManager {
     ) -> Result<ApprovalResult, WorkflowError> {
         // Verify approver is authorized (read-only check)
         {
-            let lifecycle = self
-                .workflows
-                .get(policy_id)
-                .ok_or_else(|| WorkflowError::PolicyNotFound {
-                    policy_id: policy_id.to_string(),
-                })?;
+            let lifecycle =
+                self.workflows
+                    .get(policy_id)
+                    .ok_or_else(|| WorkflowError::PolicyNotFound {
+                        policy_id: policy_id.to_string(),
+                    })?;
 
             if !self.is_authorized_approver(&approver, &lifecycle.approval_config) {
                 return Err(WorkflowError::UnauthorizedApprover {
@@ -251,12 +255,12 @@ impl ApprovalWorkflowManager {
         }
 
         // Now mutate the lifecycle
-        let lifecycle = self
-            .workflows
-            .get_mut(policy_id)
-            .ok_or_else(|| WorkflowError::PolicyNotFound {
-                policy_id: policy_id.to_string(),
-            })?;
+        let lifecycle =
+            self.workflows
+                .get_mut(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
 
         lifecycle
             .record_approval(approver.clone(), false, Some(reason))
@@ -276,17 +280,13 @@ impl ApprovalWorkflowManager {
     }
 
     /// Activate an approved policy
-    pub fn activate_policy(
-        &mut self,
-        policy_id: &str,
-        actor: String,
-    ) -> Result<(), WorkflowError> {
-        let lifecycle = self
-            .workflows
-            .get_mut(policy_id)
-            .ok_or_else(|| WorkflowError::PolicyNotFound {
-                policy_id: policy_id.to_string(),
-            })?;
+    pub fn activate_policy(&mut self, policy_id: &str, actor: String) -> Result<(), WorkflowError> {
+        let lifecycle =
+            self.workflows
+                .get_mut(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
 
         lifecycle
             .activate(actor)
@@ -303,12 +303,12 @@ impl ApprovalWorkflowManager {
         actor: String,
         reason: String,
     ) -> Result<(), WorkflowError> {
-        let lifecycle = self
-            .workflows
-            .get_mut(policy_id)
-            .ok_or_else(|| WorkflowError::PolicyNotFound {
-                policy_id: policy_id.to_string(),
-            })?;
+        let lifecycle =
+            self.workflows
+                .get_mut(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
 
         lifecycle
             .deprecate(actor, reason)
@@ -325,12 +325,12 @@ impl ApprovalWorkflowManager {
         actor: String,
         reason: String,
     ) -> Result<(), WorkflowError> {
-        let lifecycle = self
-            .workflows
-            .get_mut(policy_id)
-            .ok_or_else(|| WorkflowError::PolicyNotFound {
-                policy_id: policy_id.to_string(),
-            })?;
+        let lifecycle =
+            self.workflows
+                .get_mut(policy_id)
+                .ok_or_else(|| WorkflowError::PolicyNotFound {
+                    policy_id: policy_id.to_string(),
+                })?;
 
         lifecycle
             .archive(actor, reason)
@@ -357,9 +357,7 @@ impl ApprovalWorkflowManager {
             if let Some(role_approvers) = self.role_assignments.get(role) {
                 approvers.extend(role_approvers.clone());
             } else {
-                return Err(WorkflowError::RoleNotFound {
-                    role: role.clone(),
-                });
+                return Err(WorkflowError::RoleNotFound { role: role.clone() });
             }
         }
 
@@ -493,13 +491,13 @@ impl Default for ApprovalWorkflowManager {
 pub struct ApprovalResult {
     /// Whether approved or rejected
     pub approved: bool,
-    
+
     /// Who performed the action
     pub approver: String,
-    
+
     /// Whether sufficient approvals have been collected
     pub sufficient_approvals: bool,
-    
+
     /// How many more approvals are needed
     pub remaining_approvals: usize,
 }
@@ -562,23 +560,26 @@ mod tests {
 
     fn create_test_manager() -> ApprovalWorkflowManager {
         let mut manager = ApprovalWorkflowManager::new();
-        
+
         // Setup roles
         manager.assign_role(
             "policy-approver".to_string(),
-            vec!["alice@example.com".to_string(), "bob@example.com".to_string()],
+            vec![
+                "alice@example.com".to_string(),
+                "bob@example.com".to_string(),
+            ],
         );
-        
+
         manager
     }
 
     #[test]
     fn test_register_policy() {
         let mut manager = create_test_manager();
-        
+
         let result = manager.register_policy("test-policy".to_string(), None);
         assert!(result.is_ok());
-        
+
         let lifecycle = manager.get_lifecycle("test-policy");
         assert!(lifecycle.is_some());
         assert_eq!(lifecycle.unwrap().current_state, PolicyState::Draft);
@@ -587,16 +588,17 @@ mod tests {
     #[test]
     fn test_submit_for_approval() {
         let mut manager = create_test_manager();
-        manager.register_policy("test-policy".to_string(), None).unwrap();
-        
-        let approvers = manager.submit_for_approval(
-            "test-policy",
-            "author@example.com".to_string(),
-        ).unwrap();
-        
+        manager
+            .register_policy("test-policy".to_string(), None)
+            .unwrap();
+
+        let approvers = manager
+            .submit_for_approval("test-policy", "author@example.com".to_string())
+            .unwrap();
+
         assert_eq!(approvers.len(), 2);
         assert!(approvers.contains(&"alice@example.com".to_string()));
-        
+
         let lifecycle = manager.get_lifecycle("test-policy").unwrap();
         assert_eq!(lifecycle.current_state, PolicyState::Review);
     }
@@ -604,20 +606,26 @@ mod tests {
     #[test]
     fn test_approve_workflow() {
         let mut manager = create_test_manager();
-        manager.register_policy("test-policy".to_string(), None).unwrap();
-        manager.submit_for_approval("test-policy", "author@example.com".to_string()).unwrap();
-        
-        let result = manager.approve(
-            "test-policy",
-            "alice@example.com".to_string(),
-            "APPR-2024-001".to_string(),
-            Some("Looks good".to_string()),
-        ).unwrap();
-        
+        manager
+            .register_policy("test-policy".to_string(), None)
+            .unwrap();
+        manager
+            .submit_for_approval("test-policy", "author@example.com".to_string())
+            .unwrap();
+
+        let result = manager
+            .approve(
+                "test-policy",
+                "alice@example.com".to_string(),
+                "APPR-2024-001".to_string(),
+                Some("Looks good".to_string()),
+            )
+            .unwrap();
+
         assert!(result.approved);
         assert!(result.sufficient_approvals);
         assert_eq!(result.remaining_approvals, 0);
-        
+
         // Verify approval reference was stored
         let reference = manager.get_approval_reference("APPR-2024-001").unwrap();
         assert_eq!(reference.policy_id, "test-policy");
@@ -627,15 +635,21 @@ mod tests {
     #[test]
     fn test_reject_workflow() {
         let mut manager = create_test_manager();
-        manager.register_policy("test-policy".to_string(), None).unwrap();
-        manager.submit_for_approval("test-policy", "author@example.com".to_string()).unwrap();
-        
-        let result = manager.reject(
-            "test-policy",
-            "alice@example.com".to_string(),
-            "Needs changes".to_string(),
-        ).unwrap();
-        
+        manager
+            .register_policy("test-policy".to_string(), None)
+            .unwrap();
+        manager
+            .submit_for_approval("test-policy", "author@example.com".to_string())
+            .unwrap();
+
+        let result = manager
+            .reject(
+                "test-policy",
+                "alice@example.com".to_string(),
+                "Needs changes".to_string(),
+            )
+            .unwrap();
+
         assert!(!result.approved);
         assert!(!result.sufficient_approvals);
     }
@@ -643,29 +657,35 @@ mod tests {
     #[test]
     fn test_unauthorized_approver() {
         let mut manager = create_test_manager();
-        manager.register_policy("test-policy".to_string(), None).unwrap();
-        manager.submit_for_approval("test-policy", "author@example.com".to_string()).unwrap();
-        
-        let result = manager.approve(
-            "test-policy",
-            "unauthorized@example.com".to_string(),
-            None,
-        );
-        
+        manager
+            .register_policy("test-policy".to_string(), None)
+            .unwrap();
+        manager
+            .submit_for_approval("test-policy", "author@example.com".to_string())
+            .unwrap();
+
+        let result = manager.approve("test-policy", "unauthorized@example.com".to_string(), "REF-001".to_string(), None);
+
         assert!(result.is_err());
     }
 
     #[test]
     fn test_get_policies_by_state() {
         let mut manager = create_test_manager();
-        manager.register_policy("policy-1".to_string(), None).unwrap();
-        manager.register_policy("policy-2".to_string(), None).unwrap();
-        manager.submit_for_approval("policy-1", "author@example.com".to_string()).unwrap();
-        
+        manager
+            .register_policy("policy-1".to_string(), None)
+            .unwrap();
+        manager
+            .register_policy("policy-2".to_string(), None)
+            .unwrap();
+        manager
+            .submit_for_approval("policy-1", "author@example.com".to_string())
+            .unwrap();
+
         let drafts = manager.get_policies_by_state(PolicyState::Draft);
         assert_eq!(drafts.len(), 1);
         assert!(drafts.contains(&"policy-2".to_string()));
-        
+
         let reviews = manager.get_policies_by_state(PolicyState::Review);
         assert_eq!(reviews.len(), 1);
         assert!(reviews.contains(&"policy-1".to_string()));
@@ -674,12 +694,20 @@ mod tests {
     #[test]
     fn test_get_pending_approvals() {
         let mut manager = create_test_manager();
-        manager.register_policy("policy-1".to_string(), None).unwrap();
-        manager.register_policy("policy-2".to_string(), None).unwrap();
-        
-        manager.submit_for_approval("policy-1", "author@example.com".to_string()).unwrap();
-        manager.submit_for_approval("policy-2", "author@example.com".to_string()).unwrap();
-        
+        manager
+            .register_policy("policy-1".to_string(), None)
+            .unwrap();
+        manager
+            .register_policy("policy-2".to_string(), None)
+            .unwrap();
+
+        manager
+            .submit_for_approval("policy-1", "author@example.com".to_string())
+            .unwrap();
+        manager
+            .submit_for_approval("policy-2", "author@example.com".to_string())
+            .unwrap();
+
         let pending = manager.get_pending_approvals();
         assert_eq!(pending.len(), 2);
     }
@@ -687,12 +715,20 @@ mod tests {
     #[test]
     fn test_get_approvals_for_approver() {
         let mut manager = create_test_manager();
-        manager.register_policy("policy-1".to_string(), None).unwrap();
-        manager.register_policy("policy-2".to_string(), None).unwrap();
-        
-        manager.submit_for_approval("policy-1", "author@example.com".to_string()).unwrap();
-        manager.submit_for_approval("policy-2", "author@example.com".to_string()).unwrap();
-        
+        manager
+            .register_policy("policy-1".to_string(), None)
+            .unwrap();
+        manager
+            .register_policy("policy-2".to_string(), None)
+            .unwrap();
+
+        manager
+            .submit_for_approval("policy-1", "author@example.com".to_string())
+            .unwrap();
+        manager
+            .submit_for_approval("policy-2", "author@example.com".to_string())
+            .unwrap();
+
         let approvals = manager.get_approvals_for_approver("alice@example.com");
         assert_eq!(approvals.len(), 2);
     }
@@ -700,10 +736,16 @@ mod tests {
     #[test]
     fn test_workflow_statistics() {
         let mut manager = create_test_manager();
-        manager.register_policy("policy-1".to_string(), None).unwrap();
-        manager.register_policy("policy-2".to_string(), None).unwrap();
-        manager.submit_for_approval("policy-1", "author@example.com".to_string()).unwrap();
-        
+        manager
+            .register_policy("policy-1".to_string(), None)
+            .unwrap();
+        manager
+            .register_policy("policy-2".to_string(), None)
+            .unwrap();
+        manager
+            .submit_for_approval("policy-1", "author@example.com".to_string())
+            .unwrap();
+
         let stats = manager.get_statistics();
         assert_eq!(stats.total_policies, 2);
         assert_eq!(stats.draft_count, 1);
@@ -713,30 +755,36 @@ mod tests {
     #[test]
     fn test_full_approval_workflow() {
         let mut manager = create_test_manager();
-        manager.register_policy("test-policy".to_string(), None).unwrap();
-        
+        manager
+            .register_policy("test-policy".to_string(), None)
+            .unwrap();
+
         // Submit
-        manager.submit_for_approval("test-policy", "author@example.com".to_string()).unwrap();
-        
+        manager
+            .submit_for_approval("test-policy", "author@example.com".to_string())
+            .unwrap();
+
         // Approve with reference
-        manager.approve(
-            "test-policy",
-            "alice@example.com".to_string(),
-            "PROJ-456".to_string(),
-            None,
-        ).unwrap();
-        
+        manager
+            .approve(
+                "test-policy",
+                "alice@example.com".to_string(),
+                "PROJ-456".to_string(),
+                None,
+            )
+            .unwrap();
+
         // Transition to approved (would normally be done after sufficient approvals)
         let lifecycle = manager.get_lifecycle_mut("test-policy").unwrap();
-        lifecycle.transition(
-            PolicyState::Approved,
-            "alice@example.com".to_string(),
-            None,
-        ).unwrap();
-        
+        lifecycle
+            .transition(PolicyState::Approved, "alice@example.com".to_string(), None)
+            .unwrap();
+
         // Activate
-        manager.activate_policy("test-policy", "admin@example.com".to_string()).unwrap();
-        
+        manager
+            .activate_policy("test-policy", "admin@example.com".to_string())
+            .unwrap();
+
         let lifecycle = manager.get_lifecycle("test-policy").unwrap();
         assert_eq!(lifecycle.current_state, PolicyState::Active);
     }

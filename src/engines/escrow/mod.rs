@@ -5,17 +5,14 @@ pub mod recovery;
 pub mod release;
 
 pub use package::{
-    EscrowPackage, EscrowPackageBuilder, PackageMetadata, VendorInfo,
-    SourceFile, BuildArtifact, DependenciesManifest, BuildInstructions,
-    LicenseInfo, VerificationReport, VerificationData, CompletenessCheck,
-    DepositType, FileType, ArtifactType,
+    ArtifactType, BuildArtifact, BuildInstructions, CompletenessCheck, DependenciesManifest,
+    DepositType, EscrowPackage, EscrowPackageBuilder, FileType, LicenseInfo, PackageMetadata,
+    SourceFile, VendorInfo, VerificationData, VerificationReport,
 };
 
-pub use recovery::{
-    RecoveryOrchestrator, RecoveryReport, RecoveryStep, RecoveryPlaybook,
-};
+pub use recovery::{RecoveryOrchestrator, RecoveryPlaybook, RecoveryReport, RecoveryStep};
 
 pub use release::{
-    ReleaseAutomation, ReleaseConfig, DepositReceipt, DepositStatus,
-    EscrowAgentConfig, ReleaseTrigger,
+    DepositReceipt, DepositStatus, EscrowAgentConfig, ReleaseAutomation, ReleaseConfig,
+    ReleaseTrigger,
 };

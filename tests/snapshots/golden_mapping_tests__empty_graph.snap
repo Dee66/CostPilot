@@ -1,0 +1,16 @@
+---
+source: tests/golden_mapping_tests.rs
+assertion_line: 186
+expression: json_output
+---
+{
+  "edges": [],
+  "metadata": {
+    "edge_count": 0,
+    "has_cycles": false,
+    "max_depth": 0,
+    "node_count": 0,
+    "total_cost": 0.0
+  },
+  "nodes": []
+}
