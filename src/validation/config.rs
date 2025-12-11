@@ -3,9 +3,8 @@
 // Validates the main CostPilot configuration file against the expected schema.
 
 use crate::validation::error::{ValidationError, ValidationResult, ValidationWarning};
-use crate::validation::{ValidationReport, FileType};
+use crate::validation::{FileType, ValidationReport};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::Path;
 
 /// Main configuration schema
@@ -13,25 +12,25 @@ use std::path::Path;
 pub struct CostPilotConfig {
     #[serde(default)]
     pub version: Option<String>,
-    
+
     #[serde(default)]
     pub default_region: Option<String>,
-    
+
     #[serde(default)]
     pub scan: Option<ScanConfig>,
-    
+
     #[serde(default)]
     pub policies: Option<PoliciesConfig>,
-    
+
     #[serde(default)]
     pub output: Option<OutputConfig>,
-    
+
     #[serde(default)]
     pub heuristics: Option<HeuristicsConfig>,
-    
+
     #[serde(default)]
     pub slo: Option<SloConfig>,
-    
+
     #[serde(default)]
     pub integrations: Option<IntegrationsConfig>,
 }
@@ -40,10 +39,10 @@ pub struct CostPilotConfig {
 pub struct ScanConfig {
     #[serde(default)]
     pub fail_on_critical: Option<bool>,
-    
+
     #[serde(default)]
     pub show_autofix: Option<bool>,
-    
+
     #[serde(default)]
     pub explain: Option<bool>,
 }
@@ -52,10 +51,10 @@ pub struct ScanConfig {
 pub struct PoliciesConfig {
     #[serde(default)]
     pub default: Option<String>,
-    
+
     #[serde(default)]
     pub exemptions: Option<String>,
-    
+
     #[serde(default)]
     pub directory: Option<String>,
 }
@@ -64,10 +63,10 @@ pub struct PoliciesConfig {
 pub struct OutputConfig {
     #[serde(default)]
     pub format: Option<String>,
-    
+
     #[serde(default)]
     pub verbose: Option<bool>,
-    
+
     #[serde(default)]
     pub color: Option<bool>,
 }
@@ -76,10 +75,10 @@ pub struct OutputConfig {
 pub struct HeuristicsConfig {
     #[serde(default)]
     pub auto_update: Option<bool>,
-    
+
     #[serde(default)]
     pub cache_ttl: Option<String>,
-    
+
     #[serde(default)]
     pub file: Option<String>,
 }
@@ -88,7 +87,7 @@ pub struct HeuristicsConfig {
 pub struct SloConfig {
     #[serde(default)]
     pub config: Option<String>,
-    
+
     #[serde(default)]
     pub snapshots_dir: Option<String>,
 }
@@ -97,7 +96,7 @@ pub struct SloConfig {
 pub struct IntegrationsConfig {
     #[serde(default)]
     pub github: Option<GithubIntegration>,
-    
+
     #[serde(default)]
     pub slack: Option<SlackIntegration>,
 }
@@ -131,7 +130,7 @@ impl ConfigValidator {
                 report.add_error(
                     ValidationError::new(format!("Failed to read file: {}", e))
                         .with_error_code("E100")
-                        .with_hint("Ensure the file exists and is readable")
+                        .with_hint("Ensure the file exists and is readable"),
                 );
                 return Ok(report);
             }
@@ -161,7 +160,7 @@ impl ConfigValidator {
                     ValidationError::new(format!("Invalid version format: {}", version))
                         .with_field("version")
                         .with_error_code("E101")
-                        .with_hint("Use semantic versioning (e.g., '1.0.0')")
+                        .with_hint("Use semantic versioning (e.g., '1.0.0')"),
                 );
             }
         } else {
@@ -169,7 +168,7 @@ impl ConfigValidator {
                 ValidationWarning::new("Version field is missing")
                     .with_field("version")
                     .with_warning_code("W100")
-                    .with_suggestion("Add 'version: \"1.0.0\"' to track config version")
+                    .with_suggestion("Add 'version: \"1.0.0\"' to track config version"),
             );
         }
 
@@ -180,7 +179,9 @@ impl ConfigValidator {
                     ValidationWarning::new(format!("Unknown AWS region: {}", region))
                         .with_field("default_region")
                         .with_warning_code("W101")
-                        .with_suggestion("Use standard AWS region codes (e.g., 'us-east-1', 'eu-west-1')")
+                        .with_suggestion(
+                            "Use standard AWS region codes (e.g., 'us-east-1', 'eu-west-1')",
+                        ),
                 );
             }
         }
@@ -193,7 +194,7 @@ impl ConfigValidator {
                         ValidationError::new(format!("Invalid output format: {}", format))
                             .with_field("output.format")
                             .with_error_code("E102")
-                            .with_hint("Supported formats: 'json', 'text', 'markdown'")
+                            .with_hint("Supported formats: 'json', 'text', 'markdown'"),
                     );
                 }
             }
@@ -207,7 +208,7 @@ impl ConfigValidator {
                         ValidationError::new(format!("Invalid cache TTL format: {}", cache_ttl))
                             .with_field("heuristics.cache_ttl")
                             .with_error_code("E103")
-                            .with_hint("Use duration format: '24h', '30m', '1d'")
+                            .with_hint("Use duration format: '24h', '30m', '1d'"),
                     );
                 }
             }
@@ -221,7 +222,7 @@ impl ConfigValidator {
                         ValidationWarning::new("Default policy should be a YAML file")
                             .with_field("policies.default")
                             .with_warning_code("W102")
-                            .with_suggestion("Use .yaml or .yml extension")
+                            .with_suggestion("Use .yaml or .yml extension"),
                     );
                 }
             }
@@ -237,15 +238,19 @@ impl ConfigValidator {
                                 ValidationError::new("Invalid Slack webhook URL")
                                     .with_field("integrations.slack.webhook_url")
                                     .with_error_code("E104")
-                                    .with_hint("Webhook URL must start with 'https://hooks.slack.com/'")
+                                    .with_hint(
+                                        "Webhook URL must start with 'https://hooks.slack.com/'",
+                                    ),
                             );
                         }
                     } else {
                         report.add_error(
-                            ValidationError::new("Slack integration enabled but webhook_url is missing")
-                                .with_field("integrations.slack.webhook_url")
-                                .with_error_code("E105")
-                                .with_hint("Add 'webhook_url' field or disable Slack integration")
+                            ValidationError::new(
+                                "Slack integration enabled but webhook_url is missing",
+                            )
+                            .with_field("integrations.slack.webhook_url")
+                            .with_error_code("E105")
+                            .with_hint("Add 'webhook_url' field or disable Slack integration"),
                         );
                     }
                 }
@@ -263,11 +268,26 @@ impl ConfigValidator {
 
     fn is_valid_aws_region(region: &str) -> bool {
         const VALID_REGIONS: &[&str] = &[
-            "us-east-1", "us-east-2", "us-west-1", "us-west-2",
-            "eu-west-1", "eu-west-2", "eu-west-3", "eu-central-1", "eu-north-1",
-            "ap-south-1", "ap-northeast-1", "ap-northeast-2", "ap-northeast-3",
-            "ap-southeast-1", "ap-southeast-2", "ap-east-1",
-            "ca-central-1", "sa-east-1", "af-south-1", "me-south-1",
+            "us-east-1",
+            "us-east-2",
+            "us-west-1",
+            "us-west-2",
+            "eu-west-1",
+            "eu-west-2",
+            "eu-west-3",
+            "eu-central-1",
+            "eu-north-1",
+            "ap-south-1",
+            "ap-northeast-1",
+            "ap-northeast-2",
+            "ap-northeast-3",
+            "ap-southeast-1",
+            "ap-southeast-2",
+            "ap-east-1",
+            "ca-central-1",
+            "sa-east-1",
+            "af-south-1",
+            "me-south-1",
         ];
         VALID_REGIONS.contains(&region)
     }

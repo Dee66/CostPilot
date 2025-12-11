@@ -19,7 +19,7 @@ impl ColdStartInference {
     pub fn estimate_ec2_cost(&self, instance_type: &str) -> f64 {
         // Parse instance family and size
         let parts: Vec<&str> = instance_type.split('.').collect();
-        
+
         if parts.len() != 2 {
             return 50.0; // Default fallback
         }
@@ -35,7 +35,7 @@ impl ColdStartInference {
             "r5" | "r6" => 1.5,
             "i3" | "i4" => 1.8,
             "p3" | "p4" => 10.0, // GPU instances are expensive
-            _ => 1.2, // Conservative default
+            _ => 1.2,            // Conservative default
         };
 
         // Size multipliers
@@ -55,7 +55,7 @@ impl ColdStartInference {
 
         // Base cost for t3.micro
         let base_cost = 7.6;
-        
+
         base_cost * family_multiplier * size_multiplier
     }
 
@@ -63,7 +63,7 @@ impl ColdStartInference {
     pub fn estimate_rds_cost(&self, instance_class: &str, engine: &str) -> f64 {
         // Extract size from instance class (e.g., db.t3.micro -> micro)
         let parts: Vec<&str> = instance_class.split('.').collect();
-        
+
         if parts.len() < 3 {
             return 100.0; // Conservative default for RDS
         }
@@ -92,7 +92,7 @@ impl ColdStartInference {
 
         // Base cost for db.t3.micro MySQL
         let base_cost = 12.4;
-        
+
         base_cost * engine_multiplier * size_multiplier
     }
 
@@ -174,7 +174,7 @@ mod tests {
 
         let mysql_cost = cold_start.estimate_rds_cost("db.t3.micro", "mysql");
         let postgres_cost = cold_start.estimate_rds_cost("db.t3.micro", "postgres");
-        
+
         // Postgres is slightly more expensive
         assert!(postgres_cost >= mysql_cost);
 

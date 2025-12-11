@@ -24,13 +24,16 @@ pub fn parse_artifact(content: &str, hint: &str) -> ArtifactResult<Artifact> {
         let parser = CdkParser::new();
         return parser.parse(content);
     }
-    
-    if hint.ends_with(".yaml") || hint.ends_with(".yml") || content.trim_start().starts_with("AWSTemplateFormatVersion") {
+
+    if hint.ends_with(".yaml")
+        || hint.ends_with(".yml")
+        || content.trim_start().starts_with("AWSTemplateFormatVersion")
+    {
         // CloudFormation template
         let parser = CloudFormationParser::new();
         return parser.parse(content);
     }
-    
+
     if hint.ends_with(".json") {
         // Try CloudFormation first, then fall back to others
         let parser = CloudFormationParser::new();
@@ -38,8 +41,8 @@ pub fn parse_artifact(content: &str, hint: &str) -> ArtifactResult<Artifact> {
             return Ok(artifact);
         }
     }
-    
+
     Err(ArtifactError::UnsupportedFormat(
-        "Could not detect artifact format".to_string()
+        "Could not detect artifact format".to_string(),
     ))
 }

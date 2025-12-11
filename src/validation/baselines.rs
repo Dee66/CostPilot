@@ -2,9 +2,9 @@
 //
 // Validates baselines.json file against the expected schema.
 
-use crate::validation::error::{ValidationError, ValidationResult, ValidationWarning};
-use crate::validation::{ValidationReport, FileType};
 use crate::engines::baselines::baseline_types::BaselinesConfig;
+use crate::validation::error::{ValidationError, ValidationResult, ValidationWarning};
+use crate::validation::{FileType, ValidationReport};
 use std::path::Path;
 
 pub struct BaselinesValidator;
@@ -22,7 +22,7 @@ impl BaselinesValidator {
                 report.add_error(
                     ValidationError::new(format!("Failed to read file: {}", e))
                         .with_error_code("E300")
-                        .with_hint("Ensure the file exists and is readable")
+                        .with_hint("Ensure the file exists and is readable"),
                 );
                 return Ok(report);
             }
@@ -49,7 +49,7 @@ impl BaselinesValidator {
             report.add_warning(
                 ValidationWarning::new("Baselines file is empty")
                     .with_warning_code("W300")
-                    .with_suggestion("Add module or service baselines to track cost changes")
+                    .with_suggestion("Add module or service baselines to track cost changes"),
             );
             return;
         }
@@ -65,18 +65,18 @@ impl BaselinesValidator {
                         "Negative monthly cost: {}",
                         baseline.expected_monthly_cost
                     ))
-                    .with_field(&format!("{}.expected_monthly_cost", prefix))
+                    .with_field(format!("{}.expected_monthly_cost", prefix))
                     .with_error_code("E301")
-                    .with_hint("Cost must be non-negative")
+                    .with_hint("Cost must be non-negative"),
                 );
             }
 
             if baseline.expected_monthly_cost == 0.0 {
                 report.add_warning(
                     ValidationWarning::new("Monthly cost is zero")
-                        .with_field(&format!("{}.expected_monthly_cost", prefix))
+                        .with_field(format!("{}.expected_monthly_cost", prefix))
                         .with_warning_code("W301")
-                        .with_suggestion("Verify if this module actually has zero cost")
+                        .with_suggestion("Verify if this module actually has zero cost"),
                 );
             }
 
@@ -84,9 +84,9 @@ impl BaselinesValidator {
             if baseline.last_updated.is_empty() {
                 report.add_warning(
                     ValidationWarning::new("Missing last_updated timestamp")
-                        .with_field(&format!("{}.last_updated", prefix))
+                        .with_field(format!("{}.last_updated", prefix))
                         .with_warning_code("W302")
-                        .with_suggestion("Add timestamp to track when baseline was set")
+                        .with_suggestion("Add timestamp to track when baseline was set"),
                 );
             } else if chrono::DateTime::parse_from_rfc3339(&baseline.last_updated).is_err() {
                 report.add_error(
@@ -94,9 +94,9 @@ impl BaselinesValidator {
                         "Invalid timestamp format: {}",
                         baseline.last_updated
                     ))
-                    .with_field(&format!("{}.last_updated", prefix))
+                    .with_field(format!("{}.last_updated", prefix))
                     .with_error_code("E302")
-                    .with_hint("Use RFC3339 format (e.g., '2024-12-06T10:00:00Z')")
+                    .with_hint("Use RFC3339 format (e.g., '2024-12-06T10:00:00Z')"),
                 );
             }
 
@@ -104,9 +104,9 @@ impl BaselinesValidator {
             if baseline.justification.is_empty() {
                 report.add_warning(
                     ValidationWarning::new("Missing justification")
-                        .with_field(&format!("{}.justification", prefix))
+                        .with_field(format!("{}.justification", prefix))
                         .with_warning_code("W303")
-                        .with_suggestion("Provide context for why this baseline was set")
+                        .with_suggestion("Provide context for why this baseline was set"),
                 );
             }
 
@@ -114,16 +114,16 @@ impl BaselinesValidator {
             if let Ok(timestamp) = chrono::DateTime::parse_from_rfc3339(&baseline.last_updated) {
                 let now = chrono::Utc::now();
                 let age = now.signed_duration_since(timestamp);
-                
+
                 if age.num_days() > 90 {
                     report.add_warning(
                         ValidationWarning::new(format!(
                             "Baseline is {} days old and may be stale",
                             age.num_days()
                         ))
-                        .with_field(&format!("{}.last_updated", prefix))
+                        .with_field(format!("{}.last_updated", prefix))
                         .with_warning_code("W304")
-                        .with_suggestion("Consider updating the baseline if costs have changed")
+                        .with_suggestion("Consider updating the baseline if costs have changed"),
                     );
                 }
             }
@@ -139,18 +139,18 @@ impl BaselinesValidator {
                         "Negative monthly cost: {}",
                         baseline.expected_monthly_cost
                     ))
-                    .with_field(&format!("{}.expected_monthly_cost", prefix))
+                    .with_field(format!("{}.expected_monthly_cost", prefix))
                     .with_error_code("E303")
-                    .with_hint("Cost must be non-negative")
+                    .with_hint("Cost must be non-negative"),
                 );
             }
 
             if baseline.expected_monthly_cost == 0.0 {
                 report.add_warning(
                     ValidationWarning::new("Monthly cost is zero")
-                        .with_field(&format!("{}.expected_monthly_cost", prefix))
+                        .with_field(format!("{}.expected_monthly_cost", prefix))
                         .with_warning_code("W305")
-                        .with_suggestion("Verify if this service actually has zero cost")
+                        .with_suggestion("Verify if this service actually has zero cost"),
                 );
             }
         }
@@ -161,7 +161,7 @@ impl BaselinesValidator {
             report.add_warning(
                 ValidationWarning::new(format!("Tracking {} module baselines", module_count))
                     .with_warning_code("W306")
-                    .with_suggestion("Review periodically to ensure baselines are current")
+                    .with_suggestion("Review periodically to ensure baselines are current"),
             );
         }
     }
@@ -177,16 +177,21 @@ mod tests {
     fn test_validate_valid_baselines() {
         let json = r#"
 {
+  "version": "1.0",
   "modules": {
     "root.vpc": {
+      "name": "root.vpc",
       "expected_monthly_cost": 100.0,
+      "owner": "team-platform",
       "last_updated": "2024-12-06T10:00:00Z",
       "justification": "Standard VPC cost"
     }
   },
   "services": {
     "ec2": {
+      "name": "ec2",
       "expected_monthly_cost": 500.0,
+      "owner": "team-compute",
       "last_updated": "2024-12-06T10:00:00Z",
       "justification": "Baseline EC2 usage"
     }
@@ -195,7 +200,7 @@ mod tests {
 "#;
         let mut file = NamedTempFile::new().unwrap();
         file.write_all(json.as_bytes()).unwrap();
-        
+
         let report = BaselinesValidator::validate_file(file.path()).unwrap();
         assert!(report.is_valid);
     }
@@ -204,9 +209,12 @@ mod tests {
     fn test_validate_negative_cost() {
         let json = r#"
 {
+  "version": "1.0",
   "modules": {
     "root.test": {
+      "name": "root.test",
       "expected_monthly_cost": -100.0,
+      "owner": "team-test",
       "last_updated": "2024-12-06T10:00:00Z",
       "justification": "Test"
     }
@@ -216,19 +224,27 @@ mod tests {
 "#;
         let mut file = NamedTempFile::new().unwrap();
         file.write_all(json.as_bytes()).unwrap();
-        
+
         let report = BaselinesValidator::validate_file(file.path()).unwrap();
+        eprintln!("Report errors: {:?}", report.errors);
+        eprintln!("Report is_valid: {}", report.is_valid);
         assert!(!report.is_valid);
-        assert!(report.errors.iter().any(|e| e.error_code == Some("E301".to_string())));
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| e.error_code == Some("E301".to_string())));
     }
 
     #[test]
     fn test_validate_invalid_timestamp() {
         let json = r#"
 {
+  "version": "1.0",
   "modules": {
     "root.test": {
+      "name": "root.test",
       "expected_monthly_cost": 100.0,
+      "owner": "team-test",
       "last_updated": "invalid-date",
       "justification": "Test"
     }
@@ -238,23 +254,27 @@ mod tests {
 "#;
         let mut file = NamedTempFile::new().unwrap();
         file.write_all(json.as_bytes()).unwrap();
-        
+
         let report = BaselinesValidator::validate_file(file.path()).unwrap();
         assert!(!report.is_valid);
-        assert!(report.errors.iter().any(|e| e.error_code == Some("E302".to_string())));
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| e.error_code == Some("E302".to_string())));
     }
 
     #[test]
     fn test_validate_empty_baselines() {
         let json = r#"
 {
+  "version": "1.0",
   "modules": {},
   "services": {}
 }
 "#;
         let mut file = NamedTempFile::new().unwrap();
         file.write_all(json.as_bytes()).unwrap();
-        
+
         let report = BaselinesValidator::validate_file(file.path()).unwrap();
         assert!(report.is_valid);
         assert_eq!(report.warning_count(), 1);

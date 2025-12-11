@@ -1,7 +1,6 @@
 // Classifier: smell/risk/explosion + regression type
 
-use crate::engines::shared::models::{ResourceChange, RegressionType, ChangeAction};
-use crate::engines::shared::error_model::Result;
+use crate::engines::shared::models::{ChangeAction, RegressionType, ResourceChange};
 use serde_json::Value;
 
 /// Classify the type of cost regression
@@ -85,8 +84,9 @@ impl RegressionClassifier {
             }
 
             // Autoscaling changes
-            if Self::numeric_field_increased(old_val, new_val, "desired_capacity") ||
-               Self::numeric_field_increased(old_val, new_val, "max_size") {
+            if Self::numeric_field_increased(old_val, new_val, "desired_capacity")
+                || Self::numeric_field_increased(old_val, new_val, "max_size")
+            {
                 return true;
             }
 
@@ -96,8 +96,9 @@ impl RegressionClassifier {
             }
 
             // Replica count
-            if Self::numeric_field_increased(old_val, new_val, "replica_count") ||
-               Self::numeric_field_increased(old_val, new_val, "number_of_replicas") {
+            if Self::numeric_field_increased(old_val, new_val, "replica_count")
+                || Self::numeric_field_increased(old_val, new_val, "number_of_replicas")
+            {
                 return true;
             }
         }
@@ -110,10 +111,7 @@ impl RegressionClassifier {
         // Check resource types that are traffic-sensitive
         matches!(
             change.resource_type.as_str(),
-            "aws_nat_gateway" | 
-            "aws_lb" | 
-            "aws_alb" |
-            "aws_cloudfront_distribution"
+            "aws_nat_gateway" | "aws_lb" | "aws_alb" | "aws_cloudfront_distribution"
         )
     }
 
@@ -122,7 +120,7 @@ impl RegressionClassifier {
         if let (Some(old_obj), Some(new_obj)) = (old.as_object(), new.as_object()) {
             let old_field = old_obj.get(field);
             let new_field = new_obj.get(field);
-            
+
             old_field != new_field && new_field.is_some()
         } else {
             false
@@ -151,20 +149,17 @@ pub fn classify_regression(change: &ResourceChange) -> RegressionType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
+    use crate::engines::shared::models::{ResourceChange, ChangeAction};
     use serde_json::json;
 
     #[test]
     fn test_provisioning_classification() {
-        let change = ResourceChange {
-            resource_id: "aws_instance.test".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "t3.micro"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_instance.test")
+            .resource_type("aws_instance")
+            .action(ChangeAction::Create)
+            .new_config(json!({"instance_type": "t3.micro"}))
+            .build();
 
         assert_eq!(
             RegressionClassifier::classify(&change),
@@ -174,15 +169,13 @@ mod tests {
 
     #[test]
     fn test_scaling_classification() {
-        let change = ResourceChange {
-            resource_id: "aws_autoscaling_group.test".to_string(),
-            resource_type: "aws_autoscaling_group".to_string(),
-            action: ChangeAction::Update,
-            module_path: None,
-            old_config: Some(json!({"desired_capacity": 2})),
-            new_config: Some(json!({"desired_capacity": 5})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_autoscaling_group.test")
+            .resource_type("aws_autoscaling_group")
+            .action(ChangeAction::Update)
+            .old_config(json!({"desired_capacity": 2}))
+            .new_config(json!({"desired_capacity": 5}))
+            .build();
 
         assert_eq!(
             RegressionClassifier::classify(&change),

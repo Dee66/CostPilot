@@ -1,10 +1,10 @@
 // Detection engine - main orchestrator
 
-use crate::engines::shared::models::{ResourceChange, Detection, Severity, RegressionType};
-use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
-use crate::engines::detection::terraform::{parse_terraform_plan, convert_to_resource_changes};
 use crate::engines::detection::classifier::RegressionClassifier;
 use crate::engines::detection::severity::{calculate_severity_score, score_to_severity};
+use crate::engines::detection::terraform::{convert_to_resource_changes, parse_terraform_plan};
+use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
+use crate::engines::shared::models::{Detection, RegressionType, ResourceChange, Severity};
 use std::path::Path;
 
 /// Main detection engine
@@ -34,7 +34,10 @@ impl DetectionEngine {
                 ErrorCategory::FileSystemError,
                 format!("Failed to read Terraform plan file: {}", e),
             )
-            .with_hint(format!("Ensure the file exists and is readable: {}", plan_path.display()))
+            .with_hint(format!(
+                "Ensure the file exists and is readable: {}",
+                plan_path.display()
+            ))
         })?;
 
         self.detect_from_terraform_json(&content)
@@ -84,12 +87,8 @@ impl DetectionEngine {
             let regression_type = RegressionClassifier::classify(change);
 
             // Calculate severity
-            let severity_score = calculate_severity_score(
-                change,
-                cost_delta,
-                &regression_type,
-                confidence,
-            );
+            let severity_score =
+                calculate_severity_score(change, cost_delta, &regression_type, confidence);
             let severity = score_to_severity(severity_score);
 
             // Detect specific anti-patterns
@@ -130,6 +129,10 @@ impl DetectionEngine {
                 ),
                 fix_snippet: None,
                 estimated_cost: None,
+                resource_type: None,
+                issue: None,
+                confidence: None,
+                monthly_cost: None,
             });
         }
 
@@ -150,6 +153,10 @@ impl DetectionEngine {
                             ),
                             fix_snippet: None,
                             estimated_cost: None,
+                            resource_type: None,
+                            issue: None,
+                            confidence: None,
+                            monthly_cost: None,
                         });
                     }
                 }
@@ -169,6 +176,10 @@ impl DetectionEngine {
                         message: "S3 bucket without lifecycle rules. Consider adding policies to transition old data to cheaper storage.".to_string(),
                         fix_snippet: None,
                         estimated_cost: None,
+                        resource_type: None,
+                        issue: None,
+                        confidence: None,
+                        monthly_cost: None,
                     });
                 }
             }
@@ -188,6 +199,10 @@ impl DetectionEngine {
                 ),
                 fix_snippet: None,
                 estimated_cost: None,
+                resource_type: None,
+                issue: None,
+                confidence: None,
+                monthly_cost: None,
             });
         }
 
@@ -201,7 +216,7 @@ impl DetectionEngine {
             .iter()
             .map(|c| (c.resource_id.clone(), 0.0, 0.5))
             .collect();
-        
+
         self.analyze_changes(changes, &cost_estimates)
     }
 
@@ -220,8 +235,7 @@ impl Default for DetectionEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-    use tempfile::NamedTempFile;
+    use crate::engines::shared::models::ChangeAction;
 
     #[test]
     fn test_detection_engine_creation() {

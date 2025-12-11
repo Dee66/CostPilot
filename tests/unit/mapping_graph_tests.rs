@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 //! Mapping engine tests focusing on cyclic dependencies and graph algorithms
 //!
 //! Tests cycle detection, graph traversal, cost propagation through dependencies,

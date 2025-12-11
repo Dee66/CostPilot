@@ -1,0 +1,81 @@
+---
+source: tests/golden_mapping_tests.rs
+assertion_line: 111
+expression: json_output
+---
+{
+  "edges": [
+    {
+      "from": "aws_subnet.public",
+      "relationship": "depends_on",
+      "to": "aws_vpc.main"
+    },
+    {
+      "cost_impact": "$32.85/month",
+      "from": "aws_nat_gateway.main",
+      "relationship": "depends_on",
+      "to": "aws_subnet.public"
+    },
+    {
+      "cost_impact": "$70.08/month",
+      "from": "aws_instance.web",
+      "relationship": "depends_on",
+      "to": "aws_subnet.public"
+    },
+    {
+      "cost_impact": "$16.20/month",
+      "from": "aws_lb.main",
+      "relationship": "depends_on",
+      "to": "aws_subnet.public"
+    },
+    {
+      "from": "aws_lb.main",
+      "relationship": "data_flow",
+      "to": "aws_instance.web"
+    }
+  ],
+  "metadata": {
+    "edge_count": 5,
+    "has_cycles": false,
+    "max_depth": 2,
+    "node_count": 5,
+    "total_cost": 119.13
+  },
+  "nodes": [
+    {
+      "id": "aws_vpc.main",
+      "label": "main VPC",
+      "monthly_cost": 0.0,
+      "node_type": "resource",
+      "resource_type": "aws_vpc"
+    },
+    {
+      "id": "aws_subnet.public",
+      "label": "public subnet",
+      "monthly_cost": 0.0,
+      "node_type": "resource",
+      "resource_type": "aws_subnet"
+    },
+    {
+      "id": "aws_nat_gateway.main",
+      "label": "main NAT gateway",
+      "monthly_cost": 32.85,
+      "node_type": "resource",
+      "resource_type": "aws_nat_gateway"
+    },
+    {
+      "id": "aws_instance.web",
+      "label": "web instance",
+      "monthly_cost": 70.08,
+      "node_type": "resource",
+      "resource_type": "aws_instance"
+    },
+    {
+      "id": "aws_lb.main",
+      "label": "main load balancer",
+      "monthly_cost": 16.2,
+      "node_type": "resource",
+      "resource_type": "aws_lb"
+    }
+  ]
+}

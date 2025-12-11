@@ -1,6 +1,6 @@
 // Document calculation steps for explainability
 
-use crate::engines::shared::models::{ResourceChange, CostEstimate};
+use crate::engines::shared::models::{CostEstimate, ResourceChange};
 use serde::{Deserialize, Serialize};
 
 /// A step in the cost calculation process
@@ -50,7 +50,10 @@ pub fn ec2_calculation_step(
     CalculationStep {
         step_number: step,
         operation: "EC2 Instance Cost".to_string(),
-        input: format!("instance_type={}, hourly_rate=${:.4}, hours={}", instance_type, hourly_rate, hours),
+        input: format!(
+            "instance_type={}, hourly_rate=${:.4}, hours={}",
+            instance_type, hourly_rate, hours
+        ),
         output: format!("${:.2}/month", hourly_rate * hours),
         reasoning: format!(
             "EC2 {} instance runs at ${:.4}/hour for {} hours/month",
@@ -70,7 +73,10 @@ pub fn rds_calculation_step(
     CalculationStep {
         step_number: step,
         operation: "RDS Instance Cost".to_string(),
-        input: format!("engine={}, instance_class={}, hourly_rate=${:.4}, hours={}", engine, instance_class, hourly_rate, hours),
+        input: format!(
+            "engine={}, instance_class={}, hourly_rate=${:.4}, hours={}",
+            engine, instance_class, hourly_rate, hours
+        ),
         output: format!("${:.2}/month", hourly_rate * hours),
         reasoning: format!(
             "RDS {} {} instance runs at ${:.4}/hour for {} hours/month",
@@ -121,13 +127,11 @@ pub fn dynamodb_calculation_step(
                 ),
             )
         }
-        _ => {
-            (
-                format!("billing_mode={}", billing_mode),
-                "$0.00/month (base)".to_string(),
-                "On-demand billing - pay per request (requests not estimated in plan)".to_string(),
-            )
-        }
+        _ => (
+            format!("billing_mode={}", billing_mode),
+            "$0.00/month (base)".to_string(),
+            "On-demand billing - pay per request (requests not estimated in plan)".to_string(),
+        ),
     };
 
     CalculationStep {
@@ -182,7 +186,10 @@ pub fn nat_gateway_calculation_step(
     CalculationStep {
         step_number: step,
         operation: "NAT Gateway Cost".to_string(),
-        input: format!("hours={}, hourly_rate=${:.4}, data_gb={}, data_rate=${:.4}", hours, hourly_rate, data_gb, data_rate),
+        input: format!(
+            "hours={}, hourly_rate=${:.4}, data_gb={}, data_rate=${:.4}",
+            hours, hourly_rate, data_gb, data_rate
+        ),
         output: format!("${:.2}/month", total),
         reasoning: format!(
             "Fixed: {} hours at ${:.4}/hour = ${:.2}, Data: {} GB at ${:.4}/GB = ${:.2}",
@@ -207,7 +214,10 @@ pub fn load_balancer_calculation_step(
     CalculationStep {
         step_number: step,
         operation: format!("{} Cost", lb_type),
-        input: format!("hours={}, hourly_rate=${:.4}, lcu_hours={}, lcu_rate=${:.4}", hours, hourly_rate, lcu_hours, lcu_rate),
+        input: format!(
+            "hours={}, hourly_rate=${:.4}, lcu_hours={}, lcu_rate=${:.4}",
+            hours, hourly_rate, lcu_hours, lcu_rate
+        ),
         output: format!("${:.2}/month", total),
         reasoning: format!(
             "Fixed: {} hours at ${:.4}/hour = ${:.2}, LCU: {} LCU-hours at ${:.4} = ${:.2}",
@@ -228,7 +238,10 @@ pub fn s3_calculation_step(
     CalculationStep {
         step_number: step,
         operation: "S3 Storage Cost".to_string(),
-        input: format!("storage_gb={}, storage_class={}, cost_per_gb=${:.4}", storage_gb, storage_class, cost_per_gb),
+        input: format!(
+            "storage_gb={}, storage_class={}, cost_per_gb=${:.4}",
+            storage_gb, storage_class, cost_per_gb
+        ),
         output: format!("${:.2}/month", cost),
         reasoning: format!(
             "{} GB in {} class at ${:.4}/GB/month",
@@ -286,11 +299,18 @@ pub fn interval_step(
     CalculationStep {
         step_number: step,
         operation: "Prediction Interval".to_string(),
-        input: format!("estimate=${:.2}, width={:.0}%", estimate, interval_width * 100.0),
+        input: format!(
+            "estimate=${:.2}, width={:.0}%",
+            estimate,
+            interval_width * 100.0
+        ),
         output: format!("${:.2} - ${:.2}", lower, upper),
         reasoning: format!(
             "Estimate ${:.2} ± {:.0}% = [${:.2}, ${:.2}]",
-            estimate, interval_width * 100.0, lower, upper
+            estimate,
+            interval_width * 100.0,
+            lower,
+            upper
         ),
     }
 }

@@ -9,13 +9,13 @@ use serde_json::{json, Value};
 pub struct JsonExportConfig {
     /// Pretty print with indentation
     pub pretty: bool,
-    
+
     /// Include metadata
     pub include_metadata: bool,
-    
+
     /// Include statistics
     pub include_statistics: bool,
-    
+
     /// Export format variant
     pub format: JsonFormat,
 }
@@ -36,13 +36,13 @@ impl Default for JsonExportConfig {
 pub enum JsonFormat {
     /// Standard format (nodes and edges arrays)
     Standard,
-    
+
     /// Adjacency list format
     AdjacencyList,
-    
+
     /// Cytoscape.js format
     Cytoscape,
-    
+
     /// D3.js force-directed format
     D3Force,
 }
@@ -178,38 +178,47 @@ impl JsonExporter {
         use std::collections::HashMap;
 
         // Create node index map
-        let node_indices: HashMap<&str, usize> = graph.nodes
+        let node_indices: HashMap<&str, usize> = graph
+            .nodes
             .iter()
             .enumerate()
             .map(|(i, node)| (node.id.as_str(), i))
             .collect();
 
         // Format nodes for D3
-        let nodes: Vec<Value> = graph.nodes.iter().map(|node| {
-            json!({
-                "id": node.id,
-                "label": node.label,
-                "type": node.node_type,
-                "resource_type": node.resource_type,
-                "monthly_cost": node.monthly_cost,
-                "module": node.module,
-                "group": self.get_node_group(node),
+        let nodes: Vec<Value> = graph
+            .nodes
+            .iter()
+            .map(|node| {
+                json!({
+                    "id": node.id,
+                    "label": node.label,
+                    "type": node.node_type,
+                    "resource_type": node.resource_type,
+                    "monthly_cost": node.monthly_cost,
+                    "module": node.module,
+                    "group": self.get_node_group(node),
+                })
             })
-        }).collect();
+            .collect();
 
         // Format edges for D3 (use indices)
-        let links: Vec<Value> = graph.edges.iter().filter_map(|edge| {
-            let source_idx = node_indices.get(edge.from.as_str())?;
-            let target_idx = node_indices.get(edge.to.as_str())?;
-            
-            Some(json!({
-                "source": source_idx,
-                "target": target_idx,
-                "relationship": edge.relationship,
-                "cost_impact": edge.cost_impact,
-                "value": self.get_edge_strength(edge),
-            }))
-        }).collect();
+        let links: Vec<Value> = graph
+            .edges
+            .iter()
+            .filter_map(|edge| {
+                let source_idx = node_indices.get(edge.from.as_str())?;
+                let target_idx = node_indices.get(edge.to.as_str())?;
+
+                Some(json!({
+                    "source": source_idx,
+                    "target": target_idx,
+                    "relationship": edge.relationship,
+                    "cost_impact": edge.cost_impact,
+                    "value": self.get_edge_strength(edge),
+                }))
+            })
+            .collect();
 
         Ok(json!({
             "nodes": nodes,
@@ -329,7 +338,7 @@ impl JsonExporter {
     /// Get node group for D3 visualization
     fn get_node_group(&self, node: &super::graph_types::GraphNode) -> usize {
         use super::graph_types::NodeType;
-        
+
         match node.node_type {
             NodeType::Resource => 1,
             NodeType::Service => 2,
@@ -340,7 +349,7 @@ impl JsonExporter {
     /// Get edge strength for D3 force simulation
     fn get_edge_strength(&self, edge: &super::graph_types::GraphEdge) -> f64 {
         use super::graph_types::EdgeType;
-        
+
         match edge.relationship {
             EdgeType::DependsOn => 1.0,
             EdgeType::DataFlow => 0.8,
@@ -350,7 +359,11 @@ impl JsonExporter {
     }
 
     /// Export with custom format
-    pub fn export_with_format(&self, graph: &DependencyGraph, format: JsonFormat) -> Result<String, CostPilotError> {
+    pub fn export_with_format(
+        &self,
+        graph: &DependencyGraph,
+        format: JsonFormat,
+    ) -> Result<String, CostPilotError> {
         let mut config = self.config.clone();
         config.format = format;
         let exporter = JsonExporter::with_config(config);
@@ -365,7 +378,9 @@ impl Default for JsonExporter {
 }
 
 /// Helper function to export graph to JSON file
-pub fn export_to_file(
+/// Export graph to file with optional configuration (Premium feature - for Pro Engine)
+#[allow(dead_code)]
+pub fn _export_to_file(
     graph: &DependencyGraph,
     path: &std::path::Path,
     config: Option<JsonExportConfig>,
@@ -377,9 +392,8 @@ pub fn export_to_file(
     };
 
     let json_string = exporter.export(graph)?;
-    
-    std::fs::write(path, json_string)
-        .map_err(|e| CostPilotError::io_error(e.to_string()))?;
+
+    std::fs::write(path, json_string).map_err(|e| CostPilotError::io_error(e.to_string()))?;
 
     Ok(())
 }
@@ -409,20 +423,19 @@ mod tests {
                     module: None,
                 },
             ],
-            edges: vec![
-                GraphEdge {
-                    from: "node1".to_string(),
-                    to: "node2".to_string(),
-                    relationship: EdgeType::DependsOn,
-                    cost_impact: None,
-                },
-            ],
+            edges: vec![GraphEdge {
+                from: "node1".to_string(),
+                to: "node2".to_string(),
+                relationship: EdgeType::DependsOn,
+                cost_impact: None,
+            }],
             metadata: GraphMetadata {
                 node_count: 2,
                 edge_count: 1,
                 max_depth: 1,
-                total_cost: Some(300.0),
-                timestamp: None,
+                has_cycles: false,
+                cycles: vec![],
+                total_cost: Some(250.0),
             },
         }
     }
@@ -432,7 +445,7 @@ mod tests {
         let graph = create_test_graph();
         let exporter = JsonExporter::new();
         let result = exporter.export(&graph);
-        
+
         assert!(result.is_ok());
         let json = result.unwrap();
         assert!(json.contains("nodes"));
@@ -445,9 +458,17 @@ mod tests {
         let exporter = JsonExporter::new();
 
         // Test all formats
-        assert!(exporter.export_with_format(&graph, JsonFormat::Standard).is_ok());
-        assert!(exporter.export_with_format(&graph, JsonFormat::AdjacencyList).is_ok());
-        assert!(exporter.export_with_format(&graph, JsonFormat::Cytoscape).is_ok());
-        assert!(exporter.export_with_format(&graph, JsonFormat::D3Force).is_ok());
+        assert!(exporter
+            .export_with_format(&graph, JsonFormat::Standard)
+            .is_ok());
+        assert!(exporter
+            .export_with_format(&graph, JsonFormat::AdjacencyList)
+            .is_ok());
+        assert!(exporter
+            .export_with_format(&graph, JsonFormat::Cytoscape)
+            .is_ok());
+        assert!(exporter
+            .export_with_format(&graph, JsonFormat::D3Force)
+            .is_ok());
     }
 }

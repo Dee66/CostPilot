@@ -71,19 +71,19 @@ impl SandboxLimits {
 pub enum SandboxViolation {
     /// File size exceeded limit
     FileSizeExceeded { actual_mb: u32, limit_mb: u32 },
-    
+
     /// Memory allocation exceeded limit
     MemoryLimitExceeded { actual_mb: u32, limit_mb: u32 },
-    
+
     /// Execution timeout exceeded
     TimeoutExceeded { actual_ms: u64, limit_ms: u32 },
-    
+
     /// Network access detected
     NetworkAccessDetected { operation: String },
-    
+
     /// AWS SDK usage detected
     AwsSdkDetected { service: String },
-    
+
     /// Secret or token detected in output
     SecretLeakage { pattern: String },
 }
@@ -91,21 +91,30 @@ pub enum SandboxViolation {
 impl std::fmt::Display for SandboxViolation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SandboxViolation::FileSizeExceeded { actual_mb, limit_mb } => {
+            SandboxViolation::FileSizeExceeded {
+                actual_mb,
+                limit_mb,
+            } => {
                 write!(
                     f,
                     "File size {}MB exceeds limit of {}MB",
                     actual_mb, limit_mb
                 )
             }
-            SandboxViolation::MemoryLimitExceeded { actual_mb, limit_mb } => {
+            SandboxViolation::MemoryLimitExceeded {
+                actual_mb,
+                limit_mb,
+            } => {
                 write!(
                     f,
                     "Memory allocation {}MB exceeds limit of {}MB",
                     actual_mb, limit_mb
                 )
             }
-            SandboxViolation::TimeoutExceeded { actual_ms, limit_ms } => {
+            SandboxViolation::TimeoutExceeded {
+                actual_ms,
+                limit_ms,
+            } => {
                 write!(
                     f,
                     "Execution time {}ms exceeds timeout of {}ms",
@@ -142,10 +151,10 @@ mod tests {
     #[test]
     fn test_file_size_check() {
         let limits = SandboxLimits::default();
-        
+
         // Within limit
         assert!(limits.check_file_size(10 * 1024 * 1024).is_ok());
-        
+
         // Exceeds limit
         assert!(limits.check_file_size(30 * 1024 * 1024).is_err());
     }
@@ -153,10 +162,10 @@ mod tests {
     #[test]
     fn test_memory_check() {
         let limits = SandboxLimits::default();
-        
+
         // Within limit
         assert!(limits.check_memory(128).is_ok());
-        
+
         // Exceeds limit
         assert!(limits.check_memory(512).is_err());
     }
@@ -164,10 +173,10 @@ mod tests {
     #[test]
     fn test_timeout_check() {
         let limits = SandboxLimits::default();
-        
+
         // Within limit
         assert!(limits.check_timeout(1000).is_ok());
-        
+
         // Exceeds limit
         assert!(limits.check_timeout(3000).is_err());
     }

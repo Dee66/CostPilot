@@ -1,0 +1,62 @@
+---
+source: tests/golden_mapping_tests.rs
+assertion_line: 167
+expression: json_output
+---
+{
+  "edges": [
+    {
+      "from": "aws_subnet.private",
+      "relationship": "depends_on",
+      "to": "aws_vpc.main"
+    },
+    {
+      "from": "aws_db_subnet_group.main",
+      "relationship": "depends_on",
+      "to": "aws_subnet.private"
+    },
+    {
+      "cost_impact": "$87.60/month",
+      "from": "aws_db_instance.main",
+      "relationship": "depends_on",
+      "to": "aws_db_subnet_group.main"
+    }
+  ],
+  "metadata": {
+    "edge_count": 3,
+    "has_cycles": false,
+    "max_depth": 3,
+    "node_count": 4,
+    "total_cost": 87.6
+  },
+  "nodes": [
+    {
+      "id": "aws_vpc.main",
+      "label": "main VPC",
+      "monthly_cost": 0.0,
+      "node_type": "resource",
+      "resource_type": "aws_vpc"
+    },
+    {
+      "id": "aws_subnet.private",
+      "label": "private subnet",
+      "monthly_cost": 0.0,
+      "node_type": "resource",
+      "resource_type": "aws_subnet"
+    },
+    {
+      "id": "aws_db_subnet_group.main",
+      "label": "main DB subnet group",
+      "monthly_cost": 0.0,
+      "node_type": "resource",
+      "resource_type": "aws_db_subnet_group"
+    },
+    {
+      "id": "aws_db_instance.main",
+      "label": "main DB instance",
+      "monthly_cost": 87.6,
+      "node_type": "resource",
+      "resource_type": "aws_db_instance"
+    }
+  ]
+}

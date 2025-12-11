@@ -1,9 +1,9 @@
-# CostPilot Benchmark Suite
-# 
-# Performance benchmarks for all engines using Criterion
-# Run with: cargo bench
+// CostPilot Benchmark Suite
+//
+// Performance benchmarks for all engines using Criterion
+// Run with: cargo bench
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 // ============================================================================
 // Prediction Engine Benchmarks
@@ -20,16 +20,16 @@ fn bench_prediction_single_ec2(c: &mut Criterion) {
 
 fn bench_prediction_batch(c: &mut Criterion) {
     let mut group = c.benchmark_group("prediction_batch");
-    
+
     for size in [10, 100, 1000].iter() {
-        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _size| {
             b.iter(|| {
                 // TODO: Predict costs for N resources
                 // predict_batch(black_box(&resources[..size]))
             });
         });
     }
-    
+
     group.finish();
 }
 
@@ -115,10 +115,7 @@ criterion_group!(
     bench_detection_large_plan
 );
 
-criterion_group!(
-    policy_benches,
-    bench_policy_evaluation
-);
+criterion_group!(policy_benches, bench_policy_evaluation);
 
 criterion_group!(
     mapping_benches,
@@ -126,10 +123,7 @@ criterion_group!(
     bench_mapping_cycle_detection
 );
 
-criterion_group!(
-    pipeline_benches,
-    bench_full_scan_pipeline
-);
+criterion_group!(pipeline_benches, bench_full_scan_pipeline);
 
 criterion_main!(
     prediction_benches,

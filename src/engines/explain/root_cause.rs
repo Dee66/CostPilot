@@ -1,7 +1,7 @@
 // Root cause analysis
 
-use crate::engines::shared::models::{Detection, ResourceChange, RegressionType};
 use crate::engines::explain::anti_patterns::AntiPattern;
+use crate::engines::shared::models::{Detection, RegressionType, ResourceChange};
 use serde::{Deserialize, Serialize};
 
 /// Root cause analysis result
@@ -41,13 +41,17 @@ impl RootCauseAnalysis {
             RegressionType::Configuration => Self::analyze_configuration(change),
             RegressionType::Scaling => Self::analyze_scaling(change),
             RegressionType::Provisioning => Self::analyze_provisioning(change),
-            RegressionType::TrafficInferred | RegressionType::Traffic => Self::analyze_traffic(change),
-            RegressionType::IndirectCost | RegressionType::Indirect => Self::analyze_indirect(change),
+            RegressionType::TrafficInferred | RegressionType::Traffic => {
+                Self::analyze_traffic(change)
+            }
+            RegressionType::IndirectCost | RegressionType::Indirect => {
+                Self::analyze_indirect(change)
+            }
         }
     }
 
     /// Root cause from anti-patterns
-    fn from_anti_patterns(patterns: &[AntiPattern], change: &ResourceChange) -> Self {
+    fn from_anti_patterns(patterns: &[AntiPattern], _change: &ResourceChange) -> Self {
         let primary = &patterns[0];
         let mut contributing_factors = Vec::new();
 
@@ -75,13 +79,17 @@ impl RootCauseAnalysis {
                 "aws_instance" => {
                     if let Some(instance_type) = new_config.get("instance_type") {
                         primary_cause = format!("EC2 instance type changed to {}", instance_type);
-                        contributing_factors.push("Instance type directly affects hourly compute cost".to_string());
+                        contributing_factors
+                            .push("Instance type directly affects hourly compute cost".to_string());
                     }
                 }
                 "aws_rds_instance" => {
                     if let Some(instance_class) = new_config.get("instance_class") {
                         primary_cause = format!("RDS instance class changed to {}", instance_class);
-                        contributing_factors.push("Database instance class determines compute and memory costs".to_string());
+                        contributing_factors.push(
+                            "Database instance class determines compute and memory costs"
+                                .to_string(),
+                        );
                     }
                 }
                 "aws_dynamodb_table" => {
@@ -93,11 +101,14 @@ impl RootCauseAnalysis {
                 "aws_lambda_function" => {
                     if let Some(memory) = new_config.get("memory_size") {
                         primary_cause = format!("Lambda memory configured to {} MB", memory);
-                        contributing_factors.push("Memory allocation affects both execution speed and cost".to_string());
+                        contributing_factors.push(
+                            "Memory allocation affects both execution speed and cost".to_string(),
+                        );
                     }
                 }
                 _ => {
-                    contributing_factors.push("Resource configuration change affects pricing".to_string());
+                    contributing_factors
+                        .push("Resource configuration change affects pricing".to_string());
                 }
             }
         }
@@ -134,9 +145,11 @@ impl RootCauseAnalysis {
         contributing_factors.push("New resource adds recurring infrastructure costs".to_string());
 
         if change.resource_type.contains("nat_gateway") {
-            contributing_factors.push("NAT Gateways have high fixed costs ($32.85/month)".to_string());
+            contributing_factors
+                .push("NAT Gateways have high fixed costs ($32.85/month)".to_string());
         } else if change.resource_type.contains("lb") || change.resource_type.contains("alb") {
-            contributing_factors.push("Load balancers incur hourly charges plus LCU costs".to_string());
+            contributing_factors
+                .push("Load balancers incur hourly charges plus LCU costs".to_string());
         }
 
         RootCauseAnalysis {
@@ -170,7 +183,10 @@ impl RootCauseAnalysis {
         ];
 
         RootCauseAnalysis {
-            primary_cause: format!("Change to {} may have indirect cost effects", change.resource_type),
+            primary_cause: format!(
+                "Change to {} may have indirect cost effects",
+                change.resource_type
+            ),
             contributing_factors,
             category: RootCauseCategory::Unknown,
             confidence: 0.60,
@@ -181,58 +197,50 @@ impl RootCauseAnalysis {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ChangeAction, Severity};
-    use std::collections::HashMap;
+    use crate::engines::shared::models::{ResourceChange, ChangeAction, Detection, Severity, RegressionType};
     use serde_json::json;
 
     #[test]
     fn test_configuration_analysis() {
-        let change = ResourceChange {
-            resource_id: "aws_instance.test".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "m5.large"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_instance.test")
+            .resource_type("aws_instance")
+            .action(ChangeAction::Create)
+            .new_config(json!({"instance_type": "m5.large"}))
+            .build();
 
-        let detection = Detection {
-            resource_id: "aws_instance.test".to_string(),
-            resource_type: "aws_instance".to_string(),
-            regression_type: RegressionType::Configuration,
-            severity: Severity::Medium,
-            estimated_cost: None,
-            fix_snippet: None,
-        };
+        let detection = Detection::builder()
+            .resource_id("aws_instance.test")
+            .regression_type(RegressionType::Configuration)
+            .severity(Severity::Medium)
+            .rule_id("test")
+            .build();
 
         let analysis = RootCauseAnalysis::analyze(&change, &detection, &[]);
 
         assert!(analysis.primary_cause.contains("instance type"));
-        assert!(matches!(analysis.category, RootCauseCategory::ConfigurationChange));
+        assert!(matches!(
+            analysis.category,
+            RootCauseCategory::ConfigurationChange
+        ));
         assert!(analysis.confidence > 0.8);
     }
 
     #[test]
     fn test_anti_pattern_root_cause() {
-        let change = ResourceChange {
-            resource_id: "aws_nat_gateway.test".to_string(),
-            resource_type: "aws_nat_gateway".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_nat_gateway.test")
+            .resource_type("aws_nat_gateway")
+            .action(ChangeAction::Create)
+            .new_config(json!({}))
+            .build();
 
-        let detection = Detection {
-            resource_id: "aws_nat_gateway.test".to_string(),
-            resource_type: "aws_nat_gateway".to_string(),
-            regression_type: RegressionType::Provisioning,
-            severity: Severity::High,
-            estimated_cost: None,
-            fix_snippet: None,
-        };
+        let detection = Detection::builder()
+            .resource_id("aws_nat_gateway.test")
+            .regression_type(RegressionType::Provisioning)
+            .severity(Severity::High)
+            .rule_id("test")
+            .build();
 
         let pattern = AntiPattern {
             pattern_id: "TEST".to_string(),

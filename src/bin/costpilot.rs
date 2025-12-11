@@ -1,6 +1,5 @@
 // CLI entrypoint for CostPilot
 
-
 use clap::{Parser, Subcommand};
 use colored::*;
 use std::path::PathBuf;
@@ -40,7 +39,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Scan Terraform plan for cost issues and predictions
-    /// 
+    ///
     /// Examples:
     ///   costpilot scan --plan tfplan.json
     ///   costpilot scan --plan tfplan.json --explain
@@ -48,10 +47,10 @@ enum Commands {
     Scan(costpilot::cli::scan::ScanCommand),
 
     /// Compare cost between two Terraform plans
-    /// 
+    ///
     /// Shows the cost difference between a baseline (before) plan and
     /// a proposed (after) plan. Useful for PR reviews and change impact analysis.
-    /// 
+    ///
     /// Examples:
     ///   costpilot diff --before baseline.json --after new-plan.json
     ///   costpilot diff -b baseline.json -a new-plan.json --format json
@@ -66,35 +65,11 @@ enum Commands {
         after: PathBuf,
     },
 
-    /// Generate autofix recommendations for cost optimization
-    /// 
-    /// Modes:
-    ///   snippet - Generate code snippets with explanations (default)
-    ///   patch   - Generate unified diff patches ready to apply
-    /// 
-    /// Examples:
-    ///   costpilot autofix --plan tfplan.json
-    ///   costpilot autofix --mode patch --plan tfplan.json
-    ///   costpilot autofix --mode patch --plan tfplan.json --drift-safe
-    Autofix {
-        /// Mode: snippet or patch
-        #[arg(short, long, default_value = "snippet")]
-        mode: String,
-
-        /// Path to plan file
-        #[arg(short, long)]
-        plan: Option<PathBuf>,
-
-        /// Enable drift-safe mode (Beta)
-        #[arg(long)]
-        drift_safe: bool,
-    },
-
     /// Initialize CostPilot configuration in current directory
-    /// 
+    ///
     /// Creates costpilot.yaml and optionally generates CI/CD templates
     /// for GitHub Actions, GitLab CI, or other providers.
-    /// 
+    ///
     /// Examples:
     ///   costpilot init
     ///   costpilot init --no-ci
@@ -106,12 +81,6 @@ enum Commands {
 
     /// Generate dependency map
     Map(costpilot::cli::map::MapCommand),
-
-    /// Check cost SLOs
-    Slo {
-        #[command(subcommand)]
-        command: Option<SloCommands>,
-    },
 
     /// Manage policy lifecycle and approvals
     Policy {
@@ -147,10 +116,10 @@ enum Commands {
     Group(costpilot::cli::group::GroupCommand),
 
     /// Validate configuration files
-    /// 
+    ///
     /// Validates configuration files for errors and provides helpful hints.
     /// Supports: costpilot.yaml, policy files, baselines.json, slo.yaml
-    /// 
+    ///
     /// Examples:
     ///   costpilot validate costpilot.yaml
     ///   costpilot validate policy.yaml
@@ -177,7 +146,7 @@ enum Commands {
 enum SloCommands {
     /// Check SLO compliance
     Check,
-    
+
     /// Calculate burn rate and predict time-to-breach
     Burn {
         /// Path to SLO configuration file
@@ -368,6 +337,40 @@ enum AuditCommands {
 }
 
 fn main() {
+    // Load edition context BEFORE parsing CLI
+    // This allows us to gate premium commands early
+    let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
+        costpilot::edition::EditionContext::free()
+    });
+
+    // Intercept --version/-V to show edition
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() >= 2 {
+        let arg = &args[1];
+        if arg == "--version" || arg == "-V" {
+            let edition_str = if edition.is_premium() { "Premium" } else { "Free" };
+            println!("costpilot {} ({})", VERSION, edition_str);
+            return;
+        }
+    }
+
+    // Check for premium commands in Free mode and fail early
+    if edition.is_free() {
+        if args.len() >= 2 {
+            let premium_commands = ["autofix", "patch", "slo"];
+            let command = args[1].to_lowercase();
+            
+            if premium_commands.contains(&command.as_str()) {
+                eprintln!("{} {}", "Error:".bright_red().bold(), 
+                    format!("Unknown command '{}'", command));
+                eprintln!();
+                eprintln!("This command requires CostPilot Premium.");
+                eprintln!("Upgrade at: https://shieldcraft-ai.com/costpilot/upgrade");
+                process::exit(1);
+            }
+        }
+    }
+
     let cli = Cli::parse();
 
     // Enable debug logging if requested
@@ -375,13 +378,24 @@ fn main() {
         eprintln!("{}", "🔍 Debug mode enabled".bright_black());
         eprintln!("  Verbose: {}", cli.verbose);
         eprintln!("  Format: {}", cli.format);
+        eprintln!(
+            "  Edition: {}",
+            if edition.is_premium() {
+                "Premium"
+            } else {
+                "Free"
+            }
+        );
         eprintln!();
     }
 
     // Print banner for interactive mode
     if atty::is(atty::Stream::Stdout) {
         println!("{}", BANNER.bright_cyan());
-        println!("{}", format!("v{} | Zero-IAM FinOps Engine", VERSION).bright_black());
+        println!(
+            "{}",
+            format!("v{} | Zero-IAM FinOps Engine", VERSION).bright_black()
+        );
         println!();
     }
 
@@ -396,7 +410,9 @@ fn main() {
             if cli.debug {
                 eprintln!("🔍 Executing scan command");
             }
-            scan_cmd.execute().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+            scan_cmd
+                .execute_with_edition(&edition)
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
         }
         Commands::Diff { before, after } => {
             if cli.debug {
@@ -404,15 +420,7 @@ fn main() {
                 eprintln!("  Before: {:?}", before);
                 eprintln!("  After: {:?}", after);
             }
-            cmd_diff(before, after, &cli.format, cli.verbose)
-        }
-        Commands::Autofix { mode, plan, drift_safe } => {
-            if cli.debug {
-                eprintln!("🔍 Executing autofix command");
-                eprintln!("  Mode: {}", mode);
-                eprintln!("  Drift-safe: {}", drift_safe);
-            }
-            cmd_autofix(mode, plan, drift_safe, &cli.format, cli.verbose)
+            cmd_diff(before, after, &cli.format, cli.verbose, &edition)
         }
         Commands::Init { no_ci } => {
             if cli.debug {
@@ -425,19 +433,13 @@ fn main() {
             if cli.debug {
                 eprintln!("🔍 Executing map command");
             }
-            costpilot::cli::map::execute_map_command(&map_cmd)
-        }
-        Commands::Slo { command } => {
-            if cli.debug {
-                eprintln!("🔍 Executing SLO command");
-            }
-            cmd_slo(command, &cli.format, cli.verbose)
+            costpilot::cli::map::execute_map_command(&map_cmd, &edition)
         }
         Commands::Policy { command } => {
             if cli.debug {
                 eprintln!("🔍 Executing policy command");
             }
-            cmd_policy(command, &cli.format, cli.verbose)
+            cmd_policy(command, &cli.format, cli.verbose, &edition)
         }
         Commands::Audit { command } => {
             if cli.debug {
@@ -451,20 +453,18 @@ fn main() {
             }
             cmd_heuristics(command, &cli.format, cli.verbose)
         }
-        Commands::Explain { command } => {
-            cmd_explain(command, &cli.format, cli.verbose)
-        }
+        Commands::Explain { command } => cmd_explain(command, &cli.format, cli.verbose, &edition),
         Commands::PolicyDsl { command } => {
             costpilot::cli::policy_dsl::execute_policy_dsl_command(&command)
         }
         Commands::Group(group_cmd) => {
-            costpilot::cli::group::execute_group_command(group_cmd)
+            costpilot::cli::group::execute_group_command(group_cmd, &edition)
         }
         Commands::Validate { files, fail_fast } => {
-            cmd_validate(files, &cli.format, fail_fast)
+            cmd_validate(files, &cli.format, fail_fast, &edition)
         }
         Commands::Version { detailed } => {
-            cmd_version(detailed);
+            cmd_version(detailed, &edition);
             return;
         }
     };
@@ -478,7 +478,11 @@ fn main() {
     }
 
     if let Some(start) = start_time {
-        eprintln!("{} Command completed in {:.2?}", "⏱️".bright_black(), start.elapsed());
+        eprintln!(
+            "{} Command completed in {:.2?}",
+            "⏱️".bright_black(),
+            start.elapsed()
+        );
     }
 }
 
@@ -487,20 +491,33 @@ fn cmd_diff(
     after: PathBuf,
     format: &str,
     verbose: bool,
+    edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use costpilot::cli::commands::diff;
-    diff::execute(before, after, format, verbose)
+    diff::execute(before, after, format, verbose, edition)
 }
 
+#[allow(dead_code)]
 fn cmd_autofix(
     mode: String,
     plan: Option<PathBuf>,
     drift_safe: bool,
-    format: &str,
+    _format: &str,
     verbose: bool,
+    edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Check edition for premium features
+    if edition.is_free() {
+        return Err(
+            "Autofix requires Premium edition. Upgrade at https://costpilot.io/upgrade".into(),
+        );
+    }
+
     if drift_safe {
-        println!("{}", "⚠️  Drift-safe mode is not yet implemented (V1)".yellow());
+        println!(
+            "{}",
+            "⚠️  Drift-safe mode is not yet implemented (V1)".yellow()
+        );
         return Ok(());
     }
 
@@ -513,7 +530,7 @@ fn cmd_autofix(
                 plan: plan_path,
                 verbose,
             };
-            autofix_snippet::execute(&args)
+            autofix_snippet::execute(&args, edition)
         }
         "patch" => {
             use costpilot::cli::commands::autofix_patch;
@@ -523,17 +540,15 @@ fn cmd_autofix(
                 apply: false,
                 verbose,
             };
-            autofix_patch::execute(&args)
+            autofix_patch::execute(&args, edition)
         }
-        _ => {
-            Err(format!("Unknown mode: {}. Valid modes: snippet, patch", mode).into())
-        }
+        _ => Err(format!("Unknown mode: {}. Valid modes: snippet, patch", mode).into()),
     }
 }
 
 fn cmd_init(no_ci: bool, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
     use costpilot::cli::init::init;
-    
+
     let ci_provider = if no_ci {
         "none"
     } else {
@@ -543,43 +558,37 @@ fn cmd_init(no_ci: bool, verbose: bool) -> Result<(), Box<dyn std::error::Error>
         } else if std::path::Path::new(".gitlab-ci.yml").exists() {
             "gitlab"
         } else {
-            "github"  // Default to GitHub
+            "github" // Default to GitHub
         }
     };
-    
+
     if verbose {
         println!("  CI Provider: {}", ci_provider);
     }
-    
+
     init(".", ci_provider)?;
-    
+
     Ok(())
 }
 
-fn cmd_map(
-    format: String,
-    output: Option<PathBuf>,
-    verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", format!("🗺️  Generating dependency map ({})...", format).bright_blue().bold());
-    
-    // TODO: Implement map logic
-    println!("{}", "✅ Map complete (not yet implemented)".bright_green());
-    
-    Ok(())
-}
-
+#[allow(dead_code)]
 fn cmd_slo(
     command: Option<SloCommands>,
     format: &str,
     verbose: bool,
+    edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     match command {
         Some(SloCommands::Check) => {
             println!("{}", "📋 Checking SLO compliance...".bright_blue().bold());
-            costpilot::cli::commands::slo_check::execute(None, None, format, verbose)?;
+            costpilot::cli::commands::slo_check::execute(None, None, format, verbose, edition)?;
         }
-        Some(SloCommands::Burn { slo, snapshots, min_snapshots, min_r_squared }) => {
+        Some(SloCommands::Burn {
+            slo,
+            snapshots,
+            min_snapshots,
+            min_r_squared,
+        }) => {
             println!("{}", "🔥 Calculating burn rate...".bright_blue().bold());
             costpilot::cli::commands::slo_burn::execute(
                 slo,
@@ -588,14 +597,15 @@ fn cmd_slo(
                 Some(min_snapshots),
                 Some(min_r_squared),
                 verbose,
+                edition,
             )?;
         }
         None => {
             println!("{}", "📋 Checking SLO compliance...".bright_blue().bold());
-            costpilot::cli::commands::slo_check::execute(None, None, format, verbose)?;
+            costpilot::cli::commands::slo_check::execute(None, None, format, verbose, edition)?;
         }
     }
-    
+
     Ok(())
 }
 
@@ -603,34 +613,43 @@ fn cmd_policy(
     command: PolicyCommands,
     format: &str,
     verbose: bool,
+    edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use costpilot::cli::commands::policy_lifecycle;
 
     match command {
         PolicyCommands::Submit { policy, approvers } => {
-            policy_lifecycle::cmd_submit(policy, approvers, format, verbose)
+            policy_lifecycle::cmd_submit(policy, approvers, format, verbose, edition)
         }
-        PolicyCommands::Approve { policy_id, approver, comment } => {
-            policy_lifecycle::cmd_approve(policy_id, approver, comment, format, verbose)
-        }
-        PolicyCommands::Reject { policy_id, approver, reason } => {
-            policy_lifecycle::cmd_reject(policy_id, approver, reason, format, verbose)
-        }
+        PolicyCommands::Approve {
+            policy_id,
+            approver,
+            comment,
+        } => policy_lifecycle::cmd_approve(policy_id, approver, comment, format, verbose, edition),
+        PolicyCommands::Reject {
+            policy_id,
+            approver,
+            reason,
+        } => policy_lifecycle::cmd_reject(policy_id, approver, reason, format, verbose, edition),
         PolicyCommands::Activate { policy_id, actor } => {
-            policy_lifecycle::cmd_activate(policy_id, actor, format, verbose)
+            policy_lifecycle::cmd_activate(policy_id, actor, format, verbose, edition)
         }
-        PolicyCommands::Deprecate { policy_id, actor, reason } => {
-            policy_lifecycle::cmd_deprecate(policy_id, actor, reason, format, verbose)
-        }
+        PolicyCommands::Deprecate {
+            policy_id,
+            actor,
+            reason,
+        } => policy_lifecycle::cmd_deprecate(policy_id, actor, reason, format, verbose, edition),
         PolicyCommands::Status { policy_id } => {
-            policy_lifecycle::cmd_status(policy_id, format, verbose)
+            policy_lifecycle::cmd_status(policy_id, format, verbose, edition)
         }
         PolicyCommands::History { policy_id } => {
-            policy_lifecycle::cmd_history(policy_id, format, verbose)
+            policy_lifecycle::cmd_history(policy_id, format, verbose, edition)
         }
-        PolicyCommands::Diff { policy_id, from, to } => {
-            policy_lifecycle::cmd_diff(policy_id, from, to, format, verbose)
-        }
+        PolicyCommands::Diff {
+            policy_id,
+            from,
+            to,
+        } => policy_lifecycle::cmd_diff(policy_id, from, to, format, verbose, edition),
     }
 }
 
@@ -648,7 +667,9 @@ fn cmd_audit(
             resource,
             severity,
             last_n,
-        } => audit::cmd_audit_view(event_type, actor, resource, severity, last_n, format, verbose),
+        } => audit::cmd_audit_view(
+            event_type, actor, resource, severity, last_n, format, verbose,
+        ),
         AuditCommands::Verify => audit::cmd_audit_verify(format, verbose),
         AuditCommands::Compliance { framework, days } => {
             audit::cmd_audit_compliance(framework, days, format, verbose)
@@ -678,27 +699,28 @@ fn cmd_audit(
 
 fn cmd_heuristics(
     command: costpilot::cli::heuristics::HeuristicsCommand,
-    format: &str,
-    verbose: bool,
+    _format: &str,
+    _verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use costpilot::cli::heuristics::execute_heuristics_command;
-    
+
     let output = execute_heuristics_command(command)?;
     println!("{}", output);
-    
+
     Ok(())
 }
 
 fn cmd_explain(
     command: costpilot::cli::explain::ExplainCommand,
-    format: &str,
-    verbose: bool,
+    _format: &str,
+    _verbose: bool,
+    edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use costpilot::cli::explain::execute_explain_command;
-    
-    let output = execute_explain_command(command)?;
+
+    let output = execute_explain_command(command, edition)?;
     println!("{}", output);
-    
+
     Ok(())
 }
 
@@ -706,28 +728,39 @@ fn cmd_validate(
     files: Vec<PathBuf>,
     format: &str,
     fail_fast: bool,
+    edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use costpilot::cli::commands::validate;
-    
+
     if files.len() == 1 {
-        validate::execute(files[0].clone(), format.to_string())
+        validate::execute(files[0].clone(), format.to_string(), edition)
     } else {
-        validate::execute_batch(files, format.to_string(), fail_fast)
+        validate::execute_batch(files, format.to_string(), fail_fast, edition)
     }
 }
 
-fn cmd_version(detailed: bool) {
+fn cmd_version(detailed: bool, edition: &costpilot::edition::EditionContext) {
     // Validate version matches Cargo.toml
     let cargo_version = env!("CARGO_PKG_VERSION");
-    assert_eq!(VERSION, cargo_version, "VERSION constant must match CARGO_PKG_VERSION");
-    
+    assert_eq!(
+        VERSION, cargo_version,
+        "VERSION constant must match CARGO_PKG_VERSION"
+    );
+
+    let edition_str = if edition.is_premium() {
+        "Premium"
+    } else {
+        "Free"
+    };
+
     if detailed {
         println!("{}", "CostPilot".bright_cyan().bold());
         println!("Version: {}", VERSION);
+        println!("Edition: {}", edition_str);
         println!("Build: {} (deterministic)", cargo_version);
         println!("Features: Zero-IAM, WASM-safe, Offline");
         println!("License: MIT");
     } else {
-        println!("costpilot {}", VERSION);
+        println!("costpilot {} ({})", VERSION, edition_str);
     }
 }

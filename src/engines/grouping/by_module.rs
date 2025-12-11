@@ -69,7 +69,9 @@ impl ModuleGroup {
         let prefix = format!("{}.", self.module_path);
         all_paths
             .iter()
-            .filter(|path| path.starts_with(&prefix) && path.matches('.').count() == self.depth() + 1)
+            .filter(|path| {
+                path.starts_with(&prefix) && path.matches('.').count() == self.depth() + 1
+            })
             .cloned()
             .collect()
     }
@@ -83,7 +85,9 @@ pub fn group_by_module(
 
     for (address, resource_type, cost) in resources {
         let module_path = extract_module_path(address);
-        let group = groups.entry(module_path.clone()).or_insert_with(|| ModuleGroup::new(module_path));
+        let group = groups
+            .entry(module_path.clone())
+            .or_insert_with(|| ModuleGroup::new(module_path));
         group.add_resource(address.clone(), resource_type.clone(), *cost);
     }
 
@@ -128,8 +132,8 @@ pub fn aggregate_module_hierarchy(groups: &[ModuleGroup]) -> Vec<ModuleGroup> {
     }
 
     // Build hierarchy and aggregate upwards
-    let all_paths: Vec<String> = groups.iter().map(|g| g.module_path.clone()).collect();
-    
+    let _all_paths: Vec<String> = groups.iter().map(|g| g.module_path.clone()).collect();
+
     for group in groups {
         let mut current_path = group.module_path.clone();
         let mut accumulated_cost = group.monthly_cost;
@@ -139,18 +143,18 @@ pub fn aggregate_module_hierarchy(groups: &[ModuleGroup]) -> Vec<ModuleGroup> {
             if parent == current_path {
                 break;
             }
-            
+
             let parent_group = aggregated.entry(parent.clone()).or_insert_with(|| {
-                let mut g = ModuleGroup::new(parent.clone());
-                g
+                
+                ModuleGroup::new(parent.clone())
             });
-            
+
             // Only add cost if this isn't already counted (avoid double-counting)
             if parent != group.module_path {
                 parent_group.monthly_cost += accumulated_cost;
                 accumulated_cost = 0.0; // Don't double count on further parents
             }
-            
+
             current_path = parent;
         }
     }
@@ -188,9 +192,9 @@ pub fn generate_module_tree(groups: &[ModuleGroup]) -> String {
         let name = if group.depth() == 0 {
             group.module_path.clone()
         } else {
-            group.module_path.split('.').last().unwrap().to_string()
+            group.module_path.split('.').next_back().unwrap().to_string()
         };
-        
+
         tree.push_str(&format!(
             "{}├─ {} (${:.2}/mo, {} resources)\n",
             indent, name, group.monthly_cost, group.resource_count
@@ -217,18 +221,30 @@ mod tests {
     #[test]
     fn test_group_by_module() {
         let resources = vec![
-            ("aws_instance.web".to_string(), "aws_instance".to_string(), 100.0),
-            ("module.vpc.aws_vpc.main".to_string(), "aws_vpc".to_string(), 50.0),
-            ("module.vpc.aws_subnet.private".to_string(), "aws_subnet".to_string(), 20.0),
+            (
+                "aws_instance.web".to_string(),
+                "aws_instance".to_string(),
+                100.0,
+            ),
+            (
+                "module.vpc.aws_vpc.main".to_string(),
+                "aws_vpc".to_string(),
+                50.0,
+            ),
+            (
+                "module.vpc.aws_subnet.private".to_string(),
+                "aws_subnet".to_string(),
+                20.0,
+            ),
         ];
 
         let groups = group_by_module(&resources);
         assert_eq!(groups.len(), 2);
-        
+
         // Root module has highest cost
         assert_eq!(groups[0].module_path, "root");
         assert_eq!(groups[0].monthly_cost, 100.0);
-        
+
         // VPC module
         assert_eq!(groups[1].module_path, "root.vpc");
         assert_eq!(groups[1].monthly_cost, 70.0);
@@ -238,10 +254,10 @@ mod tests {
     fn test_module_depth() {
         let mut group = ModuleGroup::new("root".to_string());
         assert_eq!(group.depth(), 0);
-        
+
         group.module_path = "root.vpc".to_string();
         assert_eq!(group.depth(), 1);
-        
+
         group.module_path = "root.vpc.subnets".to_string();
         assert_eq!(group.depth(), 2);
     }
@@ -250,10 +266,10 @@ mod tests {
     fn test_parent_path() {
         let group = ModuleGroup::new("root.vpc.subnets".to_string());
         assert_eq!(group.parent_path(), Some("root.vpc".to_string()));
-        
+
         let group = ModuleGroup::new("root.vpc".to_string());
         assert_eq!(group.parent_path(), Some("root".to_string()));
-        
+
         let group = ModuleGroup::new("root".to_string());
         assert_eq!(group.parent_path(), None);
     }

@@ -1,11 +1,11 @@
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 use serde_json;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use crate::errors::CostPilotError;
 use super::snapshot_types::{CostSnapshot, TrendConfig, TrendHistory};
+use crate::errors::CostPilotError;
 
 /// Manages snapshot storage and rotation
 pub struct SnapshotManager {
@@ -61,9 +61,8 @@ impl SnapshotManager {
             CostPilotError::io_error(format!("Failed to create snapshot file: {}", e))
         })?;
 
-        file.write_all(json.as_bytes()).map_err(|e| {
-            CostPilotError::io_error(format!("Failed to write snapshot: {}", e))
-        })?;
+        file.write_all(json.as_bytes())
+            .map_err(|e| CostPilotError::io_error(format!("Failed to write snapshot: {}", e)))?;
 
         Ok(filepath)
     }
@@ -79,13 +78,11 @@ impl SnapshotManager {
             ));
         }
 
-        let contents = fs::read_to_string(&filepath).map_err(|e| {
-            CostPilotError::io_error(format!("Failed to read snapshot: {}", e))
-        })?;
+        let contents = fs::read_to_string(&filepath)
+            .map_err(|e| CostPilotError::io_error(format!("Failed to read snapshot: {}", e)))?;
 
-        let snapshot: CostSnapshot = serde_json::from_str(&contents).map_err(|e| {
-            CostPilotError::parse_error(format!("Failed to parse snapshot: {}", e))
-        })?;
+        let snapshot: CostSnapshot = serde_json::from_str(&contents)
+            .map_err(|e| CostPilotError::parse_error(format!("Failed to parse snapshot: {}", e)))?;
 
         Ok(snapshot)
     }
@@ -117,7 +114,7 @@ impl SnapshotManager {
                     let id = filename
                         .trim_start_matches("snapshot_")
                         .trim_end_matches(".json");
-                    
+
                     match self.read_snapshot(id) {
                         Ok(snapshot) => history.add_snapshot(snapshot),
                         Err(e) => {
@@ -277,7 +274,7 @@ impl SnapshotManager {
                     let id = filename
                         .trim_start_matches("snapshot_")
                         .trim_end_matches(".json");
-                    
+
                     // Try to read and validate
                     if self.read_snapshot(id).is_err() {
                         corrupted.push(id.to_string());
@@ -299,7 +296,7 @@ mod tests {
     fn test_snapshot_manager_init() {
         let temp_dir = TempDir::new().unwrap();
         let manager = SnapshotManager::new(temp_dir.path());
-        
+
         assert!(manager.init().is_ok());
         assert!(temp_dir.path().exists());
     }
@@ -308,15 +305,15 @@ mod tests {
     fn test_write_and_read_snapshot() {
         let temp_dir = TempDir::new().unwrap();
         let manager = SnapshotManager::new(temp_dir.path());
-        
+
         let snapshot = CostSnapshot::new("test-001".to_string(), 1234.56);
-        
+
         let write_result = manager.write_snapshot(&snapshot);
         assert!(write_result.is_ok());
-        
+
         let read_result = manager.read_snapshot("test-001");
         assert!(read_result.is_ok());
-        
+
         let loaded = read_result.unwrap();
         assert_eq!(loaded.id, "test-001");
         assert_eq!(loaded.total_monthly_cost, 1234.56);
@@ -326,13 +323,13 @@ mod tests {
     fn test_load_history() {
         let temp_dir = TempDir::new().unwrap();
         let manager = SnapshotManager::new(temp_dir.path());
-        
+
         let snapshot1 = CostSnapshot::new("test-001".to_string(), 1000.0);
         let snapshot2 = CostSnapshot::new("test-002".to_string(), 1200.0);
-        
+
         manager.write_snapshot(&snapshot1).unwrap();
         manager.write_snapshot(&snapshot2).unwrap();
-        
+
         let history = manager.load_history().unwrap();
         assert_eq!(history.snapshots.len(), 2);
     }
@@ -340,8 +337,9 @@ mod tests {
     #[test]
     fn test_generate_snapshot_id() {
         let id1 = SnapshotManager::generate_snapshot_id();
+        std::thread::sleep(std::time::Duration::from_millis(10));
         let id2 = SnapshotManager::generate_snapshot_id();
-        
+
         assert!(!id1.is_empty());
         assert!(!id2.is_empty());
         // IDs should be different (timestamp-based)
@@ -352,10 +350,10 @@ mod tests {
     fn test_snapshot_exists() {
         let temp_dir = TempDir::new().unwrap();
         let manager = SnapshotManager::new(temp_dir.path());
-        
+
         let snapshot = CostSnapshot::new("test-001".to_string(), 1234.56);
         manager.write_snapshot(&snapshot).unwrap();
-        
+
         assert!(manager.snapshot_exists("test-001"));
         assert!(!manager.snapshot_exists("nonexistent"));
     }
@@ -364,9 +362,9 @@ mod tests {
     fn test_validate_snapshot_negative_cost() {
         let temp_dir = TempDir::new().unwrap();
         let manager = SnapshotManager::new(temp_dir.path());
-        
+
         let mut snapshot = CostSnapshot::new("test-001".to_string(), -100.0);
-        
+
         let result = manager.validate_snapshot(&snapshot);
         assert!(result.is_err());
     }
@@ -375,12 +373,12 @@ mod tests {
     fn test_delete_snapshot() {
         let temp_dir = TempDir::new().unwrap();
         let manager = SnapshotManager::new(temp_dir.path());
-        
+
         let snapshot = CostSnapshot::new("test-001".to_string(), 1234.56);
         manager.write_snapshot(&snapshot).unwrap();
-        
+
         assert!(manager.snapshot_exists("test-001"));
-        
+
         manager.delete_snapshot("test-001").unwrap();
         assert!(!manager.snapshot_exists("test-001"));
     }
@@ -389,15 +387,15 @@ mod tests {
     fn test_count_snapshots() {
         let temp_dir = TempDir::new().unwrap();
         let manager = SnapshotManager::new(temp_dir.path());
-        
+
         assert_eq!(manager.count_snapshots().unwrap(), 0);
-        
+
         let snapshot1 = CostSnapshot::new("test-001".to_string(), 1000.0);
         let snapshot2 = CostSnapshot::new("test-002".to_string(), 1200.0);
-        
+
         manager.write_snapshot(&snapshot1).unwrap();
         manager.write_snapshot(&snapshot2).unwrap();
-        
+
         assert_eq!(manager.count_snapshots().unwrap(), 2);
     }
 }

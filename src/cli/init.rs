@@ -1,39 +1,42 @@
 // CLI init command - generate project configuration and CI templates
 
+use colored::Colorize;
 use std::fs;
 use std::path::Path;
-use colored::Colorize;
 
 /// Initialize CostPilot in a project
 pub fn init(directory: &str, ci_provider: &str) -> Result<(), String> {
     let project_dir = Path::new(directory);
-    
+
     println!("{}", "🚀 Initializing CostPilot...".bold().cyan());
-    
+
     // Create .costpilot directory
     let costpilot_dir = project_dir.join(".costpilot");
     create_directory(&costpilot_dir)?;
-    
+
     // Generate configuration file
     generate_config_file(&costpilot_dir)?;
-    
+
     // Generate CI templates based on provider
     match ci_provider {
-        "github" => generate_github_action(&project_dir)?,
-        "gitlab" => generate_gitlab_ci(&project_dir)?,
+        "github" => generate_github_action(project_dir)?,
+        "gitlab" => generate_gitlab_ci(project_dir)?,
         "none" => {
             println!("{}", "  Skipping CI template generation".dimmed());
         }
         _ => return Err(format!("Unsupported CI provider: {}", ci_provider)),
     }
-    
+
     // Generate example policy file
     generate_example_policy(&costpilot_dir)?;
-    
+
     // Generate .gitignore entries
-    generate_gitignore_entries(&project_dir)?;
-    
-    println!("\n{}", "✅ CostPilot initialized successfully!".bold().green());
+    generate_gitignore_entries(project_dir)?;
+
+    println!(
+        "\n{}",
+        "✅ CostPilot initialized successfully!".bold().green()
+    );
     println!("\n{}", "Next steps:".bold());
     println!("  1. Review .costpilot/config.yml");
     println!("  2. Customize .costpilot/policy.yml if needed");
@@ -43,18 +46,25 @@ pub fn init(directory: &str, ci_provider: &str) -> Result<(), String> {
     } else {
         println!("  3. Run 'costpilot scan' manually to analyze costs");
     }
-    
+
     Ok(())
 }
 
 /// Create directory if it doesn't exist
 fn create_directory(path: &Path) -> Result<(), String> {
     if !path.exists() {
-        fs::create_dir_all(path)
-            .map_err(|e| format!("Failed to create directory: {}", e))?;
-        println!("  {} {}", "✓".green(), format!("Created {}", path.display()).dimmed());
+        fs::create_dir_all(path).map_err(|e| format!("Failed to create directory: {}", e))?;
+        println!(
+            "  {} {}",
+            "✓".green(),
+            format!("Created {}", path.display()).dimmed()
+        );
     } else {
-        println!("  {} {}", "→".yellow(), format!("{} already exists", path.display()).dimmed());
+        println!(
+            "  {} {}",
+            "→".yellow(),
+            format!("{} already exists", path.display()).dimmed()
+        );
     }
     Ok(())
 }
@@ -62,7 +72,7 @@ fn create_directory(path: &Path) -> Result<(), String> {
 /// Generate configuration file
 fn generate_config_file(costpilot_dir: &Path) -> Result<(), String> {
     let config_path = costpilot_dir.join("config.yml");
-    
+
     let config_content = r#"# CostPilot Configuration
 version: 1.0.0
 
@@ -131,9 +141,9 @@ security:
 fn generate_github_action(project_dir: &Path) -> Result<(), String> {
     let workflows_dir = project_dir.join(".github").join("workflows");
     create_directory(&workflows_dir)?;
-    
+
     let workflow_path = workflows_dir.join("costpilot.yml");
-    
+
     let workflow_content = r#"name: CostPilot Cost Analysis
 
 on:
@@ -201,10 +211,13 @@ jobs:
 /// Generate GitLab CI configuration
 fn generate_gitlab_ci(project_dir: &Path) -> Result<(), String> {
     let ci_path = project_dir.join(".gitlab-ci.yml");
-    
+
     // Check if file exists and append instead of overwrite
     let ci_content = if ci_path.exists() {
-        println!("  {} .gitlab-ci.yml already exists, append CostPilot stage manually", "⚠".yellow());
+        println!(
+            "  {} .gitlab-ci.yml already exists, append CostPilot stage manually",
+            "⚠".yellow()
+        );
         return Ok(());
     } else {
         r#"# GitLab CI Configuration with CostPilot
@@ -264,7 +277,7 @@ costpilot-analysis:
 /// Generate example policy file
 fn generate_example_policy(costpilot_dir: &Path) -> Result<(), String> {
     let policy_path = costpilot_dir.join("policy.yml");
-    
+
     let policy_content = r#"# CostPilot Policy Configuration
 version: "1.0"
 
@@ -358,7 +371,7 @@ slo:
 "#;
 
     write_file(&policy_path, policy_content)?;
-    
+
     // Also generate baseline.json template
     let baseline_path = costpilot_dir.join("baseline.json");
     let baseline_content = r#"{
@@ -373,7 +386,7 @@ slo:
 }
 "#;
     write_file(&baseline_path, baseline_content)?;
-    
+
     // Generate SLO template
     let slo_path = costpilot_dir.join("slo.json");
     let slo_content = r#"{
@@ -396,44 +409,50 @@ slo:
 }
 "#;
     write_file(&slo_path, slo_content)?;
-    
+
     Ok(())
 }
 
 /// Generate .gitignore entries
 fn generate_gitignore_entries(project_dir: &Path) -> Result<(), String> {
     let gitignore_path = project_dir.join(".gitignore");
-    
+
     let entries = "\n# CostPilot\n.costpilot/snapshots/\n.costpilot/cache/\ntfplan.json\ntfplan.binary\ncost-report.md\n";
-    
+
     if gitignore_path.exists() {
         let existing = fs::read_to_string(&gitignore_path)
             .map_err(|e| format!("Failed to read .gitignore: {}", e))?;
-        
+
         if !existing.contains("# CostPilot") {
             fs::write(&gitignore_path, format!("{}{}", existing, entries))
                 .map_err(|e| format!("Failed to append to .gitignore: {}", e))?;
             println!("  {} Updated .gitignore", "✓".green());
         } else {
-            println!("  {} .gitignore already contains CostPilot entries", "→".yellow());
+            println!(
+                "  {} .gitignore already contains CostPilot entries",
+                "→".yellow()
+            );
         }
     } else {
         write_file(&gitignore_path, entries)?;
     }
-    
+
     Ok(())
 }
 
 /// Write file and report status
 fn write_file(path: &Path, content: &str) -> Result<(), String> {
     if path.exists() {
-        println!("  {} {} already exists (skipped)", "→".yellow(), path.display());
+        println!(
+            "  {} {} already exists (skipped)",
+            "→".yellow(),
+            path.display()
+        );
         return Ok(());
     }
-    
-    fs::write(path, content)
-        .map_err(|e| format!("Failed to write {}: {}", path.display(), e))?;
-    
+
+    fs::write(path, content).map_err(|e| format!("Failed to write {}: {}", path.display(), e))?;
+
     println!("  {} Created {}", "✓".green(), path.display());
     Ok(())
 }
@@ -447,10 +466,10 @@ mod tests {
     fn test_init_creates_structure() {
         let temp_dir = TempDir::new().unwrap();
         let path = temp_dir.path().to_str().unwrap();
-        
+
         let result = init(path, "none");
         assert!(result.is_ok());
-        
+
         // Verify directory structure
         assert!(temp_dir.path().join(".costpilot").exists());
         assert!(temp_dir.path().join(".costpilot/config.yml").exists());
@@ -462,22 +481,25 @@ mod tests {
     fn test_init_github_creates_workflow() {
         let temp_dir = TempDir::new().unwrap();
         let path = temp_dir.path().to_str().unwrap();
-        
+
         let result = init(path, "github");
         assert!(result.is_ok());
-        
-        assert!(temp_dir.path().join(".github/workflows/costpilot.yml").exists());
+
+        assert!(temp_dir
+            .path()
+            .join(".github/workflows/costpilot.yml")
+            .exists());
     }
 
     #[test]
     fn test_init_idempotent() {
         let temp_dir = TempDir::new().unwrap();
         let path = temp_dir.path().to_str().unwrap();
-        
+
         // Run init twice
         assert!(init(path, "none").is_ok());
         assert!(init(path, "none").is_ok());
-        
+
         // Files should still exist
         assert!(temp_dir.path().join(".costpilot/config.yml").exists());
     }

@@ -14,16 +14,16 @@ impl ArtifactNormalizer {
             source_metadata: artifact.metadata.clone(),
             resource_changes: Vec::new(),
         };
-        
+
         for resource in &artifact.resources {
             if let Some(change) = Self::normalize_resource(resource, &artifact.format) {
                 plan.resource_changes.push(change);
             }
         }
-        
+
         plan
     }
-    
+
     /// Normalize a single resource to a resource change
     fn normalize_resource(
         resource: &ArtifactResource,
@@ -31,13 +31,13 @@ impl ArtifactNormalizer {
     ) -> Option<NormalizedResourceChange> {
         // Convert to Terraform-style type
         let resource_type = resource.normalized_type();
-        
+
         // Build address (resource identifier)
         let address = Self::build_resource_address(&resource.id, &resource_type, format);
-        
+
         // Normalize properties to Terraform-style after values
         let after = Self::normalize_properties(&resource.properties, &resource_type);
-        
+
         Some(NormalizedResourceChange {
             address,
             mode: "managed".to_string(),
@@ -52,7 +52,7 @@ impl ArtifactNormalizer {
             source_metadata: resource.metadata.clone(),
         })
     }
-    
+
     /// Build resource address in Terraform format
     fn build_resource_address(id: &str, resource_type: &str, format: &ArtifactFormat) -> String {
         match format {
@@ -70,34 +70,40 @@ impl ArtifactNormalizer {
             }
         }
     }
-    
+
     /// Sanitize resource name to be Terraform-compatible
     fn sanitize_name(name: &str) -> String {
         name.chars()
-            .map(|c| if c.is_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
+            .map(|c| {
+                if c.is_alphanumeric() || c == '_' || c == '-' {
+                    c
+                } else {
+                    '_'
+                }
+            })
             .collect::<String>()
             .to_lowercase()
     }
-    
+
     /// Normalize CloudFormation/CDK properties to Terraform-style
     fn normalize_properties(properties: &HashMap<String, Value>, resource_type: &str) -> Value {
         let mut normalized = serde_json::Map::new();
-        
+
         for (key, value) in properties {
             let normalized_key = Self::normalize_property_key(key, resource_type);
             let normalized_value = Self::normalize_property_value(value);
             normalized.insert(normalized_key, normalized_value);
         }
-        
+
         Value::Object(normalized)
     }
-    
+
     /// Normalize property key from CloudFormation to Terraform style
     fn normalize_property_key(key: &str, resource_type: &str) -> String {
         // Convert PascalCase to snake_case
         let mut result = String::new();
         let mut prev_lower = false;
-        
+
         for (i, ch) in key.chars().enumerate() {
             if ch.is_uppercase() {
                 if i > 0 && prev_lower {
@@ -110,11 +116,11 @@ impl ArtifactNormalizer {
                 prev_lower = true;
             }
         }
-        
+
         // Apply resource-specific mappings
         Self::apply_property_mappings(&result, resource_type)
     }
-    
+
     /// Apply resource-specific property name mappings
     fn apply_property_mappings(key: &str, resource_type: &str) -> String {
         // EC2 Instance mappings
@@ -125,15 +131,12 @@ impl ArtifactNormalizer {
                 _ => {}
             }
         }
-        
-        // S3 Bucket mappings  
+
+        // S3 Bucket mappings
         if resource_type == "aws_s3_bucket" || resource_type.contains("s3_bucket") {
-            match key {
-                "bucket_name" => return "bucket".to_string(),
-                _ => {}
-            }
+            if key == "bucket_name" { return "bucket".to_string() }
         }
-        
+
         // RDS mappings
         if resource_type.contains("rds") || resource_type.contains("db_instance") {
             match key {
@@ -142,10 +145,10 @@ impl ArtifactNormalizer {
                 _ => {}
             }
         }
-        
+
         key.to_string()
     }
-    
+
     /// Normalize property value (resolve intrinsic functions if possible)
     fn normalize_property_value(value: &Value) -> Value {
         match value {
@@ -156,31 +159,32 @@ impl ArtifactNormalizer {
                         return json!(format!("${{{}}}", ref_val));
                     }
                 }
-                
+
                 if obj.contains_key("Fn::GetAtt") {
                     if let Some(arr) = obj.get("Fn::GetAtt").and_then(|v| v.as_array()) {
                         if arr.len() == 2 {
-                            if let (Some(resource), Some(attr)) = 
-                                (arr[0].as_str(), arr[1].as_str()) {
+                            if let (Some(resource), Some(attr)) = (arr[0].as_str(), arr[1].as_str())
+                            {
                                 return json!(format!("${{{}.{}}}", resource, attr));
                             }
                         }
                     }
                 }
-                
+
                 if obj.contains_key("Fn::Sub") {
                     // Try to simplify Sub expressions
                     if let Some(template) = obj.get("Fn::Sub").and_then(|v| v.as_str()) {
                         return json!(template);
                     }
                 }
-                
+
                 if obj.contains_key("Fn::Join") {
                     if let Some(arr) = obj.get("Fn::Join").and_then(|v| v.as_array()) {
                         if arr.len() == 2 {
-                            if let (Some(delim), Some(parts)) = 
-                                (arr[0].as_str(), arr[1].as_array()) {
-                                let joined = parts.iter()
+                            if let (Some(delim), Some(parts)) = (arr[0].as_str(), arr[1].as_array())
+                            {
+                                let joined = parts
+                                    .iter()
                                     .filter_map(|v| v.as_str())
                                     .collect::<Vec<_>>()
                                     .join(delim);
@@ -189,7 +193,7 @@ impl ArtifactNormalizer {
                         }
                     }
                 }
-                
+
                 // Recursively normalize nested objects
                 let mut normalized = serde_json::Map::new();
                 for (k, v) in obj {
@@ -197,13 +201,11 @@ impl ArtifactNormalizer {
                 }
                 Value::Object(normalized)
             }
-            Value::Array(arr) => {
-                Value::Array(
-                    arr.iter()
-                        .map(|v| Self::normalize_property_value(v))
-                        .collect()
-                )
-            }
+            Value::Array(arr) => Value::Array(
+                arr.iter()
+                    .map(Self::normalize_property_value)
+                    .collect(),
+            ),
             _ => value.clone(),
         }
     }
@@ -214,13 +216,13 @@ impl ArtifactNormalizer {
 pub struct NormalizedPlan {
     /// Format version
     pub format_version: String,
-    
+
     /// Original source format
     pub source_format: ArtifactFormat,
-    
+
     /// Source metadata
     pub source_metadata: ArtifactMetadata,
-    
+
     /// Resource changes
     pub resource_changes: Vec<NormalizedResourceChange>,
 }
@@ -230,20 +232,20 @@ pub struct NormalizedPlan {
 pub struct NormalizedResourceChange {
     /// Resource address (e.g., "aws_instance.web")
     pub address: String,
-    
+
     /// Resource mode ("managed" or "data")
     pub mode: String,
-    
+
     /// Resource type (normalized to Terraform style)
     #[serde(rename = "type")]
     pub resource_type: String,
-    
+
     /// Resource name
     pub name: String,
-    
+
     /// Change details
     pub change: ChangeAction,
-    
+
     /// Source metadata from original artifact
     #[serde(default)]
     pub source_metadata: HashMap<String, String>,
@@ -254,13 +256,13 @@ pub struct NormalizedResourceChange {
 pub struct ChangeAction {
     /// Actions to be performed (e.g., ["create"], ["update"], ["delete", "create"])
     pub actions: Vec<String>,
-    
+
     /// State before change
     pub before: Value,
-    
+
     /// State after change
     pub after: Value,
-    
+
     /// Unknown values after change
     #[serde(default)]
     pub after_unknown: HashMap<String, bool>,
@@ -276,7 +278,7 @@ impl NormalizedPlan {
             "source_format": self.source_format,
         })
     }
-    
+
     /// Get all resources being created
     pub fn created_resources(&self) -> Vec<&NormalizedResourceChange> {
         self.resource_changes
@@ -284,7 +286,7 @@ impl NormalizedPlan {
             .filter(|r| r.change.actions.contains(&"create".to_string()))
             .collect()
     }
-    
+
     /// Count resources by type
     pub fn count_by_type(&self) -> HashMap<String, usize> {
         let mut counts = HashMap::new();
@@ -301,10 +303,22 @@ mod tests {
 
     #[test]
     fn test_sanitize_name() {
-        assert_eq!(ArtifactNormalizer::sanitize_name("MyInstance"), "myinstance");
-        assert_eq!(ArtifactNormalizer::sanitize_name("My-Instance"), "my-instance");
-        assert_eq!(ArtifactNormalizer::sanitize_name("My_Instance"), "my_instance");
-        assert_eq!(ArtifactNormalizer::sanitize_name("My.Instance"), "my_instance");
+        assert_eq!(
+            ArtifactNormalizer::sanitize_name("MyInstance"),
+            "myinstance"
+        );
+        assert_eq!(
+            ArtifactNormalizer::sanitize_name("My-Instance"),
+            "my-instance"
+        );
+        assert_eq!(
+            ArtifactNormalizer::sanitize_name("My_Instance"),
+            "my_instance"
+        );
+        assert_eq!(
+            ArtifactNormalizer::sanitize_name("My.Instance"),
+            "my_instance"
+        );
     }
 
     #[test]
@@ -356,11 +370,11 @@ mod tests {
                 tags: HashMap::new(),
             },
         );
-        
+
         let mut properties = HashMap::new();
         properties.insert("InstanceType".to_string(), json!("t3.micro"));
         properties.insert("ImageId".to_string(), json!("ami-12345"));
-        
+
         artifact.add_resource(ArtifactResource {
             id: "MyInstance".to_string(),
             resource_type: "AWS::EC2::Instance".to_string(),
@@ -368,12 +382,12 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         let normalized = ArtifactNormalizer::normalize(&artifact);
-        
+
         assert_eq!(normalized.source_format, ArtifactFormat::CloudFormation);
         assert_eq!(normalized.resource_changes.len(), 1);
-        
+
         let change = &normalized.resource_changes[0];
         assert_eq!(change.resource_type, "aws_ec2_instance");
         assert!(change.address.contains("aws_ec2_instance"));
@@ -391,7 +405,7 @@ mod tests {
                 tags: HashMap::new(),
             },
         );
-        
+
         artifact.add_resource(ArtifactResource {
             id: "Instance1".to_string(),
             resource_type: "AWS::EC2::Instance".to_string(),
@@ -399,7 +413,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         artifact.add_resource(ArtifactResource {
             id: "Bucket1".to_string(),
             resource_type: "AWS::S3::Bucket".to_string(),
@@ -407,10 +421,10 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         let normalized = ArtifactNormalizer::normalize(&artifact);
         assert_eq!(normalized.resource_changes.len(), 2);
-        
+
         let counts = normalized.count_by_type();
         assert_eq!(counts.get("aws_ec2_instance"), Some(&1));
         assert_eq!(counts.get("aws_s3_bucket"), Some(&1));
@@ -424,7 +438,7 @@ mod tests {
             &ArtifactFormat::CloudFormation,
         );
         assert_eq!(address, "aws_instance.myinstance");
-        
+
         let address = ArtifactNormalizer::build_resource_address(
             "my_instance",
             "aws_instance",
@@ -447,7 +461,7 @@ mod tests {
             },
             resource_changes: Vec::new(),
         };
-        
+
         let plan = normalized.to_terraform_plan();
         assert!(plan.is_object());
         assert!(plan.get("format_version").is_some());

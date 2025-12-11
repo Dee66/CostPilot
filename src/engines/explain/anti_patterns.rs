@@ -1,6 +1,6 @@
 // Anti-pattern detection - MVP top 5 patterns
 
-use crate::engines::shared::models::{ResourceChange, CostEstimate};
+use crate::engines::shared::models::{CostEstimate, ResourceChange};
 use serde::{Deserialize, Serialize};
 
 /// Anti-pattern detection result
@@ -61,9 +61,8 @@ fn detect_nat_gateway_overuse(
     }
 
     // NAT Gateways are expensive (~$32.85/month + data transfer)
-    let mut evidence = vec![
-        "NAT Gateway incurs fixed hourly charges plus data transfer costs".to_string(),
-    ];
+    let mut evidence =
+        vec!["NAT Gateway incurs fixed hourly charges plus data transfer costs".to_string()];
 
     if let Some(est) = estimate {
         evidence.push(format!("Estimated cost: ${:.2}/month", est.monthly_cost));
@@ -97,16 +96,17 @@ fn detect_overprovisioned_ec2(
     if let Some(config) = &change.new_config {
         if let Some(instance_type) = config.get("instance_type").and_then(|v| v.as_str()) {
             // Detect potentially oversized instances
-            let is_large = instance_type.contains("large") || 
-                          instance_type.contains("xlarge") ||
-                          instance_type.starts_with("m5.") ||
-                          instance_type.starts_with("c5.") ||
-                          instance_type.starts_with("r5.");
+            let is_large = instance_type.contains("large")
+                || instance_type.contains("xlarge")
+                || instance_type.starts_with("m5.")
+                || instance_type.starts_with("c5.")
+                || instance_type.starts_with("r5.");
 
             if is_large {
                 let mut evidence = vec![
                     format!("Instance type: {}", instance_type),
-                    "Large instance types should be right-sized based on actual workload".to_string(),
+                    "Large instance types should be right-sized based on actual workload"
+                        .to_string(),
                 ];
 
                 if let Some(est) = estimate {
@@ -141,8 +141,7 @@ fn detect_s3_missing_lifecycle(change: &ResourceChange) -> Option<AntiPattern> {
 
     // Check if lifecycle rules are missing
     let has_lifecycle = if let Some(config) = &change.new_config {
-        config.get("lifecycle_rule").is_some() || 
-        config.get("lifecycle_configuration").is_some()
+        config.get("lifecycle_rule").is_some() || config.get("lifecycle_configuration").is_some()
     } else {
         false
     };
@@ -187,18 +186,22 @@ fn detect_unbounded_lambda_concurrency(change: &ResourceChange) -> Option<AntiPa
         return Some(AntiPattern {
             pattern_id: "UNBOUNDED_LAMBDA_CONCURRENCY".to_string(),
             pattern_name: "Unbounded Lambda Concurrency".to_string(),
-            description: "Lambda function without concurrency limits can cause unexpected cost spikes.".to_string(),
+            description:
+                "Lambda function without concurrency limits can cause unexpected cost spikes."
+                    .to_string(),
             severity: "HIGH".to_string(),
             detected_in: change.resource_id.clone(),
             evidence: vec![
                 "No reserved_concurrent_executions configured".to_string(),
-                "Function can scale to account-level limits (1000 concurrent by default)".to_string(),
+                "Function can scale to account-level limits (1000 concurrent by default)"
+                    .to_string(),
                 "Traffic spikes or bugs can cause runaway costs".to_string(),
             ],
             suggested_fix: Some(
                 "Set reserved_concurrent_executions based on expected peak load. \
                 Start conservative (e.g., 10-100) and adjust based on CloudWatch metrics. \
-                Consider provisioned concurrency for predictable traffic.".to_string()
+                Consider provisioned concurrency for predictable traffic."
+                    .to_string(),
             ),
             cost_impact: None,
         });
@@ -215,7 +218,8 @@ fn detect_dynamodb_pay_per_request_default(change: &ResourceChange) -> Option<An
 
     // Check billing mode
     if let Some(config) = &change.new_config {
-        let billing_mode = config.get("billing_mode")
+        let billing_mode = config
+            .get("billing_mode")
             .and_then(|v| v.as_str())
             .unwrap_or("PAY_PER_REQUEST"); // Default is on-demand
 
@@ -251,28 +255,25 @@ fn detect_dynamodb_pay_per_request_default(change: &ResourceChange) -> Option<An
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::ChangeAction;
-    use std::collections::HashMap;
+    use crate::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate};
     use serde_json::json;
 
     #[test]
     fn test_nat_gateway_pattern() {
-        let change = ResourceChange {
-            resource_id: "aws_nat_gateway.test".to_string(),
-            resource_type: "aws_nat_gateway".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_nat_gateway.test")
+            .resource_type("aws_nat_gateway")
+            .action(ChangeAction::Create)
+            .new_config(json!({}))
+            .build();
 
-        let estimate = CostEstimate {
-            estimate: 32.85,
-            lower: 24.64,
-            upper: 41.06,
-            confidence: 0.95,
-        };
+        let estimate = CostEstimate::builder()
+            .resource_id("test")
+            .estimate(32.85)
+            .lower(24.64)
+            .upper(41.06)
+            .confidence(0.95)
+            .build();
 
         let patterns = detect_anti_patterns(&change, Some(&estimate));
         assert_eq!(patterns.len(), 1);
@@ -282,15 +283,12 @@ mod tests {
 
     #[test]
     fn test_overprovisioned_ec2() {
-        let change = ResourceChange {
-            resource_id: "aws_instance.test".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "m5.4xlarge"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_instance.test")
+            .resource_type("aws_instance")
+            .action(ChangeAction::Create)
+            .new_config(json!({"instance_type": "m5.4xlarge"}))
+            .build();
 
         let patterns = detect_anti_patterns(&change, None);
         assert_eq!(patterns.len(), 1);
@@ -299,15 +297,12 @@ mod tests {
 
     #[test]
     fn test_s3_missing_lifecycle() {
-        let change = ResourceChange {
-            resource_id: "aws_s3_bucket.test".to_string(),
-            resource_type: "aws_s3_bucket".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"bucket": "test-bucket"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_s3_bucket.test")
+            .resource_type("aws_s3_bucket")
+            .action(ChangeAction::Create)
+            .new_config(json!({"bucket": "test-bucket"}))
+            .build();
 
         let patterns = detect_anti_patterns(&change, None);
         assert_eq!(patterns.len(), 1);
@@ -316,15 +311,12 @@ mod tests {
 
     #[test]
     fn test_unbounded_lambda() {
-        let change = ResourceChange {
-            resource_id: "aws_lambda_function.test".to_string(),
-            resource_type: "aws_lambda_function".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"function_name": "test", "memory_size": 256})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_lambda_function.test")
+            .resource_type("aws_lambda_function")
+            .action(ChangeAction::Create)
+            .new_config(json!({"function_name": "test", "memory_size": 256}))
+            .build();
 
         let patterns = detect_anti_patterns(&change, None);
         assert_eq!(patterns.len(), 1);
@@ -333,15 +325,12 @@ mod tests {
 
     #[test]
     fn test_dynamodb_pay_per_request() {
-        let change = ResourceChange {
-            resource_id: "aws_dynamodb_table.test".to_string(),
-            resource_type: "aws_dynamodb_table".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"name": "test-table"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_dynamodb_table.test")
+            .resource_type("aws_dynamodb_table")
+            .action(ChangeAction::Create)
+            .new_config(json!({"name": "test-table"}))
+            .build();
 
         let patterns = detect_anti_patterns(&change, None);
         assert_eq!(patterns.len(), 1);
@@ -350,15 +339,12 @@ mod tests {
 
     #[test]
     fn test_no_patterns() {
-        let change = ResourceChange {
-            resource_id: "aws_instance.test".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "t3.micro"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_instance.test")
+            .resource_type("aws_instance")
+            .action(ChangeAction::Create)
+            .new_config(json!({"instance_type": "t3.micro"}))
+            .build();
 
         let patterns = detect_anti_patterns(&change, None);
         assert_eq!(patterns.len(), 0);

@@ -1,9 +1,9 @@
 // Autofix engine - orchestrates fix generation
 
-use crate::engines::shared::models::{Detection, ResourceChange, CostEstimate};
-use crate::engines::explain::anti_patterns::{AntiPattern, detect_anti_patterns};
+use crate::engines::autofix::patch_generator::{PatchFile, PatchGenerator};
 use crate::engines::autofix::snippet_generator::{FixSnippet, SnippetGenerator};
-use crate::engines::autofix::patch_generator::{PatchGenerator, PatchFile};
+use crate::engines::explain::anti_patterns::detect_anti_patterns;
+use crate::engines::shared::models::{CostEstimate, Detection, ResourceChange};
 use serde::{Deserialize, Serialize};
 
 /// Autofix mode
@@ -28,6 +28,12 @@ pub struct AutofixResult {
 }
 
 pub struct AutofixEngine;
+
+impl Default for AutofixEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl AutofixEngine {
     /// Create new AutofixEngine
@@ -69,10 +75,12 @@ impl AutofixEngine {
 
         for detection in detections {
             // Find corresponding resource change
-            let change = changes.iter()
+            let change = changes
+                .iter()
                 .find(|c| c.resource_id == detection.resource_id);
-            
-            let estimate = estimates.iter()
+
+            let estimate = estimates
+                .iter()
                 .find(|e| e.resource_id == detection.resource_id);
 
             if let Some(change) = change {
@@ -80,13 +88,14 @@ impl AutofixEngine {
                 let anti_patterns = detect_anti_patterns(change, estimate);
 
                 // Generate fix snippet if applicable
-                if let Some(snippet) = SnippetGenerator::generate(detection, change, &anti_patterns, estimate) {
+                if let Some(snippet) =
+                    SnippetGenerator::generate(detection, change, &anti_patterns, estimate)
+                {
                     fixes.push(snippet);
                 } else {
                     warnings.push(format!(
                         "No automated fix available for {} ({})",
-                        detection.resource_id,
-                        change.resource_type
+                        detection.resource_id, change.resource_type
                     ));
                 }
             } else {
@@ -148,41 +157,41 @@ impl AutofixEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ChangeAction, RegressionType, Severity, CostEstimate};
-    use std::collections::HashMap;
+    use crate::engines::shared::models::{ChangeAction, CostEstimate, RegressionType, Severity};
     use serde_json::json;
+    use std::collections::HashMap;
 
     #[test]
     fn test_snippet_mode() {
         let detection = Detection {
+            rule_id: "cost_spike".to_string(),
             resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
             regression_type: RegressionType::Configuration,
             severity: Severity::High,
-            estimated_cost: Some(CostEstimate {
-                estimate: 560.0,
-                lower: 420.0,
-                upper: 700.0,
-                confidence: 0.9,
-            }),
+            severity_score: 70,
+            message: "High cost instance detected".to_string(),
+            estimated_cost: Some(560.0),
             fix_snippet: None,
+            resource_type: Some("aws_instance".to_string()),
+            issue: None,
+            confidence: None,
+            monthly_cost: None,
         };
 
-        let change = ResourceChange {
-            resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "m5.4xlarge"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_instance.web".to_string())
+            .resource_type("aws_instance".to_string())
+            .action(ChangeAction::Create)
+            .old_config(serde_json::Value::Null)
+            .new_config(serde_json::json!({"instance_type": "t2.2xlarge"}))
+            .build();
 
-        let result = AutofixEngine::generate_fixes(
-            &[detection],
-            &[change],
-            AutofixMode::Snippet,
-        );
+        let estimate = CostEstimate::builder()
+            .resource_id("aws_instance.web".to_string())
+            .monthly_cost(560.0)
+            .build();
+
+        let result = AutofixEngine::generate_fixes(&[detection], &[change], &[estimate], AutofixMode::Snippet);
 
         assert_eq!(result.mode, "snippet");
         assert_eq!(result.fixes_generated, 1);
@@ -193,34 +202,29 @@ mod tests {
     #[test]
     fn test_patch_mode() {
         let detection = Detection {
+            rule_id: "cost_spike".to_string(),
             resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
             regression_type: RegressionType::Configuration,
             severity: Severity::High,
-            estimated_cost: Some(CostEstimate {
-                estimate: 560.0,
-                lower: 420.0,
-                upper: 700.0,
-                confidence: 0.9,
-            }),
+            severity_score: 70,
+            message: "High cost instance detected".to_string(),
+            estimated_cost: Some(560.0),
             fix_snippet: None,
+            resource_type: None,
+            issue: None,
+            confidence: None,
+            monthly_cost: None,
         };
 
-        let change = ResourceChange {
-            resource_id: "aws_instance.web".to_string(),
-            resource_type: "aws_instance".to_string(),
-            action: ChangeAction::Create,
-            module_path: None,
-            old_config: None,
-            new_config: Some(json!({"instance_type": "m5.4xlarge"})),
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder()
+            .resource_id("aws_instance.web".to_string())
+            .resource_type("aws_instance".to_string())
+            .action(ChangeAction::Create)
+            .old_config(serde_json::Value::Null)
+            .new_config(serde_json::Value::Null)
+            .build();
 
-        let result = AutofixEngine::generate_fixes(
-            &[detection],
-            &[change],
-            AutofixMode::Patch,
-        );
+        let result = AutofixEngine::generate_fixes(&[detection], &[change], &[], AutofixMode::Patch);
 
         assert_eq!(result.mode, "patch");
         // Will have patches if anti-patterns are detected

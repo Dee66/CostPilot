@@ -1,5 +1,5 @@
 /// Zero-network enforcement layer for policy evaluation
-/// 
+///
 /// This module provides compile-time and runtime guarantees that policy
 /// evaluation never makes network calls, external API requests, or filesystem
 /// operations beyond loading local configuration files.
@@ -19,11 +19,10 @@
 /// - No external API requests
 /// - No DNS lookups
 /// - No time-based non-determinism (uses fixed timestamps for testing)
-
 use std::marker::PhantomData;
 
 /// Zero-network token that proves evaluation happens without network access
-/// 
+///
 /// This is a zero-sized type that can only be constructed through safe methods,
 /// providing compile-time proof that network operations are not performed.
 #[derive(Debug, Clone, Copy)]
@@ -33,7 +32,7 @@ pub struct ZeroNetworkToken {
 
 impl ZeroNetworkToken {
     /// Create a new zero-network token
-    /// 
+    ///
     /// This is the only way to obtain a token, and it requires no arguments,
     /// preventing any network state from being smuggled in.
     #[inline]
@@ -42,7 +41,7 @@ impl ZeroNetworkToken {
             _private: PhantomData,
         }
     }
-    
+
     /// Validate that we're still in zero-network context
     #[inline]
     pub fn validate(&self) -> Result<(), ZeroNetworkViolation> {
@@ -63,13 +62,13 @@ impl Default for ZeroNetworkToken {
 pub enum ZeroNetworkViolation {
     /// Network call attempted
     NetworkCallAttempted { operation: String },
-    
+
     /// External API call attempted
     ApiCallAttempted { endpoint: String },
-    
+
     /// Non-deterministic operation attempted
     NonDeterministicOperation { description: String },
-    
+
     /// Unsafe file system operation
     UnsafeFileOperation { path: String },
 }
@@ -96,18 +95,18 @@ impl std::fmt::Display for ZeroNetworkViolation {
 impl std::error::Error for ZeroNetworkViolation {}
 
 /// Policy evaluator with zero-network guarantees
-/// 
+///
 /// This trait ensures that policy evaluation happens entirely locally
 /// without any network I/O or external dependencies.
 pub trait ZeroNetworkEvaluator {
     /// Evaluation input type
     type Input;
-    
+
     /// Evaluation output type
     type Output;
-    
+
     /// Evaluate with zero-network guarantee
-    /// 
+    ///
     /// By requiring a ZeroNetworkToken, we prove at compile time that
     /// this evaluation will not make network calls.
     fn evaluate_zero_network(
@@ -140,17 +139,19 @@ impl ZeroNetworkValidator {
             "azure_core",
             "google-cloud",
         ];
-        
-        !DISALLOWED.iter().any(|&disallowed| crate_name.contains(disallowed))
+
+        !DISALLOWED
+            .iter()
+            .any(|&disallowed| crate_name.contains(disallowed))
     }
-    
+
     /// Validate configuration is safe for zero-network evaluation
     pub fn validate_config<T>(_config: &T) -> Result<(), ZeroNetworkViolation> {
         // Configuration should be pure data - no function pointers, etc.
         // In Rust, if it's serializable, it's safe
         Ok(())
     }
-    
+
     /// Ensure operation is deterministic
     pub fn ensure_deterministic(operation: &str) -> Result<(), ZeroNetworkViolation> {
         // Operations that break determinism
@@ -161,19 +162,19 @@ impl ZeroNetworkValidator {
             "thread::sleep",
             "thread_rng",
         ];
-        
+
         if NON_DETERMINISTIC.iter().any(|&nd| operation.contains(nd)) {
             return Err(ZeroNetworkViolation::NonDeterministicOperation {
                 description: format!("Operation '{}' is non-deterministic", operation),
             });
         }
-        
+
         Ok(())
     }
 }
 
 /// Marker trait for types that are safe for zero-network evaluation
-/// 
+///
 /// This trait is automatically implemented for types that don't contain
 /// network-capable functionality.
 pub trait ZeroNetworkSafe: Send + Sync {}
@@ -209,27 +210,27 @@ impl<T> ZeroNetworkEnforced<T> {
             token: ZeroNetworkToken::new(),
         }
     }
-    
+
     /// Get reference to inner value
     pub fn inner(&self) -> &T {
         &self.inner
     }
-    
+
     /// Get mutable reference to inner value
     pub fn inner_mut(&mut self) -> &mut T {
         &mut self.inner
     }
-    
+
     /// Consume and return inner value
     pub fn into_inner(self) -> T {
         self.inner
     }
-    
+
     /// Get the zero-network token
     pub fn token(&self) -> ZeroNetworkToken {
         self.token
     }
-    
+
     /// Execute a closure with zero-network guarantee
     pub fn with_zero_network<F, R>(&self, f: F) -> Result<R, ZeroNetworkViolation>
     where
@@ -251,7 +252,7 @@ impl ZeroNetworkRuntime {
             _private: PhantomData,
         }
     }
-    
+
     /// Execute a function with zero-network guarantees
     pub fn execute<F, R>(&self, f: F) -> Result<R, ZeroNetworkViolation>
     where
@@ -261,7 +262,7 @@ impl ZeroNetworkRuntime {
         token.validate()?;
         f(token)
     }
-    
+
     /// Verify that we're running in a safe environment
     pub fn verify_environment(&self) -> Result<(), ZeroNetworkViolation> {
         // Check for network interfaces (in a real implementation)
@@ -279,66 +280,66 @@ impl Default for ZeroNetworkRuntime {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_zero_network_token() {
         let token = ZeroNetworkToken::new();
         assert!(token.validate().is_ok());
     }
-    
+
     #[test]
     fn test_allowed_dependencies() {
         assert!(ZeroNetworkValidator::is_allowed_dependency("serde"));
         assert!(ZeroNetworkValidator::is_allowed_dependency("serde_json"));
         assert!(ZeroNetworkValidator::is_allowed_dependency("chrono"));
-        
+
         assert!(!ZeroNetworkValidator::is_allowed_dependency("reqwest"));
         assert!(!ZeroNetworkValidator::is_allowed_dependency("hyper"));
         assert!(!ZeroNetworkValidator::is_allowed_dependency("aws-sdk-s3"));
     }
-    
+
     #[test]
     fn test_deterministic_validation() {
         assert!(ZeroNetworkValidator::ensure_deterministic("pure_function").is_ok());
         assert!(ZeroNetworkValidator::ensure_deterministic("calculate_cost").is_ok());
-        
+
         assert!(ZeroNetworkValidator::ensure_deterministic("SystemTime::now()").is_err());
         assert!(ZeroNetworkValidator::ensure_deterministic("rand::random()").is_err());
     }
-    
+
     #[test]
     fn test_zero_network_enforced() {
         let enforced = ZeroNetworkEnforced::new(42);
         assert_eq!(*enforced.inner(), 42);
-        
+
         let result = enforced.with_zero_network(|value, token| {
             token.validate()?;
             Ok(*value * 2)
         });
-        
+
         assert_eq!(result.unwrap(), 84);
     }
-    
+
     #[test]
     fn test_zero_network_runtime() {
         let runtime = ZeroNetworkRuntime::new();
         assert!(runtime.verify_environment().is_ok());
-        
+
         let result = runtime.execute(|token| {
             token.validate()?;
             Ok(100)
         });
-        
+
         assert_eq!(result.unwrap(), 100);
     }
-    
+
     #[test]
     fn test_zero_network_violation_display() {
         let violation = ZeroNetworkViolation::NetworkCallAttempted {
             operation: "HTTP GET".to_string(),
         };
         assert_eq!(violation.to_string(), "Network call attempted: HTTP GET");
-        
+
         let violation = ZeroNetworkViolation::ApiCallAttempted {
             endpoint: "https://api.aws.com/pricing".to_string(),
         };

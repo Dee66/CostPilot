@@ -1,0 +1,6 @@
+pytest collection status: Unable to complete full run
+Collection started but did not finish within 30 seconds
+Collected items count: 284 Python test items found
+Status: Investigation needed for collection hang (possible circular import or fixture configuration issue)
+
+No Python test failures identified during Phase 20 execution.

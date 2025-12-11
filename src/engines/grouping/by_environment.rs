@@ -32,7 +32,13 @@ impl EnvironmentGroup {
         }
     }
 
-    pub fn add_resource(&mut self, address: String, resource_type: String, service: String, cost: f64) {
+    pub fn add_resource(
+        &mut self,
+        address: String,
+        resource_type: String,
+        service: String,
+        cost: f64,
+    ) {
         self.resources.push(address);
         self.monthly_cost += cost;
         self.resource_count += 1;
@@ -49,7 +55,9 @@ impl EnvironmentGroup {
     }
 
     pub fn top_services(&self, limit: usize) -> Vec<(String, f64)> {
-        let mut services: Vec<(String, f64)> = self.cost_by_service.iter()
+        let mut services: Vec<(String, f64)> = self
+            .cost_by_service
+            .iter()
             .map(|(s, c)| (s.clone(), *c))
             .collect();
         services.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
@@ -69,7 +77,12 @@ pub fn group_by_environment(
         let group = groups
             .entry(environment.clone())
             .or_insert_with(|| EnvironmentGroup::new(environment));
-        group.add_resource(address.clone(), resource_type.clone(), service.clone(), *cost);
+        group.add_resource(
+            address.clone(),
+            resource_type.clone(),
+            service.clone(),
+            *cost,
+        );
     }
 
     let mut result: Vec<EnvironmentGroup> = groups.into_values().collect();
@@ -96,32 +109,32 @@ pub fn infer_environment(address: &str, tags: &HashMap<String, String>) -> Strin
 
     // Check address patterns
     let lower = address.to_lowercase();
-    
+
     // Production patterns
     if lower.contains("prod") || lower.contains("production") || lower.contains("prd") {
         return "production".to_string();
     }
-    
+
     // Staging patterns
     if lower.contains("stag") || lower.contains("stage") || lower.contains("staging") {
         return "staging".to_string();
     }
-    
+
     // Development patterns
     if lower.contains("dev") || lower.contains("development") {
         return "development".to_string();
     }
-    
+
     // QA/Test patterns
     if lower.contains("qa") || lower.contains("test") || lower.contains("testing") {
         return "qa".to_string();
     }
-    
+
     // UAT patterns
     if lower.contains("uat") || lower.contains("acceptance") {
         return "uat".to_string();
     }
-    
+
     // Sandbox patterns
     if lower.contains("sandbox") || lower.contains("sbx") {
         return "sandbox".to_string();
@@ -133,7 +146,7 @@ pub fn infer_environment(address: &str, tags: &HashMap<String, String>) -> Strin
 /// Normalize environment names to standard values
 pub fn normalize_environment(env: &str) -> String {
     let normalized = env.trim().to_lowercase();
-    
+
     match normalized.as_str() {
         "prod" | "production" | "prd" | "live" => "production".to_string(),
         "stag" | "stage" | "staging" | "stg" => "staging".to_string(),
@@ -149,7 +162,7 @@ pub fn normalize_environment(env: &str) -> String {
 /// Calculate environment cost ratios (useful for detecting cost imbalances)
 pub fn calculate_environment_ratios(groups: &[EnvironmentGroup]) -> HashMap<String, f64> {
     let total_cost: f64 = groups.iter().map(|g| g.monthly_cost).sum();
-    
+
     groups
         .iter()
         .map(|g| {
@@ -322,9 +335,18 @@ mod tests {
     #[test]
     fn test_infer_environment_from_address() {
         let tags = HashMap::new();
-        assert_eq!(infer_environment("aws_instance.prod-web", &tags), "production");
-        assert_eq!(infer_environment("aws_instance.staging-api", &tags), "staging");
-        assert_eq!(infer_environment("aws_instance.dev_db", &tags), "development");
+        assert_eq!(
+            infer_environment("aws_instance.prod-web", &tags),
+            "production"
+        );
+        assert_eq!(
+            infer_environment("aws_instance.staging-api", &tags),
+            "staging"
+        );
+        assert_eq!(
+            infer_environment("aws_instance.dev_db", &tags),
+            "development"
+        );
         assert_eq!(infer_environment("aws_instance.qa-test", &tags), "qa");
     }
 

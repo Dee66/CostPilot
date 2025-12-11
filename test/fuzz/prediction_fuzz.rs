@@ -4,7 +4,8 @@
 mod prediction_fuzz_tests {
     use proptest::prelude::*;
     use costpilot::engines::prediction::PredictionEngine;
-    use costpilot::engines::shared::models::ResourceChange;
+    use costpilot::engines::shared::models::{ResourceChange, Severity, ChangeAction};
+    use serde_json::json;
 
     // Generate arbitrary resource changes for fuzzing
     fn arb_resource_change() -> impl Strategy<Value = ResourceChange> {
@@ -14,14 +15,14 @@ mod prediction_fuzz_tests {
             prop::option::of(any::<String>()),
             prop::option::of(any::<f64>()),
         ).prop_map(|(id, old_type, new_type, monthly_cost)| {
-            ResourceChange {
-                resource_id: id,
-                resource_type: new_type.unwrap_or_else(|| "aws_instance".to_string()),
-                action: "create".to_string(),
-                before: old_type.map(|t| serde_json::json!({"type": t})),
-                after: Some(serde_json::json!({"type": "t3.medium"})),
-                monthly_cost: monthly_cost.unwrap_or(0.0).abs(),
-            }
+            ResourceChange::builder()
+                .resource_id(id)
+                .resource_type(new_type.unwrap_or_else(|| "aws_instance".to_string()))
+                .action(ChangeAction::Create)
+                .old_config(old_type.map(|t| json!({"type": t})).unwrap_or(json!(null)))
+                .new_config(json!({"type": "t3.medium"}))
+                .monthly_cost(monthly_cost.unwrap_or(0.0).abs())
+                .build()
         })
     }
 
@@ -86,14 +87,13 @@ mod prediction_fuzz_tests {
         fn fuzz_prediction_extreme_costs(
             cost in prop::num::f64::ANY
         ) {
-            let resource = ResourceChange {
-                resource_id: "test".to_string(),
-                resource_type: "aws_instance".to_string(),
-                action: "create".to_string(),
-                before: None,
-                after: Some(serde_json::json!({"instance_type": "t3.medium"})),
-                monthly_cost: cost.abs(),
-            };
+            let resource = ResourceChange::builder()
+                .resource_id("test")
+                .resource_type("aws_instance")
+                .action(ChangeAction::Create)
+                .new_config(json!({"instance_type": "t3.medium"}))
+                .monthly_cost(cost.abs())
+                .build();
             
             let engine = PredictionEngine::new();
             let _ = engine.predict(&resource);
@@ -104,14 +104,13 @@ mod prediction_fuzz_tests {
             id in "\\PC{1,100}",
             resource_type in "\\PC{1,50}"
         ) {
-            let resource = ResourceChange {
-                resource_id: id,
-                resource_type,
-                action: "create".to_string(),
-                before: None,
-                after: Some(serde_json::json!({})),
-                monthly_cost: 10.0,
-            };
+            let resource = ResourceChange::builder()
+                .resource_id(id)
+                .resource_type(resource_type)
+                .action(ChangeAction::Create)
+                .new_config(json!({}))
+                .monthly_cost(10.0)
+                .build();
             
             let engine = PredictionEngine::new();
             let _ = engine.predict(&resource);

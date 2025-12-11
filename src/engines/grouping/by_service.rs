@@ -115,24 +115,42 @@ pub fn extract_service_info(resource_type: &str) -> (String, ServiceCategory) {
         ("aws_ecs_service", ("ECS", ServiceCategory::Compute)),
         ("aws_ecs_task_definition", ("ECS", ServiceCategory::Compute)),
         ("aws_eks_cluster", ("EKS", ServiceCategory::Compute)),
-        ("aws_batch_compute_environment", ("Batch", ServiceCategory::Compute)),
-        
+        (
+            "aws_batch_compute_environment",
+            ("Batch", ServiceCategory::Compute),
+        ),
         // Storage
         ("aws_s3_bucket", ("S3", ServiceCategory::Storage)),
         ("aws_ebs_volume", ("EBS", ServiceCategory::Storage)),
         ("aws_efs_file_system", ("EFS", ServiceCategory::Storage)),
-        ("aws_fsx_windows_file_system", ("FSx", ServiceCategory::Storage)),
+        (
+            "aws_fsx_windows_file_system",
+            ("FSx", ServiceCategory::Storage),
+        ),
         ("aws_glacier_vault", ("Glacier", ServiceCategory::Storage)),
-        
         // Database
         ("aws_db_instance", ("RDS", ServiceCategory::Database)),
         ("aws_rds_cluster", ("RDS", ServiceCategory::Database)),
-        ("aws_dynamodb_table", ("DynamoDB", ServiceCategory::Database)),
-        ("aws_elasticache_cluster", ("ElastiCache", ServiceCategory::Database)),
-        ("aws_redshift_cluster", ("Redshift", ServiceCategory::Database)),
-        ("aws_neptune_cluster", ("Neptune", ServiceCategory::Database)),
-        ("aws_docdb_cluster", ("DocumentDB", ServiceCategory::Database)),
-        
+        (
+            "aws_dynamodb_table",
+            ("DynamoDB", ServiceCategory::Database),
+        ),
+        (
+            "aws_elasticache_cluster",
+            ("ElastiCache", ServiceCategory::Database),
+        ),
+        (
+            "aws_redshift_cluster",
+            ("Redshift", ServiceCategory::Database),
+        ),
+        (
+            "aws_neptune_cluster",
+            ("Neptune", ServiceCategory::Database),
+        ),
+        (
+            "aws_docdb_cluster",
+            ("DocumentDB", ServiceCategory::Database),
+        ),
         // Networking
         ("aws_vpc", ("VPC", ServiceCategory::Networking)),
         ("aws_subnet", ("VPC", ServiceCategory::Networking)),
@@ -142,42 +160,91 @@ pub fn extract_service_info(resource_type: &str) -> (String, ServiceCategory) {
         ("aws_alb", ("ALB", ServiceCategory::Networking)),
         ("aws_elb", ("ELB", ServiceCategory::Networking)),
         ("aws_route53_zone", ("Route53", ServiceCategory::Networking)),
-        ("aws_cloudfront_distribution", ("CloudFront", ServiceCategory::Networking)),
-        ("aws_api_gateway_rest_api", ("API Gateway", ServiceCategory::Networking)),
+        (
+            "aws_cloudfront_distribution",
+            ("CloudFront", ServiceCategory::Networking),
+        ),
+        (
+            "aws_api_gateway_rest_api",
+            ("API Gateway", ServiceCategory::Networking),
+        ),
         ("aws_vpn_gateway", ("VPN", ServiceCategory::Networking)),
-        ("aws_dx_connection", ("Direct Connect", ServiceCategory::Networking)),
-        
+        (
+            "aws_dx_connection",
+            ("Direct Connect", ServiceCategory::Networking),
+        ),
         // Security
         ("aws_security_group", ("VPC", ServiceCategory::Security)),
         ("aws_iam_role", ("IAM", ServiceCategory::Security)),
         ("aws_iam_policy", ("IAM", ServiceCategory::Security)),
         ("aws_kms_key", ("KMS", ServiceCategory::Security)),
         ("aws_wafv2_web_acl", ("WAF", ServiceCategory::Security)),
-        ("aws_guardduty_detector", ("GuardDuty", ServiceCategory::Security)),
-        ("aws_secretsmanager_secret", ("Secrets Manager", ServiceCategory::Security)),
-        
+        (
+            "aws_guardduty_detector",
+            ("GuardDuty", ServiceCategory::Security),
+        ),
+        (
+            "aws_secretsmanager_secret",
+            ("Secrets Manager", ServiceCategory::Security),
+        ),
         // Analytics
-        ("aws_kinesis_stream", ("Kinesis", ServiceCategory::Analytics)),
-        ("aws_kinesis_firehose_delivery_stream", ("Kinesis", ServiceCategory::Analytics)),
-        ("aws_athena_workgroup", ("Athena", ServiceCategory::Analytics)),
-        ("aws_glue_catalog_database", ("Glue", ServiceCategory::Analytics)),
+        (
+            "aws_kinesis_stream",
+            ("Kinesis", ServiceCategory::Analytics),
+        ),
+        (
+            "aws_kinesis_firehose_delivery_stream",
+            ("Kinesis", ServiceCategory::Analytics),
+        ),
+        (
+            "aws_athena_workgroup",
+            ("Athena", ServiceCategory::Analytics),
+        ),
+        (
+            "aws_glue_catalog_database",
+            ("Glue", ServiceCategory::Analytics),
+        ),
         ("aws_emr_cluster", ("EMR", ServiceCategory::Analytics)),
-        
         // Application Integration
-        ("aws_sqs_queue", ("SQS", ServiceCategory::ApplicationIntegration)),
-        ("aws_sns_topic", ("SNS", ServiceCategory::ApplicationIntegration)),
-        ("aws_mq_broker", ("MQ", ServiceCategory::ApplicationIntegration)),
-        ("aws_step_functions_state_machine", ("Step Functions", ServiceCategory::ApplicationIntegration)),
-        
+        (
+            "aws_sqs_queue",
+            ("SQS", ServiceCategory::ApplicationIntegration),
+        ),
+        (
+            "aws_sns_topic",
+            ("SNS", ServiceCategory::ApplicationIntegration),
+        ),
+        (
+            "aws_mq_broker",
+            ("MQ", ServiceCategory::ApplicationIntegration),
+        ),
+        (
+            "aws_step_functions_state_machine",
+            ("Step Functions", ServiceCategory::ApplicationIntegration),
+        ),
         // Management
-        ("aws_cloudwatch_log_group", ("CloudWatch", ServiceCategory::Management)),
-        ("aws_cloudwatch_metric_alarm", ("CloudWatch", ServiceCategory::Management)),
+        (
+            "aws_cloudwatch_log_group",
+            ("CloudWatch", ServiceCategory::Management),
+        ),
+        (
+            "aws_cloudwatch_metric_alarm",
+            ("CloudWatch", ServiceCategory::Management),
+        ),
         ("aws_ssm_parameter", ("SSM", ServiceCategory::Management)),
-        ("aws_config_config_rule", ("Config", ServiceCategory::Management)),
-        
+        (
+            "aws_config_config_rule",
+            ("Config", ServiceCategory::Management),
+        ),
         // Machine Learning
-        ("aws_sagemaker_notebook_instance", ("SageMaker", ServiceCategory::MachineLearning)),
-        ("aws_sagemaker_endpoint", ("SageMaker", ServiceCategory::MachineLearning)),
+        (
+            "aws_sagemaker_notebook_instance",
+            ("SageMaker", ServiceCategory::MachineLearning),
+        ),
+        (
+            "aws_sagemaker_endpoint",
+            ("SageMaker", ServiceCategory::MachineLearning),
+        ),
     ]
     .iter()
     .cloned()
@@ -206,7 +273,7 @@ pub fn group_by_category(groups: &[ServiceGroup]) -> HashMap<ServiceCategory, Ve
     for group in groups {
         category_groups
             .entry(group.category)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(group.clone());
     }
 
@@ -295,9 +362,21 @@ mod tests {
     #[test]
     fn test_group_by_service() {
         let resources = vec![
-            ("aws_instance.web".to_string(), "aws_instance".to_string(), 100.0),
-            ("aws_instance.app".to_string(), "aws_instance".to_string(), 150.0),
-            ("aws_s3_bucket.data".to_string(), "aws_s3_bucket".to_string(), 50.0),
+            (
+                "aws_instance.web".to_string(),
+                "aws_instance".to_string(),
+                100.0,
+            ),
+            (
+                "aws_instance.app".to_string(),
+                "aws_instance".to_string(),
+                150.0,
+            ),
+            (
+                "aws_s3_bucket.data".to_string(),
+                "aws_s3_bucket".to_string(),
+                50.0,
+            ),
         ];
 
         let groups = group_by_service(&resources);
