@@ -1,3 +1,4 @@
+use std::time::Duration;
 //! Integration tests for engine-to-engine interactions
 //! 
 //! Tests the entire pipeline flow from detection through policy evaluation,

@@ -8,40 +8,50 @@ use crate::engines::shared::models::ChangeAction;
 use std::collections::HashMap;
 
 /// Policy evaluation engine with exemption support
-/// 
+///
 /// This engine guarantees zero-network evaluation through the ZeroNetworkSafe trait.
 /// All policy evaluation is deterministic and happens entirely locally.
 pub struct PolicyEngine {
     config: PolicyConfig,
     exemptions: Option<ExemptionsFile>,
     exemption_validator: ExemptionValidator,
+    edition: crate::edition::EditionContext,
 }
 
 impl PolicyEngine {
     /// Create a new policy engine with configuration
-    pub fn new(config: PolicyConfig) -> Self {
+    pub fn new(config: PolicyConfig, edition: &crate::edition::EditionContext) -> Self {
         Self {
             config,
             exemptions: None,
             exemption_validator: ExemptionValidator::new(),
+            edition: edition.clone(),
         }
     }
 
     /// Create a new policy engine with configuration and exemptions
-    pub fn with_exemptions(config: PolicyConfig, exemptions: ExemptionsFile) -> Self {
+    pub fn with_exemptions(
+        config: PolicyConfig,
+        exemptions: ExemptionsFile,
+        edition: &crate::edition::EditionContext,
+    ) -> Self {
         Self {
             config,
             exemptions: Some(exemptions),
             exemption_validator: ExemptionValidator::new(),
+            edition: edition.clone(),
         }
     }
 
     /// Evaluate policies against resource changes and cost estimates
-    pub fn evaluate(
-        &self,
-        changes: &[ResourceChange],
-        total_cost: &CostEstimate,
-    ) -> PolicyResult {
+    pub fn evaluate(&self, changes: &[ResourceChange], total_cost: &CostEstimate) -> PolicyResult {
+        // Gate enforcement mode for premium (skip enforcement gating in Free)
+        if !self.edition.is_premium() {
+            // Free edition: lint-only mode
+            eprintln!("⚠️  Free edition: Policy enforcement disabled (lint-only mode)");
+            eprintln!("   Upgrade to Premium to block deployments on policy violations");
+        }
+
         let mut result = PolicyResult::new();
 
         // Evaluate budget policies
@@ -52,9 +62,9 @@ impl PolicyEngine {
 
         result
     }
-    
+
     /// Evaluate policies with explicit zero-network guarantee
-    /// 
+    ///
     /// This method requires a ZeroNetworkToken, proving at compile time
     /// that no network calls will be made during evaluation.
     pub fn evaluate_zero_network(
@@ -70,11 +80,9 @@ impl PolicyEngine {
     /// Check if a violation is exempted
     fn is_violation_exempted(&self, policy_name: &str, resource_id: &str) -> bool {
         if let Some(exemptions) = &self.exemptions {
-            let matches = self.exemption_validator.find_exemptions(
-                exemptions,
-                policy_name,
-                resource_id,
-            );
+            let matches =
+                self.exemption_validator
+                    .find_exemptions(exemptions, policy_name, resource_id);
             !matches.is_empty()
         } else {
             false
@@ -136,8 +144,8 @@ impl PolicyEngine {
 
         // Check NAT gateway policy
         if let Some(nat_policy) = &self.config.resources.nat_gateways {
-            if nat_gateway_count > nat_policy.max_count {
-                if !self.is_violation_exempted("nat_gateway_limit", "nat_gateways") {
+            if nat_gateway_count > nat_policy.max_count
+                && !self.is_violation_exempted("nat_gateway_limit", "nat_gateways") {
                     result.add_violation(PolicyViolation {
                         policy_name: "nat_gateway_limit".to_string(),
                         severity: "HIGH".to_string(),
@@ -150,9 +158,8 @@ impl PolicyEngine {
                         expected_value: format!("<= {}", nat_policy.max_count),
                     });
                 }
-            }
         }
-        
+
         // Check compute savings plan eligibility
         self.evaluate_compute_savings_plan(changes, result);
 
@@ -162,13 +169,17 @@ impl PolicyEngine {
                 if change.resource_type == "aws_instance" && change.action != ChangeAction::Delete {
                     if let Some(config) = &change.new_config {
                         // Check instance type family
-                        if let Some(instance_type) = config.get("instance_type").and_then(|v| v.as_str()) {
+                        if let Some(instance_type) =
+                            config.get("instance_type").and_then(|v| v.as_str())
+                        {
                             let family = instance_type.split('.').next().unwrap_or("");
-                            
+
                             if !ec2_policy.allowed_families.is_empty()
                                 && !ec2_policy.allowed_families.contains(&family.to_string())
-                            {
-                                if !self.is_violation_exempted("ec2_allowed_families", &change.resource_id) {
+                                && !self.is_violation_exempted(
+                                    "ec2_allowed_families",
+                                    &change.resource_id,
+                                ) {
                                     result.add_violation(PolicyViolation {
                                         policy_name: "ec2_allowed_families".to_string(),
                                         severity: "MEDIUM".to_string(),
@@ -178,16 +189,20 @@ impl PolicyEngine {
                                             family
                                         ),
                                         actual_value: family.to_string(),
-                                        expected_value: format!("One of: {:?}", ec2_policy.allowed_families),
+                                        expected_value: format!(
+                                            "One of: {:?}",
+                                            ec2_policy.allowed_families
+                                        ),
                                     });
                                 }
-                            }
 
                             // Check instance size
                             if let Some(max_size) = &ec2_policy.max_size {
                                 let size = instance_type.split('.').nth(1).unwrap_or("");
-                                if self.exceeds_size_limit(size, max_size) {
-                                    if !self.is_violation_exempted("ec2_max_size", &change.resource_id) {
+                                if self.exceeds_size_limit(size, max_size)
+                                    && !self
+                                        .is_violation_exempted("ec2_max_size", &change.resource_id)
+                                    {
                                         result.add_violation(PolicyViolation {
                                             policy_name: "ec2_max_size".to_string(),
                                             severity: "MEDIUM".to_string(),
@@ -200,7 +215,6 @@ impl PolicyEngine {
                                             expected_value: format!("<= {}", max_size),
                                         });
                                     }
-                                }
                             }
                         }
                     }
@@ -212,15 +226,19 @@ impl PolicyEngine {
         if let Some(s3_policy) = &self.config.resources.s3_buckets {
             if s3_policy.require_lifecycle_rules {
                 for change in changes {
-                    if change.resource_type == "aws_s3_bucket" && change.action != ChangeAction::Delete {
+                    if change.resource_type == "aws_s3_bucket"
+                        && change.action != ChangeAction::Delete
+                    {
                         let has_lifecycle = change
                             .new_config
                             .as_ref()
                             .and_then(|c| c.get("lifecycle_rule"))
                             .is_some();
 
-                        if !has_lifecycle {
-                            if !self.is_violation_exempted("s3_lifecycle_required", &change.resource_id) {
+                        if !has_lifecycle
+                            && !self
+                                .is_violation_exempted("s3_lifecycle_required", &change.resource_id)
+                            {
                                 result.add_violation(PolicyViolation {
                                     policy_name: "s3_lifecycle_required".to_string(),
                                     severity: "MEDIUM".to_string(),
@@ -230,7 +248,6 @@ impl PolicyEngine {
                                     expected_value: "lifecycle_rule configured".to_string(),
                                 });
                             }
-                        }
                     }
                 }
             }
@@ -240,25 +257,31 @@ impl PolicyEngine {
         if let Some(lambda_policy) = &self.config.resources.lambda_functions {
             if lambda_policy.require_concurrency_limit {
                 for change in changes {
-                    if change.resource_type == "aws_lambda_function" && change.action != ChangeAction::Delete {
+                    if change.resource_type == "aws_lambda_function"
+                        && change.action != ChangeAction::Delete
+                    {
                         let has_limit = change
                             .new_config
                             .as_ref()
                             .and_then(|c| c.get("reserved_concurrent_executions"))
                             .is_some();
 
-                        if !has_limit {
-                            if !self.is_violation_exempted("lambda_concurrency_required", &change.resource_id) {
+                        if !has_limit
+                            && !self.is_violation_exempted(
+                                "lambda_concurrency_required",
+                                &change.resource_id,
+                            ) {
                                 result.add_violation(PolicyViolation {
                                     policy_name: "lambda_concurrency_required".to_string(),
                                     severity: "HIGH".to_string(),
                                     resource_id: change.resource_id.clone(),
-                                    message: "Lambda function missing concurrency limit".to_string(),
+                                    message: "Lambda function missing concurrency limit"
+                                        .to_string(),
                                     actual_value: "no concurrency limit".to_string(),
-                                    expected_value: "reserved_concurrent_executions configured".to_string(),
+                                    expected_value: "reserved_concurrent_executions configured"
+                                        .to_string(),
                                 });
                             }
-                        }
                     }
                 }
             }
@@ -268,25 +291,30 @@ impl PolicyEngine {
         if let Some(dynamo_policy) = &self.config.resources.dynamodb_tables {
             if dynamo_policy.prefer_provisioned {
                 for change in changes {
-                    if change.resource_type == "aws_dynamodb_table" && change.action != ChangeAction::Delete {
+                    if change.resource_type == "aws_dynamodb_table"
+                        && change.action != ChangeAction::Delete
+                    {
                         if let Some(config) = &change.new_config {
                             let billing_mode = config
                                 .get("billing_mode")
                                 .and_then(|v| v.as_str())
                                 .unwrap_or("PROVISIONED");
 
-                            if billing_mode == "PAY_PER_REQUEST" {
-                                if !self.is_violation_exempted("dynamodb_prefer_provisioned", &change.resource_id) {
+                            if billing_mode == "PAY_PER_REQUEST"
+                                && !self.is_violation_exempted(
+                                    "dynamodb_prefer_provisioned",
+                                    &change.resource_id,
+                                ) {
                                     result.add_violation(PolicyViolation {
                                         policy_name: "dynamodb_prefer_provisioned".to_string(),
                                         severity: "MEDIUM".to_string(),
                                         resource_id: change.resource_id.clone(),
-                                        message: "DynamoDB table using PAY_PER_REQUEST billing".to_string(),
+                                        message: "DynamoDB table using PAY_PER_REQUEST billing"
+                                            .to_string(),
                                         actual_value: "PAY_PER_REQUEST".to_string(),
                                         expected_value: "PROVISIONED".to_string(),
                                     });
                                 }
-                            }
                         }
                     }
                 }
@@ -296,8 +324,11 @@ impl PolicyEngine {
 
     /// Check if instance size exceeds limit
     fn exceeds_size_limit(&self, size: &str, max_size: &str) -> bool {
-        let size_order = ["nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge", "8xlarge", "16xlarge", "24xlarge", "32xlarge"];
-        
+        let size_order = [
+            "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge", "8xlarge",
+            "16xlarge", "24xlarge", "32xlarge",
+        ];
+
         let size_idx = size_order.iter().position(|&s| s == size);
         let max_idx = size_order.iter().position(|&s| s == max_size);
 
@@ -306,13 +337,13 @@ impl PolicyEngine {
             _ => false,
         }
     }
-    
+
     /// Evaluate compute savings plan eligibility
     fn evaluate_compute_savings_plan(&self, changes: &[ResourceChange], result: &mut PolicyResult) {
         // Collect EC2 and Lambda resources that could benefit from savings plans
         let mut ec2_instances = Vec::new();
         let mut lambda_functions = Vec::new();
-        
+
         for change in changes {
             if change.action != ChangeAction::Delete {
                 match change.resource_type.as_str() {
@@ -329,14 +360,15 @@ impl PolicyEngine {
                 }
             }
         }
-        
+
         // Suggest compute savings plan if >= 3 EC2 instances or high Lambda usage
         if ec2_instances.len() >= 3 || lambda_functions.len() >= 5 {
-            let resource_ids: Vec<String> = ec2_instances.iter()
+            let resource_ids: Vec<String> = ec2_instances
+                .iter()
                 .chain(lambda_functions.iter())
                 .map(|c| c.resource_id.clone())
                 .collect();
-            
+
             let message = if ec2_instances.len() >= 3 && lambda_functions.is_empty() {
                 format!(
                     "Consider a Compute Savings Plan: {} EC2 instances detected. Savings plans can reduce costs by 17-54% for 1-year commitment",
@@ -353,13 +385,16 @@ impl PolicyEngine {
                     ec2_instances.len(), lambda_functions.len()
                 )
             };
-            
+
             result.add_violation(PolicyViolation {
                 policy_name: "compute_savings_plan_suggestion".to_string(),
                 severity: "INFO".to_string(),
                 resource_id: resource_ids.join(", "),
                 message,
-                actual_value: format!("{} compute resources", ec2_instances.len() + lambda_functions.len()),
+                actual_value: format!(
+                    "{} compute resources",
+                    ec2_instances.len() + lambda_functions.len()
+                ),
                 expected_value: "Consider savings plan commitment".to_string(),
             });
         }
@@ -370,6 +405,7 @@ impl PolicyEngine {
 mod tests {
     use super::*;
     use serde_json::json;
+    use crate::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate};
 
     #[test]
     fn test_budget_evaluation() {
@@ -387,12 +423,27 @@ mod tests {
             enforcement: EnforcementConfig::default(),
         };
 
-        let engine = PolicyEngine::new(config);
+        let edition = crate::edition::EditionContext::free();
+        let engine = PolicyEngine::new(config, &edition);
+        #[allow(deprecated)]
         let cost = CostEstimate {
-            hourly: 50.0,
-            daily: 1200.0,
-            monthly: 1500.0,
-            confidence: 0.9,
+            resource_id: "test".to_string(),
+            monthly_cost: 1500.0,
+            prediction_interval_low: 0.0,
+            prediction_interval_high: 0.0,
+            confidence_score: 0.9,
+            heuristic_reference: None,
+            cold_start_inference: false,
+            monthly: None,
+            yearly: None,
+            one_time: None,
+            breakdown: None,
+            estimate: None,
+            lower: None,
+            upper: None,
+            confidence: None,
+            hourly: None,
+            daily: None,
         };
 
         let result = engine.evaluate(&[], &cost);
@@ -417,41 +468,41 @@ mod tests {
             enforcement: EnforcementConfig::default(),
         };
 
-        let engine = PolicyEngine::new(config);
+        let edition = crate::edition::EditionContext::free();
+        let engine = PolicyEngine::new(config, &edition);
         let changes = vec![
-            ResourceChange {
-                resource_id: "nat1".to_string(),
-                resource_type: "aws_nat_gateway".to_string(),
-                change_type: "create".to_string(),
-                old_config: None,
-                new_config: Some(json!({})),
-            },
-            ResourceChange {
-                resource_id: "nat2".to_string(),
-                resource_type: "aws_nat_gateway".to_string(),
-                change_type: "create".to_string(),
-                old_config: None,
-                new_config: Some(json!({})),
-            },
-            ResourceChange {
-                resource_id: "nat3".to_string(),
-                resource_type: "aws_nat_gateway".to_string(),
-                change_type: "create".to_string(),
-                old_config: None,
-                new_config: Some(json!({})),
-            },
+            ResourceChange::builder()
+                .resource_id("nat1")
+                .resource_type("aws_nat_gateway")
+                .action(ChangeAction::Create)
+                .new_config(json!({}))
+                .build(),
+            ResourceChange::builder()
+                .resource_id("nat2")
+                .resource_type("aws_nat_gateway")
+                .action(ChangeAction::Create)
+                .new_config(json!({}))
+                .build(),
+            ResourceChange::builder()
+                .resource_id("nat3")
+                .resource_type("aws_nat_gateway")
+                .action(ChangeAction::Create)
+                .new_config(json!({}))
+                .build(),
         ];
 
-        let cost = CostEstimate {
-            hourly: 1.0,
-            daily: 24.0,
-            monthly: 720.0,
-            confidence: 0.9,
-        };
+        let cost = CostEstimate::builder()
+            .resource_id("test")
+            .monthly(720.0)
+            .confidence(0.9)
+            .build();
 
         let result = engine.evaluate(&changes, &cost);
         assert!(!result.passed);
-        assert!(result.violations.iter().any(|v| v.policy_name == "nat_gateway_limit"));
+        assert!(result
+            .violations
+            .iter()
+            .any(|v| v.policy_name == "nat_gateway_limit"));
     }
 
     #[test]
@@ -470,20 +521,34 @@ mod tests {
             enforcement: EnforcementConfig::default(),
         };
 
-        let engine = PolicyEngine::new(config);
-        let changes = vec![ResourceChange {
-            resource_id: "lambda1".to_string(),
-            resource_type: "aws_lambda_function".to_string(),
-            change_type: "create".to_string(),
-            old_config: None,
-            new_config: Some(json!({"memory_size": 128})),
-        }];
+        let edition = crate::edition::EditionContext::free();
+        let engine = PolicyEngine::new(config, &edition);
+        let changes = vec![ResourceChange::builder()
+            .resource_id("lambda1")
+            .resource_type("aws_lambda_function")
+            .action(ChangeAction::Create)
+            .new_config(json!({"memory_size": 128}))
+            .build()];
 
+        #[allow(deprecated)]
         let cost = CostEstimate {
-            hourly: 0.1,
-            daily: 2.4,
-            monthly: 72.0,
-            confidence: 0.9,
+            resource_id: "test".to_string(),
+            monthly_cost: 72.0,
+            prediction_interval_low: 0.0,
+            prediction_interval_high: 0.0,
+            confidence_score: 0.9,
+            heuristic_reference: None,
+            cold_start_inference: false,
+            monthly: None,
+            yearly: None,
+            one_time: None,
+            breakdown: None,
+            estimate: None,
+            lower: None,
+            upper: None,
+            confidence: None,
+            hourly: None,
+            daily: None,
         };
 
         let result = engine.evaluate(&changes, &cost);
@@ -493,7 +558,7 @@ mod tests {
             .iter()
             .any(|v| v.policy_name == "lambda_concurrency_required"));
     }
-    
+
     #[test]
     fn test_compute_savings_plan_suggestion() {
         let config = PolicyConfig {
@@ -503,50 +568,47 @@ mod tests {
             slos: vec![],
             enforcement: EnforcementConfig::default(),
         };
-        
-        let engine = PolicyEngine::new(config);
-        
+
+        let edition = crate::edition::EditionContext::free();
+        let engine = PolicyEngine::new(config, &edition);
+
         // Test with 3 EC2 instances
         let changes = vec![
-            ResourceChange {
-                resource_id: "aws_instance.web_1".to_string(),
-                resource_type: "aws_instance".to_string(),
-                action: ChangeAction::Create,
-                old_config: None,
-                new_config: Some(json!({"instance_type": "t3.medium"})),
-            },
-            ResourceChange {
-                resource_id: "aws_instance.web_2".to_string(),
-                resource_type: "aws_instance".to_string(),
-                action: ChangeAction::Create,
-                old_config: None,
-                new_config: Some(json!({"instance_type": "t3.medium"})),
-            },
-            ResourceChange {
-                resource_id: "aws_instance.web_3".to_string(),
-                resource_type: "aws_instance".to_string(),
-                action: ChangeAction::Create,
-                old_config: None,
-                new_config: Some(json!({"instance_type": "t3.large"})),
-            },
+            ResourceChange::builder()
+                .resource_id("aws_instance.web_1")
+                .resource_type("aws_instance")
+                .action(ChangeAction::Create)
+                .new_config(json!({"instance_type": "t3.medium"}))
+                .build(),
+            ResourceChange::builder()
+                .resource_id("aws_instance.web_2")
+                .resource_type("aws_instance")
+                .action(ChangeAction::Create)
+                .new_config(json!({"instance_type": "t3.medium"}))
+                .build(),
+            ResourceChange::builder()
+                .resource_id("aws_instance.web_3")
+                .resource_type("aws_instance")
+                .action(ChangeAction::Create)
+                .new_config(json!({"instance_type": "t3.large"}))
+                .build(),
         ];
-        
-        let cost = CostEstimate {
-            hourly: 0.5,
-            daily: 12.0,
-            monthly: 360.0,
-            confidence: 0.95,
-        };
-        
+
+        let cost = CostEstimate::builder()
+            .resource_id("test")
+            .monthly(360.0)
+            .confidence(0.95)
+            .build();
+
         let result = engine.evaluate(&changes, &cost);
-        
+
         // Should have savings plan suggestion
-        assert!(result.violations.iter().any(|v| 
-            v.policy_name == "compute_savings_plan_suggestion" &&
-            v.severity == "INFO"
-        ));
+        assert!(result
+            .violations
+            .iter()
+            .any(|v| v.policy_name == "compute_savings_plan_suggestion" && v.severity == "INFO"));
     }
-    
+
     #[test]
     fn test_compute_savings_plan_not_suggested_for_few_resources() {
         let config = PolicyConfig {
@@ -556,33 +618,31 @@ mod tests {
             slos: vec![],
             enforcement: EnforcementConfig::default(),
         };
-        
-        let engine = PolicyEngine::new(config);
-        
+
+        let edition = crate::edition::EditionContext::free();
+        let engine = PolicyEngine::new(config, &edition);
+
         // Test with only 1 EC2 instance
-        let changes = vec![
-            ResourceChange {
-                resource_id: "aws_instance.single".to_string(),
-                resource_type: "aws_instance".to_string(),
-                action: ChangeAction::Create,
-                old_config: None,
-                new_config: Some(json!({"instance_type": "t3.medium"})),
-            },
-        ];
-        
-        let cost = CostEstimate {
-            hourly: 0.1,
-            daily: 2.4,
-            monthly: 72.0,
-            confidence: 0.95,
-        };
-        
+        let changes = vec![ResourceChange::builder()
+            .resource_id("aws_instance.single")
+            .resource_type("aws_instance")
+            .action(ChangeAction::Create)
+            .new_config(json!({"instance_type": "t3.medium"}))
+            .build()];
+
+        let cost = CostEstimate::builder()
+            .resource_id("test")
+            .monthly(72.0)
+            .confidence(0.95)
+            .build();
+
         let result = engine.evaluate(&changes, &cost);
-        
+
         // Should NOT have savings plan suggestion
-        assert!(!result.violations.iter().any(|v| 
-            v.policy_name == "compute_savings_plan_suggestion"
-        ));
+        assert!(!result
+            .violations
+            .iter()
+            .any(|v| v.policy_name == "compute_savings_plan_suggestion"));
     }
 
     #[test]
@@ -593,7 +653,7 @@ mod tests {
             version: "1.0.0".to_string(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies {
-                nat_gateways: Some(NatGatewayPolicy { max_count: 1 }),
+                nat_gateways: Some(NatGatewayPolicy { max_count: 1, require_justification: false }),
                 ..Default::default()
             },
             slos: vec![],
@@ -615,30 +675,43 @@ mod tests {
             metadata: None,
         };
 
-        let engine = PolicyEngine::with_exemptions(config, exemptions);
-        
+        let edition = crate::edition::EditionContext::free();
+        let engine = PolicyEngine::with_exemptions(config, exemptions, &edition);
+
         let changes = vec![
-            ResourceChange {
-                resource_id: "nat1".to_string(),
-                resource_type: "aws_nat_gateway".to_string(),
-                change_type: "create".to_string(),
-                old_config: None,
-                new_config: Some(json!({})),
-            },
-            ResourceChange {
-                resource_id: "nat2".to_string(),
-                resource_type: "aws_nat_gateway".to_string(),
-                change_type: "create".to_string(),
-                old_config: None,
-                new_config: Some(json!({})),
-            },
+            ResourceChange::builder()
+                .resource_id("nat1")
+                .resource_type("aws_nat_gateway")
+                .action(ChangeAction::Create)
+                .new_config(json!({}))
+                .build(),
+            ResourceChange::builder()
+                .resource_id("nat2")
+                .resource_type("aws_nat_gateway")
+                .action(ChangeAction::Create)
+                .new_config(json!({}))
+                .build(),
         ];
 
+        #[allow(deprecated)]
         let cost = CostEstimate {
-            hourly: 1.0,
-            daily: 24.0,
-            monthly: 720.0,
-            confidence: 0.9,
+            resource_id: "test".to_string(),
+            monthly_cost: 720.0,
+            prediction_interval_low: 0.0,
+            prediction_interval_high: 0.0,
+            confidence_score: 0.9,
+            heuristic_reference: None,
+            cold_start_inference: false,
+            monthly: None,
+            yearly: None,
+            one_time: None,
+            breakdown: None,
+            estimate: None,
+            lower: None,
+            upper: None,
+            confidence: None,
+            hourly: None,
+            daily: None,
         };
 
         let result = engine.evaluate(&changes, &cost);

@@ -7,5 +7,3 @@ pub mod rollback_patch;
 
 pub use critical_drift::*;
 pub use drift_checksum::*;
-pub use drift_detector::*;
-pub use rollback_patch::*;

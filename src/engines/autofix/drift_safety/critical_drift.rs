@@ -1,7 +1,6 @@
 // Critical drift blocking for execution safety
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use super::drift_checksum::{DriftChecksum, DriftSeverity};
 
@@ -10,16 +9,16 @@ use super::drift_checksum::{DriftChecksum, DriftSeverity};
 pub struct CriticalDriftCheck {
     /// Total resources checked
     pub total_resources: usize,
-    
+
     /// Resources with critical drift
     pub critical_drifts: Vec<CriticalDrift>,
-    
+
     /// Whether execution should be blocked
     pub should_block: bool,
-    
+
     /// Blocking reason (if blocked)
     pub blocking_reason: Option<String>,
-    
+
     /// Timestamp of check
     pub checked_at: String,
 }
@@ -29,19 +28,19 @@ pub struct CriticalDriftCheck {
 pub struct CriticalDrift {
     /// Resource identifier
     pub resource_id: String,
-    
+
     /// Resource type
     pub resource_type: String,
-    
+
     /// Drifted attribute causing critical issue
     pub attribute: String,
-    
+
     /// Expected value
     pub expected_value: String,
-    
+
     /// Actual value
     pub actual_value: String,
-    
+
     /// Why this drift is critical
     pub reason: CriticalDriftReason,
 }
@@ -52,22 +51,22 @@ pub struct CriticalDrift {
 pub enum CriticalDriftReason {
     /// Security configuration changed
     SecurityViolation,
-    
+
     /// Encryption disabled or weakened
     EncryptionDisabled,
-    
+
     /// IAM policy or permissions changed
     IamPolicyChanged,
-    
+
     /// Network security configuration changed
     NetworkSecurityChanged,
-    
+
     /// Compliance-critical setting changed
     ComplianceViolation,
-    
+
     /// Resource in protected production environment
     ProtectedEnvironment,
-    
+
     /// Multiple high-severity drifts on same resource
     MultipleHighSeverityDrifts,
 }
@@ -77,16 +76,16 @@ pub enum CriticalDriftReason {
 pub struct CriticalDriftConfig {
     /// Whether to enable critical drift blocking
     pub enabled: bool,
-    
+
     /// Minimum severity to consider as blocking
     pub min_blocking_severity: DriftSeverity,
-    
+
     /// Protected resource patterns (e.g., "prod-*", "module.security.*")
     pub protected_patterns: Vec<String>,
-    
+
     /// Critical attributes that always block
     pub critical_attributes: Vec<String>,
-    
+
     /// Maximum number of high-severity drifts before blocking
     pub max_high_severity_drifts: usize,
 }
@@ -122,6 +121,12 @@ pub struct CriticalDriftDetector {
     config: CriticalDriftConfig,
 }
 
+impl Default for CriticalDriftDetector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CriticalDriftDetector {
     /// Create new critical drift detector with default config
     pub fn new() -> Self {
@@ -136,10 +141,7 @@ impl CriticalDriftDetector {
     }
 
     /// Check if critical drift should block execution
-    pub fn check_critical_drift(
-        &self,
-        drift_results: Vec<DriftChecksum>,
-    ) -> CriticalDriftCheck {
+    pub fn check_critical_drift(&self, drift_results: Vec<DriftChecksum>) -> CriticalDriftCheck {
         if !self.config.enabled {
             return CriticalDriftCheck {
                 total_resources: drift_results.len(),
@@ -188,7 +190,11 @@ impl CriticalDriftDetector {
 
             // Check protected resource patterns
             if self.is_protected_resource(&drift.resource_id) {
-                for attr in drift.drifted_attributes.iter().filter(|a| a.severity >= DriftSeverity::High) {
+                for attr in drift
+                    .drifted_attributes
+                    .iter()
+                    .filter(|a| a.severity >= DriftSeverity::High)
+                {
                     critical_drifts.push(CriticalDrift {
                         resource_id: drift.resource_id.clone(),
                         resource_type: drift.resource_type.clone(),
@@ -221,16 +227,26 @@ impl CriticalDriftDetector {
     }
 
     /// Determine why drift is critical
-    fn determine_critical_reason(&self, _resource_id: &str, attribute: &str) -> CriticalDriftReason {
+    fn determine_critical_reason(
+        &self,
+        _resource_id: &str,
+        attribute: &str,
+    ) -> CriticalDriftReason {
         let attr_lower = attribute.to_lowercase();
 
         if attr_lower.contains("security") || attr_lower.contains("security_group") {
             CriticalDriftReason::SecurityViolation
         } else if attr_lower.contains("encryption") || attr_lower.contains("kms") {
             CriticalDriftReason::EncryptionDisabled
-        } else if attr_lower.contains("iam") || attr_lower.contains("policy") || attr_lower.contains("role") {
+        } else if attr_lower.contains("iam")
+            || attr_lower.contains("policy")
+            || attr_lower.contains("role")
+        {
             CriticalDriftReason::IamPolicyChanged
-        } else if attr_lower.contains("vpc") || attr_lower.contains("subnet") || attr_lower.contains("public") {
+        } else if attr_lower.contains("vpc")
+            || attr_lower.contains("subnet")
+            || attr_lower.contains("public")
+        {
             CriticalDriftReason::NetworkSecurityChanged
         } else {
             CriticalDriftReason::ComplianceViolation
@@ -255,8 +271,18 @@ impl CriticalDriftDetector {
 
         output.push_str("Critical Drift Check:\n");
         output.push_str(&format!("  Resources checked: {}\n", check.total_resources));
-        output.push_str(&format!("  Critical drifts: {}\n", check.critical_drifts.len()));
-        output.push_str(&format!("  Status: {}\n", if check.should_block { "🚫 BLOCKED" } else { "✓ PASSED" }));
+        output.push_str(&format!(
+            "  Critical drifts: {}\n",
+            check.critical_drifts.len()
+        ));
+        output.push_str(&format!(
+            "  Status: {}\n",
+            if check.should_block {
+                "🚫 BLOCKED"
+            } else {
+                "✓ PASSED"
+            }
+        ));
 
         if let Some(reason) = &check.blocking_reason {
             output.push_str(&format!("\nBlocking Reason: {}\n", reason));
@@ -267,19 +293,10 @@ impl CriticalDriftDetector {
             for drift in &check.critical_drifts {
                 output.push_str(&format!(
                     "  - {} [{}]: {} (reason: {:?})\n",
-                    drift.resource_id,
-                    drift.resource_type,
-                    drift.attribute,
-                    drift.reason
+                    drift.resource_id, drift.resource_type, drift.attribute, drift.reason
                 ));
-                output.push_str(&format!(
-                    "    Expected: {}\n",
-                    drift.expected_value
-                ));
-                output.push_str(&format!(
-                    "    Actual:   {}\n",
-                    drift.actual_value
-                ));
+                output.push_str(&format!("    Expected: {}\n", drift.expected_value));
+                output.push_str(&format!("    Actual:   {}\n", drift.actual_value));
             }
         }
 
@@ -311,9 +328,7 @@ mod tests {
     #[test]
     fn test_no_drift_does_not_block() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift("i-123", "aws_instance", vec![]),
-        ];
+        let drift_results = vec![create_test_drift("i-123", "aws_instance", vec![])];
 
         let result = detector.check_critical_drift(drift_results);
 
@@ -325,147 +340,146 @@ mod tests {
     #[test]
     fn test_critical_security_drift_blocks() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift(
-                "i-123",
-                "aws_instance",
-                vec![DriftedAttribute {
-                    path: "security_group".to_string(),
-                    expected_value: "sg-12345".to_string(),
-                    actual_value: "sg-67890".to_string(),
-                    severity: DriftSeverity::Critical,
-                }],
-            ),
-        ];
+        let drift_results = vec![create_test_drift(
+            "i-123",
+            "aws_instance",
+            vec![DriftedAttribute {
+                path: "security_group".to_string(),
+                expected_value: "sg-12345".to_string(),
+                actual_value: "sg-67890".to_string(),
+                severity: DriftSeverity::Critical,
+            }],
+        )];
 
         let result = detector.check_critical_drift(drift_results);
 
         assert!(result.should_block);
         assert_eq!(result.critical_drifts.len(), 1);
-        assert_eq!(result.critical_drifts[0].reason, CriticalDriftReason::SecurityViolation);
+        assert_eq!(
+            result.critical_drifts[0].reason,
+            CriticalDriftReason::SecurityViolation
+        );
     }
 
     #[test]
     fn test_encryption_drift_blocks() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift(
-                "vol-123",
-                "aws_ebs_volume",
-                vec![DriftedAttribute {
-                    path: "encryption_enabled".to_string(),
-                    expected_value: "true".to_string(),
-                    actual_value: "false".to_string(),
-                    severity: DriftSeverity::Critical,
-                }],
-            ),
-        ];
+        let drift_results = vec![create_test_drift(
+            "vol-123",
+            "aws_ebs_volume",
+            vec![DriftedAttribute {
+                path: "encryption_enabled".to_string(),
+                expected_value: "true".to_string(),
+                actual_value: "false".to_string(),
+                severity: DriftSeverity::Critical,
+            }],
+        )];
 
         let result = detector.check_critical_drift(drift_results);
 
         assert!(result.should_block);
-        assert_eq!(result.critical_drifts[0].reason, CriticalDriftReason::EncryptionDisabled);
+        assert_eq!(
+            result.critical_drifts[0].reason,
+            CriticalDriftReason::EncryptionDisabled
+        );
     }
 
     #[test]
     fn test_iam_policy_drift_blocks() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift(
-                "role-123",
-                "aws_iam_role",
-                vec![DriftedAttribute {
-                    path: "iam_policy".to_string(),
-                    expected_value: "policy-v1".to_string(),
-                    actual_value: "policy-v2".to_string(),
-                    severity: DriftSeverity::Critical,
-                }],
-            ),
-        ];
+        let drift_results = vec![create_test_drift(
+            "role-123",
+            "aws_iam_role",
+            vec![DriftedAttribute {
+                path: "iam_policy".to_string(),
+                expected_value: "policy-v1".to_string(),
+                actual_value: "policy-v2".to_string(),
+                severity: DriftSeverity::Critical,
+            }],
+        )];
 
         let result = detector.check_critical_drift(drift_results);
 
         assert!(result.should_block);
-        assert_eq!(result.critical_drifts[0].reason, CriticalDriftReason::IamPolicyChanged);
+        assert_eq!(
+            result.critical_drifts[0].reason,
+            CriticalDriftReason::IamPolicyChanged
+        );
     }
 
     #[test]
     fn test_multiple_high_severity_drifts_blocks() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift(
-                "i-123",
-                "aws_instance",
-                vec![
-                    DriftedAttribute {
-                        path: "instance_type".to_string(),
-                        expected_value: "t3.micro".to_string(),
-                        actual_value: "t3.large".to_string(),
-                        severity: DriftSeverity::High,
-                    },
-                    DriftedAttribute {
-                        path: "subnet_id".to_string(),
-                        expected_value: "subnet-1".to_string(),
-                        actual_value: "subnet-2".to_string(),
-                        severity: DriftSeverity::High,
-                    },
-                    DriftedAttribute {
-                        path: "vpc_id".to_string(),
-                        expected_value: "vpc-1".to_string(),
-                        actual_value: "vpc-2".to_string(),
-                        severity: DriftSeverity::High,
-                    },
-                ],
-            ),
-        ];
+        let drift_results = vec![create_test_drift(
+            "i-123",
+            "aws_instance",
+            vec![
+                DriftedAttribute {
+                    path: "instance_type".to_string(),
+                    expected_value: "t3.micro".to_string(),
+                    actual_value: "t3.large".to_string(),
+                    severity: DriftSeverity::High,
+                },
+                DriftedAttribute {
+                    path: "subnet_id".to_string(),
+                    expected_value: "subnet-1".to_string(),
+                    actual_value: "subnet-2".to_string(),
+                    severity: DriftSeverity::High,
+                },
+                DriftedAttribute {
+                    path: "vpc_id".to_string(),
+                    expected_value: "vpc-1".to_string(),
+                    actual_value: "vpc-2".to_string(),
+                    severity: DriftSeverity::High,
+                },
+            ],
+        )];
 
         let result = detector.check_critical_drift(drift_results);
 
         assert!(result.should_block);
-        assert!(result.critical_drifts.iter().any(|d| 
-            d.reason == CriticalDriftReason::MultipleHighSeverityDrifts
-        ));
+        assert!(result
+            .critical_drifts
+            .iter()
+            .any(|d| d.reason == CriticalDriftReason::MultipleHighSeverityDrifts));
     }
 
     #[test]
     fn test_protected_resource_with_high_drift_blocks() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift(
-                "prod-web-server",
-                "aws_instance",
-                vec![DriftedAttribute {
-                    path: "instance_type".to_string(),
-                    expected_value: "t3.micro".to_string(),
-                    actual_value: "t3.large".to_string(),
-                    severity: DriftSeverity::High,
-                }],
-            ),
-        ];
+        let drift_results = vec![create_test_drift(
+            "prod-web-server",
+            "aws_instance",
+            vec![DriftedAttribute {
+                path: "instance_type".to_string(),
+                expected_value: "t3.micro".to_string(),
+                actual_value: "t3.large".to_string(),
+                severity: DriftSeverity::High,
+            }],
+        )];
 
         let result = detector.check_critical_drift(drift_results);
 
         assert!(result.should_block);
-        assert!(result.critical_drifts.iter().any(|d| 
-            d.reason == CriticalDriftReason::ProtectedEnvironment
-        ));
+        assert!(result
+            .critical_drifts
+            .iter()
+            .any(|d| d.reason == CriticalDriftReason::ProtectedEnvironment));
     }
 
     #[test]
     fn test_medium_severity_does_not_block() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift(
-                "i-123",
-                "aws_instance",
-                vec![DriftedAttribute {
-                    path: "tags".to_string(),
-                    expected_value: "prod".to_string(),
-                    actual_value: "dev".to_string(),
-                    severity: DriftSeverity::Medium,
-                }],
-            ),
-        ];
+        let drift_results = vec![create_test_drift(
+            "i-123",
+            "aws_instance",
+            vec![DriftedAttribute {
+                path: "tags".to_string(),
+                expected_value: "prod".to_string(),
+                actual_value: "dev".to_string(),
+                severity: DriftSeverity::Medium,
+            }],
+        )];
 
         let result = detector.check_critical_drift(drift_results);
 
@@ -480,19 +494,17 @@ mod tests {
             ..Default::default()
         };
         let detector = CriticalDriftDetector::with_config(config);
-        
-        let drift_results = vec![
-            create_test_drift(
-                "i-123",
-                "aws_instance",
-                vec![DriftedAttribute {
-                    path: "security_group".to_string(),
-                    expected_value: "sg-1".to_string(),
-                    actual_value: "sg-2".to_string(),
-                    severity: DriftSeverity::Critical,
-                }],
-            ),
-        ];
+
+        let drift_results = vec![create_test_drift(
+            "i-123",
+            "aws_instance",
+            vec![DriftedAttribute {
+                path: "security_group".to_string(),
+                expected_value: "sg-1".to_string(),
+                actual_value: "sg-2".to_string(),
+                severity: DriftSeverity::Critical,
+            }],
+        )];
 
         let result = detector.check_critical_drift(drift_results);
 
@@ -513,18 +525,16 @@ mod tests {
     #[test]
     fn test_format_summary_with_critical_drifts() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift(
-                "i-123",
-                "aws_instance",
-                vec![DriftedAttribute {
-                    path: "security_group".to_string(),
-                    expected_value: "sg-12345".to_string(),
-                    actual_value: "sg-67890".to_string(),
-                    severity: DriftSeverity::Critical,
-                }],
-            ),
-        ];
+        let drift_results = vec![create_test_drift(
+            "i-123",
+            "aws_instance",
+            vec![DriftedAttribute {
+                path: "security_group".to_string(),
+                expected_value: "sg-12345".to_string(),
+                actual_value: "sg-67890".to_string(),
+                severity: DriftSeverity::Critical,
+            }],
+        )];
 
         let result = detector.check_critical_drift(drift_results);
         let summary = detector.format_summary(&result);
@@ -538,9 +548,7 @@ mod tests {
     #[test]
     fn test_format_summary_no_drifts() {
         let detector = CriticalDriftDetector::new();
-        let drift_results = vec![
-            create_test_drift("i-123", "aws_instance", vec![]),
-        ];
+        let drift_results = vec![create_test_drift("i-123", "aws_instance", vec![])];
 
         let result = detector.check_critical_drift(drift_results);
         let summary = detector.format_summary(&result);

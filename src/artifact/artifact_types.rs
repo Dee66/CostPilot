@@ -6,17 +6,17 @@ use std::collections::HashMap;
 pub struct Artifact {
     /// Source format of the artifact
     pub format: ArtifactFormat,
-    
+
     /// Metadata about the artifact source
     pub metadata: ArtifactMetadata,
-    
+
     /// Resources defined in the artifact
     pub resources: Vec<ArtifactResource>,
-    
+
     /// Outputs defined in the artifact
     #[serde(default)]
     pub outputs: HashMap<String, ArtifactOutput>,
-    
+
     /// Parameters/variables used
     #[serde(default)]
     pub parameters: HashMap<String, ArtifactParameter>,
@@ -28,13 +28,13 @@ pub struct Artifact {
 pub enum ArtifactFormat {
     /// Terraform JSON plan
     Terraform,
-    
+
     /// AWS CloudFormation template
     CloudFormation,
-    
+
     /// AWS CDK synthesized output
     Cdk,
-    
+
     /// Pulumi program output (future)
     Pulumi,
 }
@@ -49,13 +49,12 @@ impl ArtifactFormat {
             ArtifactFormat::Pulumi => "Pulumi",
         }
     }
-    
+
     /// Check if format is supported
     pub fn is_supported(&self) -> bool {
-        matches!(self, 
-            ArtifactFormat::Terraform | 
-            ArtifactFormat::CloudFormation | 
-            ArtifactFormat::Cdk
+        matches!(
+            self,
+            ArtifactFormat::Terraform | ArtifactFormat::CloudFormation | ArtifactFormat::Cdk
         )
     }
 }
@@ -65,19 +64,19 @@ impl ArtifactFormat {
 pub struct ArtifactMetadata {
     /// Source file path or stack name
     pub source: String,
-    
+
     /// Artifact format version (e.g., CFN template version, TF version)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    
+
     /// Stack name (for CloudFormation/CDK)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stack_name: Option<String>,
-    
+
     /// Region where resources will be created
     #[serde(skip_serializing_if = "Option::is_none")]
     pub region: Option<String>,
-    
+
     /// Additional metadata
     #[serde(default)]
     pub tags: HashMap<String, String>,
@@ -88,17 +87,17 @@ pub struct ArtifactMetadata {
 pub struct ArtifactResource {
     /// Logical ID in the template
     pub id: String,
-    
+
     /// Resource type (e.g., AWS::EC2::Instance, aws_instance)
     pub resource_type: String,
-    
+
     /// Resource properties/configuration
     pub properties: HashMap<String, serde_json::Value>,
-    
+
     /// Dependencies on other resources
     #[serde(default)]
     pub depends_on: Vec<String>,
-    
+
     /// Resource-level metadata
     #[serde(default)]
     pub metadata: HashMap<String, String>,
@@ -118,19 +117,17 @@ impl ArtifactResource {
         }
         self.resource_type.clone()
     }
-    
+
     /// Get property value as string
     pub fn get_property_string(&self, key: &str) -> Option<String> {
-        self.properties.get(key).and_then(|v| {
-            match v {
-                serde_json::Value::String(s) => Some(s.clone()),
-                serde_json::Value::Number(n) => Some(n.to_string()),
-                serde_json::Value::Bool(b) => Some(b.to_string()),
-                _ => None,
-            }
+        self.properties.get(key).and_then(|v| match v {
+            serde_json::Value::String(s) => Some(s.clone()),
+            serde_json::Value::Number(n) => Some(n.to_string()),
+            serde_json::Value::Bool(b) => Some(b.to_string()),
+            _ => None,
         })
     }
-    
+
     /// Check if resource has a specific property
     pub fn has_property(&self, key: &str) -> bool {
         self.properties.contains_key(key)
@@ -142,11 +139,11 @@ impl ArtifactResource {
 pub struct ArtifactOutput {
     /// Output value or reference
     pub value: serde_json::Value,
-    
+
     /// Output description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    
+
     /// Whether output is exported for cross-stack reference
     #[serde(default)]
     pub export: bool,
@@ -158,15 +155,15 @@ pub struct ArtifactParameter {
     /// Parameter type
     #[serde(rename = "type")]
     pub param_type: String,
-    
+
     /// Default value
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<serde_json::Value>,
-    
+
     /// Parameter description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    
+
     /// Allowed values
     #[serde(default)]
     pub allowed_values: Vec<serde_json::Value>,
@@ -177,44 +174,47 @@ pub struct ArtifactParameter {
 #[serde(untagged)]
 pub enum IntrinsicFunction {
     /// Ref function: { "Ref": "LogicalName" }
-    Ref { #[serde(rename = "Ref")] reference: String },
-    
-    /// GetAtt function: { "Fn::GetAtt": ["LogicalName", "Attribute"] }
-    GetAtt { 
-        #[serde(rename = "Fn::GetAtt")] 
-        get_att: Vec<String> 
+    Ref {
+        #[serde(rename = "Ref")]
+        reference: String,
     },
-    
+
+    /// GetAtt function: { "Fn::GetAtt": ["LogicalName", "Attribute"] }
+    GetAtt {
+        #[serde(rename = "Fn::GetAtt")]
+        get_att: Vec<String>,
+    },
+
     /// Sub function: { "Fn::Sub": "String with ${placeholder}" }
     Sub {
         #[serde(rename = "Fn::Sub")]
         sub: serde_json::Value,
     },
-    
+
     /// Join function: { "Fn::Join": ["delimiter", ["value1", "value2"]] }
     Join {
         #[serde(rename = "Fn::Join")]
         join: Vec<serde_json::Value>,
     },
-    
+
     /// ImportValue function
     ImportValue {
         #[serde(rename = "Fn::ImportValue")]
         import_value: serde_json::Value,
     },
-    
+
     /// Select function
     Select {
         #[serde(rename = "Fn::Select")]
         select: Vec<serde_json::Value>,
     },
-    
+
     /// FindInMap function
     FindInMap {
         #[serde(rename = "Fn::FindInMap")]
         find_in_map: Vec<serde_json::Value>,
     },
-    
+
     /// Base64 function
     Base64 {
         #[serde(rename = "Fn::Base64")]
@@ -247,22 +247,22 @@ pub type ArtifactResult<T> = Result<T, ArtifactError>;
 pub enum ArtifactError {
     #[error("Unsupported artifact format: {0}")]
     UnsupportedFormat(String),
-    
+
     #[error("Failed to parse artifact: {0}")]
     ParseError(String),
-    
+
     #[error("Invalid resource definition: {0}")]
     InvalidResource(String),
-    
+
     #[error("Missing required field: {0}")]
     MissingField(String),
-    
+
     #[error("Invalid template version: {0}")]
     InvalidVersion(String),
-    
+
     #[error("Unsupported intrinsic function: {0}")]
     UnsupportedFunction(String),
-    
+
     #[error("IO error: {0}")]
     IoError(String),
 }
@@ -283,13 +283,13 @@ impl From<serde_json::Error> for ArtifactError {
 pub trait ArtifactParser {
     /// Parse artifact from JSON/YAML string
     fn parse(&self, content: &str) -> ArtifactResult<Artifact>;
-    
+
     /// Parse artifact from file
     fn parse_file(&self, path: &str) -> ArtifactResult<Artifact> {
         let content = std::fs::read_to_string(path)?;
         self.parse(&content)
     }
-    
+
     /// Get the format this parser handles
     fn format(&self) -> ArtifactFormat;
 }
@@ -305,17 +305,17 @@ impl Artifact {
             parameters: HashMap::new(),
         }
     }
-    
+
     /// Add a resource to the artifact
     pub fn add_resource(&mut self, resource: ArtifactResource) {
         self.resources.push(resource);
     }
-    
+
     /// Get resource by ID
     pub fn get_resource(&self, id: &str) -> Option<&ArtifactResource> {
         self.resources.iter().find(|r| r.id == id)
     }
-    
+
     /// Get all resources of a specific type
     pub fn get_resources_by_type(&self, resource_type: &str) -> Vec<&ArtifactResource> {
         self.resources
@@ -323,7 +323,7 @@ impl Artifact {
             .filter(|r| r.resource_type == resource_type || r.normalized_type() == resource_type)
             .collect()
     }
-    
+
     /// Count resources by type
     pub fn count_by_type(&self) -> HashMap<String, usize> {
         let mut counts = HashMap::new();
@@ -332,36 +332,37 @@ impl Artifact {
         }
         counts
     }
-    
+
     /// Get total resource count
     pub fn resource_count(&self) -> usize {
         self.resources.len()
     }
-    
+
     /// Validate artifact structure
     pub fn validate(&self) -> ArtifactResult<()> {
         // Check for duplicate resource IDs
         let mut seen_ids = std::collections::HashSet::new();
         for resource in &self.resources {
             if !seen_ids.insert(&resource.id) {
-                return Err(ArtifactError::InvalidResource(
-                    format!("Duplicate resource ID: {}", resource.id)
-                ));
+                return Err(ArtifactError::InvalidResource(format!(
+                    "Duplicate resource ID: {}",
+                    resource.id
+                )));
             }
         }
-        
+
         // Check dependencies exist
         for resource in &self.resources {
             for dep in &resource.depends_on {
                 if !seen_ids.contains(dep) {
-                    return Err(ArtifactError::InvalidResource(
-                        format!("Resource {} depends on non-existent resource {}", 
-                            resource.id, dep)
-                    ));
+                    return Err(ArtifactError::InvalidResource(format!(
+                        "Resource {} depends on non-existent resource {}",
+                        resource.id, dep
+                    )));
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -394,7 +395,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         };
-        
+
         assert_eq!(resource.normalized_type(), "aws_ec2_instance");
     }
 
@@ -407,7 +408,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         };
-        
+
         assert_eq!(resource.normalized_type(), "aws_instance");
     }
 
@@ -420,7 +421,7 @@ mod tests {
             region: Some("us-east-1".to_string()),
             tags: HashMap::new(),
         };
-        
+
         let artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
         assert_eq!(artifact.format, ArtifactFormat::CloudFormation);
         assert_eq!(artifact.resources.len(), 0);
@@ -435,9 +436,9 @@ mod tests {
             region: None,
             tags: HashMap::new(),
         };
-        
+
         let mut artifact = Artifact::new(ArtifactFormat::Terraform, metadata);
-        
+
         let resource = ArtifactResource {
             id: "test_resource".to_string(),
             resource_type: "aws_instance".to_string(),
@@ -445,10 +446,10 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         };
-        
+
         artifact.add_resource(resource);
         assert_eq!(artifact.resource_count(), 1);
-        
+
         let retrieved = artifact.get_resource("test_resource");
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().id, "test_resource");
@@ -463,9 +464,9 @@ mod tests {
             region: None,
             tags: HashMap::new(),
         };
-        
+
         let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
-        
+
         artifact.add_resource(ArtifactResource {
             id: "Instance1".to_string(),
             resource_type: "AWS::EC2::Instance".to_string(),
@@ -473,7 +474,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         artifact.add_resource(ArtifactResource {
             id: "Instance2".to_string(),
             resource_type: "AWS::EC2::Instance".to_string(),
@@ -481,7 +482,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         artifact.add_resource(ArtifactResource {
             id: "Bucket1".to_string(),
             resource_type: "AWS::S3::Bucket".to_string(),
@@ -489,10 +490,10 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         let instances = artifact.get_resources_by_type("aws_ec2_instance");
         assert_eq!(instances.len(), 2);
-        
+
         let buckets = artifact.get_resources_by_type("aws_s3_bucket");
         assert_eq!(buckets.len(), 1);
     }
@@ -506,9 +507,9 @@ mod tests {
             region: None,
             tags: HashMap::new(),
         };
-        
+
         let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
-        
+
         artifact.add_resource(ArtifactResource {
             id: "1".to_string(),
             resource_type: "AWS::EC2::Instance".to_string(),
@@ -516,7 +517,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         artifact.add_resource(ArtifactResource {
             id: "2".to_string(),
             resource_type: "AWS::EC2::Instance".to_string(),
@@ -524,7 +525,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         artifact.add_resource(ArtifactResource {
             id: "3".to_string(),
             resource_type: "AWS::S3::Bucket".to_string(),
@@ -532,7 +533,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         let counts = artifact.count_by_type();
         assert_eq!(counts.get("aws_ec2_instance"), Some(&2));
         assert_eq!(counts.get("aws_s3_bucket"), Some(&1));
@@ -547,9 +548,9 @@ mod tests {
             region: None,
             tags: HashMap::new(),
         };
-        
+
         let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
-        
+
         artifact.add_resource(ArtifactResource {
             id: "duplicate".to_string(),
             resource_type: "AWS::EC2::Instance".to_string(),
@@ -557,7 +558,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         artifact.add_resource(ArtifactResource {
             id: "duplicate".to_string(),
             resource_type: "AWS::S3::Bucket".to_string(),
@@ -565,7 +566,7 @@ mod tests {
             depends_on: Vec::new(),
             metadata: HashMap::new(),
         });
-        
+
         let result = artifact.validate();
         assert!(result.is_err());
     }
@@ -579,9 +580,9 @@ mod tests {
             region: None,
             tags: HashMap::new(),
         };
-        
+
         let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
-        
+
         artifact.add_resource(ArtifactResource {
             id: "resource1".to_string(),
             resource_type: "AWS::EC2::Instance".to_string(),
@@ -589,7 +590,7 @@ mod tests {
             depends_on: vec!["nonexistent".to_string()],
             metadata: HashMap::new(),
         });
-        
+
         let result = artifact.validate();
         assert!(result.is_err());
     }
@@ -600,10 +601,13 @@ mod tests {
             reference: "MyParam".to_string(),
         };
         assert_eq!(ref_fn.try_resolve(), Some("${MyParam}".to_string()));
-        
+
         let getatt_fn = IntrinsicFunction::GetAtt {
             get_att: vec!["MyInstance".to_string(), "PublicIp".to_string()],
         };
-        assert_eq!(getatt_fn.try_resolve(), Some("${MyInstance.PublicIp}".to_string()));
+        assert_eq!(
+            getatt_fn.try_resolve(),
+            Some("${MyInstance.PublicIp}".to_string())
+        );
     }
 }

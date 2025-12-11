@@ -71,8 +71,8 @@ pub enum Operator {
     Contains,
     StartsWith,
     EndsWith,
-    Matches,      // Regex match
-    In,           // Value in list
+    Matches, // Regex match
+    In,      // Value in list
     NotIn,
 }
 
@@ -95,7 +95,10 @@ pub enum RuleAction {
     /// Warn but allow
     Warn { message: String },
     /// Require approval
-    RequireApproval { approvers: Vec<String>, message: String },
+    RequireApproval {
+        approvers: Vec<String>,
+        message: String,
+    },
     /// Set cost budget
     SetBudget { monthly_limit: f64 },
     /// Tag resource
@@ -115,8 +118,8 @@ impl DslParser {
 
     /// Parse rules from YAML string
     pub fn parse_yaml(yaml: &str) -> Result<Vec<PolicyRule>, ParseError> {
-        let rules: Vec<PolicyRule> = serde_yaml::from_str(yaml)
-            .map_err(|e| ParseError::YamlError(e.to_string()))?;
+        let rules: Vec<PolicyRule> =
+            serde_yaml::from_str(yaml).map_err(|e| ParseError::YamlError(e.to_string()))?;
 
         // Validate rules
         for rule in &rules {
@@ -128,8 +131,8 @@ impl DslParser {
 
     /// Parse rules from JSON string
     pub fn parse_json(json: &str) -> Result<Vec<PolicyRule>, ParseError> {
-        let rules: Vec<PolicyRule> = serde_json::from_str(json)
-            .map_err(|e| ParseError::JsonError(e.to_string()))?;
+        let rules: Vec<PolicyRule> =
+            serde_json::from_str(json).map_err(|e| ParseError::JsonError(e.to_string()))?;
 
         // Validate rules
         for rule in &rules {
@@ -142,13 +145,16 @@ impl DslParser {
     /// Validate a rule
     fn validate_rule(rule: &PolicyRule) -> Result<(), ParseError> {
         if rule.name.is_empty() {
-            return Err(ParseError::InvalidRule("Rule name cannot be empty".to_string()));
+            return Err(ParseError::InvalidRule(
+                "Rule name cannot be empty".to_string(),
+            ));
         }
 
         if rule.conditions.is_empty() {
-            return Err(ParseError::InvalidRule(
-                format!("Rule '{}' must have at least one condition", rule.name)
-            ));
+            return Err(ParseError::InvalidRule(format!(
+                "Rule '{}' must have at least one condition",
+                rule.name
+            )));
         }
 
         // Validate each condition
@@ -173,9 +179,10 @@ impl DslParser {
                         | Operator::LessThan
                         | Operator::LessThanOrEqual
                 ) {
-                    return Err(ParseError::InvalidCondition(
-                        format!("Operator {:?} not compatible with numeric value", condition.operator)
-                    ));
+                    return Err(ParseError::InvalidCondition(format!(
+                        "Operator {:?} not compatible with numeric value",
+                        condition.operator
+                    )));
                 }
             }
             ConditionValue::String(_) => {
@@ -183,16 +190,18 @@ impl DslParser {
             }
             ConditionValue::Boolean(_) => {
                 if !matches!(condition.operator, Operator::Equals | Operator::NotEquals) {
-                    return Err(ParseError::InvalidCondition(
-                        format!("Operator {:?} not compatible with boolean value", condition.operator)
-                    ));
+                    return Err(ParseError::InvalidCondition(format!(
+                        "Operator {:?} not compatible with boolean value",
+                        condition.operator
+                    )));
                 }
             }
             ConditionValue::List(_) => {
                 if !matches!(condition.operator, Operator::In | Operator::NotIn) {
-                    return Err(ParseError::InvalidCondition(
-                        format!("Operator {:?} not compatible with list value", condition.operator)
-                    ));
+                    return Err(ParseError::InvalidCondition(format!(
+                        "Operator {:?} not compatible with list value",
+                        condition.operator
+                    )));
                 }
             }
         }
@@ -219,7 +228,8 @@ impl DslParser {
 
     /// Get rules by severity
     pub fn rules_by_severity(&self, severity: RuleSeverity) -> Vec<&PolicyRule> {
-        self.rules.iter()
+        self.rules
+            .iter()
             .filter(|r| r.enabled && r.severity == severity)
             .collect()
     }
@@ -236,13 +246,13 @@ impl Default for DslParser {
 pub enum ParseError {
     #[error("YAML parse error: {0}")]
     YamlError(String),
-    
+
     #[error("JSON parse error: {0}")]
     JsonError(String),
-    
+
     #[error("Invalid rule: {0}")]
     InvalidRule(String),
-    
+
     #[error("Invalid condition: {0}")]
     InvalidCondition(String),
 }
@@ -283,30 +293,22 @@ impl RuleEvaluator {
     /// Evaluate single rule
     fn evaluate_rule(&self, rule: &PolicyRule, context: &EvaluationContext) -> bool {
         // All conditions must be true (AND logic)
-        rule.conditions.iter().all(|cond| self.evaluate_condition(cond, context))
+        rule.conditions
+            .iter()
+            .all(|cond| self.evaluate_condition(cond, context))
     }
 
     /// Evaluate single condition
     fn evaluate_condition(&self, condition: &Condition, context: &EvaluationContext) -> bool {
         let result = match &condition.condition_type {
-            ConditionType::ResourceType => {
-                self.evaluate_resource_type(condition, context)
-            }
+            ConditionType::ResourceType => self.evaluate_resource_type(condition, context),
             ConditionType::ResourceAttribute { attribute } => {
                 self.evaluate_attribute(attribute, condition, context)
             }
-            ConditionType::MonthlyCost => {
-                self.evaluate_monthly_cost(condition, context)
-            }
-            ConditionType::CostIncrease => {
-                self.evaluate_cost_increase(condition, context)
-            }
-            ConditionType::ModulePath => {
-                self.evaluate_module_path(condition, context)
-            }
-            ConditionType::Tag { key } => {
-                self.evaluate_tag(key, condition, context)
-            }
+            ConditionType::MonthlyCost => self.evaluate_monthly_cost(condition, context),
+            ConditionType::CostIncrease => self.evaluate_cost_increase(condition, context),
+            ConditionType::ModulePath => self.evaluate_module_path(condition, context),
+            ConditionType::Tag { key } => self.evaluate_tag(key, condition, context),
             ConditionType::ResourceCount { resource_type } => {
                 self.evaluate_resource_count(resource_type, condition, context)
             }
@@ -330,7 +332,12 @@ impl RuleEvaluator {
         }
     }
 
-    fn evaluate_attribute(&self, attribute: &str, condition: &Condition, context: &EvaluationContext) -> bool {
+    fn evaluate_attribute(
+        &self,
+        attribute: &str,
+        condition: &Condition,
+        context: &EvaluationContext,
+    ) -> bool {
         if let Some(value) = context.attributes.get(attribute) {
             self.compare_value(value, &condition.operator, &condition.value)
         } else {
@@ -378,7 +385,12 @@ impl RuleEvaluator {
         }
     }
 
-    fn evaluate_resource_count(&self, resource_type: &str, condition: &Condition, context: &EvaluationContext) -> bool {
+    fn evaluate_resource_count(
+        &self,
+        resource_type: &str,
+        condition: &Condition,
+        context: &EvaluationContext,
+    ) -> bool {
         if let Some(&count) = context.resource_counts.get(resource_type) {
             if let ConditionValue::Number(limit) = condition.value {
                 self.compare_number(count as f64, &condition.operator, limit)
@@ -390,7 +402,12 @@ impl RuleEvaluator {
         }
     }
 
-    fn evaluate_expression(&self, _expr: &str, _condition: &Condition, _context: &EvaluationContext) -> bool {
+    fn evaluate_expression(
+        &self,
+        _expr: &str,
+        _condition: &Condition,
+        _context: &EvaluationContext,
+    ) -> bool {
         // Expression evaluation not yet implemented (future enhancement)
         false
     }
@@ -493,7 +510,9 @@ pub struct EvaluationResult {
 
 impl EvaluationResult {
     pub fn new() -> Self {
-        Self { matches: Vec::new() }
+        Self {
+            matches: Vec::new(),
+        }
     }
 
     pub fn add_match(&mut self, rule_match: RuleMatch) {
@@ -501,15 +520,21 @@ impl EvaluationResult {
     }
 
     pub fn has_blocks(&self) -> bool {
-        self.matches.iter().any(|m| matches!(m.action, RuleAction::Block { .. }))
+        self.matches
+            .iter()
+            .any(|m| matches!(m.action, RuleAction::Block { .. }))
     }
 
     pub fn has_warnings(&self) -> bool {
-        self.matches.iter().any(|m| matches!(m.action, RuleAction::Warn { .. }))
+        self.matches
+            .iter()
+            .any(|m| matches!(m.action, RuleAction::Warn { .. }))
     }
 
     pub fn requires_approval(&self) -> bool {
-        self.matches.iter().any(|m| matches!(m.action, RuleAction::RequireApproval { .. }))
+        self.matches
+            .iter()
+            .any(|m| matches!(m.action, RuleAction::RequireApproval { .. }))
     }
 }
 
@@ -566,14 +591,12 @@ mod tests {
             description: "Test".to_string(),
             enabled: true,
             severity: RuleSeverity::High,
-            conditions: vec![
-                Condition {
-                    condition_type: ConditionType::ResourceType,
-                    operator: Operator::Equals,
-                    value: ConditionValue::String("aws_instance".to_string()),
-                    negate: false,
-                },
-            ],
+            conditions: vec![Condition {
+                condition_type: ConditionType::ResourceType,
+                operator: Operator::Equals,
+                value: ConditionValue::String("aws_instance".to_string()),
+                negate: false,
+            }],
             action: RuleAction::Warn {
                 message: "Test warning".to_string(),
             },
@@ -581,8 +604,7 @@ mod tests {
         };
 
         let evaluator = RuleEvaluator::new(vec![rule]);
-        let context = EvaluationContext::new()
-            .with_resource_type("aws_instance".to_string());
+        let context = EvaluationContext::new().with_resource_type("aws_instance".to_string());
 
         let result = evaluator.evaluate(&context);
         assert_eq!(result.matches.len(), 1);

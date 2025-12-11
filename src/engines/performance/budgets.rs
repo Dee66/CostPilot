@@ -9,25 +9,25 @@ use std::time::{Duration, Instant};
 pub struct PerformanceBudgets {
     /// Prediction engine budget
     pub prediction: EngineBudget,
-    
+
     /// Mapping engine budget
     pub mapping: EngineBudget,
-    
+
     /// Autofix engine budget
     pub autofix: EngineBudget,
-    
+
     /// Total scan budget
     pub total_scan: EngineBudget,
-    
+
     /// SLO engine budget
     pub slo: EngineBudget,
-    
+
     /// Policy engine budget
     pub policy: EngineBudget,
-    
+
     /// WASM sandbox limits
     pub wasm: WasmLimits,
-    
+
     /// Circuit breaker configuration
     pub circuit_breaker: CircuitBreakerConfig,
 }
@@ -37,19 +37,19 @@ pub struct PerformanceBudgets {
 pub struct EngineBudget {
     /// Engine name
     pub name: String,
-    
+
     /// Maximum execution time (milliseconds)
     pub max_latency_ms: u64,
-    
+
     /// Maximum memory usage (MB)
     pub max_memory_mb: usize,
-    
+
     /// Maximum file size to process (MB)
     pub max_file_size_mb: usize,
-    
+
     /// Timeout action
     pub timeout_action: TimeoutAction,
-    
+
     /// Warning threshold (percentage of max_latency_ms)
     pub warning_threshold: f64,
 }
@@ -58,10 +58,10 @@ pub struct EngineBudget {
 pub enum TimeoutAction {
     /// Return partial results
     PartialResults,
-    
+
     /// Return error
     Error,
-    
+
     /// Fail fast with circuit breaker
     CircuitBreak,
 }
@@ -71,13 +71,13 @@ pub enum TimeoutAction {
 pub struct WasmLimits {
     /// Maximum memory (MB)
     pub max_memory_mb: usize,
-    
+
     /// Maximum execution time (milliseconds)
     pub max_execution_ms: u64,
-    
+
     /// Maximum stack depth
     pub max_stack_depth: usize,
-    
+
     /// Maximum bytecode size (MB)
     pub max_bytecode_mb: usize,
 }
@@ -87,13 +87,13 @@ pub struct WasmLimits {
 pub struct CircuitBreakerConfig {
     /// Failure threshold before opening circuit
     pub failure_threshold: usize,
-    
+
     /// Success threshold to close circuit
     pub success_threshold: usize,
-    
+
     /// Timeout before attempting to close (seconds)
     pub timeout_seconds: u64,
-    
+
     /// Maximum consecutive failures
     pub max_consecutive_failures: usize,
 }
@@ -103,10 +103,10 @@ pub struct CircuitBreakerConfig {
 pub enum CircuitState {
     /// Circuit closed, normal operation
     Closed,
-    
+
     /// Circuit open, rejecting requests
     Open,
-    
+
     /// Circuit half-open, testing recovery
     HalfOpen,
 }
@@ -133,7 +133,7 @@ impl CircuitBreaker {
             last_failure_time: None,
         }
     }
-    
+
     /// Check if request should be allowed
     pub fn allow_request(&mut self) -> Result<(), String> {
         match self.state {
@@ -157,11 +157,11 @@ impl CircuitBreaker {
             CircuitState::HalfOpen => Ok(()),
         }
     }
-    
+
     /// Record successful execution
     pub fn record_success(&mut self) {
         self.consecutive_failures = 0;
-        
+
         match self.state {
             CircuitState::Closed => {
                 // Stay closed
@@ -179,13 +179,13 @@ impl CircuitBreaker {
             }
         }
     }
-    
+
     /// Record failed execution
     pub fn record_failure(&mut self) {
         self.failure_count += 1;
         self.consecutive_failures += 1;
         self.last_failure_time = Some(Instant::now());
-        
+
         // Check if we should open circuit
         if self.consecutive_failures >= self.config.max_consecutive_failures
             || self.failure_count >= self.config.failure_threshold
@@ -193,12 +193,12 @@ impl CircuitBreaker {
             self.state = CircuitState::Open;
         }
     }
-    
+
     /// Get current state
     pub fn state(&self) -> CircuitState {
         self.state
     }
-    
+
     /// Get failure statistics
     pub fn stats(&self) -> CircuitBreakerStats {
         CircuitBreakerStats {
@@ -235,7 +235,7 @@ impl PerformanceTracker {
             circuit_breaker: None,
         }
     }
-    
+
     /// Create tracker with circuit breaker
     pub fn with_circuit_breaker(budget: EngineBudget, breaker: CircuitBreaker) -> Self {
         Self {
@@ -244,12 +244,12 @@ impl PerformanceTracker {
             circuit_breaker: Some(breaker),
         }
     }
-    
+
     /// Check if execution should continue
     pub fn check_budget(&self) -> Result<(), BudgetViolation> {
         let elapsed = self.start_time.elapsed();
         let elapsed_ms = elapsed.as_millis() as u64;
-        
+
         // Check if exceeded budget
         if elapsed_ms > self.budget.max_latency_ms {
             return Err(BudgetViolation {
@@ -260,26 +260,30 @@ impl PerformanceTracker {
                 action: self.budget.timeout_action,
             });
         }
-        
+
         // Check if approaching warning threshold
-        let warning_threshold_ms = (self.budget.max_latency_ms as f64 * self.budget.warning_threshold) as u64;
+        let warning_threshold_ms =
+            (self.budget.max_latency_ms as f64 * self.budget.warning_threshold) as u64;
         if elapsed_ms > warning_threshold_ms {
             // Log warning but don't fail
-            eprintln!("⚠️  Performance warning: {} at {}ms ({}% of budget)",
-                self.budget.name, elapsed_ms,
-                (elapsed_ms as f64 / self.budget.max_latency_ms as f64 * 100.0) as u64);
+            eprintln!(
+                "⚠️  Performance warning: {} at {}ms ({}% of budget)",
+                self.budget.name,
+                elapsed_ms,
+                (elapsed_ms as f64 / self.budget.max_latency_ms as f64 * 100.0) as u64
+            );
         }
-        
+
         Ok(())
     }
-    
+
     /// Complete execution and record metrics
     pub fn complete(mut self) -> PerformanceMetrics {
         let duration = self.start_time.elapsed();
         let duration_ms = duration.as_millis() as u64;
-        
+
         let within_budget = duration_ms <= self.budget.max_latency_ms;
-        
+
         // Update circuit breaker
         if let Some(breaker) = &mut self.circuit_breaker {
             if within_budget {
@@ -288,7 +292,7 @@ impl PerformanceTracker {
                 breaker.record_failure();
             }
         }
-        
+
         PerformanceMetrics {
             engine: self.budget.name.clone(),
             duration_ms,
@@ -298,17 +302,17 @@ impl PerformanceTracker {
             circuit_breaker_stats: self.circuit_breaker.as_ref().map(|b| b.stats()),
         }
     }
-    
+
     /// Complete with failure
-    pub fn complete_with_failure(mut self, error: &str) -> PerformanceMetrics {
+    pub fn complete_with_failure(mut self, _error: &str) -> PerformanceMetrics {
         let duration = self.start_time.elapsed();
         let duration_ms = duration.as_millis() as u64;
-        
+
         // Update circuit breaker
         if let Some(breaker) = &mut self.circuit_breaker {
             breaker.record_failure();
         }
-        
+
         PerformanceMetrics {
             engine: self.budget.name.clone(),
             duration_ms,
@@ -353,20 +357,28 @@ impl BudgetViolation {
     pub fn format_error(&self) -> String {
         match self.violation_type {
             ViolationType::Timeout => {
-                format!("⏱️  {} exceeded time budget: {}ms (limit: {}ms)",
-                    self.engine, self.actual_value, self.budget_value)
+                format!(
+                    "⏱️  {} exceeded time budget: {}ms (limit: {}ms)",
+                    self.engine, self.actual_value, self.budget_value
+                )
             }
             ViolationType::MemoryExceeded => {
-                format!("💾 {} exceeded memory budget: {}MB (limit: {}MB)",
-                    self.engine, self.actual_value, self.budget_value)
+                format!(
+                    "💾 {} exceeded memory budget: {}MB (limit: {}MB)",
+                    self.engine, self.actual_value, self.budget_value
+                )
             }
             ViolationType::FileSizeExceeded => {
-                format!("📄 {} input file too large: {}MB (limit: {}MB)",
-                    self.engine, self.actual_value, self.budget_value)
+                format!(
+                    "📄 {} input file too large: {}MB (limit: {}MB)",
+                    self.engine, self.actual_value, self.budget_value
+                )
             }
             ViolationType::CircuitBreakerOpen => {
-                format!("🔌 {} circuit breaker is open (too many failures)",
-                    self.engine)
+                format!(
+                    "🔌 {} circuit breaker is open (too many failures)",
+                    self.engine
+                )
             }
         }
     }
@@ -386,9 +398,10 @@ pub struct PerformanceMetrics {
 impl PerformanceMetrics {
     pub fn format_text(&self) -> String {
         let status = if self.within_budget { "✅" } else { "❌" };
-        format!("{} {} - {}ms / {}ms ({}% utilized)",
-            status, self.engine, self.duration_ms, self.budget_ms,
-            self.utilization as u64)
+        format!(
+            "{} {} - {}ms / {}ms ({}% utilized)",
+            status, self.engine, self.duration_ms, self.budget_ms, self.utilization as u64
+        )
     }
 }
 
@@ -400,6 +413,12 @@ pub struct PerformanceReport {
     pub all_within_budget: bool,
 }
 
+impl Default for PerformanceReport {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PerformanceReport {
     pub fn new() -> Self {
         Self {
@@ -408,7 +427,7 @@ impl PerformanceReport {
             all_within_budget: true,
         }
     }
-    
+
     pub fn add_metric(&mut self, metric: PerformanceMetrics) {
         if !metric.within_budget {
             self.all_within_budget = false;
@@ -416,26 +435,26 @@ impl PerformanceReport {
         self.total_duration_ms += metric.duration_ms;
         self.metrics.push(metric);
     }
-    
+
     pub fn format_text(&self) -> String {
         let mut output = String::new();
-        
+
         output.push_str("⚡ Performance Report\n");
         output.push_str("===================\n\n");
-        
+
         if self.all_within_budget {
             output.push_str("✅ All engines within budget\n\n");
         } else {
             output.push_str("❌ Some engines exceeded budget\n\n");
         }
-        
+
         output.push_str("Engine Performance:\n");
         for metric in &self.metrics {
             output.push_str(&format!("  {}\n", metric.format_text()));
         }
-        
+
         output.push_str(&format!("\nTotal Duration: {}ms\n", self.total_duration_ms));
-        
+
         output
     }
 }
@@ -512,7 +531,7 @@ impl Default for PerformanceBudgets {
 mod tests {
     use super::*;
     use std::thread;
-    
+
     #[test]
     fn test_performance_tracker_within_budget() {
         let budget = EngineBudget {
@@ -523,15 +542,15 @@ mod tests {
             timeout_action: TimeoutAction::Error,
             warning_threshold: 0.8,
         };
-        
+
         let tracker = PerformanceTracker::new(budget);
         thread::sleep(Duration::from_millis(10));
-        
+
         let metrics = tracker.complete();
         assert!(metrics.within_budget);
         assert!(metrics.duration_ms < 100);
     }
-    
+
     #[test]
     fn test_circuit_breaker_opens_on_failures() {
         let config = CircuitBreakerConfig {
@@ -540,19 +559,19 @@ mod tests {
             timeout_seconds: 1,
             max_consecutive_failures: 3,
         };
-        
+
         let mut breaker = CircuitBreaker::new(config);
-        
+
         // Record failures
         breaker.record_failure();
         breaker.record_failure();
         breaker.record_failure();
-        
+
         // Circuit should be open
         assert_eq!(breaker.state(), CircuitState::Open);
         assert!(breaker.allow_request().is_err());
     }
-    
+
     #[test]
     fn test_circuit_breaker_half_open_transition() {
         let config = CircuitBreakerConfig {
@@ -561,22 +580,22 @@ mod tests {
             timeout_seconds: 0, // Immediate timeout for testing
             max_consecutive_failures: 2,
         };
-        
+
         let mut breaker = CircuitBreaker::new(config);
-        
+
         // Open circuit
         breaker.record_failure();
         breaker.record_failure();
         assert_eq!(breaker.state(), CircuitState::Open);
-        
+
         // Wait a bit
         thread::sleep(Duration::from_millis(10));
-        
+
         // Should transition to half-open
         assert!(breaker.allow_request().is_ok());
         assert_eq!(breaker.state(), CircuitState::HalfOpen);
     }
-    
+
     #[test]
     fn test_circuit_breaker_closes_on_success() {
         let config = CircuitBreakerConfig {
@@ -585,29 +604,29 @@ mod tests {
             timeout_seconds: 0,
             max_consecutive_failures: 2,
         };
-        
+
         let mut breaker = CircuitBreaker::new(config);
-        
+
         // Open circuit
         breaker.record_failure();
         breaker.record_failure();
-        
+
         // Transition to half-open
         thread::sleep(Duration::from_millis(10));
         breaker.allow_request().unwrap();
-        
+
         // Record successes
         breaker.record_success();
         breaker.record_success();
-        
+
         // Should be closed
         assert_eq!(breaker.state(), CircuitState::Closed);
     }
-    
+
     #[test]
     fn test_performance_report() {
         let mut report = PerformanceReport::new();
-        
+
         report.add_metric(PerformanceMetrics {
             engine: "Prediction".to_string(),
             duration_ms: 250,
@@ -616,7 +635,7 @@ mod tests {
             utilization: 83.3,
             circuit_breaker_stats: None,
         });
-        
+
         report.add_metric(PerformanceMetrics {
             engine: "Mapping".to_string(),
             duration_ms: 450,
@@ -625,14 +644,14 @@ mod tests {
             utilization: 90.0,
             circuit_breaker_stats: None,
         });
-        
+
         assert!(report.all_within_budget);
         assert_eq!(report.total_duration_ms, 700);
-        
+
         let text = report.format_text();
         assert!(text.contains("All engines within budget"));
     }
-    
+
     #[test]
     fn test_budget_violation_format() {
         let violation = BudgetViolation {
@@ -642,7 +661,7 @@ mod tests {
             actual_value: 500,
             action: TimeoutAction::Error,
         };
-        
+
         let error = violation.format_error();
         assert!(error.contains("exceeded time budget"));
         assert!(error.contains("500ms"));

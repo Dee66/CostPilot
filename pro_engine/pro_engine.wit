@@ -1,0 +1,15 @@
+package costpilot:proengine;
+
+interface proengine {
+    scan:       func(input: string) -> string;
+    predict:    func(input: string) -> string;
+    explain:    func(input: string) -> string;
+    autofix:    func(input: string) -> string;
+    mapdeep:    func(input: string) -> string;
+    trend:      func(input: string) -> string;
+    enforce:    func(input: string) -> string;
+}
+
+world costpilot-proengine {
+    import proengine;
+}

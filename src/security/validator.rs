@@ -65,19 +65,14 @@ impl SecurityValidator {
             )
         })?;
 
-        self.limits
-            .check_file_size(metadata.len())
-            .map_err(|v| {
-                CostPilotError::new(
-                    "SEC_002",
-                    ErrorCategory::ValidationError,
-                    v.to_string(),
-                )
-                .with_hint(format!(
+        self.limits.check_file_size(metadata.len()).map_err(|v| {
+            CostPilotError::new("SEC_002", ErrorCategory::ValidationError, v.to_string()).with_hint(
+                format!(
                     "File size limit is {}MB to ensure WASM sandbox safety",
                     self.limits.max_file_size_mb
-                ))
-            })
+                ),
+            )
+        })
     }
 
     /// Scan code for network operations
@@ -129,25 +124,19 @@ impl SecurityValidator {
     pub fn validate_code(&self, code: &str) -> Result<(), CostPilotError> {
         // Check for network calls
         self.scan_for_network_calls(code).map_err(|v| {
-            CostPilotError::new(
-                "SEC_003",
-                ErrorCategory::SecurityViolation,
-                v.to_string(),
-            )
-            .with_hint("CostPilot enforces zero-network policy for WASM sandbox safety".to_string())
+            CostPilotError::new("SEC_003", ErrorCategory::SecurityViolation, v.to_string())
+                .with_hint(
+                    "CostPilot enforces zero-network policy for WASM sandbox safety".to_string(),
+                )
         })?;
 
         // Check for AWS SDK usage
         self.scan_for_aws_sdk(code).map_err(|v| {
-            CostPilotError::new(
-                "SEC_004",
-                ErrorCategory::SecurityViolation,
-                v.to_string(),
-            )
-            .with_hint(
-                "CostPilot must not use AWS SDK - all analysis is done on static IaC files"
-                    .to_string(),
-            )
+            CostPilotError::new("SEC_004", ErrorCategory::SecurityViolation, v.to_string())
+                .with_hint(
+                    "CostPilot must not use AWS SDK - all analysis is done on static IaC files"
+                        .to_string(),
+                )
         })?;
 
         Ok(())
@@ -156,12 +145,10 @@ impl SecurityValidator {
     /// Validate output for secrets
     pub fn validate_output(&self, output: &str) -> Result<(), CostPilotError> {
         self.scan_for_secrets(output).map_err(|v| {
-            CostPilotError::new(
-                "SEC_005",
-                ErrorCategory::SecurityViolation,
-                v.to_string(),
-            )
-            .with_hint("Output contains potential secrets - redact before displaying".to_string())
+            CostPilotError::new("SEC_005", ErrorCategory::SecurityViolation, v.to_string())
+                .with_hint(
+                    "Output contains potential secrets - redact before displaying".to_string(),
+                )
         })
     }
 
@@ -190,7 +177,7 @@ mod tests {
             let url = "https://api.example.com";
             let response = reqwest::get(url).await?;
         "#;
-        
+
         assert!(validator.scan_for_network_calls(code).is_err());
     }
 
@@ -201,7 +188,7 @@ mod tests {
             use aws_sdk_s3::Client;
             let client = Client::new(&config);
         "#;
-        
+
         assert!(validator.scan_for_aws_sdk(code).is_err());
     }
 
@@ -209,7 +196,7 @@ mod tests {
     fn test_detect_aws_access_key() {
         let validator = SecurityValidator::new();
         let output = "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE";
-        
+
         assert!(validator.scan_for_secrets(output).is_err());
     }
 
@@ -217,7 +204,7 @@ mod tests {
     fn test_detect_bearer_token() {
         let validator = SecurityValidator::new();
         let output = "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
-        
+
         assert!(validator.scan_for_secrets(output).is_err());
     }
 
@@ -228,19 +215,19 @@ mod tests {
             use serde_json::Value;
             let config: Value = serde_json::from_str(json_str)?;
         "#;
-        
+
         assert!(validator.validate_code(code).is_ok());
     }
 
     #[test]
     fn test_file_size_validation() {
         let validator = SecurityValidator::new();
-        
+
         // Create a small temp file
         let mut file = NamedTempFile::new().unwrap();
         file.write_all(b"test content").unwrap();
         file.flush().unwrap();
-        
+
         assert!(validator.validate_file_size(file.path()).is_ok());
     }
 

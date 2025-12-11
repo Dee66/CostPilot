@@ -1,12 +1,12 @@
 // Severity calculation
 
-use crate::engines::shared::models::{ResourceChange, Severity, RegressionType};
+use crate::engines::shared::models::{RegressionType, ResourceChange, Severity};
 
 /// Calculate severity score (0-100) for a resource change
 pub fn calculate_severity_score(
     change: &ResourceChange,
     cost_delta: f64,
-    regression_type: &RegressionType,
+    _regression_type: &RegressionType,
     confidence: f64,
 ) -> u32 {
     let mut score = 0.0;
@@ -54,27 +54,20 @@ fn calculate_resource_importance(resource_type: &str) -> f64 {
     // High-cost resources get higher importance
     match resource_type {
         // High importance (expensive resources)
-        "aws_rds_cluster" | 
-        "aws_rds_instance" |
-        "aws_elasticache_cluster" |
-        "aws_elasticsearch_domain" |
-        "aws_eks_cluster" => 100.0,
+        "aws_rds_cluster"
+        | "aws_rds_instance"
+        | "aws_elasticache_cluster"
+        | "aws_elasticsearch_domain"
+        | "aws_eks_cluster" => 100.0,
 
         // Medium-high importance
-        "aws_instance" |
-        "aws_nat_gateway" |
-        "aws_lb" |
-        "aws_alb" => 75.0,
+        "aws_instance" | "aws_nat_gateway" | "aws_lb" | "aws_alb" => 75.0,
 
         // Medium importance
-        "aws_dynamodb_table" |
-        "aws_lambda_function" |
-        "aws_s3_bucket" => 50.0,
+        "aws_dynamodb_table" | "aws_lambda_function" | "aws_s3_bucket" => 50.0,
 
         // Lower importance
-        "aws_cloudwatch_log_group" |
-        "aws_security_group" |
-        "aws_iam_role" => 25.0,
+        "aws_cloudwatch_log_group" | "aws_security_group" | "aws_iam_role" => 25.0,
 
         // Default
         _ => 40.0,
@@ -86,12 +79,18 @@ fn calculate_blast_radius(change: &ResourceChange) -> f64 {
     let mut score: f64 = 50.0; // Base score
 
     // Root module changes have higher blast radius
-    if change.module_path.is_none() || change.module_path.as_ref().map(|s| s.is_empty()).unwrap_or(true) {
+    if change.module_path.is_none()
+        || change
+            .module_path
+            .as_ref()
+            .map(|s| s.is_empty())
+            .unwrap_or(true)
+    {
         score += 30.0;
     }
 
     // Shared resources have higher blast radius
-    if let Some(name) = change.resource_id.split('.').last() {
+    if let Some(name) = change.resource_id.split('.').next_back() {
         if name.contains("shared") || name.contains("common") {
             score += 20.0;
         }
@@ -118,15 +117,7 @@ mod tests {
 
     #[test]
     fn test_severity_calculation() {
-        let change = ResourceChange {
-            resource_id: "aws_rds_instance.prod".to_string(),
-            resource_type: "aws_rds_instance".to_string(),
-            action: ChangeAction::Update,
-            module_path: None,
-            old_config: None,
-            new_config: None,
-            tags: HashMap::new(),
-        };
+        let change = ResourceChange::builder().resource_id("aws_rds_instance.prod".to_string()).resource_type("aws_rds_instance".to_string()).action(ChangeAction::Update).monthly_cost(100.0).module_path("".to_string()).tags(HashMap::new()).build();
 
         let score = calculate_severity_score(
             &change,

@@ -6,26 +6,26 @@ use std::fmt;
 pub struct PolicyExemption {
     /// Unique identifier for the exemption
     pub id: String,
-    
+
     /// The policy rule being exempted (e.g., "NAT_GATEWAY_LIMIT")
     pub policy_name: String,
-    
+
     /// Resource pattern or specific resource ID this exemption applies to
     /// Supports wildcards: "module.vpc.*" or specific: "module.vpc.nat_gateway[0]"
     pub resource_pattern: String,
-    
+
     /// Human-readable justification for the exemption
     pub justification: String,
-    
+
     /// ISO 8601 date when exemption expires (YYYY-MM-DD)
     pub expires_at: String,
-    
+
     /// Who approved this exemption (email or username)
     pub approved_by: String,
-    
+
     /// ISO 8601 timestamp when exemption was created
     pub created_at: String,
-    
+
     /// Optional reference to ticket/issue (e.g., JIRA-123)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ticket_ref: Option<String>,
@@ -36,13 +36,13 @@ pub struct PolicyExemption {
 pub enum ExemptionStatus {
     /// Exemption is valid and active
     Active,
-    
+
     /// Exemption has expired
     Expired { expired_on: String },
-    
+
     /// Exemption is about to expire (within warning threshold)
     ExpiringSoon { expires_in_days: u32 },
-    
+
     /// Exemption has invalid format or missing required fields
     Invalid { reason: String },
 }
@@ -52,10 +52,10 @@ pub enum ExemptionStatus {
 pub struct ExemptionConfig {
     /// Days before expiration to start warning (default: 30)
     pub warning_threshold_days: u32,
-    
+
     /// Whether to enforce expiration checks (default: true)
     pub enforce_expiration: bool,
-    
+
     /// Maximum allowed exemption duration in days (default: 365)
     pub max_duration_days: u32,
 }
@@ -75,10 +75,10 @@ impl Default for ExemptionConfig {
 pub struct ExemptionsFile {
     /// Schema version for future compatibility
     pub version: String,
-    
+
     /// List of active exemptions
     pub exemptions: Vec<PolicyExemption>,
-    
+
     /// Optional metadata
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<ExemptionMetadata>,
@@ -89,7 +89,7 @@ pub struct ExemptionMetadata {
     /// Last time exemptions file was reviewed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_reviewed: Option<String>,
-    
+
     /// Team or organization owning these exemptions
     #[serde(skip_serializing_if = "Option::is_none")]
     pub owner: Option<String>,
@@ -118,18 +118,18 @@ impl PolicyExemption {
         if self.policy_name != policy_name {
             return false;
         }
-        
+
         // Exact match
         if self.resource_pattern == resource_id {
             return true;
         }
-        
+
         // Wildcard matching: "module.vpc.*" matches "module.vpc.nat_gateway[0]"
         if self.resource_pattern.ends_with('*') {
             let prefix = self.resource_pattern.trim_end_matches('*');
             return resource_id.starts_with(prefix);
         }
-        
+
         false
     }
 }
@@ -179,15 +179,24 @@ mod tests {
     fn test_exemption_status_display() {
         assert_eq!(ExemptionStatus::Active.to_string(), "Active");
         assert_eq!(
-            ExemptionStatus::Expired { expired_on: "2025-11-01".to_string() }.to_string(),
+            ExemptionStatus::Expired {
+                expired_on: "2025-11-01".to_string()
+            }
+            .to_string(),
             "Expired on 2025-11-01"
         );
         assert_eq!(
-            ExemptionStatus::ExpiringSoon { expires_in_days: 15 }.to_string(),
+            ExemptionStatus::ExpiringSoon {
+                expires_in_days: 15
+            }
+            .to_string(),
             "Expiring in 15 days"
         );
         assert_eq!(
-            ExemptionStatus::Invalid { reason: "Missing approval".to_string() }.to_string(),
+            ExemptionStatus::Invalid {
+                reason: "Missing approval".to_string()
+            }
+            .to_string(),
             "Invalid: Missing approval"
         );
     }

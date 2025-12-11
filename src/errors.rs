@@ -6,12 +6,16 @@ pub use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Res
 impl CostPilotError {
     /// Create a timeout error
     pub fn timeout(message: impl Into<String>) -> Self {
-        Self::new("TIMEOUT", ErrorCategory::Timeout, &message.into())
+        Self::new("TIMEOUT", ErrorCategory::Timeout, message.into())
     }
 
     /// Create a circuit breaker error
     pub fn circuit_breaker(message: impl Into<String>) -> Self {
-        Self::new("CIRCUIT_BREAK", ErrorCategory::CircuitBreaker, &message.into())
+        Self::new(
+            "CIRCUIT_BREAK",
+            ErrorCategory::CircuitBreaker,
+            message.into(),
+        )
     }
 
     /// Create a performance budget error
@@ -19,8 +23,10 @@ impl CostPilotError {
         Self::new(
             "BUDGET_EXCEEDED",
             ErrorCategory::Timeout,
-            &format!("{} engine exceeded budget: {}ms budget, {}ms actual", 
-                engine, budget_ms, actual_ms)
+            format!(
+                "{} engine exceeded budget: {}ms budget, {}ms actual",
+                engine, budget_ms, actual_ms
+            ),
         )
     }
 

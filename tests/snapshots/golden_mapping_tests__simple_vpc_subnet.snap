@@ -1,0 +1,37 @@
+---
+source: tests/golden_mapping_tests.rs
+assertion_line: 40
+expression: json_output
+---
+{
+  "edges": [
+    {
+      "from": "aws_subnet.public",
+      "relationship": "depends_on",
+      "to": "aws_vpc.main"
+    }
+  ],
+  "metadata": {
+    "edge_count": 1,
+    "has_cycles": false,
+    "max_depth": 1,
+    "node_count": 2,
+    "total_cost": 0.0
+  },
+  "nodes": [
+    {
+      "id": "aws_vpc.main",
+      "label": "main VPC",
+      "monthly_cost": 0.0,
+      "node_type": "resource",
+      "resource_type": "aws_vpc"
+    },
+    {
+      "id": "aws_subnet.public",
+      "label": "public subnet",
+      "monthly_cost": 0.0,
+      "node_type": "resource",
+      "resource_type": "aws_subnet"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 // Validation errors and result types
 
-use std::fmt;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Result type for validation operations
 pub type ValidationResult<T> = Result<T, ValidationError>;
@@ -61,7 +61,12 @@ impl ValidationError {
 
         // Error code and message
         if let Some(code) = &self.error_code {
-            output.push_str(&format!("  {} {}: {}\n", "❌".red(), code.red().bold(), self.message));
+            output.push_str(&format!(
+                "  {} {}: {}\n",
+                "❌".red(),
+                code.red().bold(),
+                self.message
+            ));
         } else {
             output.push_str(&format!("  {} {}\n", "❌".red(), self.message));
         }
@@ -72,7 +77,10 @@ impl ValidationError {
         }
         if let Some(line) = self.line {
             if let Some(column) = self.column {
-                output.push_str(&format!("     Location: line {}, column {}\n", line, column));
+                output.push_str(&format!(
+                    "     Location: line {}, column {}\n",
+                    line, column
+                ));
             } else {
                 output.push_str(&format!("     Location: line {}\n", line));
             }
@@ -97,8 +105,7 @@ impl std::error::Error for ValidationError {}
 
 impl From<std::io::Error> for ValidationError {
     fn from(err: std::io::Error) -> Self {
-        ValidationError::new(format!("IO error: {}", err))
-            .with_error_code("E500")
+        ValidationError::new(format!("IO error: {}", err)).with_error_code("E500")
     }
 }
 
@@ -119,7 +126,9 @@ impl From<serde_yaml::Error> for ValidationError {
 
         // Try to extract location info
         if let Some(location) = err.location() {
-            error = error.with_line(location.line()).with_column(location.column());
+            error = error
+                .with_line(location.line())
+                .with_column(location.column());
         }
 
         error
@@ -167,7 +176,12 @@ impl ValidationWarning {
 
         // Warning code and message
         if let Some(code) = &self.warning_code {
-            output.push_str(&format!("  {} {}: {}\n", "⚠️ ".yellow(), code.yellow().bold(), self.message));
+            output.push_str(&format!(
+                "  {} {}: {}\n",
+                "⚠️ ".yellow(),
+                code.yellow().bold(),
+                self.message
+            ));
         } else {
             output.push_str(&format!("  {} {}\n", "⚠️ ".yellow(), self.message));
         }

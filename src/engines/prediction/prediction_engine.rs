@@ -1,14 +1,24 @@
 // Prediction engine - deterministic cost estimation
 
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::Path;
-use crate::engines::shared::models::{ResourceChange, CostEstimate, ChangeAction};
-use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
+use crate::engines::performance::budgets::{
+    BudgetViolation, PerformanceBudgets, PerformanceTracker, TimeoutAction,
+};
 use crate::engines::prediction::cold_start::ColdStartInference;
 use crate::engines::prediction::confidence::calculate_confidence;
 use crate::engines::prediction::heuristics_loader::HeuristicsLoader;
-use crate::engines::performance::budgets::{PerformanceTracker, PerformanceBudgets, BudgetViolation, TimeoutAction};
+use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
+use crate::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
+use crate::heuristics::FreeHeuristics;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::Path;
+
+/// Prediction mode - Free or Premium
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PredictionMode {
+    Free,
+    Premium,
+}
 
 /// Cost heuristics database
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -156,20 +166,44 @@ pub struct PredictionEngine {
     cold_start: ColdStartInference,
     verbose: bool,
     performance_tracker: Option<PerformanceTracker>,
+    pub mode: PredictionMode,
+    pub free_rules: Option<FreeHeuristics>,
 }
 
 impl PredictionEngine {
-    /// Create a new prediction engine with automatic heuristics discovery
+    /// Create a new prediction engine with Free edition defaults
     pub fn new() -> Result<Self> {
-        let loader = HeuristicsLoader::new();
-        let heuristics = loader.load()?;
-        
+        let free_heuristics = FreeHeuristics::load_free_heuristics();
+        let minimal_heuristics =
+            crate::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
+
         Ok(Self {
-            cold_start: ColdStartInference::new(&heuristics.cold_start_defaults),
-            heuristics,
+            cold_start: ColdStartInference::new(&minimal_heuristics.cold_start_defaults),
+            heuristics: minimal_heuristics,
             verbose: false,
             performance_tracker: None,
+            mode: PredictionMode::Free,
+            free_rules: Some(free_heuristics),
         })
+    }
+
+    /// Create prediction engine with edition context
+    pub fn new_with_edition(edition: &crate::edition::EditionContext) -> Result<Self> {
+        if edition.is_premium() {
+            // Premium mode: defer to ProEngine, use minimal heuristics as placeholder
+            let minimal_heuristics = crate::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
+            Ok(Self {
+                cold_start: ColdStartInference::new(&minimal_heuristics.cold_start_defaults),
+                heuristics: minimal_heuristics,
+                verbose: false,
+                performance_tracker: None,
+                mode: PredictionMode::Premium,
+                free_rules: None,
+            })
+        } else {
+            // Free mode: use static free heuristics
+            Self::new()
+        }
     }
 
     /// Create a new prediction engine from specific heuristics file
@@ -182,6 +216,8 @@ impl PredictionEngine {
             heuristics,
             verbose: false,
             performance_tracker: None,
+            mode: PredictionMode::Free,
+            free_rules: None,
         })
     }
 
@@ -192,6 +228,8 @@ impl PredictionEngine {
             heuristics,
             verbose: false,
             performance_tracker: None,
+            mode: PredictionMode::Free,
+            free_rules: None,
         }
     }
 
@@ -209,69 +247,57 @@ impl PredictionEngine {
 
     /// Predict costs for resource changes
     pub fn predict(&mut self, changes: &[ResourceChange]) -> Result<Vec<CostEstimate>> {
-        // Check budget before starting
-        if let Some(tracker) = &self.performance_tracker {
-            if let Err(violation) = tracker.check_budget() {
-                return self.handle_budget_violation(violation);
-            }
+        // Check edition mode
+        if self.mode == PredictionMode::Premium {
+            return Err(CostPilotError::upgrade_required(
+                "Premium prediction requires ProEngine via call_pro_engine()",
+            ));
         }
 
-        let mut estimates = Vec::new();
-
-        for change in changes {
-            // Check budget periodically during processing
-            if let Some(tracker) = &self.performance_tracker {
-                if let Err(violation) = tracker.check_budget() {
-                    return self.handle_budget_violation_with_partial(violation, estimates);
-                }
-            }
-
-            if let Some(estimate) = self.predict_resource(change)? {
-                estimates.push(estimate);
-            }
-        }
-
-        // Mark completion and collect metrics
-        if let Some(tracker) = self.performance_tracker.take() {
-            let _metrics = tracker.complete();
-            // TODO: Log or return metrics
-        }
-
-        Ok(estimates)
+        // Free mode: use static prediction (no heuristics)
+        Self::predict_static(changes)
     }
 
-    /// Handle budget violation based on timeout action
-    fn handle_budget_violation(&self, violation: BudgetViolation) -> Result<Vec<CostEstimate>> {
+    /// Handle budget violation based on timeout action (legacy - for performance tracking)
+    #[allow(dead_code)]
+    fn _handle_budget_violation(&self, violation: BudgetViolation) -> Result<Vec<CostEstimate>> {
         match violation.action {
             TimeoutAction::PartialResults => {
                 if self.verbose {
-                    eprintln!("⚠️  Budget exceeded: {:?} ({}ms budget, {}ms elapsed)",
-                        violation.violation_type, violation.budget_value, violation.actual_value);
+                    eprintln!(
+                        "⚠️  Budget exceeded: {:?} ({}ms budget, {}ms elapsed)",
+                        violation.violation_type, violation.budget_value, violation.actual_value
+                    );
                     eprintln!("   Returning empty results");
                 }
                 Ok(Vec::new())
             }
-            TimeoutAction::Error => {
-                Err(CostPilotError::new(
-                    "PREDICT_TIMEOUT",
-                    ErrorCategory::Timeout,
-                    &format!("Prediction exceeded budget: {:?} ({}ms budget, {}ms elapsed)",
-                        violation.violation_type, violation.budget_value, violation.actual_value)
-                ))
-            }
-            TimeoutAction::CircuitBreak => {
-                Err(CostPilotError::new(
-                    "PREDICT_CIRCUIT_BREAK",
-                    ErrorCategory::CircuitBreaker,
-                    &format!("Circuit breaker triggered: {:?} ({}ms budget, {}ms elapsed)",
-                        violation.violation_type, violation.budget_value, violation.actual_value)
-                ))
-            }
+            TimeoutAction::Error => Err(CostPilotError::new(
+                "PREDICT_TIMEOUT",
+                ErrorCategory::Timeout,
+                format!(
+                    "Prediction exceeded budget: {:?} ({}ms budget, {}ms elapsed)",
+                    violation.violation_type, violation.budget_value, violation.actual_value
+                ),
+            )),
+            TimeoutAction::CircuitBreak => Err(CostPilotError::new(
+                "PREDICT_CIRCUIT_BREAK",
+                ErrorCategory::CircuitBreaker,
+                format!(
+                    "Circuit breaker triggered: {:?} ({}ms budget, {}ms elapsed)",
+                    violation.violation_type, violation.budget_value, violation.actual_value
+                ),
+            )),
         }
     }
 
-    /// Handle budget violation with partial results
-    fn handle_budget_violation_with_partial(&self, violation: BudgetViolation, partial: Vec<CostEstimate>) -> Result<Vec<CostEstimate>> {
+    /// Handle budget violation with partial results (legacy - for performance tracking)
+    #[allow(dead_code)]
+    fn _handle_budget_violation_with_partial(
+        &self,
+        violation: BudgetViolation,
+        partial: Vec<CostEstimate>,
+    ) -> Result<Vec<CostEstimate>> {
         match violation.action {
             TimeoutAction::PartialResults => {
                 if self.verbose {
@@ -285,7 +311,7 @@ impl PredictionEngine {
                 Err(CostPilotError::new(
                     "PREDICT_TIMEOUT",
                     ErrorCategory::Timeout,
-                    &format!("Prediction exceeded budget: {:?} ({}ms budget, {}ms elapsed) - {} partial results discarded",
+                    format!("Prediction exceeded budget: {:?} ({}ms budget, {}ms elapsed) - {} partial results discarded",
                         violation.violation_type, violation.budget_value, violation.actual_value, partial.len())
                 ))
             }
@@ -293,11 +319,50 @@ impl PredictionEngine {
                 Err(CostPilotError::new(
                     "PREDICT_CIRCUIT_BREAK",
                     ErrorCategory::CircuitBreaker,
-                    &format!("Circuit breaker triggered: {:?} ({}ms budget, {}ms elapsed) - {} partial results discarded",
+                    format!("Circuit breaker triggered: {:?} ({}ms budget, {}ms elapsed) - {} partial results discarded",
                         violation.violation_type, violation.budget_value, violation.actual_value, partial.len())
                 ))
             }
         }
+    }
+
+    /// Static prediction (no heuristics) - Free edition method
+    pub fn predict_static(changes: &[ResourceChange]) -> Result<Vec<CostEstimate>> {
+        let mut estimates = Vec::new();
+
+        for change in changes {
+            // Simple resource type detection only - no cost calculation
+            let monthly_cost = 0.0; // Free tier doesn't calculate costs
+
+            let action_applies = match change.action {
+                ChangeAction::Create | ChangeAction::Update | ChangeAction::Replace => true,
+                ChangeAction::Delete | ChangeAction::NoOp => false,
+            };
+
+            if action_applies {
+                estimates.push(CostEstimate {
+                    resource_id: change.resource_id.clone(),
+                    monthly_cost,
+                    prediction_interval_low: 0.0,
+                    prediction_interval_high: 0.0,
+                    confidence_score: 0.0, // No confidence in free tier
+                    heuristic_reference: Some("free_static".to_string()),
+                    cold_start_inference: true,
+                    monthly: None,
+                    yearly: None,
+                    one_time: None,
+                    breakdown: None,
+                    estimate: None,
+                    lower: None,
+                    upper: None,
+                    confidence: None,
+                    hourly: None,
+                    daily: None,
+                });
+            }
+        }
+
+        Ok(estimates)
     }
 
     /// Predict cost for a single resource
@@ -337,13 +402,27 @@ impl PredictionEngine {
             confidence_score: confidence,
             heuristic_reference: Some(format!("v{}", self.heuristics.version)),
             cold_start_inference: cold_start_used,
+            monthly: None,
+            yearly: None,
+            one_time: None,
+            breakdown: None,
+            estimate: None,
+            lower: None,
+            upper: None,
+            confidence: None,
+            hourly: None,
+            daily: None,
         }))
     }
 
     /// Predict EC2 instance cost
     fn predict_ec2(&self, change: &ResourceChange) -> Result<f64> {
         let config = change.new_config.as_ref().ok_or_else(|| {
-            CostPilotError::new("PREDICT_003", ErrorCategory::InvalidInput, "Missing EC2 configuration")
+            CostPilotError::new(
+                "PREDICT_003",
+                ErrorCategory::InvalidInput,
+                "Missing EC2 configuration",
+            )
         })?;
 
         let instance_type = config
@@ -351,7 +430,11 @@ impl PredictionEngine {
             .and_then(|v| v.as_str())
             .unwrap_or("t3.micro");
 
-        let cost = self.heuristics.compute.ec2.get(instance_type)
+        let cost = self
+            .heuristics
+            .compute
+            .ec2
+            .get(instance_type)
             .map(|c| c.monthly)
             .unwrap_or_else(|| {
                 // Use cold start for unknown instance types
@@ -364,7 +447,11 @@ impl PredictionEngine {
     /// Predict RDS instance cost
     fn predict_rds(&self, change: &ResourceChange) -> Result<f64> {
         let config = change.new_config.as_ref().ok_or_else(|| {
-            CostPilotError::new("PREDICT_004", ErrorCategory::InvalidInput, "Missing RDS configuration")
+            CostPilotError::new(
+                "PREDICT_004",
+                ErrorCategory::InvalidInput,
+                "Missing RDS configuration",
+            )
         })?;
 
         let instance_class = config
@@ -382,7 +469,8 @@ impl PredictionEngine {
             _ => &self.heuristics.database.rds.mysql,
         };
 
-        let instance_cost = instances.get(instance_class)
+        let instance_cost = instances
+            .get(instance_class)
             .map(|c| c.monthly)
             .unwrap_or(50.0); // Conservative default
 
@@ -400,7 +488,11 @@ impl PredictionEngine {
     /// Predict DynamoDB table cost
     fn predict_dynamodb(&self, change: &ResourceChange) -> Result<f64> {
         let config = change.new_config.as_ref().ok_or_else(|| {
-            CostPilotError::new("PREDICT_005", ErrorCategory::InvalidInput, "Missing DynamoDB configuration")
+            CostPilotError::new(
+                "PREDICT_005",
+                ErrorCategory::InvalidInput,
+                "Missing DynamoDB configuration",
+            )
         })?;
 
         let billing_mode = config
@@ -419,8 +511,22 @@ impl PredictionEngine {
                 .and_then(|v| v.as_f64())
                 .unwrap_or(self.heuristics.cold_start_defaults.dynamodb_unknown_wcu as f64);
 
-            let read_cost = read_capacity * self.heuristics.database.dynamodb.provisioned.read_capacity_unit_hourly * 730.0;
-            let write_cost = write_capacity * self.heuristics.database.dynamodb.provisioned.write_capacity_unit_hourly * 730.0;
+            let read_cost = read_capacity
+                * self
+                    .heuristics
+                    .database
+                    .dynamodb
+                    .provisioned
+                    .read_capacity_unit_hourly
+                * 730.0;
+            let write_cost = write_capacity
+                * self
+                    .heuristics
+                    .database
+                    .dynamodb
+                    .provisioned
+                    .write_capacity_unit_hourly
+                * 730.0;
 
             Ok(read_cost + write_cost)
         } else {
@@ -433,8 +539,13 @@ impl PredictionEngine {
     fn predict_nat_gateway(&self, _change: &ResourceChange) -> Result<f64> {
         let base_cost = self.heuristics.networking.nat_gateway.monthly;
         let data_gb = self.heuristics.cold_start_defaults.nat_gateway_default_gb as f64;
-        let data_cost = data_gb * self.heuristics.networking.nat_gateway.data_processing_per_gb;
-        
+        let data_cost = data_gb
+            * self
+                .heuristics
+                .networking
+                .nat_gateway
+                .data_processing_per_gb;
+
         Ok(base_cost + data_cost)
     }
 
@@ -442,22 +553,33 @@ impl PredictionEngine {
     fn predict_load_balancer(&self, _change: &ResourceChange) -> Result<f64> {
         let base_cost = self.heuristics.networking.load_balancer.alb.monthly;
         let lcu_cost = self.heuristics.networking.load_balancer.alb.lcu_hourly * 730.0 * 2.0; // Assume 2 LCUs
-        
+
         Ok(base_cost + lcu_cost)
     }
 
     /// Predict S3 bucket cost
     fn predict_s3(&self, _change: &ResourceChange) -> Result<f64> {
         let storage_gb = self.heuristics.cold_start_defaults.s3_default_gb as f64;
-        let storage_cost = storage_gb * self.heuristics.storage.s3.standard.first_50tb_per_gb.unwrap_or(0.023);
-        
+        let storage_cost = storage_gb
+            * self
+                .heuristics
+                .storage
+                .s3
+                .standard
+                .first_50tb_per_gb
+                .unwrap_or(0.023);
+
         Ok(storage_cost)
     }
 
     /// Predict Lambda function cost
     fn predict_lambda(&self, change: &ResourceChange) -> Result<f64> {
         let config = change.new_config.as_ref().ok_or_else(|| {
-            CostPilotError::new("PREDICT_006", ErrorCategory::InvalidInput, "Missing Lambda configuration")
+            CostPilotError::new(
+                "PREDICT_006",
+                ErrorCategory::InvalidInput,
+                "Missing Lambda configuration",
+            )
         })?;
 
         let memory_mb = config
@@ -466,15 +588,15 @@ impl PredictionEngine {
             .unwrap_or(self.heuristics.compute.lambda.default_memory_mb as f64);
 
         let invocations = self.heuristics.compute.lambda.default_memory_mb as f64 / 1000.0;
-        
+
         // Request cost
         let request_cost = invocations * self.heuristics.compute.lambda.price_per_request;
-        
+
         // Compute cost (GB-seconds)
         let duration_seconds = self.heuristics.compute.lambda.default_duration_ms as f64 / 1000.0;
         let gb_seconds = (memory_mb / 1024.0) * duration_seconds * invocations;
         let compute_cost = gb_seconds * self.heuristics.compute.lambda.price_per_gb_second;
-        
+
         Ok(request_cost + compute_cost)
     }
 
@@ -495,17 +617,18 @@ impl PredictionEngine {
     }
 
     /// Generate explanation for a prediction
-    pub fn explain(
-        &self,
-        change: &ResourceChange,
-    ) -> Result<crate::engines::explain::ReasoningChain> {
+    pub fn explain(&self, change: &ResourceChange) -> Result<crate::engines::explain::Explanation> {
         // First get the prediction
-        let estimate = self.predict_resource(change)?
-            .ok_or_else(|| CostPilotError::new(
+        let estimate = self.predict_resource(change)?.ok_or_else(|| {
+            CostPilotError::new(
                 "PREDICT_EXPLAIN_001",
                 ErrorCategory::InvalidInput,
-                format!("Cannot explain prediction for unknown resource type: {}", change.resource_type),
-            ))?;
+                format!(
+                    "Cannot explain prediction for unknown resource type: {}",
+                    change.resource_type
+                ),
+            )
+        })?;
 
         // Generate reasoning chain
         use crate::engines::explain::PredictionExplainer;
@@ -514,12 +637,15 @@ impl PredictionEngine {
     }
 
     /// Predict total cost for multiple resource changes (convenience method)
-    pub fn predict_total_cost(&mut self, changes: &[ResourceChange]) -> Result<crate::engines::shared::models::TotalCost> {
+    pub fn predict_total_cost(
+        &mut self,
+        changes: &[ResourceChange],
+    ) -> Result<crate::engines::shared::models::TotalCost> {
         let estimates = self.predict(changes)?;
-        
+
         // Calculate total
         let total_monthly: f64 = estimates.iter().map(|e| e.monthly_cost).sum();
-        
+
         // Average confidence
         let avg_confidence = if !estimates.is_empty() {
             estimates.iter().map(|e| e.confidence_score).sum::<f64>() / estimates.len() as f64
@@ -542,19 +668,21 @@ impl PredictionEngine {
 
     /// Predict cost for a single resource change (convenience method)
     pub fn predict_resource_cost(&self, change: &ResourceChange) -> Result<CostEstimate> {
-        self.predict_resource(change)?
-            .ok_or_else(|| CostPilotError::new(
+        self.predict_resource(change)?.ok_or_else(|| {
+            CostPilotError::new(
                 "PREDICT_RESOURCE_001",
                 ErrorCategory::InvalidInput,
-                format!("Cannot predict cost for unknown resource type: {}", change.resource_type),
-            ))
+                format!(
+                    "Cannot predict cost for unknown resource type: {}",
+                    change.resource_type
+                ),
+            )
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::collections::HashMap;
 
     #[test]
     fn test_ec2_prediction() {

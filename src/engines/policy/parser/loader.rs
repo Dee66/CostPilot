@@ -1,8 +1,8 @@
 // Policy loader - Load policy rules from files and directories
 
-use super::dsl::{PolicyRule, DslParser, ParseError};
-use std::path::{Path, PathBuf};
+use super::dsl::{DslParser, ParseError, PolicyRule};
 use std::fs;
+use std::path::{Path, PathBuf};
 
 /// Policy rule loader with multiple search paths
 pub struct PolicyRuleLoader {
@@ -27,12 +27,12 @@ impl PolicyRuleLoader {
     /// Default search paths for policy rules
     pub fn default_search_paths() -> Vec<PathBuf> {
         vec![
-            PathBuf::from(".costpilot/policies"),      // Project policies
-            PathBuf::from(".costpilot/rules"),         // Alternative name
+            PathBuf::from(".costpilot/policies"), // Project policies
+            PathBuf::from(".costpilot/rules"),    // Alternative name
             dirs::home_dir()
                 .map(|h| h.join(".costpilot/policies"))
-                .unwrap_or_else(|| PathBuf::from("~/.costpilot/policies")),  // User policies
-            PathBuf::from("/etc/costpilot/policies"),  // System-wide policies
+                .unwrap_or_else(|| PathBuf::from("~/.costpilot/policies")), // User policies
+            PathBuf::from("/etc/costpilot/policies"), // System-wide policies
         ]
     }
 
@@ -90,22 +90,14 @@ impl PolicyRuleLoader {
         let content = fs::read_to_string(file_path)
             .map_err(|e| LoadError::ReadError(file_path.to_path_buf(), e.to_string()))?;
 
-        let extension = file_path.extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
+        let extension = file_path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
         match extension {
-            "yaml" | "yml" => {
-                DslParser::parse_yaml(&content)
-                    .map_err(|e| LoadError::ParseError(file_path.to_path_buf(), e))
-            }
-            "json" => {
-                DslParser::parse_json(&content)
-                    .map_err(|e| LoadError::ParseError(file_path.to_path_buf(), e))
-            }
-            _ => {
-                Err(LoadError::UnsupportedFormat(file_path.to_path_buf()))
-            }
+            "yaml" | "yml" => DslParser::parse_yaml(&content)
+                .map_err(|e| LoadError::ParseError(file_path.to_path_buf(), e)),
+            "json" => DslParser::parse_json(&content)
+                .map_err(|e| LoadError::ParseError(file_path.to_path_buf(), e)),
+            _ => Err(LoadError::UnsupportedFormat(file_path.to_path_buf())),
         }
     }
 
@@ -117,16 +109,18 @@ impl PolicyRuleLoader {
             .map_err(|e| LoadError::ReadError(dir_path.to_path_buf(), e.to_string()))?;
 
         for entry in entries {
-            let entry = entry
-                .map_err(|e| LoadError::ReadError(dir_path.to_path_buf(), e.to_string()))?;
-            
+            let entry =
+                entry.map_err(|e| LoadError::ReadError(dir_path.to_path_buf(), e.to_string()))?;
+
             let path = entry.path();
-            
+
             // Skip non-files and hidden files
-            if !path.is_file() || path.file_name()
-                .and_then(|n| n.to_str())
-                .map(|n| n.starts_with('.'))
-                .unwrap_or(false)
+            if !path.is_file()
+                || path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n.starts_with('.'))
+                    .unwrap_or(false)
             {
                 continue;
             }
@@ -154,13 +148,16 @@ impl PolicyRuleLoader {
     pub fn validate_rules(&self, rules: &[PolicyRule]) -> Result<(), LoadError> {
         for rule in rules {
             if rule.name.is_empty() {
-                return Err(LoadError::ValidationError("Rule name cannot be empty".to_string()));
+                return Err(LoadError::ValidationError(
+                    "Rule name cannot be empty".to_string(),
+                ));
             }
 
             if rule.conditions.is_empty() {
-                return Err(LoadError::ValidationError(
-                    format!("Rule '{}' must have at least one condition", rule.name)
-                ));
+                return Err(LoadError::ValidationError(format!(
+                    "Rule '{}' must have at least one condition",
+                    rule.name
+                )));
             }
         }
 
@@ -175,7 +172,9 @@ impl PolicyRuleLoader {
 
         let mut severity_counts = std::collections::HashMap::new();
         for rule in rules {
-            *severity_counts.entry(format!("{:?}", rule.severity)).or_insert(0) += 1;
+            *severity_counts
+                .entry(format!("{:?}", rule.severity))
+                .or_insert(0) += 1;
         }
 
         RuleStatistics {
@@ -209,11 +208,11 @@ impl RuleStatistics {
         output.push_str(&format!("Enabled: {}\n", self.enabled_rules));
         output.push_str(&format!("Disabled: {}\n", self.disabled_rules));
         output.push_str("\nBy Severity:\n");
-        
+
         for (severity, count) in &self.severity_counts {
             output.push_str(&format!("  {}: {}\n", severity, count));
         }
-        
+
         output
     }
 }
@@ -254,7 +253,9 @@ mod tests {
     fn test_default_search_paths() {
         let paths = PolicyRuleLoader::default_search_paths();
         assert!(paths.len() >= 3);
-        assert!(paths.iter().any(|p| p.to_str().unwrap().contains(".costpilot")));
+        assert!(paths
+            .iter()
+            .any(|p| p.to_str().unwrap().contains(".costpilot")));
     }
 
     #[test]

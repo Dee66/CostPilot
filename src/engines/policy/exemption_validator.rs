@@ -3,10 +3,8 @@ use serde_yaml;
 use std::fs;
 use std::path::Path;
 
+use super::exemption_types::{ExemptionConfig, ExemptionStatus, ExemptionsFile, PolicyExemption};
 use crate::errors::CostPilotError;
-use super::exemption_types::{
-    ExemptionConfig, ExemptionStatus, ExemptionsFile, PolicyExemption,
-};
 
 /// Validates and manages policy exemptions
 pub struct ExemptionValidator {
@@ -32,7 +30,7 @@ impl ExemptionValidator {
         path: P,
     ) -> Result<ExemptionsFile, CostPilotError> {
         let path = path.as_ref();
-        
+
         if !path.exists() {
             return Err(CostPilotError::file_not_found(
                 path.to_string_lossy().to_string(),
@@ -58,10 +56,7 @@ impl ExemptionValidator {
     }
 
     /// Validate the entire exemptions file structure
-    fn validate_exemptions_file(
-        &self,
-        file: &ExemptionsFile,
-    ) -> Result<(), CostPilotError> {
+    fn validate_exemptions_file(&self, file: &ExemptionsFile) -> Result<(), CostPilotError> {
         // Check version format (must be semver-like)
         if !file.version.contains('.') {
             return Err(CostPilotError::validation_error(
@@ -94,10 +89,7 @@ impl ExemptionValidator {
     }
 
     /// Validate a single exemption
-    pub fn validate_exemption(
-        &self,
-        exemption: &PolicyExemption,
-    ) -> Result<(), CostPilotError> {
+    pub fn validate_exemption(&self, exemption: &PolicyExemption) -> Result<(), CostPilotError> {
         // Check required fields are non-empty
         if exemption.id.is_empty() {
             return Err(CostPilotError::validation_error(
@@ -134,8 +126,8 @@ impl ExemptionValidator {
         self.validate_iso8601_timestamp(&exemption.created_at, "created_at")?;
 
         // Check expiration is not too far in future
-        let expires = NaiveDate::parse_from_str(&exemption.expires_at, "%Y-%m-%d")
-            .map_err(|_| {
+        let expires =
+            NaiveDate::parse_from_str(&exemption.expires_at, "%Y-%m-%d").map_err(|_| {
                 CostPilotError::validation_error(format!(
                     "Invalid expiration date format: {}",
                     exemption.expires_at
@@ -297,7 +289,7 @@ mod tests {
     fn test_validate_exemption_valid() {
         let validator = ExemptionValidator::new();
         let exemption = create_valid_exemption("2026-06-01");
-        
+
         assert!(validator.validate_exemption(&exemption).is_ok());
     }
 
@@ -306,7 +298,7 @@ mod tests {
         let validator = ExemptionValidator::new();
         let mut exemption = create_valid_exemption("2026-06-01");
         exemption.id = "".to_string();
-        
+
         assert!(validator.validate_exemption(&exemption).is_err());
     }
 
@@ -315,7 +307,7 @@ mod tests {
         let validator = ExemptionValidator::new();
         let mut exemption = create_valid_exemption("2026-06-01");
         exemption.justification = "".to_string();
-        
+
         assert!(validator.validate_exemption(&exemption).is_err());
     }
 
@@ -323,7 +315,7 @@ mod tests {
     fn test_validate_exemption_invalid_date_format() {
         let validator = ExemptionValidator::new();
         let exemption = create_valid_exemption("2026/06/01"); // Wrong format
-        
+
         assert!(validator.validate_exemption(&exemption).is_err());
     }
 
@@ -331,7 +323,7 @@ mod tests {
     fn test_validate_exemption_expired_before_created() {
         let validator = ExemptionValidator::new();
         let exemption = create_valid_exemption("2025-11-01"); // Before created_at
-        
+
         assert!(validator.validate_exemption(&exemption).is_err());
     }
 
@@ -339,9 +331,9 @@ mod tests {
     fn test_check_status_active() {
         let validator = ExemptionValidator::new();
         let exemption = create_valid_exemption("2026-06-01");
-        
+
         match validator.check_status(&exemption) {
-            ExemptionStatus::Active => {},
+            ExemptionStatus::Active => {}
             _ => panic!("Expected Active status"),
         }
     }
@@ -350,9 +342,9 @@ mod tests {
     fn test_check_status_expired() {
         let validator = ExemptionValidator::new();
         let exemption = create_valid_exemption("2025-11-01");
-        
+
         match validator.check_status(&exemption) {
-            ExemptionStatus::Expired { .. } => {},
+            ExemptionStatus::Expired { .. } => {}
             _ => panic!("Expected Expired status"),
         }
     }
@@ -362,9 +354,13 @@ mod tests {
         let validator = ExemptionValidator::new();
         let active_exemption = create_valid_exemption("2026-06-01");
         let expired_exemption = create_valid_exemption("2025-11-01");
-        
+
         assert!(validator.is_exempted(&active_exemption, "NAT_GATEWAY_LIMIT", "module.vpc.nat[0]"));
-        assert!(!validator.is_exempted(&expired_exemption, "NAT_GATEWAY_LIMIT", "module.vpc.nat[0]"));
+        assert!(!validator.is_exempted(
+            &expired_exemption,
+            "NAT_GATEWAY_LIMIT",
+            "module.vpc.nat[0]"
+        ));
     }
 
     #[test]
@@ -382,7 +378,7 @@ exemptions:
     created_at: "2025-12-01T00:00:00Z"
     ticket_ref: "JIRA-123"
 "#;
-        
+
         let result = validator.parse_yaml(yaml);
         assert!(result.is_ok());
         let file = result.unwrap();
@@ -411,7 +407,7 @@ exemptions:
     approved_by: "dev@example.com"
     created_at: "2025-12-01T00:00:00Z"
 "#;
-        
+
         let result = validator.parse_yaml(yaml);
         assert!(result.is_err());
     }
@@ -436,7 +432,7 @@ exemptions:
             ],
             metadata: None,
         };
-        
+
         let matches = validator.find_exemptions(&file, "NAT_GATEWAY_LIMIT", "module.vpc.nat[0]");
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].id, "EXE-001");

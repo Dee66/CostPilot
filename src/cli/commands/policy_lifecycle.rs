@@ -1,13 +1,10 @@
 // Policy lifecycle CLI commands
 
 use colored::*;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use crate::engines::policy::{
-    ApprovalWorkflowManager, PolicyContent, PolicyHistory, PolicyState,
-};
 use crate::engines::policy::lifecycle::PolicyLifecycle as PolicyLifecycleManager;
-
+use crate::engines::policy::{ApprovalWorkflowManager, PolicyContent, PolicyHistory, PolicyState};
 
 /// Execute policy submit command
 pub fn cmd_submit(
@@ -15,8 +12,12 @@ pub fn cmd_submit(
     approvers: Vec<String>,
     format: &str,
     verbose: bool,
+    _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", "📝 Submitting policy for approval...".bright_blue().bold());
+    println!(
+        "{}",
+        "📝 Submitting policy for approval...".bright_blue().bold()
+    );
 
     if verbose {
         println!("  Policy file: {}", policy_file.display());
@@ -32,18 +33,16 @@ pub fn cmd_submit(
 
     // Create workflow manager
     let mut manager = ApprovalWorkflowManager::new();
-    
+
     // Setup roles (in production, load from config)
-    manager.assign_role(
-        "policy-approver".to_string(),
-        approvers.clone(),
-    );
+    manager.assign_role("policy-approver".to_string(), approvers.clone());
 
     // Register policy
     manager.register_policy(policy_id.clone(), None)?;
 
     // Submit for approval
-    let assigned_approvers = manager.submit_for_approval(&policy_id, "system@costpilot".to_string())?;
+    let assigned_approvers =
+        manager.submit_for_approval(&policy_id, "system@costpilot".to_string())?;
 
     match format {
         "json" => {
@@ -56,7 +55,10 @@ pub fn cmd_submit(
         }
         _ => {
             println!();
-            println!("{}", "✅ Policy submitted for approval".bright_green().bold());
+            println!(
+                "{}",
+                "✅ Policy submitted for approval".bright_green().bold()
+            );
             println!();
             println!("Policy ID: {}", policy_id.bright_white());
             println!("Status: {}", "Review".bright_yellow());
@@ -69,7 +71,10 @@ pub fn cmd_submit(
             println!("Next steps:");
             println!("  1. Wait for approvers to review");
             println!("  2. Check status: costpilot policy status {}", policy_id);
-            println!("  3. Activate when approved: costpilot policy activate {}", policy_id);
+            println!(
+                "  3. Activate when approved: costpilot policy activate {}",
+                policy_id
+            );
         }
     }
 
@@ -82,23 +87,31 @@ pub fn cmd_approve(
     approver: String,
     comment: Option<String>,
     format: &str,
-    verbose: bool,
+    _verbose: bool,
+    _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", format!("✅ Approving policy '{}'...", policy_id).bright_blue().bold());
+    println!(
+        "{}",
+        format!("✅ Approving policy '{}'...", policy_id)
+            .bright_blue()
+            .bold()
+    );
 
     // In production, would load from persistence layer
     let mut manager = ApprovalWorkflowManager::new();
-    
+
     // For demo, setup mock data
-    manager.assign_role(
-        "policy-approver".to_string(),
-        vec![approver.clone()],
-    );
+    manager.assign_role("policy-approver".to_string(), vec![approver.clone()]);
     manager.register_policy(policy_id.clone(), None)?;
     manager.submit_for_approval(&policy_id, "author".to_string())?;
 
     // Record approval
-    let result = manager.approve(&policy_id, approver.clone(), "APPROVAL-001".to_string(), comment.clone())?;
+    let result = manager.approve(
+        &policy_id,
+        approver.clone(),
+        "APPROVAL-001".to_string(),
+        comment.clone(),
+    )?;
 
     match format {
         "json" => {
@@ -114,17 +127,23 @@ pub fn cmd_approve(
                 println!("Comment: {}", c);
             }
             println!();
-            
+
             if result.sufficient_approvals {
-                println!("{}", "🎉 Policy has sufficient approvals!".bright_green().bold());
+                println!(
+                    "{}",
+                    "🎉 Policy has sufficient approvals!".bright_green().bold()
+                );
                 println!();
                 println!("Next step: costpilot policy activate {}", policy_id);
             } else {
-                println!("Approvals: {}/{}", 
-                    result.remaining_approvals,
+                println!(
+                    "Approvals: {}/{}",
+                    result.remaining_approvals, result.remaining_approvals
+                );
+                println!(
+                    "Waiting for {} more approval(s)",
                     result.remaining_approvals
                 );
-                println!("Waiting for {} more approval(s)", result.remaining_approvals);
             }
         }
     }
@@ -139,8 +158,14 @@ pub fn cmd_reject(
     reason: String,
     format: &str,
     _verbose: bool,
+    _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", format!("❌ Rejecting policy '{}'...", policy_id).bright_red().bold());
+    println!(
+        "{}",
+        format!("❌ Rejecting policy '{}'...", policy_id)
+            .bright_red()
+            .bold()
+    );
 
     let mut manager = ApprovalWorkflowManager::new();
     manager.assign_role("policy-approver".to_string(), vec![approver.clone()]);
@@ -175,12 +200,18 @@ pub fn cmd_activate(
     actor: String,
     format: &str,
     _verbose: bool,
+    _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", format!("🚀 Activating policy '{}'...", policy_id).bright_blue().bold());
+    println!(
+        "{}",
+        format!("🚀 Activating policy '{}'...", policy_id)
+            .bright_blue()
+            .bold()
+    );
 
     let mut manager = ApprovalWorkflowManager::new();
     manager.register_policy(policy_id.clone(), None)?;
-    
+
     // Simulate approved state (in production, load from storage)
     let lifecycle = manager.get_lifecycle_mut(&policy_id).unwrap();
     lifecycle.current_state = PolicyState::Approved;
@@ -198,7 +229,10 @@ pub fn cmd_activate(
         }
         _ => {
             println!();
-            println!("{}", "✅ Policy activated successfully!".bright_green().bold());
+            println!(
+                "{}",
+                "✅ Policy activated successfully!".bright_green().bold()
+            );
             println!();
             println!("Policy ID: {}", policy_id.bright_white());
             println!("Status: {}", "Active".bright_green());
@@ -218,12 +252,18 @@ pub fn cmd_deprecate(
     reason: String,
     format: &str,
     _verbose: bool,
+    _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", format!("⚠️  Deprecating policy '{}'...", policy_id).bright_yellow().bold());
+    println!(
+        "{}",
+        format!("⚠️  Deprecating policy '{}'...", policy_id)
+            .bright_yellow()
+            .bold()
+    );
 
     let mut manager = ApprovalWorkflowManager::new();
     manager.register_policy(policy_id.clone(), None)?;
-    
+
     let lifecycle = manager.get_lifecycle_mut(&policy_id).unwrap();
     lifecycle.current_state = PolicyState::Active;
 
@@ -260,8 +300,14 @@ pub fn cmd_status(
     policy_id: String,
     format: &str,
     verbose: bool,
+    _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", format!("📊 Policy status for '{}'...", policy_id).bright_blue().bold());
+    println!(
+        "{}",
+        format!("📊 Policy status for '{}'...", policy_id)
+            .bright_blue()
+            .bold()
+    );
 
     // Mock lifecycle for demo
     let lifecycle = PolicyLifecycleManager::new(policy_id.clone());
@@ -277,7 +323,7 @@ pub fn cmd_status(
             println!("{}", "━".repeat(60).bright_black());
             println!();
             println!("Policy ID: {}", summary.policy_id.bright_white());
-            
+
             let state_colored = match summary.current_state {
                 PolicyState::Draft => format!("{:?}", summary.current_state).bright_black(),
                 PolicyState::Review => format!("{:?}", summary.current_state).bright_yellow(),
@@ -291,13 +337,30 @@ pub fn cmd_status(
             println!();
 
             println!("Permissions:");
-            println!("  Editable: {}", if summary.is_editable { "✅ Yes" } else { "❌ No" });
-            println!("  Enforceable: {}", if summary.is_enforceable { "✅ Yes" } else { "❌ No" });
+            println!(
+                "  Editable: {}",
+                if summary.is_editable {
+                    "✅ Yes"
+                } else {
+                    "❌ No"
+                }
+            );
+            println!(
+                "  Enforceable: {}",
+                if summary.is_enforceable {
+                    "✅ Yes"
+                } else {
+                    "❌ No"
+                }
+            );
             println!();
 
             if summary.requires_approval {
                 println!("Approvals:");
-                println!("  Received: {}/{}", summary.approvals_received, summary.approvals_required);
+                println!(
+                    "  Received: {}/{}",
+                    summary.approvals_received, summary.approvals_required
+                );
                 if summary.has_rejections {
                     println!("  Rejections: {}", "⚠️  Yes".bright_yellow());
                 }
@@ -325,13 +388,19 @@ pub fn cmd_history(
     policy_id: String,
     format: &str,
     _verbose: bool,
+    _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", format!("📚 Policy history for '{}'...", policy_id).bright_blue().bold());
+    println!(
+        "{}",
+        format!("📚 Policy history for '{}'...", policy_id)
+            .bright_blue()
+            .bold()
+    );
 
     // Mock history for demo
     use serde_json::json;
     use std::collections::HashMap;
-    
+
     let content = PolicyContent {
         id: policy_id.clone(),
         name: "Test Policy".to_string(),
@@ -339,7 +408,7 @@ pub fn cmd_history(
         rules: json!({"test": "rule"}),
         config: HashMap::new(),
     };
-    
+
     let history = PolicyHistory::new(policy_id.clone(), content, "author@example.com".to_string());
 
     match format {
@@ -359,11 +428,15 @@ pub fn cmd_history(
                     " ".normal()
                 };
 
-                println!("{} Version {}", marker, version.version.bright_white().bold());
+                println!(
+                    "{} Version {}",
+                    marker,
+                    version.version.bright_white().bold()
+                );
                 println!("  Author: {}", version.author);
                 println!("  Created: {}", version.created_at);
                 println!("  Description: {}", version.change_description);
-                
+
                 if !version.metadata.tags.is_empty() {
                     println!("  Tags: {}", version.metadata.tags.join(", "));
                 }
@@ -374,7 +447,10 @@ pub fn cmd_history(
             }
 
             println!();
-            println!("Current version: {}", history.current_version.bright_green());
+            println!(
+                "Current version: {}",
+                history.current_version.bright_green()
+            );
             println!("Total versions: {}", history.version_count());
         }
     }
@@ -389,13 +465,19 @@ pub fn cmd_diff(
     to_version: String,
     format: &str,
     _verbose: bool,
+    _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", format!("🔍 Comparing versions {} → {}...", from_version, to_version).bright_blue().bold());
+    println!(
+        "{}",
+        format!("🔍 Comparing versions {} → {}...", from_version, to_version)
+            .bright_blue()
+            .bold()
+    );
 
     // Mock for demo
     use serde_json::json;
     use std::collections::HashMap;
-    
+
     let content = PolicyContent {
         id: policy_id.clone(),
         name: "Test Policy".to_string(),
@@ -403,7 +485,7 @@ pub fn cmd_diff(
         rules: json!({"test": "rule"}),
         config: HashMap::new(),
     };
-    
+
     let history = PolicyHistory::new(policy_id, content, "author@example.com".to_string());
     let diff = history.diff(&from_version, &to_version)?;
 

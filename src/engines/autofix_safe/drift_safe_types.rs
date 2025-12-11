@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -7,34 +7,34 @@ use std::collections::HashMap;
 pub struct DriftSafeOperation {
     /// Unique operation ID
     pub id: String,
-    
+
     /// Timestamp when operation was created
     pub created_at: String,
-    
+
     /// Resource being fixed
     pub resource_id: String,
-    
+
     /// Type of resource
     pub resource_type: String,
-    
+
     /// Fix being applied
     pub fix_description: String,
-    
+
     /// Original state before fix (for rollback)
     pub original_state: ResourceState,
-    
+
     /// Expected state after fix
     pub target_state: ResourceState,
-    
+
     /// Current operation status
     pub status: OperationStatus,
-    
+
     /// Safety checks that must pass
     pub safety_checks: Vec<SafetyCheck>,
-    
+
     /// Rollback plan
     pub rollback_plan: RollbackPlan,
-    
+
     /// Execution log
     pub execution_log: Vec<LogEntry>,
 }
@@ -44,13 +44,13 @@ pub struct DriftSafeOperation {
 pub struct ResourceState {
     /// Resource configuration snapshot
     pub config: HashMap<String, serde_json::Value>,
-    
+
     /// Cost estimate at this state
     pub estimated_cost: f64,
-    
+
     /// Timestamp of this state
     pub timestamp: String,
-    
+
     /// Configuration hash for verification
     pub config_hash: String,
 }
@@ -61,25 +61,25 @@ pub struct ResourceState {
 pub enum OperationStatus {
     /// Pending execution
     Pending,
-    
+
     /// Safety checks in progress
     ValidatingSafety,
-    
+
     /// Applying fix
     Applying,
-    
+
     /// Successfully applied
     Applied,
-    
+
     /// Failed during application
     Failed,
-    
+
     /// Rolling back
     RollingBack,
-    
+
     /// Successfully rolled back
     RolledBack,
-    
+
     /// Rollback failed (manual intervention needed)
     RollbackFailed,
 }
@@ -89,19 +89,19 @@ pub enum OperationStatus {
 pub struct SafetyCheck {
     /// Check name
     pub name: String,
-    
+
     /// Check description
     pub description: String,
-    
+
     /// Check type
     pub check_type: SafetyCheckType,
-    
+
     /// Check status
     pub status: CheckStatus,
-    
+
     /// Result message
     pub message: Option<String>,
-    
+
     /// When check was performed
     pub checked_at: Option<String>,
 }
@@ -112,22 +112,22 @@ pub struct SafetyCheck {
 pub enum SafetyCheckType {
     /// Verify no drift since state snapshot
     NoDrift,
-    
+
     /// Verify resource still exists
     ResourceExists,
-    
+
     /// Verify configuration hash matches
     ConfigHashMatch,
-    
+
     /// Verify cost impact is acceptable
     CostImpactAcceptable,
-    
+
     /// Verify no policy violations
     NoPolicyViolations,
-    
+
     /// Verify no SLO violations
     NoSloViolations,
-    
+
     /// Custom safety check
     Custom(String),
 }
@@ -138,13 +138,13 @@ pub enum SafetyCheckType {
 pub enum CheckStatus {
     /// Not yet checked
     Pending,
-    
+
     /// Check passed
     Passed,
-    
+
     /// Check failed
     Failed,
-    
+
     /// Check skipped
     Skipped,
 }
@@ -154,13 +154,13 @@ pub enum CheckStatus {
 pub struct RollbackPlan {
     /// Steps to rollback to original state
     pub steps: Vec<RollbackStep>,
-    
+
     /// Maximum time allowed for rollback
     pub timeout_seconds: u32,
-    
+
     /// Whether rollback is automatic on failure
     pub auto_rollback: bool,
-    
+
     /// Rollback status
     pub status: RollbackStatus,
 }
@@ -170,13 +170,13 @@ pub struct RollbackPlan {
 pub struct RollbackStep {
     /// Step order (lower executes first)
     pub order: u32,
-    
+
     /// Step description
     pub description: String,
-    
+
     /// Configuration to restore
     pub restore_config: HashMap<String, serde_json::Value>,
-    
+
     /// Verification after this step
     pub verification: Option<String>,
 }
@@ -187,13 +187,13 @@ pub struct RollbackStep {
 pub enum RollbackStatus {
     /// Not triggered
     NotTriggered,
-    
+
     /// In progress
     InProgress,
-    
+
     /// Successfully completed
     Completed,
-    
+
     /// Failed (manual intervention needed)
     Failed,
 }
@@ -203,13 +203,13 @@ pub enum RollbackStatus {
 pub struct LogEntry {
     /// Timestamp
     pub timestamp: String,
-    
+
     /// Log level
     pub level: LogLevel,
-    
+
     /// Log message
     pub message: String,
-    
+
     /// Additional context
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context: Option<HashMap<String, String>>,
@@ -231,13 +231,13 @@ pub enum LogLevel {
 pub struct DriftDetection {
     /// Whether drift was detected
     pub has_drift: bool,
-    
+
     /// Drifted attributes
     pub drifted_attributes: Vec<DriftedAttribute>,
-    
+
     /// Drift severity
     pub severity: DriftSeverity,
-    
+
     /// When drift was detected
     pub detected_at: String,
 }
@@ -247,13 +247,13 @@ pub struct DriftDetection {
 pub struct DriftedAttribute {
     /// Attribute name
     pub name: String,
-    
+
     /// Expected value
     pub expected: serde_json::Value,
-    
+
     /// Actual value
     pub actual: serde_json::Value,
-    
+
     /// Impact of drift
     pub impact: String,
 }
@@ -264,13 +264,13 @@ pub struct DriftedAttribute {
 pub enum DriftSeverity {
     /// Minor drift, safe to proceed
     Minor,
-    
+
     /// Moderate drift, caution advised
     Moderate,
-    
+
     /// Major drift, operation should be blocked
     Major,
-    
+
     /// Critical drift, immediate attention needed
     Critical,
 }
@@ -285,7 +285,7 @@ impl DriftSafeOperation {
         target_state: ResourceState,
     ) -> Self {
         let id = Self::generate_operation_id(&resource_id);
-        
+
         Self {
             id,
             created_at: Utc::now().to_rfc3339(),
@@ -338,7 +338,10 @@ impl DriftSafeOperation {
     /// Check if all safety checks passed
     pub fn all_safety_checks_passed(&self) -> bool {
         !self.safety_checks.is_empty()
-            && self.safety_checks.iter().all(|c| c.status == CheckStatus::Passed)
+            && self
+                .safety_checks
+                .iter()
+                .all(|c| c.status == CheckStatus::Passed)
     }
 
     /// Check if operation can proceed
@@ -350,7 +353,7 @@ impl DriftSafeOperation {
     pub fn mark_failed(&mut self, reason: String) {
         self.status = OperationStatus::Failed;
         self.log(LogLevel::Error, format!("Operation failed: {}", reason));
-        
+
         if self.rollback_plan.auto_rollback {
             self.trigger_rollback();
         }
@@ -367,7 +370,10 @@ impl DriftSafeOperation {
     pub fn mark_rollback_complete(&mut self) {
         self.status = OperationStatus::RolledBack;
         self.rollback_plan.status = RollbackStatus::Completed;
-        self.log(LogLevel::Info, "Rollback completed successfully".to_string());
+        self.log(
+            LogLevel::Info,
+            "Rollback completed successfully".to_string(),
+        );
     }
 
     /// Get operation summary
@@ -383,7 +389,7 @@ impl ResourceState {
     /// Create a new resource state
     pub fn new(config: HashMap<String, serde_json::Value>, estimated_cost: f64) -> Self {
         let config_hash = Self::compute_hash(&config);
-        
+
         Self {
             config,
             estimated_cost,
@@ -488,14 +494,8 @@ mod tests {
 
     #[test]
     fn test_operation_creation() {
-        let original = ResourceState::new(
-            HashMap::new(),
-            100.0,
-        );
-        let target = ResourceState::new(
-            HashMap::new(),
-            50.0,
-        );
+        let original = ResourceState::new(HashMap::new(), 100.0);
+        let target = ResourceState::new(HashMap::new(), 50.0);
 
         let op = DriftSafeOperation::new(
             "aws_instance.web".to_string(),
@@ -525,7 +525,7 @@ mod tests {
             SafetyCheckType::NoDrift,
         );
         check.mark_passed("No drift detected".to_string());
-        
+
         op.add_safety_check(check);
         assert!(op.all_safety_checks_passed());
     }
@@ -546,7 +546,7 @@ mod tests {
             SafetyCheckType::NoDrift,
         );
         check.mark_failed("Drift detected".to_string());
-        
+
         op.add_safety_check(check);
         assert!(!op.all_safety_checks_passed());
         assert!(!op.can_proceed());
@@ -556,7 +556,7 @@ mod tests {
     fn test_config_hash() {
         let mut config = HashMap::new();
         config.insert("instance_type".to_string(), serde_json::json!("t3.large"));
-        
+
         let state = ResourceState::new(config.clone(), 100.0);
         assert!(state.verify_hash());
 
@@ -572,14 +572,12 @@ mod tests {
         assert!(!drift.has_drift);
         assert!(!drift.is_blocking());
 
-        let drifted = vec![
-            DriftedAttribute {
-                name: "instance_type".to_string(),
-                expected: serde_json::json!("t3.medium"),
-                actual: serde_json::json!("t3.large"),
-                impact: "Cost increase".to_string(),
-            },
-        ];
+        let drifted = vec![DriftedAttribute {
+            name: "instance_type".to_string(),
+            expected: serde_json::json!("t3.medium"),
+            actual: serde_json::json!("t3.large"),
+            impact: "Cost increase".to_string(),
+        }];
 
         let drift_detected = DriftDetection::with_drift(drifted);
         assert!(drift_detected.has_drift);
@@ -589,14 +587,12 @@ mod tests {
     #[test]
     fn test_drift_severity() {
         // Minor drift
-        let minor = DriftDetection::with_drift(vec![
-            DriftedAttribute {
-                name: "tag".to_string(),
-                expected: serde_json::json!("v1"),
-                actual: serde_json::json!("v2"),
-                impact: "Metadata change".to_string(),
-            },
-        ]);
+        let minor = DriftDetection::with_drift(vec![DriftedAttribute {
+            name: "tag".to_string(),
+            expected: serde_json::json!("v1"),
+            actual: serde_json::json!("v2"),
+            impact: "Metadata change".to_string(),
+        }]);
         assert_eq!(minor.severity, DriftSeverity::Minor);
         assert!(!minor.is_blocking());
 

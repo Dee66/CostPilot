@@ -1,9 +1,8 @@
 // Patch generator - creates full unified diff patches for cost optimizations
 
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use crate::engines::shared::models::{Detection, ResourceChange, CostEstimate};
 use crate::engines::explain::anti_patterns::AntiPattern;
+use crate::engines::shared::models::{CostEstimate, Detection, ResourceChange};
+use serde::{Deserialize, Serialize};
 
 /// A complete patch file with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -80,10 +79,12 @@ impl PatchGenerator {
         let mut warnings = Vec::new();
 
         for detection in detections {
-            let change = changes.iter()
+            let change = changes
+                .iter()
                 .find(|c| c.resource_id == detection.resource_id);
-            
-            let estimate = estimates.iter()
+
+            let estimate = estimates
+                .iter()
                 .find(|e| e.resource_id == detection.resource_id);
 
             if let Some(change) = change {
@@ -122,10 +123,8 @@ impl PatchGenerator {
         change: &ResourceChange,
         estimate: Option<&CostEstimate>,
     ) -> Result<PatchFile, String> {
-        let anti_patterns = crate::engines::explain::anti_patterns::detect_anti_patterns(
-            change,
-            estimate,
-        );
+        let anti_patterns =
+            crate::engines::explain::anti_patterns::detect_anti_patterns(change, estimate);
 
         if anti_patterns.is_empty() {
             return Err("No fixable anti-patterns detected".to_string());
@@ -141,9 +140,7 @@ impl PatchGenerator {
             return Err("No changes generated".to_string());
         }
 
-        let cost_before = estimate
-            .map(|e| e.monthly_cost)
-            .unwrap_or(0.0);
+        let cost_before = estimate.map(|e| e.monthly_cost).unwrap_or(0.0);
 
         let cost_after = Self::estimate_cost_after(&anti_patterns, cost_before);
         let monthly_savings = cost_before - cost_after;
@@ -152,10 +149,11 @@ impl PatchGenerator {
             cost_before,
             cost_after,
             monthly_savings,
-            confidence: estimate
-                .map(|e| e.confidence_score)
-                .unwrap_or(0.5),
-            anti_patterns: anti_patterns.iter().map(|ap| ap.pattern_name.clone()).collect(),
+            confidence: estimate.map(|e| e.confidence_score).unwrap_or(0.5),
+            anti_patterns: anti_patterns
+                .iter()
+                .map(|ap| ap.pattern_name.clone())
+                .collect(),
             rationale: Self::build_rationale(&anti_patterns, monthly_savings),
             simulation_required: true,
             beta: true,
@@ -182,7 +180,10 @@ impl PatchGenerator {
             "aws_dynamodb_table" => Self::generate_dynamodb_hunks(change, anti_patterns),
             "aws_s3_bucket" => Self::generate_s3_hunks(change, anti_patterns),
             "aws_nat_gateway" => Self::generate_nat_gateway_hunks(change, anti_patterns),
-            _ => Err(format!("Patch generation not supported for {}", change.resource_type)),
+            _ => Err(format!(
+                "Patch generation not supported for {}",
+                change.resource_type
+            )),
         }
     }
 
@@ -194,8 +195,13 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for overprovisioned instance
-        if anti_patterns.iter().any(|ap| ap.pattern_name == "Overprovisioned EC2 instance") {
-            let old_instance = change.new_config.as_ref()
+        if anti_patterns
+            .iter()
+            .any(|ap| ap.pattern_name == "Overprovisioned EC2 instance")
+        {
+            let old_instance = change
+                .new_config
+                .as_ref()
                 .and_then(|c| c.get("instance_type"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("t3.large");
@@ -210,7 +216,10 @@ impl PatchGenerator {
                 lines: vec![
                     PatchLine {
                         line_type: PatchLineType::Context,
-                        content: format!("resource \"aws_instance\" \"{}\" {{", Self::extract_name(&change.resource_id)),
+                        content: format!(
+                            "resource \"aws_instance\" \"{}\" {{",
+                            Self::extract_name(&change.resource_id)
+                        ),
                         indent_level: 0,
                     },
                     PatchLine {
@@ -229,9 +238,7 @@ impl PatchGenerator {
                         indent_level: 1,
                     },
                 ],
-                context_before: vec![
-                    "# Web server instance".to_string(),
-                ],
+                context_before: vec!["# Web server instance".to_string()],
                 context_after: vec![
                     "  tags = {".to_string(),
                     "    Name = \"web-server\"".to_string(),
@@ -255,8 +262,13 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for overprovisioned RDS
-        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("RDS") || ap.pattern_name.contains("oversized")) {
-            let old_instance = change.new_config.as_ref()
+        if anti_patterns
+            .iter()
+            .any(|ap| ap.pattern_name.contains("RDS") || ap.pattern_name.contains("oversized"))
+        {
+            let old_instance = change
+                .new_config
+                .as_ref()
                 .and_then(|c| c.get("instance_class"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("db.m5.large");
@@ -271,7 +283,10 @@ impl PatchGenerator {
                 lines: vec![
                     PatchLine {
                         line_type: PatchLineType::Context,
-                        content: format!("resource \"aws_rds_instance\" \"{}\" {{", Self::extract_name(&change.resource_id)),
+                        content: format!(
+                            "resource \"aws_rds_instance\" \"{}\" {{",
+                            Self::extract_name(&change.resource_id)
+                        ),
                         indent_level: 0,
                     },
                     PatchLine {
@@ -291,9 +306,7 @@ impl PatchGenerator {
                     },
                 ],
                 context_before: vec![],
-                context_after: vec![
-                    "  allocated_storage = 20".to_string(),
-                ],
+                context_after: vec!["  allocated_storage = 20".to_string()],
             });
         }
 
@@ -312,7 +325,10 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for unbounded concurrency
-        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("concurrency")) {
+        if anti_patterns
+            .iter()
+            .any(|ap| ap.pattern_name.contains("concurrency"))
+        {
             hunks.push(PatchHunk {
                 old_start: 12,
                 old_count: 2,
@@ -321,7 +337,10 @@ impl PatchGenerator {
                 lines: vec![
                     PatchLine {
                         line_type: PatchLineType::Context,
-                        content: format!("resource \"aws_lambda_function\" \"{}\" {{", Self::extract_name(&change.resource_id)),
+                        content: format!(
+                            "resource \"aws_lambda_function\" \"{}\" {{",
+                            Self::extract_name(&change.resource_id)
+                        ),
                         indent_level: 0,
                     },
                     PatchLine {
@@ -351,9 +370,7 @@ impl PatchGenerator {
                     },
                 ],
                 context_before: vec![],
-                context_after: vec![
-                    "  handler       = \"index.handler\"".to_string(),
-                ],
+                context_after: vec!["  handler       = \"index.handler\"".to_string()],
             });
         }
 
@@ -372,7 +389,10 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for pay-per-request to provisioned conversion
-        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("pay-per-request")) {
+        if anti_patterns
+            .iter()
+            .any(|ap| ap.pattern_name.contains("pay-per-request"))
+        {
             hunks.push(PatchHunk {
                 old_start: 3,
                 old_count: 3,
@@ -381,7 +401,10 @@ impl PatchGenerator {
                 lines: vec![
                     PatchLine {
                         line_type: PatchLineType::Context,
-                        content: format!("resource \"aws_dynamodb_table\" \"{}\" {{", Self::extract_name(&change.resource_id)),
+                        content: format!(
+                            "resource \"aws_dynamodb_table\" \"{}\" {{",
+                            Self::extract_name(&change.resource_id)
+                        ),
                         indent_level: 0,
                     },
                     PatchLine {
@@ -411,9 +434,7 @@ impl PatchGenerator {
                     },
                 ],
                 context_before: vec![],
-                context_after: vec![
-                    "  attribute {".to_string(),
-                ],
+                context_after: vec!["  attribute {".to_string()],
             });
         }
 
@@ -432,7 +453,10 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // Check for missing lifecycle
-        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("lifecycle")) {
+        if anti_patterns
+            .iter()
+            .any(|ap| ap.pattern_name.contains("lifecycle"))
+        {
             hunks.push(PatchHunk {
                 old_start: 10,
                 old_count: 2,
@@ -441,7 +465,10 @@ impl PatchGenerator {
                 lines: vec![
                     PatchLine {
                         line_type: PatchLineType::Context,
-                        content: format!("resource \"aws_s3_bucket\" \"{}\" {{", Self::extract_name(&change.resource_id)),
+                        content: format!(
+                            "resource \"aws_s3_bucket\" \"{}\" {{",
+                            Self::extract_name(&change.resource_id)
+                        ),
                         indent_level: 0,
                     },
                     PatchLine {
@@ -500,9 +527,7 @@ impl PatchGenerator {
                         indent_level: 0,
                     },
                 ],
-                context_before: vec![
-                    "# Storage bucket".to_string(),
-                ],
+                context_before: vec!["# Storage bucket".to_string()],
                 context_after: vec![],
             });
         }
@@ -522,7 +547,10 @@ impl PatchGenerator {
         let mut hunks = Vec::new();
 
         // NAT Gateway optimization: suggest VPC endpoints
-        if anti_patterns.iter().any(|ap| ap.pattern_name.contains("NAT")) {
+        if anti_patterns
+            .iter()
+            .any(|ap| ap.pattern_name.contains("NAT"))
+        {
             hunks.push(PatchHunk {
                 old_start: 15,
                 old_count: 1,
@@ -541,7 +569,9 @@ impl PatchGenerator {
                     },
                     PatchLine {
                         line_type: PatchLineType::Addition,
-                        content: "# Consider VPC endpoints for AWS services to reduce NAT Gateway usage".to_string(),
+                        content:
+                            "# Consider VPC endpoints for AWS services to reduce NAT Gateway usage"
+                                .to_string(),
                         indent_level: 0,
                     },
                     PatchLine {
@@ -571,9 +601,10 @@ impl PatchGenerator {
                     },
                 ],
                 context_before: vec![],
-                context_after: vec![
-                    format!("resource \"aws_nat_gateway\" \"{}\" {{", Self::extract_name(&change.resource_id)),
-                ],
+                context_after: vec![format!(
+                    "resource \"aws_nat_gateway\" \"{}\" {{",
+                    Self::extract_name(&change.resource_id)
+                )],
             });
         }
 
@@ -620,10 +651,10 @@ impl PatchGenerator {
         for pattern in anti_patterns {
             // Estimate reduction based on anti-pattern type
             reduction_factor *= match pattern.severity.as_str() {
-                "Critical" => 0.5,  // 50% reduction
-                "High" => 0.7,      // 30% reduction
-                "Medium" => 0.85,   // 15% reduction
-                _ => 0.95,          // 5% reduction
+                "Critical" => 0.5, // 50% reduction
+                "High" => 0.7,     // 30% reduction
+                "Medium" => 0.85,  // 15% reduction
+                _ => 0.95,         // 5% reduction
             };
         }
 
@@ -651,7 +682,7 @@ impl PatchGenerator {
     fn infer_filename(resource_id: &str) -> String {
         // Extract module path if present (e.g., module.web.aws_instance.server)
         let parts: Vec<&str> = resource_id.split('.').collect();
-        
+
         if parts.len() >= 2 {
             let resource_type = parts[parts.len() - 2];
             match resource_type {
@@ -672,7 +703,7 @@ impl PatchGenerator {
     fn extract_name(resource_id: &str) -> String {
         resource_id
             .split('.')
-            .last()
+            .next_back()
             .unwrap_or("resource")
             .to_string()
     }
@@ -687,16 +718,21 @@ impl PatchFile {
         output.push_str(&format!("--- a/{}\n", self.filename));
         output.push_str(&format!("+++ b/{}\n", self.filename));
         output.push_str(&format!("# Resource: {}\n", self.resource_id));
-        output.push_str(&format!("# Monthly Savings: ${:.2}\n", self.metadata.monthly_savings));
-        output.push_str(&format!("# Confidence: {:.0}%\n", self.metadata.confidence * 100.0));
-        output.push_str("\n");
+        output.push_str(&format!(
+            "# Monthly Savings: ${:.2}\n",
+            self.metadata.monthly_savings
+        ));
+        output.push_str(&format!(
+            "# Confidence: {:.0}%\n",
+            self.metadata.confidence * 100.0
+        ));
+        output.push('\n');
 
         // Hunks
         for hunk in &self.hunks {
             output.push_str(&format!(
                 "@@ -{},{} +{},{} @@\n",
-                hunk.old_start, hunk.old_count,
-                hunk.new_start, hunk.new_count
+                hunk.old_start, hunk.old_count, hunk.new_start, hunk.new_count
             ));
 
             for line in &hunk.lines {
@@ -719,20 +755,38 @@ mod tests {
 
     #[test]
     fn test_instance_downsize() {
-        assert_eq!(PatchGenerator::recommend_instance_downsize("t3.large"), "t3.medium");
-        assert_eq!(PatchGenerator::recommend_instance_downsize("m5.xlarge"), "m5.large");
+        assert_eq!(
+            PatchGenerator::recommend_instance_downsize("t3.large"),
+            "t3.medium"
+        );
+        assert_eq!(
+            PatchGenerator::recommend_instance_downsize("m5.xlarge"),
+            "m5.large"
+        );
     }
 
     #[test]
     fn test_infer_filename() {
-        assert_eq!(PatchGenerator::infer_filename("aws_instance.web"), "compute.tf");
-        assert_eq!(PatchGenerator::infer_filename("aws_rds_instance.db"), "database.tf");
-        assert_eq!(PatchGenerator::infer_filename("aws_lambda_function.api"), "lambda.tf");
+        assert_eq!(
+            PatchGenerator::infer_filename("aws_instance.web"),
+            "compute.tf"
+        );
+        assert_eq!(
+            PatchGenerator::infer_filename("aws_rds_instance.db"),
+            "database.tf"
+        );
+        assert_eq!(
+            PatchGenerator::infer_filename("aws_lambda_function.api"),
+            "lambda.tf"
+        );
     }
 
     #[test]
     fn test_extract_name() {
         assert_eq!(PatchGenerator::extract_name("aws_instance.web"), "web");
-        assert_eq!(PatchGenerator::extract_name("module.app.aws_instance.server"), "server");
+        assert_eq!(
+            PatchGenerator::extract_name("module.app.aws_instance.server"),
+            "server"
+        );
     }
 }

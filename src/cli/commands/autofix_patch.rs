@@ -1,11 +1,11 @@
 // Autofix patch command implementation - Generate full unified diff patches
 
-use clap::Args;
-use std::path::PathBuf;
-use colored::Colorize;
+use crate::engines::autofix::{AutofixEngine, AutofixMode};
 use crate::engines::detection::DetectionEngine;
 use crate::engines::prediction::PredictionEngine;
-use crate::engines::autofix::{AutofixEngine, AutofixMode};
+use clap::Args;
+use colored::Colorize;
+use std::path::PathBuf;
 
 #[derive(Debug, Args)]
 pub struct AutofixPatchArgs {
@@ -26,8 +26,17 @@ pub struct AutofixPatchArgs {
     pub verbose: bool,
 }
 
-pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", "🔧 CostPilot Autofix - Patch Mode (Beta)".bold().cyan());
+pub fn execute(
+    args: &AutofixPatchArgs,
+    edition: &crate::edition::EditionContext,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Require Premium for autofix
+    crate::edition::require_premium(edition, "Autofix")?;
+
+    println!(
+        "{}",
+        "🔧 CostPilot Autofix - Patch Mode (Beta)".bold().cyan()
+    );
     println!();
 
     // Load and parse plan
@@ -44,7 +53,7 @@ pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>
     println!("{}", "Detecting cost regressions...".dimmed());
     let detection_engine = DetectionEngine::new();
     let detections = detection_engine.detect(&changes)?;
-    
+
     if detections.is_empty() {
         println!("   {} No cost issues detected", "✓".green());
         return Ok(());
@@ -55,11 +64,14 @@ pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>
 
     // Generate predictions
     println!("{}", "Estimating costs...".dimmed());
-    let prediction_engine = PredictionEngine::new()?;
+    let prediction_engine = PredictionEngine::new_with_edition(edition)?;
     let mut detections_with_estimates = detections;
-    
+
     for detection in &mut detections_with_estimates {
-        if let Some(change) = changes.iter().find(|c| c.resource_id == detection.resource_id) {
+        if let Some(change) = changes
+            .iter()
+            .find(|c| c.resource_id == detection.resource_id)
+        {
             if let Ok(estimate) = prediction_engine.predict_resource_cost(change) {
                 detection.estimated_cost = Some(estimate.monthly_cost);
             }
@@ -73,7 +85,7 @@ pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>
     let autofix_result = AutofixEngine::generate_fixes(
         &detections_with_estimates,
         &changes,
-        &[],  // estimates not used for patch mode
+        &[], // estimates not used for patch mode
         AutofixMode::Patch,
     );
 
@@ -94,45 +106,64 @@ pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>
 
     // Display patches
     let mut output_buffer = String::new();
-    
+
     for (idx, patch) in autofix_result.patches.iter().enumerate() {
         let header = format!("Patch #{} - {}", idx + 1, patch.resource_id);
         output_buffer.push_str(&format!("{}\n", header.bold().green()));
         output_buffer.push_str(&format!("{}\n", "=".repeat(header.len())));
-        
+
         if args.verbose {
             output_buffer.push_str(&format!("Resource Type: {}\n", patch.resource_type));
             output_buffer.push_str(&format!("File: {}\n", patch.filename));
-            output_buffer.push_str(&format!("Monthly Savings: ${:.2}\n", patch.metadata.monthly_savings));
-            output_buffer.push_str(&format!("Confidence: {:.0}%\n", patch.metadata.confidence * 100.0));
-            output_buffer.push_str(&format!("Anti-Patterns: {}\n", patch.metadata.anti_patterns.join(", ")));
+            output_buffer.push_str(&format!(
+                "Monthly Savings: ${:.2}\n",
+                patch.metadata.monthly_savings
+            ));
+            output_buffer.push_str(&format!(
+                "Confidence: {:.0}%\n",
+                patch.metadata.confidence * 100.0
+            ));
+            output_buffer.push_str(&format!(
+                "Anti-Patterns: {}\n",
+                patch.metadata.anti_patterns.join(", ")
+            ));
             output_buffer.push_str(&format!("\nRationale:\n{}\n", patch.metadata.rationale));
-            output_buffer.push_str("\n");
+            output_buffer.push('\n');
         }
-        
+
         output_buffer.push_str(&patch.to_unified_diff());
-        output_buffer.push_str("\n");
+        output_buffer.push('\n');
     }
 
     // Show summary
-    let total_savings: f64 = autofix_result.patches.iter()
+    let total_savings: f64 = autofix_result
+        .patches
+        .iter()
         .map(|p| p.metadata.monthly_savings)
         .sum();
-    
+
     output_buffer.push_str(&format!("{}\n", "Summary".bold()));
-    output_buffer.push_str(&format!("Total patches: {}\n", autofix_result.patches.len()));
+    output_buffer.push_str(&format!(
+        "Total patches: {}\n",
+        autofix_result.patches.len()
+    ));
     output_buffer.push_str(&format!("Total monthly savings: ${:.2}\n", total_savings));
     output_buffer.push_str(&format!("Annual savings: ${:.2}\n", total_savings * 12.0));
-    
+
     if autofix_result.patches.iter().any(|p| p.metadata.beta) {
         output_buffer.push_str(&format!("\n{}\n", "⚠️  Beta Feature".yellow()));
-        output_buffer.push_str("These patches are in Beta. Always review and test before applying.\n");
+        output_buffer
+            .push_str("These patches are in Beta. Always review and test before applying.\n");
     }
 
     // Write output
     if let Some(output_file) = &args.output {
         std::fs::write(output_file, &output_buffer)?;
-        println!("{} Patches written to {}", "✓".green(), output_file.display());
+        println!(
+            "{} Patches written to {}",
+            "✓".green(),
+            output_file.display()
+        );
     } else {
         println!("{}", output_buffer);
     }
@@ -140,7 +171,10 @@ pub fn execute(args: &AutofixPatchArgs) -> Result<(), Box<dyn std::error::Error>
     // Apply warning
     if args.apply {
         println!();
-        println!("{}", "⚠️  Patch application is not yet implemented".yellow());
+        println!(
+            "{}",
+            "⚠️  Patch application is not yet implemented".yellow()
+        );
         println!("Use --output to save patches and apply manually after review.");
     }
 

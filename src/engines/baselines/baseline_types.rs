@@ -7,27 +7,27 @@ use std::collections::HashMap;
 pub struct Baseline {
     /// Name/identifier of the module or resource
     pub name: String,
-    
+
     /// Expected monthly cost
     pub expected_monthly_cost: f64,
-    
+
     /// Acceptable variance percentage (e.g., 10.0 for ±10%)
     #[serde(default = "default_variance")]
     pub acceptable_variance_percent: f64,
-    
+
     /// ISO 8601 timestamp when baseline was last updated
     pub last_updated: String,
-    
+
     /// Justification for this baseline
     pub justification: String,
-    
+
     /// Who set or approved this baseline
     pub owner: String,
-    
+
     /// Optional reference to ticket or decision document
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
-    
+
     /// Tags for categorization
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub tags: HashMap<String, String>,
@@ -42,19 +42,19 @@ fn default_variance() -> f64 {
 pub struct BaselinesConfig {
     /// Schema version
     pub version: String,
-    
+
     /// Global baseline for total monthly cost
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global: Option<Baseline>,
-    
+
     /// Module-level baselines
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub modules: HashMap<String, Baseline>,
-    
+
     /// Service-level baselines
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub services: HashMap<String, Baseline>,
-    
+
     /// Configuration metadata
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<BaselineMetadata>,
@@ -66,11 +66,11 @@ pub struct BaselineMetadata {
     /// When baselines were last reviewed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_reviewed: Option<String>,
-    
+
     /// Review cadence in days
     #[serde(skip_serializing_if = "Option::is_none")]
     pub review_cadence_days: Option<u32>,
-    
+
     /// Team or organization owning baselines
     #[serde(skip_serializing_if = "Option::is_none")]
     pub owner_team: Option<String>,
@@ -81,21 +81,21 @@ pub struct BaselineMetadata {
 pub enum BaselineStatus {
     /// Within acceptable variance
     Within,
-    
+
     /// Exceeds upper bound
     Exceeded {
         expected: f64,
         actual: f64,
         variance_percent: f64,
     },
-    
+
     /// Below lower bound (potentially over-optimized or misconfigured)
     Below {
         expected: f64,
         actual: f64,
         variance_percent: f64,
     },
-    
+
     /// No baseline defined
     NoBaseline,
 }
@@ -105,28 +105,28 @@ pub enum BaselineStatus {
 pub struct BaselineViolation {
     /// Name of module/resource/service
     pub name: String,
-    
+
     /// Type of baseline (global, module, service)
     pub baseline_type: String,
-    
+
     /// Expected cost
     pub expected_cost: f64,
-    
+
     /// Actual cost
     pub actual_cost: f64,
-    
+
     /// Variance percentage
     pub variance_percent: f64,
-    
+
     /// Acceptable variance threshold
     pub acceptable_variance: f64,
-    
+
     /// Severity level
     pub severity: String,
-    
+
     /// Baseline owner for escalation
     pub owner: String,
-    
+
     /// Justification from baseline
     pub justification: String,
 }
@@ -153,9 +153,8 @@ impl Baseline {
 
     /// Check if actual cost is within acceptable variance
     pub fn check_variance(&self, actual_cost: f64) -> BaselineStatus {
-        let variance = ((actual_cost - self.expected_monthly_cost) / self.expected_monthly_cost)
-            .abs()
-            * 100.0;
+        let variance =
+            ((actual_cost - self.expected_monthly_cost) / self.expected_monthly_cost).abs() * 100.0;
 
         if variance <= self.acceptable_variance_percent {
             BaselineStatus::Within
@@ -350,7 +349,9 @@ mod tests {
         );
 
         match baseline.check_variance(1200.0) {
-            BaselineStatus::Exceeded { variance_percent, .. } => {
+            BaselineStatus::Exceeded {
+                variance_percent, ..
+            } => {
                 assert!(variance_percent > 10.0);
             }
             _ => panic!("Expected Exceeded status"),
@@ -367,7 +368,9 @@ mod tests {
         );
 
         match baseline.check_variance(800.0) {
-            BaselineStatus::Below { variance_percent, .. } => {
+            BaselineStatus::Below {
+                variance_percent, ..
+            } => {
                 assert!(variance_percent > 10.0);
             }
             _ => panic!("Expected Below status"),
@@ -431,7 +434,10 @@ mod tests {
         config.set_global(global);
 
         assert!(config.global.is_some());
-        assert_eq!(config.global.as_ref().unwrap().expected_monthly_cost, 5000.0);
+        assert_eq!(
+            config.global.as_ref().unwrap().expected_monthly_cost,
+            5000.0
+        );
     }
 
     #[test]
@@ -451,7 +457,10 @@ mod tests {
     #[test]
     fn test_baseline_status_display() {
         assert_eq!(BaselineStatus::Within.to_string(), "Within baseline");
-        assert_eq!(BaselineStatus::NoBaseline.to_string(), "No baseline defined");
+        assert_eq!(
+            BaselineStatus::NoBaseline.to_string(),
+            "No baseline defined"
+        );
 
         let exceeded = BaselineStatus::Exceeded {
             expected: 1000.0,
@@ -475,7 +484,10 @@ mod tests {
         let deserialized: Baseline = serde_json::from_str(&json).unwrap();
 
         assert_eq!(baseline.name, deserialized.name);
-        assert_eq!(baseline.expected_monthly_cost, deserialized.expected_monthly_cost);
+        assert_eq!(
+            baseline.expected_monthly_cost,
+            deserialized.expected_monthly_cost
+        );
     }
 
     #[test]

@@ -1,9 +1,11 @@
 // Mapping CLI commands for dependency visualization
 
+use crate::engines::mapping::{
+    ColorScheme, GraphvizConfig, JsonExportConfig, JsonFormat, MappingEngine,
+};
 use clap::Args;
-use std::path::PathBuf;
 use colored::Colorize;
-use crate::engines::mapping::{MappingEngine, GraphvizConfig, JsonExportConfig, JsonFormat, ColorScheme};
+use std::path::PathBuf;
 
 #[derive(Debug, Args)]
 pub struct MapCommand {
@@ -31,6 +33,10 @@ pub struct MapCommand {
     #[arg(long, default_value = "cost")]
     color_scheme: String,
 
+    /// Maximum depth for dependency traversal (default: 5, Premium required for > 1)
+    #[arg(long)]
+    max_depth: Option<u32>,
+
     /// Hide costs in visualization
     #[arg(long)]
     hide_costs: bool,
@@ -44,7 +50,16 @@ pub struct MapCommand {
     verbose: bool,
 }
 
-pub fn execute_map_command(cmd: &MapCommand) -> Result<(), Box<dyn std::error::Error>> {
+pub fn execute_map_command(
+    cmd: &MapCommand,
+    edition: &crate::edition::EditionContext,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Check depth gating
+    let max_depth = cmd.max_depth.unwrap_or(5);
+    if max_depth > 1 {
+        crate::edition::require_premium(edition, "Deep mapping")?;
+    }
+
     println!("{}", "📊 CostPilot Dependency Mapper".bold().cyan());
     println!();
 
@@ -57,7 +72,7 @@ pub fn execute_map_command(cmd: &MapCommand) -> Result<(), Box<dyn std::error::E
 
     // Extract resource changes
     let changes = crate::cli::utils::extract_resource_changes(&plan)?;
-    
+
     if cmd.verbose {
         println!("   Found {} resource changes", changes.len());
         println!();
@@ -67,8 +82,23 @@ pub fn execute_map_command(cmd: &MapCommand) -> Result<(), Box<dyn std::error::E
     if cmd.verbose {
         println!("{}", "Building dependency graph...".dimmed());
     }
-    
-    let mut engine = MappingEngine::new();
+
+    let graph_config = if edition.capabilities.allow_mapping_deep {
+        // Premium: no depth limit
+        crate::engines::mapping::GraphConfig::default()
+    } else {
+        // Free: max depth 1
+        crate::engines::mapping::GraphConfig {
+            max_depth: Some(1),
+            ..Default::default()
+        }
+    };
+
+    let mut engine = MappingEngine::with_config(
+        graph_config,
+        crate::engines::mapping::MermaidConfig::default(),
+        edition,
+    );
     let graph = engine.build_graph(&changes)?;
 
     if cmd.verbose {
@@ -118,14 +148,22 @@ pub fn execute_map_command(cmd: &MapCommand) -> Result<(), Box<dyn std::error::E
             engine.generate_html(&graph, "Infrastructure Dependencies")?
         }
         _ => {
-            return Err(format!("Unknown format: {}. Valid formats: mermaid, graphviz, json, html", cmd.format).into());
+            return Err(format!(
+                "Unknown format: {}. Valid formats: mermaid, graphviz, json, html",
+                cmd.format
+            )
+            .into());
         }
     };
 
     // Write output
     if let Some(output_path) = &cmd.output {
         std::fs::write(output_path, &output_content)?;
-        println!("{} Output written to {}", "✓".green(), output_path.display());
+        println!(
+            "{} Output written to {}",
+            "✓".green(),
+            output_path.display()
+        );
     } else {
         println!("{}", output_content);
     }
@@ -158,7 +196,7 @@ pub fn execute_map_command(cmd: &MapCommand) -> Result<(), Box<dyn std::error::E
         println!("  Total nodes: {}", graph.metadata.node_count);
         println!("  Total edges: {}", graph.metadata.edge_count);
         println!("  Max depth: {}", graph.metadata.max_depth);
-        
+
         if let Some(total_cost) = graph.metadata.total_cost {
             println!("  Total monthly cost: ${:.2}", total_cost);
         }
@@ -167,7 +205,7 @@ pub fn execute_map_command(cmd: &MapCommand) -> Result<(), Box<dyn std::error::E
         let mut resource_count = 0;
         let mut service_count = 0;
         let mut module_count = 0;
-        
+
         for node in &graph.nodes {
             match node.node_type {
                 crate::engines::mapping::NodeType::Resource => resource_count += 1,

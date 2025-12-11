@@ -1,6 +1,6 @@
 // CLI commands for grouping operations
 
-use crate::engines::grouping::{GroupingEngine, GroupingOptions, SortBy};
+use crate::engines::grouping::GroupingEngine;
 // use crate::parser::plan_parser::PlanParser; // TODO: Implement plan parser
 use clap::{Args, Subcommand};
 use std::collections::HashMap;
@@ -90,7 +90,10 @@ pub enum GroupSubcommand {
     },
 }
 
-pub fn execute_group_command(cmd: GroupCommand) -> Result<(), Box<dyn std::error::Error>> {
+pub fn execute_group_command(
+    cmd: GroupCommand,
+    _edition: &crate::edition::EditionContext,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Load and parse the plan using detection engine
     use crate::engines::detection::DetectionEngine;
     let detection = DetectionEngine::new();
@@ -167,7 +170,10 @@ fn execute_group_module(
     println!("Total Monthly Cost: ${:.2}\n", total_cost);
 
     if tree {
-        println!("{}", crate::engines::grouping::generate_module_tree(&groups));
+        println!(
+            "{}",
+            crate::engines::grouping::generate_module_tree(&groups)
+        );
     } else {
         for (i, group) in groups.iter().enumerate() {
             let percentage = if total_cost > 0.0 {
@@ -231,10 +237,18 @@ fn execute_group_service(
             } else {
                 0.0
             };
-            println!("{}: ${:.2}/mo ({:.1}%)", category.as_str(), cost, percentage);
+            println!(
+                "{}: ${:.2}/mo ({:.1}%)",
+                category.as_str(),
+                cost,
+                percentage
+            );
         }
     } else {
-        println!("{}", crate::engines::grouping::generate_service_report(&groups));
+        println!(
+            "{}",
+            crate::engines::grouping::generate_service_report(&groups)
+        );
     }
 
     Ok(())
@@ -252,8 +266,9 @@ fn execute_group_environment(
         .filter_map(|r| {
             if let Some(cost) = r.monthly_cost {
                 if cost >= min_cost {
-                    let (service, _) =
-                        crate::engines::grouping::by_service::extract_service_info(&r.resource_type);
+                    let (service, _) = crate::engines::grouping::by_service::extract_service_info(
+                        &r.resource_type,
+                    );
                     return Some((
                         r.resource_id.clone(),
                         r.resource_type.clone(),
@@ -270,7 +285,10 @@ fn execute_group_environment(
     let groups = engine.group_by_environment(&env_resources);
 
     if detailed || detect_anomalies {
-        println!("{}", crate::engines::grouping::generate_environment_report(&groups));
+        println!(
+            "{}",
+            crate::engines::grouping::generate_environment_report(&groups)
+        );
     } else {
         println!("Environment Grouping Report");
         println!("==========================\n");
@@ -299,7 +317,7 @@ fn execute_attribution(
     resources: &[crate::engines::shared::models::ResourceChange],
     format: &str,
     output: Option<PathBuf>,
-    top_n: usize,
+    _top_n: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let attr_resources: Vec<(String, String, f64, HashMap<String, String>)> = resources
         .iter()

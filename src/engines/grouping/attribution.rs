@@ -17,7 +17,7 @@ pub struct AttributionPipeline {
 impl Default for AttributionPipeline {
     fn default() -> Self {
         let mut tag_mappings = HashMap::new();
-        
+
         // Environment mappings
         tag_mappings.insert(
             "environment".to_string(),
@@ -29,7 +29,7 @@ impl Default for AttributionPipeline {
                 "ENVIRONMENT".to_string(),
             ],
         );
-        
+
         // Cost center mappings
         tag_mappings.insert(
             "cost_center".to_string(),
@@ -41,7 +41,7 @@ impl Default for AttributionPipeline {
                 "COST_CENTER".to_string(),
             ],
         );
-        
+
         // Team/Owner mappings
         tag_mappings.insert(
             "owner".to_string(),
@@ -53,7 +53,7 @@ impl Default for AttributionPipeline {
                 "OWNER".to_string(),
             ],
         );
-        
+
         // Project mappings
         tag_mappings.insert(
             "project".to_string(),
@@ -65,7 +65,7 @@ impl Default for AttributionPipeline {
                 "PROJECT".to_string(),
             ],
         );
-        
+
         // Application mappings
         tag_mappings.insert(
             "application".to_string(),
@@ -115,11 +115,7 @@ impl AttributionPipeline {
     }
 
     /// Infer environment from tags and resource address
-    pub fn infer_environment(
-        &self,
-        address: &str,
-        tags: &HashMap<String, String>,
-    ) -> String {
+    pub fn infer_environment(&self, address: &str, tags: &HashMap<String, String>) -> String {
         crate::engines::grouping::by_environment::infer_environment(address, tags)
     }
 
@@ -132,12 +128,24 @@ impl AttributionPipeline {
 
         for (address, resource_type, cost, raw_tags) in resources {
             let normalized_tags = self.extract_tags(raw_tags);
-            
+
             let environment = self.infer_environment(address, raw_tags);
-            let cost_center = normalized_tags.get("cost_center").cloned().unwrap_or_else(|| "untagged".to_string());
-            let owner = normalized_tags.get("owner").cloned().unwrap_or_else(|| "untagged".to_string());
-            let project = normalized_tags.get("project").cloned().unwrap_or_else(|| "untagged".to_string());
-            let application = normalized_tags.get("application").cloned().unwrap_or_else(|| "untagged".to_string());
+            let cost_center = normalized_tags
+                .get("cost_center")
+                .cloned()
+                .unwrap_or_else(|| "untagged".to_string());
+            let owner = normalized_tags
+                .get("owner")
+                .cloned()
+                .unwrap_or_else(|| "untagged".to_string());
+            let project = normalized_tags
+                .get("project")
+                .cloned()
+                .unwrap_or_else(|| "untagged".to_string());
+            let application = normalized_tags
+                .get("application")
+                .cloned()
+                .unwrap_or_else(|| "untagged".to_string());
 
             report.add_allocation(Attribution {
                 resource_address: address.clone(),
@@ -211,23 +219,28 @@ impl AttributionReport {
     pub fn add_allocation(&mut self, attribution: Attribution) {
         self.total_cost += attribution.monthly_cost;
 
-        *self.cost_by_environment
+        *self
+            .cost_by_environment
             .entry(attribution.environment.clone())
             .or_insert(0.0) += attribution.monthly_cost;
 
-        *self.cost_by_cost_center
+        *self
+            .cost_by_cost_center
             .entry(attribution.cost_center.clone())
             .or_insert(0.0) += attribution.monthly_cost;
 
-        *self.cost_by_owner
+        *self
+            .cost_by_owner
             .entry(attribution.owner.clone())
             .or_insert(0.0) += attribution.monthly_cost;
 
-        *self.cost_by_project
+        *self
+            .cost_by_project
             .entry(attribution.project.clone())
             .or_insert(0.0) += attribution.monthly_cost;
 
-        *self.cost_by_application
+        *self
+            .cost_by_application
             .entry(attribution.application.clone())
             .or_insert(0.0) += attribution.monthly_cost;
 
@@ -241,7 +254,9 @@ impl AttributionReport {
 
     /// Get top N cost centers
     pub fn top_cost_centers(&self, limit: usize) -> Vec<(String, f64)> {
-        let mut entries: Vec<(String, f64)> = self.cost_by_cost_center.iter()
+        let mut entries: Vec<(String, f64)> = self
+            .cost_by_cost_center
+            .iter()
             .map(|(k, v)| (k.clone(), *v))
             .collect();
         entries.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
@@ -251,7 +266,9 @@ impl AttributionReport {
 
     /// Get top N owners
     pub fn top_owners(&self, limit: usize) -> Vec<(String, f64)> {
-        let mut entries: Vec<(String, f64)> = self.cost_by_owner.iter()
+        let mut entries: Vec<(String, f64)> = self
+            .cost_by_owner
+            .iter()
             .map(|(k, v)| (k.clone(), *v))
             .collect();
         entries.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
@@ -261,7 +278,9 @@ impl AttributionReport {
 
     /// Get top N projects
     pub fn top_projects(&self, limit: usize) -> Vec<(String, f64)> {
-        let mut entries: Vec<(String, f64)> = self.cost_by_project.iter()
+        let mut entries: Vec<(String, f64)> = self
+            .cost_by_project
+            .iter()
             .map(|(k, v)| (k.clone(), *v))
             .collect();
         entries.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
@@ -285,7 +304,10 @@ impl AttributionReport {
         report.push_str("======================\n\n");
 
         report.push_str(&format!("Total Monthly Cost: ${:.2}\n", self.total_cost));
-        report.push_str(&format!("Tagging Coverage: {:.1}%\n", self.tagging_coverage()));
+        report.push_str(&format!(
+            "Tagging Coverage: {:.1}%\n",
+            self.tagging_coverage()
+        ));
         report.push_str(&format!("Untagged Cost: ${:.2}\n\n", self.untagged_cost));
 
         // Environment breakdown
@@ -301,21 +323,39 @@ impl AttributionReport {
         report.push_str("\nTop Cost Centers:\n");
         for (i, (center, cost)) in self.top_cost_centers(5).iter().enumerate() {
             let pct = (cost / self.total_cost) * 100.0;
-            report.push_str(&format!("  {}. {}: ${:.2}/mo ({:.1}%)\n", i + 1, center, cost, pct));
+            report.push_str(&format!(
+                "  {}. {}: ${:.2}/mo ({:.1}%)\n",
+                i + 1,
+                center,
+                cost,
+                pct
+            ));
         }
 
         // Top owners
         report.push_str("\nTop Owners:\n");
         for (i, (owner, cost)) in self.top_owners(5).iter().enumerate() {
             let pct = (cost / self.total_cost) * 100.0;
-            report.push_str(&format!("  {}. {}: ${:.2}/mo ({:.1}%)\n", i + 1, owner, cost, pct));
+            report.push_str(&format!(
+                "  {}. {}: ${:.2}/mo ({:.1}%)\n",
+                i + 1,
+                owner,
+                cost,
+                pct
+            ));
         }
 
         // Top projects
         report.push_str("\nTop Projects:\n");
         for (i, (project, cost)) in self.top_projects(5).iter().enumerate() {
             let pct = (cost / self.total_cost) * 100.0;
-            report.push_str(&format!("  {}. {}: ${:.2}/mo ({:.1}%)\n", i + 1, project, cost, pct));
+            report.push_str(&format!(
+                "  {}. {}: ${:.2}/mo ({:.1}%)\n",
+                i + 1,
+                project,
+                cost,
+                pct
+            ));
         }
 
         report
@@ -324,7 +364,9 @@ impl AttributionReport {
     /// Export to CSV format
     pub fn export_csv(&self) -> String {
         let mut csv = String::new();
-        csv.push_str("Resource,Type,Environment,CostCenter,Owner,Project,Application,MonthlyCost\n");
+        csv.push_str(
+            "Resource,Type,Environment,CostCenter,Owner,Project,Application,MonthlyCost\n",
+        );
 
         for allocation in &self.allocations {
             csv.push_str(&format!(
@@ -362,8 +404,14 @@ mod tests {
         raw_tags.insert("CostCenter".to_string(), "eng-platform".to_string());
 
         let normalized = pipeline.extract_tags(&raw_tags);
-        assert_eq!(normalized.get("environment"), Some(&"production".to_string()));
-        assert_eq!(normalized.get("cost_center"), Some(&"eng-platform".to_string()));
+        assert_eq!(
+            normalized.get("environment"),
+            Some(&"production".to_string())
+        );
+        assert_eq!(
+            normalized.get("cost_center"),
+            Some(&"eng-platform".to_string())
+        );
     }
 
     #[test]
@@ -373,7 +421,10 @@ mod tests {
         tags.insert("OWNER".to_string(), "TeamA".to_string());
 
         let normalized = AttributionPipeline::normalize_tag_casing(&tags);
-        assert_eq!(normalized.get("environment"), Some(&"Production".to_string()));
+        assert_eq!(
+            normalized.get("environment"),
+            Some(&"Production".to_string())
+        );
         assert_eq!(normalized.get("owner"), Some(&"TeamA".to_string()));
     }
 
@@ -388,8 +439,18 @@ mod tests {
         tags2.insert("env".to_string(), "dev".to_string());
 
         let resources = vec![
-            ("aws_instance.web".to_string(), "aws_instance".to_string(), 100.0, tags1),
-            ("aws_s3_bucket.data".to_string(), "aws_s3_bucket".to_string(), 50.0, tags2),
+            (
+                "aws_instance.web".to_string(),
+                "aws_instance".to_string(),
+                100.0,
+                tags1,
+            ),
+            (
+                "aws_s3_bucket.data".to_string(),
+                "aws_s3_bucket".to_string(),
+                50.0,
+                tags2,
+            ),
         ];
 
         let report = pipeline.generate_attribution_report(&resources);
@@ -402,7 +463,7 @@ mod tests {
     #[test]
     fn test_tagging_coverage() {
         let mut report = AttributionReport::new();
-        
+
         report.add_allocation(Attribution {
             resource_address: "res1".to_string(),
             resource_type: "type1".to_string(),
