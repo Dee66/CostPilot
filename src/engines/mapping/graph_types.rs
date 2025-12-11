@@ -1,26 +1,26 @@
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 /// A node in the dependency graph representing a resource or service
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GraphNode {
     /// Unique stable identifier for the node
     pub id: String,
-    
+
     /// Human-readable label
     pub label: String,
-    
+
     /// Type of node (resource, service, module)
     pub node_type: NodeType,
-    
+
     /// AWS resource type (e.g., "aws_nat_gateway")
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resource_type: Option<String>,
-    
+
     /// Monthly cost estimate
     #[serde(skip_serializing_if = "Option::is_none")]
     pub monthly_cost: Option<f64>,
-    
+
     /// Module name if applicable
     #[serde(skip_serializing_if = "Option::is_none")]
     pub module: Option<String>,
@@ -32,10 +32,10 @@ pub struct GraphNode {
 pub enum NodeType {
     /// AWS resource
     Resource,
-    
+
     /// AWS service (aggregated)
     Service,
-    
+
     /// Terraform module
     Module,
 }
@@ -45,13 +45,13 @@ pub enum NodeType {
 pub struct GraphEdge {
     /// Source node ID
     pub from: String,
-    
+
     /// Target node ID
     pub to: String,
-    
+
     /// Type of relationship
     pub relationship: EdgeType,
-    
+
     /// Optional cost impact description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cost_impact: Option<String>,
@@ -63,13 +63,13 @@ pub struct GraphEdge {
 pub enum EdgeType {
     /// Direct dependency (e.g., Lambda depends on VPC)
     DependsOn,
-    
+
     /// Data flow (e.g., S3 bucket read by Lambda)
     DataFlow,
-    
+
     /// Network connection
     NetworkConnection,
-    
+
     /// Cost attribution
     CostAttribution,
 }
@@ -79,10 +79,10 @@ pub enum EdgeType {
 pub struct DependencyGraph {
     /// All nodes in the graph
     pub nodes: Vec<GraphNode>,
-    
+
     /// All edges in the graph
     pub edges: Vec<GraphEdge>,
-    
+
     /// Metadata about the graph
     pub metadata: GraphMetadata,
 }
@@ -92,20 +92,20 @@ pub struct DependencyGraph {
 pub struct GraphMetadata {
     /// Total number of nodes
     pub node_count: usize,
-    
+
     /// Total number of edges
     pub edge_count: usize,
-    
+
     /// Maximum depth detected
     pub max_depth: usize,
-    
+
     /// Whether cycles were detected
     pub has_cycles: bool,
-    
+
     /// List of cycles if detected
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub cycles: Vec<Vec<String>>,
-    
+
     /// Total monthly cost across all nodes
     #[serde(skip_serializing_if = "Option::is_none")]
     pub total_cost: Option<f64>,
@@ -114,15 +114,15 @@ pub struct GraphMetadata {
 /// Configuration for graph construction
 #[derive(Debug, Clone)]
 pub struct GraphConfig {
-    /// Maximum depth to traverse
-    pub max_depth: usize,
-    
+    /// Maximum depth to traverse (None = unlimited)
+    pub max_depth: Option<usize>,
+
     /// Whether to detect cycles
     pub detect_cycles: bool,
-    
+
     /// Whether to infer downstream services
     pub infer_downstream: bool,
-    
+
     /// Whether to aggregate by service
     pub aggregate_by_service: bool,
 }
@@ -130,7 +130,7 @@ pub struct GraphConfig {
 impl Default for GraphConfig {
     fn default() -> Self {
         Self {
-            max_depth: 5,
+            max_depth: Some(5),
             detect_cycles: true,
             infer_downstream: true,
             aggregate_by_service: false,
@@ -276,12 +276,8 @@ impl DependencyGraph {
 
     /// Calculate total cost
     pub fn calculate_total_cost(&mut self) {
-        let total: f64 = self
-            .nodes
-            .iter()
-            .filter_map(|n| n.monthly_cost)
-            .sum();
-        
+        let total: f64 = self.nodes.iter().filter_map(|n| n.monthly_cost).sum();
+
         if total > 0.0 {
             self.metadata.total_cost = Some(total);
         }
@@ -312,7 +308,7 @@ mod tests {
             "aws_vpc".to_string(),
             "Main VPC".to_string(),
         );
-        
+
         assert_eq!(node.id, "vpc-1");
         assert_eq!(node.node_type, NodeType::Resource);
         assert_eq!(node.resource_type, Some("aws_vpc".to_string()));
@@ -321,7 +317,7 @@ mod tests {
     #[test]
     fn test_create_service_node() {
         let node = GraphNode::new_service("ec2-service".to_string(), "EC2".to_string());
-        
+
         assert_eq!(node.node_type, NodeType::Service);
         assert_eq!(node.label, "EC2");
     }
@@ -334,7 +330,7 @@ mod tests {
             "aws_nat_gateway".to_string(),
             "NAT Gateway".to_string(),
         );
-        
+
         graph.add_node(node);
         assert_eq!(graph.metadata.node_count, 1);
     }
@@ -347,7 +343,7 @@ mod tests {
             "vpc-1".to_string(),
             EdgeType::DependsOn,
         );
-        
+
         graph.add_edge(edge);
         assert_eq!(graph.metadata.edge_count, 1);
     }
@@ -360,9 +356,9 @@ mod tests {
             "aws_s3_bucket".to_string(),
             "Data Bucket".to_string(),
         );
-        
+
         graph.add_node(node);
-        
+
         let found = graph.find_node("s3-1");
         assert!(found.is_some());
         assert_eq!(found.unwrap().label, "Data Bucket");
@@ -371,14 +367,34 @@ mod tests {
     #[test]
     fn test_downstream_nodes() {
         let mut graph = DependencyGraph::new();
-        
-        graph.add_node(GraphNode::new_resource("a".to_string(), "type".to_string(), "A".to_string()));
-        graph.add_node(GraphNode::new_resource("b".to_string(), "type".to_string(), "B".to_string()));
-        graph.add_node(GraphNode::new_resource("c".to_string(), "type".to_string(), "C".to_string()));
-        
-        graph.add_edge(GraphEdge::new("a".to_string(), "b".to_string(), EdgeType::DependsOn));
-        graph.add_edge(GraphEdge::new("b".to_string(), "c".to_string(), EdgeType::DependsOn));
-        
+
+        graph.add_node(GraphNode::new_resource(
+            "a".to_string(),
+            "type".to_string(),
+            "A".to_string(),
+        ));
+        graph.add_node(GraphNode::new_resource(
+            "b".to_string(),
+            "type".to_string(),
+            "B".to_string(),
+        ));
+        graph.add_node(GraphNode::new_resource(
+            "c".to_string(),
+            "type".to_string(),
+            "C".to_string(),
+        ));
+
+        graph.add_edge(GraphEdge::new(
+            "a".to_string(),
+            "b".to_string(),
+            EdgeType::DependsOn,
+        ));
+        graph.add_edge(GraphEdge::new(
+            "b".to_string(),
+            "c".to_string(),
+            EdgeType::DependsOn,
+        ));
+
         let downstream = graph.downstream_nodes("a");
         assert_eq!(downstream.len(), 2);
         assert!(downstream.contains("b"));
@@ -388,16 +404,16 @@ mod tests {
     #[test]
     fn test_calculate_total_cost() {
         let mut graph = DependencyGraph::new();
-        
+
         graph.add_node(
             GraphNode::new_resource("n1".to_string(), "type".to_string(), "N1".to_string())
-                .with_cost(100.0)
+                .with_cost(100.0),
         );
         graph.add_node(
             GraphNode::new_resource("n2".to_string(), "type".to_string(), "N2".to_string())
-                .with_cost(200.0)
+                .with_cost(200.0),
         );
-        
+
         graph.calculate_total_cost();
         assert_eq!(graph.metadata.total_cost, Some(300.0));
     }

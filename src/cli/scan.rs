@@ -1,8 +1,8 @@
 use crate::engines::detection::DetectionEngine;
-use crate::engines::prediction::PredictionEngine;
 use crate::engines::policy::{ExemptionValidator, PolicyEngine, PolicyLoader};
-use crate::engines::shared::models::CostEstimate;
+use crate::engines::prediction::PredictionEngine;
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory};
+use crate::engines::shared::models::CostEstimate;
 use clap::Args;
 use colored::Colorize;
 use std::path::PathBuf;
@@ -48,6 +48,14 @@ enum OutputFormat {
 
 impl ScanCommand {
     pub fn execute(&self) -> Result<(), CostPilotError> {
+        let edition = crate::edition::EditionContext::new();
+        self.execute_with_edition(&edition)
+    }
+
+    pub fn execute_with_edition(
+        &self,
+        edition: &crate::edition::EditionContext,
+    ) -> Result<(), CostPilotError> {
         println!("{}", "🔍 CostPilot Scan".bold().cyan());
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
@@ -58,7 +66,10 @@ impl ScanCommand {
                 crate::errors::ErrorCategory::FileSystemError,
                 format!("Terraform plan file not found: {}", self.plan.display()),
             )
-            .with_hint("Run 'terraform plan -out=tfplan && terraform show -json tfplan > tfplan.json'".to_string()));
+            .with_hint(
+                "Run 'terraform plan -out=tfplan && terraform show -json tfplan > tfplan.json'"
+                    .to_string(),
+            ));
         }
 
         // Step 1: Detection
@@ -74,29 +85,60 @@ impl ScanCommand {
 
         // Step 2: Prediction
         println!("{}", "💰 Step 2: Cost Prediction".bold());
-        let mut prediction_engine = PredictionEngine::new()
-            .map_err(|e| CostPilotError::new("E_PREDICTION_INIT", ErrorCategory::PredictionError, format!("Failed to initialize prediction engine: {}", e)))?;
-        let total_cost = prediction_engine.predict_total_cost(&changes)?;
-        
-        println!("   Estimated monthly cost: ${:.2}", total_cost.monthly);
-        println!("   Confidence: {:.0}%\n", total_cost.confidence_score * 100.0);
+
+        let estimates = match edition.pro.as_ref() {
+            Some(pro) => {
+                // Premium: use ProEngine
+                use crate::cli::pro_serde;
+                let input = pro_serde::serialize(&changes).map_err(|e| {
+                    CostPilotError::new(
+                        "E_SERIALIZE",
+                        ErrorCategory::PredictionError,
+                        e.to_string(),
+                    )
+                })?;
+                let output = pro.scan(input.as_bytes()).map_err(|e| {
+                    CostPilotError::new("E_PRO_SCAN", ErrorCategory::PredictionError, e.to_string())
+                })?;
+                let output_str = std::str::from_utf8(&output).map_err(|e| {
+                    CostPilotError::new("E_UTF8", ErrorCategory::PredictionError, e.to_string())
+                })?;
+                pro_serde::deserialize::<Vec<CostEstimate>>(output_str).map_err(|e| {
+                    CostPilotError::new(
+                        "E_DESERIALIZE",
+                        ErrorCategory::PredictionError,
+                        e.to_string(),
+                    )
+                })?
+            }
+            None => {
+                // Free: use static prediction
+                PredictionEngine::predict_static(&changes)?
+            }
+        };
+
+        let total_monthly: f64 = estimates.iter().map(|e| e.monthly_cost).sum();
+        println!("   Estimated monthly cost: ${:.2}", total_monthly);
+        println!("   ({} resources analyzed)\n", estimates.len());
 
         // Step 3: Policy Evaluation (if policy file provided)
         if let Some(policy_path) = &self.policy {
             println!("{}", "📋 Step 3: Policy Evaluation".bold());
             let policy_config = PolicyLoader::load_from_file(policy_path)?;
             PolicyLoader::validate(&policy_config)?;
-            
+
             // Load exemptions if provided
             let policy_engine = if let Some(exemptions_path) = &self.exemptions {
                 let exemption_validator = ExemptionValidator::new();
                 let exemptions = exemption_validator.load_from_file(exemptions_path)?;
-                
+
                 // Check for expiring exemptions and warn
                 let mut expiring_count = 0;
                 for exemption in &exemptions.exemptions {
                     match exemption_validator.check_status(exemption) {
-                        crate::engines::policy::ExemptionStatus::ExpiringSoon { expires_in_days } => {
+                        crate::engines::policy::ExemptionStatus::ExpiringSoon {
+                            expires_in_days,
+                        } => {
                             println!(
                                 "   {} Exemption {} expires in {} days",
                                 "⚠".yellow(),
@@ -119,30 +161,61 @@ impl ScanCommand {
                 if expiring_count > 0 {
                     println!();
                 }
-                
-                PolicyEngine::with_exemptions(policy_config, exemptions)
+
+                PolicyEngine::with_exemptions(policy_config, exemptions, edition)
             } else {
-                PolicyEngine::new(policy_config)
+                PolicyEngine::new(policy_config, edition)
             };
-            
+
             // Convert TotalCost to CostEstimate for policy evaluation
             let total_cost_estimate = CostEstimate {
                 resource_id: "total".to_string(),
-                monthly_cost: total_cost.monthly,
-                prediction_interval_low: total_cost.prediction_interval_low,
-                prediction_interval_high: total_cost.prediction_interval_high,
-                confidence_score: total_cost.confidence_score,
+                monthly_cost: total_monthly,
+                prediction_interval_low: 0.0,
+                prediction_interval_high: 0.0,
+                confidence_score: 0.0,
                 heuristic_reference: None,
                 cold_start_inference: false,
+                monthly: None,
+                yearly: None,
+                one_time: None,
+                breakdown: None,
+                estimate: None,
+                lower: None,
+                upper: None,
+                confidence: None,
+                hourly: None,
+                daily: None,
             };
-            
-            let policy_result = policy_engine.evaluate(&changes, &total_cost_estimate);
-            
+
+            let mut policy_result = policy_engine.evaluate(&changes, &total_cost_estimate);
+
+            // Free edition: downgrade all violations to warnings
+            if !edition.capabilities.allow_policy_enforce {
+                let violations_to_convert = policy_result.violations.clone();
+                for violation in &violations_to_convert {
+                    policy_result.add_warning(format!(
+                        "[{}] {} - {} (actual: {}, expected: {})",
+                        violation.severity,
+                        violation.policy_name,
+                        violation.message,
+                        violation.actual_value,
+                        violation.expected_value
+                    ));
+                }
+                policy_result.violations.clear();
+                policy_result.passed = true;
+            }
+
             if !policy_result.violations.is_empty() {
                 println!(
                     "   {} {}",
                     "⚠".yellow(),
-                    format!("{} policy violations detected", policy_result.violations.len()).yellow()
+                    format!(
+                        "{} policy violations detected",
+                        policy_result.violations.len()
+                    )
+                    .yellow()
                 );
                 for violation in &policy_result.violations {
                     println!(
@@ -164,7 +237,7 @@ impl ScanCommand {
             let _explain_engine = crate::engines::explain::ExplainEngine::new();
             // TODO: Implement detect_anti_patterns
             let anti_patterns: Vec<String> = Vec::new();
-            
+
             if !anti_patterns.is_empty() {
                 println!("   Detected {} anti-patterns:\n", anti_patterns.len());
             } else {
@@ -182,28 +255,41 @@ impl ScanCommand {
         }
 
         // Summary
-        println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_black());
+        println!(
+            "{}",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_black()
+        );
         println!("{}", "📈 Summary".bold());
         println!("   Resources changed: {}", changes.len());
-        println!("   Monthly cost: ${:.2}", total_cost.monthly);
-        
+        println!("   Monthly cost: ${:.2}", total_monthly);
+
         if let Some(policy_path) = &self.policy {
             let policy_config = PolicyLoader::load_from_file(policy_path)?;
-            let policy_engine = PolicyEngine::new(policy_config);
-            
-            // Convert TotalCost to CostEstimate for policy evaluation
+            let policy_engine = PolicyEngine::new(policy_config, edition);
+
+            // Convert estimates to CostEstimate for policy evaluation
             let total_cost_estimate = CostEstimate {
                 resource_id: "total".to_string(),
-                monthly_cost: total_cost.monthly,
-                prediction_interval_low: total_cost.prediction_interval_low,
-                prediction_interval_high: total_cost.prediction_interval_high,
-                confidence_score: total_cost.confidence_score,
+                monthly_cost: total_monthly,
+                prediction_interval_low: 0.0,
+                prediction_interval_high: 0.0,
+                confidence_score: 0.0,
                 heuristic_reference: None,
                 cold_start_inference: false,
+                monthly: None,
+                yearly: None,
+                one_time: None,
+                breakdown: None,
+                estimate: None,
+                lower: None,
+                upper: None,
+                confidence: None,
+                hourly: None,
+                daily: None,
             };
-            
+
             let policy_result = policy_engine.evaluate(&changes, &total_cost_estimate);
-            
+
             if !policy_result.passed {
                 println!("   Policy status: {}", "FAILED".red());
                 if self.fail_on_critical {
@@ -223,12 +309,14 @@ impl ScanCommand {
                 println!("   Policy status: {}", "PASSED".green());
             }
         }
-        
+
         println!();
         Ok(())
     }
 
-    fn format_severity(&self, severity: &str) -> String {
+    /// Format severity with color (utility for future output modes)
+    #[allow(dead_code)]
+    fn _format_severity(&self, severity: &str) -> String {
         match severity {
             "CRITICAL" => severity.red().to_string(),
             "HIGH" => severity.bright_red().to_string(),
@@ -238,7 +326,9 @@ impl ScanCommand {
         }
     }
 
-    fn format_code_block(&self, code: &str) -> String {
+    /// Format code block with syntax highlighting (utility for future output modes)
+    #[allow(dead_code)]
+    fn _format_code_block(&self, code: &str) -> String {
         code.lines()
             .map(|line| format!("       {}", line.bright_black()))
             .collect::<Vec<_>>()
@@ -256,6 +346,7 @@ mod tests {
             plan: PathBuf::from("nonexistent.json"),
             explain: false,
             policy: None,
+            exemptions: None,
             format: OutputFormat::Markdown,
             fail_on_critical: false,
             autofix: false,

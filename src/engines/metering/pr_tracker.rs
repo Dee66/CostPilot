@@ -1,43 +1,43 @@
 // PR-based billing tracker for measuring CostPilot usage in CI/CD
 
+use crate::engines::metering::usage_meter::{Attribution, UsageContext, UsageEvent, UsageEventType};
+use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::engines::metering::usage_meter::{UsageEvent, UsageEventType, Attribution, UsageContext};
-use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
 
 /// PR (Pull Request) usage tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrUsageTracker {
     /// Repository identifier
     pub repository: String,
-    
+
     /// PR number
     pub pr_number: u32,
-    
+
     /// PR author
     pub author: String,
-    
+
     /// PR title
     pub title: String,
-    
+
     /// Branch name
     pub branch: String,
-    
+
     /// Usage events for this PR
     pub events: Vec<UsageEvent>,
-    
+
     /// Total resources analyzed
     pub total_resources: u32,
-    
+
     /// Total cost impact detected
     pub total_cost_impact: f64,
-    
+
     /// Total analysis time
     pub total_duration_ms: u64,
-    
+
     /// Number of commits analyzed
     pub commits_analyzed: u32,
-    
+
     /// PR status
     pub status: PrStatus,
 }
@@ -47,13 +47,13 @@ pub struct PrUsageTracker {
 pub enum PrStatus {
     /// PR is open
     Open,
-    
+
     /// PR has been merged
     Merged,
-    
+
     /// PR was closed without merging
     Closed,
-    
+
     /// PR is in draft state
     Draft,
 }
@@ -63,31 +63,31 @@ pub enum PrStatus {
 pub struct PrUsageSummary {
     /// PR identifier
     pub pr_number: u32,
-    
+
     /// Repository
     pub repository: String,
-    
+
     /// Author and team attribution
     pub attribution: Attribution,
-    
+
     /// Number of scans performed
     pub scan_count: u32,
-    
+
     /// Resources analyzed
     pub resources_analyzed: u32,
-    
+
     /// Cost issues detected
     pub issues_detected: u32,
-    
+
     /// Cost impact prevented (if issues were fixed)
     pub cost_prevented: f64,
-    
+
     /// Billable units for this PR
     pub billable_units: u32,
-    
+
     /// Estimated charge
     pub estimated_charge: f64,
-    
+
     /// ROI (return on investment)
     pub roi: Option<f64>,
 }
@@ -97,7 +97,7 @@ pub struct PrUsageSummary {
 pub struct CiUsageTracker {
     /// Tracked PRs
     prs: HashMap<u32, PrUsageTracker>,
-    
+
     /// Repository identifier
     repository: String,
 }
@@ -112,7 +112,13 @@ impl CiUsageTracker {
     }
 
     /// Start tracking a PR
-    pub fn track_pr(&mut self, pr_number: u32, author: String, title: String, branch: String) -> Result<()> {
+    pub fn track_pr(
+        &mut self,
+        pr_number: u32,
+        author: String,
+        title: String,
+        branch: String,
+    ) -> Result<()> {
         let tracker = PrUsageTracker {
             repository: self.repository.clone(),
             pr_number,
@@ -144,7 +150,7 @@ impl CiUsageTracker {
         tracker.total_resources += event.resources_analyzed;
         tracker.total_cost_impact += event.cost_impact;
         tracker.total_duration_ms += event.duration_ms;
-        
+
         if event.context.commit.is_some() {
             tracker.commits_analyzed += 1;
         }
@@ -168,7 +174,11 @@ impl CiUsageTracker {
     }
 
     /// Get PR summary for billing
-    pub fn get_pr_summary(&self, pr_number: u32, price_per_resource: f64) -> Result<PrUsageSummary> {
+    pub fn get_pr_summary(
+        &self,
+        pr_number: u32,
+        price_per_resource: f64,
+    ) -> Result<PrUsageSummary> {
         let tracker = self.prs.get(&pr_number).ok_or_else(|| {
             CostPilotError::new(
                 "PR_003",
@@ -178,7 +188,9 @@ impl CiUsageTracker {
         })?;
 
         // Get attribution from first event (or use PR author)
-        let attribution = tracker.events.first()
+        let attribution = tracker
+            .events
+            .first()
             .map(|e| e.attribution.clone())
             .unwrap_or_else(|| Attribution {
                 user_id: tracker.author.clone(),
@@ -188,12 +200,21 @@ impl CiUsageTracker {
                 project_id: Some(self.repository.clone()),
             });
 
-        let scan_count = tracker.events.iter()
-            .filter(|e| matches!(e.event_type, UsageEventType::Scan | UsageEventType::PlanAnalysis))
+        let scan_count = tracker
+            .events
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.event_type,
+                    UsageEventType::Scan | UsageEventType::PlanAnalysis
+                )
+            })
             .count() as u32;
 
         // Count issues detected (would come from event metadata in practice)
-        let issues_detected = tracker.events.iter()
+        let issues_detected = tracker
+            .events
+            .iter()
             .filter_map(|e| e.metadata.get("issues_detected"))
             .filter_map(|s| s.parse::<u32>().ok())
             .sum();
@@ -223,10 +244,18 @@ impl CiUsageTracker {
     }
 
     /// Get all PR summaries for a time period
-    pub fn get_all_summaries(&self, start: u64, end: u64, price_per_resource: f64) -> Vec<PrUsageSummary> {
-        self.prs.values()
+    pub fn get_all_summaries(
+        &self,
+        start: u64,
+        end: u64,
+        price_per_resource: f64,
+    ) -> Vec<PrUsageSummary> {
+        self.prs
+            .values()
             .filter(|pr| {
-                pr.events.iter().any(|e| e.timestamp >= start && e.timestamp <= end)
+                pr.events
+                    .iter()
+                    .any(|e| e.timestamp >= start && e.timestamp <= end)
             })
             .filter_map(|pr| self.get_pr_summary(pr.pr_number, price_per_resource).ok())
             .collect()
@@ -281,28 +310,28 @@ pub struct PrUsageReport {
     /// Time period
     pub period_start: u64,
     pub period_end: u64,
-    
+
     /// Total PRs analyzed
     pub total_prs: u32,
-    
+
     /// Total scans performed
     pub total_scans: u32,
-    
+
     /// Total resources analyzed
     pub total_resources: u32,
-    
+
     /// Total cost prevented
     pub total_cost_prevented: f64,
-    
+
     /// Total estimated charge
     pub total_estimated_charge: f64,
-    
+
     /// Average resources per PR
     pub avg_resources_per_pr: u32,
-    
+
     /// Average ROI
     pub avg_roi: Option<f64>,
-    
+
     /// Individual PR summaries
     pub pr_summaries: Vec<PrUsageSummary>,
 }
@@ -311,28 +340,40 @@ impl PrUsageReport {
     /// Format report as human-readable text
     pub fn format_text(&self) -> String {
         let mut output = String::new();
-        
+
         output.push_str("📊 PR Usage Report\n");
         output.push_str("==================\n\n");
-        
-        output.push_str(&format!("Period: {} - {}\n\n", self.period_start, self.period_end));
-        
+
+        output.push_str(&format!(
+            "Period: {} - {}\n\n",
+            self.period_start, self.period_end
+        ));
+
         output.push_str("Summary:\n");
         output.push_str(&format!("  Total PRs: {}\n", self.total_prs));
         output.push_str(&format!("  Total Scans: {}\n", self.total_scans));
         output.push_str(&format!("  Resources Analyzed: {}\n", self.total_resources));
-        output.push_str(&format!("  Cost Prevented: ${:.2}\n", self.total_cost_prevented));
-        output.push_str(&format!("  Estimated Charge: ${:.2}\n", self.total_estimated_charge));
-        output.push_str(&format!("  Avg Resources/PR: {}\n", self.avg_resources_per_pr));
-        
+        output.push_str(&format!(
+            "  Cost Prevented: ${:.2}\n",
+            self.total_cost_prevented
+        ));
+        output.push_str(&format!(
+            "  Estimated Charge: ${:.2}\n",
+            self.total_estimated_charge
+        ));
+        output.push_str(&format!(
+            "  Avg Resources/PR: {}\n",
+            self.avg_resources_per_pr
+        ));
+
         if let Some(roi) = self.avg_roi {
             output.push_str(&format!("  Average ROI: {:.1}x\n", roi));
         }
-        
+
         output.push_str("\nTop PRs by Resources Analyzed:\n");
         let mut sorted = self.pr_summaries.clone();
         sorted.sort_by(|a, b| b.resources_analyzed.cmp(&a.resources_analyzed));
-        
+
         for (i, pr) in sorted.iter().take(10).enumerate() {
             output.push_str(&format!(
                 "  {}. PR #{} - {} resources (${:.2})\n",
@@ -342,7 +383,7 @@ impl PrUsageReport {
                 pr.estimated_charge
             ));
         }
-        
+
         output
     }
 }
@@ -382,12 +423,19 @@ mod tests {
     #[test]
     fn test_track_pr() {
         let mut tracker = CiUsageTracker::new("test/repo".to_string());
-        
-        tracker.track_pr(1, "user1".to_string(), "Test PR".to_string(), "feature/test".to_string()).unwrap();
-        
+
+        tracker
+            .track_pr(
+                1,
+                "user1".to_string(),
+                "Test PR".to_string(),
+                "feature/test".to_string(),
+            )
+            .unwrap();
+
         let event = create_test_event(100, 1000.0);
         tracker.record_pr_event(1, event).unwrap();
-        
+
         let summary = tracker.get_pr_summary(1, 0.01).unwrap();
         assert_eq!(summary.pr_number, 1);
         assert_eq!(summary.resources_analyzed, 100);
@@ -397,13 +445,20 @@ mod tests {
     #[test]
     fn test_pr_roi_calculation() {
         let mut tracker = CiUsageTracker::new("test/repo".to_string());
-        
-        tracker.track_pr(1, "user1".to_string(), "Test PR".to_string(), "feature/test".to_string()).unwrap();
-        
+
+        tracker
+            .track_pr(
+                1,
+                "user1".to_string(),
+                "Test PR".to_string(),
+                "feature/test".to_string(),
+            )
+            .unwrap();
+
         // Detected $5000 in cost issues, charged $1.00
         let event = create_test_event(100, 5000.0);
         tracker.record_pr_event(1, event).unwrap();
-        
+
         let summary = tracker.get_pr_summary(1, 0.01).unwrap();
         assert!(summary.roi.is_some());
         assert!(summary.roi.unwrap() > 4999.0); // ROI of 5000x
@@ -412,13 +467,31 @@ mod tests {
     #[test]
     fn test_usage_report() {
         let mut tracker = CiUsageTracker::new("test/repo".to_string());
-        
-        tracker.track_pr(1, "user1".to_string(), "PR 1".to_string(), "branch1".to_string()).unwrap();
-        tracker.track_pr(2, "user2".to_string(), "PR 2".to_string(), "branch2".to_string()).unwrap();
-        
-        tracker.record_pr_event(1, create_test_event(100, 1000.0)).unwrap();
-        tracker.record_pr_event(2, create_test_event(200, 2000.0)).unwrap();
-        
+
+        tracker
+            .track_pr(
+                1,
+                "user1".to_string(),
+                "PR 1".to_string(),
+                "branch1".to_string(),
+            )
+            .unwrap();
+        tracker
+            .track_pr(
+                2,
+                "user2".to_string(),
+                "PR 2".to_string(),
+                "branch2".to_string(),
+            )
+            .unwrap();
+
+        tracker
+            .record_pr_event(1, create_test_event(100, 1000.0))
+            .unwrap();
+        tracker
+            .record_pr_event(2, create_test_event(200, 2000.0))
+            .unwrap();
+
         let report = tracker.generate_report(0, 2000);
         assert_eq!(report.total_prs, 2);
         assert_eq!(report.total_resources, 300);

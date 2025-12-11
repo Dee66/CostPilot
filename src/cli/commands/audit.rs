@@ -1,10 +1,10 @@
 // CLI commands for audit log and compliance reporting
 
 use crate::engines::policy::{
-    AuditEvent, AuditEventType, AuditLog, AuditSeverity, ComplianceAnalyzer, ComplianceFramework,
-    AuditQuery,
+    AuditEvent, AuditEventType, AuditLog, AuditQuery, AuditSeverity, ComplianceAnalyzer,
+    ComplianceFramework,
 };
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 use colored::Colorize;
 use std::fs;
 use std::path::PathBuf;
@@ -13,8 +13,7 @@ const AUDIT_LOG_PATH: &str = ".costpilot/audit_log.json";
 
 /// Load audit log from file
 fn load_audit_log(path: Option<PathBuf>) -> Result<AuditLog, Box<dyn std::error::Error>> {
-    let log_path = path
-        .unwrap_or_else(|| PathBuf::from(AUDIT_LOG_PATH));
+    let log_path = path.unwrap_or_else(|| PathBuf::from(AUDIT_LOG_PATH));
 
     if log_path.exists() {
         let contents = fs::read_to_string(&log_path)?;
@@ -26,10 +25,7 @@ fn load_audit_log(path: Option<PathBuf>) -> Result<AuditLog, Box<dyn std::error:
 }
 
 /// Save audit log to file
-fn save_audit_log(
-    log: &AuditLog,
-    path: Option<PathBuf>,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn save_audit_log(log: &AuditLog, path: Option<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
     let log_path = path.unwrap_or_else(|| PathBuf::from(AUDIT_LOG_PATH));
 
     // Create directory if needed
@@ -113,7 +109,7 @@ pub fn cmd_audit_view(
         }
 
         let entries_len = entries.len();
-        
+
         for entry in &entries {
             let severity_color = match entry.event.severity {
                 AuditSeverity::Critical => "critical".red().bold(),
@@ -133,7 +129,10 @@ pub fn cmd_audit_view(
             println!("  Severity: {}", severity_color);
             println!("  Timestamp: {}", entry.event.timestamp.to_rfc3339());
             println!("  Actor: {}", entry.event.actor.bright_cyan());
-            println!("  Resource: {} ({})", entry.event.resource_id, entry.event.resource_type);
+            println!(
+                "  Resource: {} ({})",
+                entry.event.resource_id, entry.event.resource_type
+            );
             println!("  Description: {}", entry.event.description);
 
             if let Some(old) = &entry.event.old_value {
@@ -161,10 +160,7 @@ pub fn cmd_audit_view(
 }
 
 /// Verify audit log integrity
-pub fn cmd_audit_verify(
-    format: &str,
-    _verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn cmd_audit_verify(format: &str, _verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
     let log = load_audit_log(None)?;
 
     if format == "json" {
@@ -183,7 +179,10 @@ pub fn cmd_audit_verify(
         };
         println!("{}", serde_json::to_string_pretty(&result)?);
     } else {
-        println!("{}", "🔐 Verifying Audit Log Integrity".bright_blue().bold());
+        println!(
+            "{}",
+            "🔐 Verifying Audit Log Integrity".bright_blue().bold()
+        );
         println!("{}", "━".repeat(80).bright_black());
         println!();
 
@@ -262,7 +261,11 @@ pub fn cmd_audit_compliance(
         };
 
         println!("Overall Status: {}", status_display);
-        println!("Report Period: {} to {}", start.format("%Y-%m-%d"), end.format("%Y-%m-%d"));
+        println!(
+            "Report Period: {} to {}",
+            start.format("%Y-%m-%d"),
+            end.format("%Y-%m-%d")
+        );
         println!(
             "Audit Log Verified: {}",
             if report.audit_log_verified {
@@ -274,9 +277,16 @@ pub fn cmd_audit_compliance(
         println!();
 
         println!("{}", "Summary".bright_cyan().bold());
-        println!("  Total Requirements: {}", report.summary.total_requirements);
+        println!(
+            "  Total Requirements: {}",
+            report.summary.total_requirements
+        );
         println!("  {} Compliant: {}", "✅".green(), report.summary.compliant);
-        println!("  {} Non-Compliant: {}", "❌".red(), report.summary.non_compliant);
+        println!(
+            "  {} Non-Compliant: {}",
+            "❌".red(),
+            report.summary.non_compliant
+        );
         println!(
             "  {} Partially Compliant: {}",
             "⚠".yellow(),
@@ -317,10 +327,7 @@ pub fn cmd_audit_compliance(
         }
 
         println!("{}", "━".repeat(80).bright_black());
-        println!(
-            "Report generated at: {}",
-            report.generated_at.to_rfc3339()
-        );
+        println!("Report generated at: {}", report.generated_at.to_rfc3339());
     }
 
     Ok(())
@@ -354,10 +361,7 @@ pub fn cmd_audit_export(
 }
 
 /// Get audit log statistics
-pub fn cmd_audit_stats(
-    format: &str,
-    _verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn cmd_audit_stats(format: &str, _verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
     let log = load_audit_log(None)?;
     let stats = log.get_statistics()?;
 

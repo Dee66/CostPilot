@@ -11,7 +11,7 @@ Purpose: Track completion of all P0/P1 test suites required for CostPilot launch
 - [x] Verify signed binary installs locally (`test_install_signed_binary.py`)
 - [x] Validate binary checksum matches release metadata
 - [x] Validate `--version` matches SOT
-- [ ] Validate WASM bundle signature
+- [x] Validate WASM bundle signature
 - [x] Validate packaging script outputs correct artifacts (`validate_package.sh`)
 
 ---
@@ -447,3 +447,265 @@ Purpose: Track completion of all P0/P1 test suites required for CostPilot launch
 - [x] 72-hour WASM stability test
 - [x] FD leak detection test
 - [x] Parallel CLI stress test
+
+P0 — Release-Blocking Additions
+
+Installation & Packaging
+
+- [x] Validate WASM bundle signature
+- [x] Validate artifact size bounds
+- [x] Validate reproducible build hashes
+- [x] Validate archives contain no forbidden files
+- [x] Validate signature manifests present for each platform
+
+CLI Contract
+
+- [x] Validate deterministic --help ordering
+- [x] Validate unknown flags produce structured errors
+- [x] Validate reject illegal flag combinations
+- [x] Validate reject malformed UTF-8 flags
+- [x] Validate init respects existing config unless forced
+
+Functional Core
+
+- [x] Validate prediction interval invariants
+- [x] Validate cold-start assumption annotations
+- [x] Validate explain verbose always references heuristic versions
+- [x] Validate explain sentence ordering determinism
+- [x] Validate severity score bounds 0–100
+
+Determinism & Cross-Platform
+
+- [x] Validate TZ variance stability
+- [x] Validate locale variance stability
+- [x] Validate CPU core-count stability
+- [x] Validate disk jitter stability
+- [x] Validate env-var drift resistance
+
+Zero-Cost Policy
+
+- [x] Validate rejection of AWS credential load attempts
+- [x] Validate DNS resolution blocked
+- [x] Validate no writes outside allowed dirs
+- [x] Validate apply remains forbidden in all contexts
+- [x] Validate cloud SDK shims cannot be monkey-patched
+
+Snapshot & Golden Output
+
+- [x] Validate verbose explain snapshot
+- [x] Validate SLO burn snapshot
+- [x] Validate mapping JSON snapshot
+- [x] Validate graphviz/dot snapshot
+- [x] Validate trend snapshot hash lock
+
+Autofix / Patch
+
+[x] Validate rollback byte-for-byte restoration
+[x] Validate patch fails without policy version
+[x] Validate unsupported resources blocked
+[x] Validate drift check precedence
+[x] Validate concurrent patch generation safety
+
+Noise & False Positives
+
+- [x] Empty file → no findings
+- [x] Invalid JSON → structured INVALID_PLAN
+- [x] Out-of-order modules deterministic
+- [x] Providers-only diff → no findings
+- [x] Mixed CRLF/LF normalization
+
+WASM Sandbox
+
+- [x] Validate syscall filter
+- [x] Validate deny host imports
+- [x] Validate memory scrub post-execution
+- [x] Validate deterministic local RNG
+- [x] Validate missing heuristics failure mode
+
+CI/CD
+
+- [x] Validate golden drift requires metadata update
+- [x] Validate missing fixtures cause CI failure
+- [x] Validate snapshot regeneration requires signature
+- [x] Validate pinned runner reproducibility
+- [x] Validate macOS + Windows act emulation
+
+Demo & Media
+
+- [x] Validate PR GIF hash stability
+- [x] Validate README code-block golden match
+- [x] Validate diagram export pixel stability
+- [x] Validate trend.svg markdown embedding stable
+- [x] Validate demo repo reset idempotency
+
+Security
+
+- [x] Validate symlink escape denied
+- [x] Validate config file permission hardening
+- [x] Validate world-writable binary rejection
+- [x] Validate expired exemption rejection
+- [x] Validate malicious JSON → structured error
+
+Acceptance Criteria
+
+- [x] Validate AC pass on Windows
+- [x] Validate AC pass on read-only FS
+- [x] Validate AC pass under slow disk
+- [x] Validate AC metadata presence in --json
+- [x] Validate multi-SLO AC-04 flow
+
+P1 — Important Additions
+1.  Fuzzing
+
+- [x] HCL comment fuzzing
+- [x] Large random-object fuzzing
+- [x] Deep recursion fuzz
+- [x] Differential fuzz between versions
+- [x] WASM heuristics fuzzing
+
+Performance
+
+- [x] Detect under CPU throttle
+- [x] Predict under memory pressure
+- [x] Explain under large diffs
+- [x] Mapping for 20k-node graphs
+- [x] Perf tracking per OS
+
+Telemetry
+
+- [x] Validate multi-line redaction
+- [x] Validate no absolute paths in logs
+- [x] Validate no IAM-like strings
+- [x] Validate UTC timestamps
+- [x] Validate stable trace ID format
+
+Hardening
+
+- [x] Validate no eval/exec paths
+- [x] Validate pinning of imports
+- [x] Validate OS command injection impossible
+- [x] Validate path traversal blocked
+- [x] Validate temp directory auto-clean
+
+P2 — Future Additions
+18. Version Compatibility
+
+- [x] Validate graph node-count stability
+- [x] Validate SLO drift stability
+- [x] Validate patch stability across versions
+- [x] Validate pro-engine invariant stability
+- [x] Validate downgrade safety
+
+Adversarial Plans
+
+- [x] Invalid escape sequences
+- [x] Extremely long strings
+- [x] Unknown provider types
+- [x] Partial module graphs
+- [x] Binary garbage in tfplan
+
+WASM Deep Security
+
+- [x] FD exhaustion in WASM
+- [x] Socket open attempts denied
+- [x] Stack overflow behavior checked
+- [x] Heap poisoning detection
+- [x] WASM module hashing stability
+
+Marketplace & Packaging
+
+- [x] Marketplace terms file present
+- [x] Uninstall removes configs
+- [x] Homebrew formula matches version
+- [x] npm/npx wrapper parity
+- [x] Marketplace metadata consistency
+
+Long-Run Reliability
+
+- [x] 48h prediction loop
+- [x] 24h WASM memory stability
+- [x] Trend append-only invariant
+- [x] Repeated patch cycles stability
+- [x] 10k CLI invocations stability
+
+Stress & Chaos
+
+- [x] Disk error injection
+- [x] FD exhaustion
+- [x] Slow I/O
+- [x] Cycle-detected mapping errors clean
+- [x] Corrupted rollback file safety
+
+20. Free Edition Gating Tests
+
+- [x] Free: autofix command not present
+- [x] Free: patch command not present
+- [x] Free: slo command not present
+- [x] Free: premium-only flags rejected (--mode, --license, --bundle)
+- [x] Free: mapping depth >1 returns structured error
+- [x] Free: advanced explain modes rejected (--verbose, --deep)
+- [x] Free: loading Pro heuristics bundle fails with correct error code
+- [x] Free: Pro WASM engine cannot be imported (byte-level verification)
+- [x] Free: no encrypted heuristic files shipped in artifacts
+- [x]  Free: debug output reveals no internal heuristics keys or versions
+- [x] Free: --help shows only Free commands
+- [x] Free: version info clearly identifies "Community Edition"
+- [x] Free: ensure no telemetry subsystem is reachable
+- [x] Free: deny license token usage (--license path)
+- [x] Free: deny any premium installer metadata fields
+
+NEW SECTION: P0 — PREMIUM ENGINE ACCESS CONTROL
+
+21. Premium Licensing Enforcement
+
+ - [x] Premium: binary refuses to load engine without valid license
+ - [x] Premium: invalid license → deterministic exit code
+ - [x] Premium: expired license → correct structured error
+ - [x] Premium: tampered license → signature verification failure
+ - [x] Premium: license binding to machine attributes validated
+ - [x] Premium: license rotation accepted for premium engine
+ - [x] Premium: CLI blocks run if heuristics bundle missing
+
+NEW SECTION: P0 — PREMIUM FEATURE ENABLEMENT
+
+22. Premium Capability Tests
+
+- [x]  Premium: autofix enabled and validated
+- [x] Premium: patch engine available
+- [x] Premium: drift detection executes
+- [x] Premium: anomaly detection executes
+- [x] Premium: economic attack detection executes
+- [x] Premium: SLO mode available and functional
+- [x] Premium: mapping depth unlimited
+- [x] Premium: full explain mode references encrypted heuristics bundle
+- [x] Premium: advanced cost models produce expected outputs
+
+NEW SECTION: P0 — IP PROTECTION TESTS
+23. Heuristics & Engine IP Protection
+
+- [x] Encrypted heuristics bundle cannot be opened by Free edition
+- [x] WASM Pro engine cannot be loaded by Free binary (opcode level test)
+- [x] Premium bundle fails validation if modified (bitflip test)
+- [x] No premium constants appear in Free binary via strings analysis
+- [x] No premium feature names appear in Free help output
+- [x] No debug mode prints internal premium heuristics entries
+- [x] Free edition error traces scrub premium references
+- [x] Premium engine memory scrub verified upon unload
+
+NEW SECTION: P1 — UX Consistency for Free vs Premium
+24. CLI UX Differentiation Tests
+
+- [x] Free help text includes upgrade hint
+- [x] Premium help text excludes free upgrade hint
+- [x] Free: disabled features show deterministic error message
+- [x] Premium: no disabled features appear
+- [x] Help ordering consistent between editions
+
+NEW SECTION: P1 — Distribution Boundary Tests
+25. Artifact Separation Tests
+
+- [x] Free binary does not ship premium WASM
+- [x] Free binary does not ship encrypted heuristic bundles
+- [x] Free archive size < threshold
+- [x] Premium archive size includes bundles + metadata
+- [x] Marketplace installer includes premium fields only

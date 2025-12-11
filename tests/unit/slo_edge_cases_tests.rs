@@ -1,3 +1,4 @@
+use std::time::Duration;
 //! SLO engine edge case and boundary tests
 //!
 //! Tests burn rate calculation edge cases, SLO inheritance,

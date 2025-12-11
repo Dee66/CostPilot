@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Policy configuration loaded from .costpilot/policy.yml
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -154,6 +153,12 @@ pub struct PolicyResult {
     pub violations: Vec<PolicyViolation>,
     pub warnings: Vec<String>,
     pub passed: bool,
+}
+
+impl Default for PolicyResult {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PolicyResult {

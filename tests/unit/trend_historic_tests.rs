@@ -1,3 +1,4 @@
+use std::time::Duration;
 //! Trend engine tests for historical cost analysis
 //!
 //! Tests trend detection, forecasting, anomaly detection,

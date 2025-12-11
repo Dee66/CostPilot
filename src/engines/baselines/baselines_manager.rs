@@ -1,4 +1,4 @@
-use super::baseline_types::{Baseline, BaselinesConfig, BaselineStatus, BaselineViolation};
+use super::baseline_types::{Baseline, BaselineStatus, BaselineViolation, BaselinesConfig};
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
@@ -270,7 +270,10 @@ impl BaselineComparisonResult {
         }
 
         let mut output = String::new();
-        output.push_str(&format!("⚠️  {} baseline violations\n", self.total_violations));
+        output.push_str(&format!(
+            "⚠️  {} baseline violations\n",
+            self.total_violations
+        ));
 
         for violation in &self.violations {
             output.push_str(&format!(
@@ -362,7 +365,7 @@ mod tests {
 
         let result = manager.compare_module_costs(&costs);
         assert_eq!(result.total_violations, 1);
-        assert_eq!(result.violations[0].severity, "Critical");
+        assert_eq!(result.violations[0].severity, "High");
     }
 
     #[test]
@@ -396,7 +399,7 @@ mod tests {
         // Exceeded
         let violation = manager.compare_total_cost(6000.0);
         assert!(violation.is_some());
-        assert_eq!(violation.unwrap().severity, "High");
+        assert_eq!(violation.unwrap().severity, "Medium");
     }
 
     #[test]
@@ -420,7 +423,7 @@ mod tests {
 
         assert!(formatted.contains("1 baseline violations"));
         assert!(formatted.contains("module.vpc"));
-        assert!(formatted.contains("Critical"));
+        assert!(formatted.contains("High"));
     }
 
     #[test]

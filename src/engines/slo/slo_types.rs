@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -7,35 +7,35 @@ use std::collections::HashMap;
 pub struct Slo {
     /// Unique identifier for this SLO
     pub id: String,
-    
+
     /// Human-readable name
     pub name: String,
-    
+
     /// Description of what this SLO enforces
     pub description: String,
-    
+
     /// Type of SLO check
     pub slo_type: SloType,
-    
+
     /// Target entity (module name, service name, or "global")
     pub target: String,
-    
+
     /// Threshold configuration
     pub threshold: SloThreshold,
-    
+
     /// Enforcement level
     pub enforcement: EnforcementLevel,
-    
+
     /// Owner responsible for this SLO
     pub owner: String,
-    
+
     /// When this SLO was created
     pub created_at: String,
-    
+
     /// When this SLO was last updated
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<String>,
-    
+
     /// Tags for categorization
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub tags: HashMap<String, String>,
@@ -47,19 +47,19 @@ pub struct Slo {
 pub enum SloType {
     /// Monthly cost limit for total infrastructure
     MonthlyBudget,
-    
+
     /// Monthly cost limit for a specific module
     ModuleBudget,
-    
+
     /// Monthly cost limit for a specific service type
     ServiceBudget,
-    
+
     /// Cost per resource limit
     ResourceBudget,
-    
+
     /// Cost increase rate limit (percentage)
     CostGrowthRate,
-    
+
     /// Resource count limit
     ResourceCount,
 }
@@ -69,23 +69,23 @@ pub enum SloType {
 pub struct SloThreshold {
     /// Maximum allowed value
     pub max_value: f64,
-    
+
     /// Minimum allowed value (optional)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_value: Option<f64>,
-    
+
     /// Warning threshold (percentage of max, e.g., 80.0 for 80%)
     #[serde(default = "default_warning_threshold")]
     pub warning_threshold_percent: f64,
-    
+
     /// Time window for evaluation (e.g., "30d" for 30 days)
     #[serde(default = "default_time_window")]
     pub time_window: String,
-    
+
     /// Use baseline as threshold source
     #[serde(default)]
     pub use_baseline: bool,
-    
+
     /// Baseline multiplier if using baseline (e.g., 1.2 for 120% of baseline)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub baseline_multiplier: Option<f64>,
@@ -105,13 +105,13 @@ fn default_time_window() -> String {
 pub enum EnforcementLevel {
     /// Log only - no action taken
     Observe,
-    
+
     /// Warn but allow deployment
     Warn,
-    
+
     /// Block deployment on violation
     Block,
-    
+
     /// Block and require approval to override
     StrictBlock,
 }
@@ -121,28 +121,28 @@ pub enum EnforcementLevel {
 pub struct SloEvaluation {
     /// SLO that was evaluated
     pub slo_id: String,
-    
+
     /// SLO name
     pub slo_name: String,
-    
+
     /// Evaluation status
     pub status: SloStatus,
-    
+
     /// Actual measured value
     pub actual_value: f64,
-    
+
     /// Threshold that was checked against
     pub threshold_value: f64,
-    
+
     /// Percentage of threshold used (e.g., 85.5 for 85.5%)
     pub threshold_usage_percent: f64,
-    
+
     /// Time of evaluation
     pub evaluated_at: String,
-    
+
     /// Message describing the result
     pub message: String,
-    
+
     /// Affected resources or modules
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub affected: Vec<String>,
@@ -154,13 +154,13 @@ pub struct SloEvaluation {
 pub enum SloStatus {
     /// Within SLO limits
     Pass,
-    
+
     /// Approaching threshold (warning level)
     Warning,
-    
+
     /// Exceeded threshold
     Violation,
-    
+
     /// No data available for evaluation
     NoData,
 }
@@ -170,10 +170,10 @@ pub enum SloStatus {
 pub struct SloConfig {
     /// Schema version
     pub version: String,
-    
+
     /// All SLOs
     pub slos: Vec<Slo>,
-    
+
     /// Global configuration
     #[serde(skip_serializing_if = "Option::is_none")]
     pub config: Option<SloGlobalConfig>,
@@ -185,11 +185,11 @@ pub struct SloGlobalConfig {
     /// Default enforcement level
     #[serde(default = "default_enforcement")]
     pub default_enforcement: EnforcementLevel,
-    
+
     /// Enable SLO inheritance from parent modules
     #[serde(default)]
     pub enable_inheritance: bool,
-    
+
     /// Baseline file path for baseline-aware SLOs
     #[serde(skip_serializing_if = "Option::is_none")]
     pub baseline_file: Option<String>,
@@ -204,13 +204,13 @@ fn default_enforcement() -> EnforcementLevel {
 pub struct SloReport {
     /// When the report was generated
     pub generated_at: String,
-    
+
     /// All evaluations in this report
     pub evaluations: Vec<SloEvaluation>,
-    
+
     /// Summary statistics
     pub summary: SloSummary,
-    
+
     /// Metadata about the evaluation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<HashMap<String, String>>,
@@ -221,19 +221,19 @@ pub struct SloReport {
 pub struct SloSummary {
     /// Total SLOs evaluated
     pub total_slos: usize,
-    
+
     /// Number passing
     pub pass_count: usize,
-    
+
     /// Number in warning state
     pub warning_count: usize,
-    
+
     /// Number violated
     pub violation_count: usize,
-    
+
     /// Number with no data
     pub no_data_count: usize,
-    
+
     /// Overall status (Pass if all pass, Violation if any violation)
     pub overall_status: SloStatus,
 }
@@ -366,14 +366,17 @@ impl SloConfig {
 
     /// Get SLOs by type
     pub fn get_slos_by_type(&self, slo_type: &SloType) -> Vec<&Slo> {
-        self.slos.iter().filter(|s| &s.slo_type == slo_type).collect()
+        self.slos
+            .iter()
+            .filter(|s| &s.slo_type == slo_type)
+            .collect()
     }
 
     /// Get global budget SLO
     pub fn get_global_budget_slo(&self) -> Option<&Slo> {
-        self.slos.iter().find(|s| {
-            s.slo_type == SloType::MonthlyBudget && s.target == "global"
-        })
+        self.slos
+            .iter()
+            .find(|s| s.slo_type == SloType::MonthlyBudget && s.target == "global")
     }
 }
 
@@ -386,10 +389,22 @@ impl Default for SloConfig {
 impl SloReport {
     /// Create a new report
     pub fn new(evaluations: Vec<SloEvaluation>) -> Self {
-        let pass_count = evaluations.iter().filter(|e| e.status == SloStatus::Pass).count();
-        let warning_count = evaluations.iter().filter(|e| e.status == SloStatus::Warning).count();
-        let violation_count = evaluations.iter().filter(|e| e.status == SloStatus::Violation).count();
-        let no_data_count = evaluations.iter().filter(|e| e.status == SloStatus::NoData).count();
+        let pass_count = evaluations
+            .iter()
+            .filter(|e| e.status == SloStatus::Pass)
+            .count();
+        let warning_count = evaluations
+            .iter()
+            .filter(|e| e.status == SloStatus::Warning)
+            .count();
+        let violation_count = evaluations
+            .iter()
+            .filter(|e| e.status == SloStatus::Violation)
+            .count();
+        let no_data_count = evaluations
+            .iter()
+            .filter(|e| e.status == SloStatus::NoData)
+            .count();
 
         let overall_status = if violation_count > 0 {
             SloStatus::Violation
@@ -451,18 +466,24 @@ impl SloReport {
     /// Format report for display
     pub fn format(&self) -> String {
         let mut output = String::new();
-        output.push_str(&format!("📊 SLO Evaluation Report\n"));
+        output.push_str(&"📊 SLO Evaluation Report\n".to_string());
         output.push_str(&format!("Generated: {}\n\n", self.generated_at));
 
-        output.push_str(&format!("Summary:\n"));
+        output.push_str(&"Summary:\n".to_string());
         output.push_str(&format!("  Total SLOs: {}\n", self.summary.total_slos));
         output.push_str(&format!("  ✅ Pass: {}\n", self.summary.pass_count));
         output.push_str(&format!("  ⚠️  Warning: {}\n", self.summary.warning_count));
-        output.push_str(&format!("  ❌ Violation: {}\n", self.summary.violation_count));
+        output.push_str(&format!(
+            "  ❌ Violation: {}\n",
+            self.summary.violation_count
+        ));
         if self.summary.no_data_count > 0 {
             output.push_str(&format!("  ❓ No Data: {}\n", self.summary.no_data_count));
         }
-        output.push_str(&format!("\nOverall Status: {:?}\n\n", self.summary.overall_status));
+        output.push_str(&format!(
+            "\nOverall Status: {:?}\n\n",
+            self.summary.overall_status
+        ));
 
         if !self.evaluations.is_empty() {
             output.push_str("Evaluations:\n");
@@ -639,7 +660,7 @@ mod tests {
     #[test]
     fn test_slo_config() {
         let mut config = SloConfig::new();
-        
+
         let slo = Slo::new(
             "slo-1".to_string(),
             "Global Budget".to_string(),

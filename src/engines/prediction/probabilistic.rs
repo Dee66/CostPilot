@@ -1,8 +1,7 @@
 // Probabilistic prediction model - advanced cost forecasting with uncertainty quantification
 
+use crate::engines::shared::error_model::Result;
 use serde::{Deserialize, Serialize};
-use crate::engines::shared::models::{ResourceChange, CostEstimate};
-use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
 
 /// Scenario for multi-scenario analysis
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,37 +21,37 @@ pub enum CostScenario {
 pub struct ProbabilisticEstimate {
     /// Resource identifier
     pub resource_id: String,
-    
+
     /// Point estimate (median/P50)
     pub median_monthly_cost: f64,
-    
+
     /// Best case scenario (P10)
     pub p10_monthly_cost: f64,
-    
+
     /// Expected case (P50)
     pub p50_monthly_cost: f64,
-    
+
     /// Worst case scenario (P90)
     pub p90_monthly_cost: f64,
-    
+
     /// Very worst case (P99)
     pub p99_monthly_cost: f64,
-    
+
     /// Standard deviation
     pub std_dev: f64,
-    
+
     /// Coefficient of variation (std_dev / mean)
     pub coefficient_of_variation: f64,
-    
+
     /// Confidence level (0.0 - 1.0)
     pub confidence: f64,
-    
+
     /// Monte Carlo simulation runs
     pub simulation_runs: u32,
-    
+
     /// Risk level based on uncertainty
     pub risk_level: RiskLevel,
-    
+
     /// Factors contributing to uncertainty
     pub uncertainty_factors: Vec<UncertaintyFactor>,
 }
@@ -122,16 +121,16 @@ impl ProbabilisticPredictor {
     pub fn generate_estimate(&self, resource_id: &str) -> Result<ProbabilisticEstimate> {
         // Calculate uncertainty based on confidence
         let base_uncertainty = self.calculate_base_uncertainty();
-        
+
         // Add resource-specific uncertainty
         let resource_uncertainty = self.calculate_resource_uncertainty();
-        
+
         // Total uncertainty factor
         let total_uncertainty = base_uncertainty + resource_uncertainty;
-        
+
         // Calculate standard deviation
         let std_dev = self.base_cost * total_uncertainty;
-        
+
         // Calculate percentiles using normal distribution approximation
         // P10: mean - 1.28 * std_dev
         // P50: mean (median)
@@ -141,20 +140,20 @@ impl ProbabilisticPredictor {
         let p50 = self.base_cost;
         let p90 = self.base_cost + 1.28 * std_dev;
         let p99 = self.base_cost + 2.33 * std_dev;
-        
+
         // Calculate coefficient of variation
         let cov = if self.base_cost > 0.0 {
             std_dev / self.base_cost
         } else {
             0.0
         };
-        
+
         // Determine risk level
         let risk_level = Self::classify_risk(cov);
-        
+
         // Identify uncertainty factors
         let uncertainty_factors = self.identify_uncertainty_factors();
-        
+
         Ok(ProbabilisticEstimate {
             resource_id: resource_id.to_string(),
             median_monthly_cost: p50,
@@ -185,16 +184,16 @@ impl ProbabilisticPredictor {
         match self.resource_type.as_str() {
             // Low variability resources
             "aws_instance" | "aws_rds_instance" | "aws_nat_gateway" => 0.03,
-            
+
             // Medium variability (usage-dependent pricing)
             "aws_dynamodb_table" | "aws_elasticache_cluster" => 0.10,
-            
+
             // High variability (data transfer, request-based)
             "aws_lambda_function" | "aws_s3_bucket" => 0.20,
-            
+
             // Very high variability (complex, multi-factor pricing)
             "aws_ecs_service" | "aws_eks_cluster" | "aws_cloudfront_distribution" => 0.35,
-            
+
             // Default
             _ => 0.15,
         }
@@ -222,7 +221,9 @@ impl ProbabilisticPredictor {
             factors.push(UncertaintyFactor {
                 name: "cold_start_inference".to_string(),
                 impact: 0.40,
-                description: "Cost estimated using default assumptions due to missing configuration data".to_string(),
+                description:
+                    "Cost estimated using default assumptions due to missing configuration data"
+                        .to_string(),
             });
         }
 
@@ -232,7 +233,10 @@ impl ProbabilisticPredictor {
             factors.push(UncertaintyFactor {
                 name: "low_confidence".to_string(),
                 impact,
-                description: format!("Prediction confidence is {:.1}%, indicating uncertainty in inputs", self.confidence * 100.0),
+                description: format!(
+                    "Prediction confidence is {:.1}%, indicating uncertainty in inputs",
+                    self.confidence * 100.0
+                ),
             });
         }
 
@@ -278,16 +282,16 @@ impl ProbabilisticPredictor {
 pub struct ScenarioAnalysis {
     /// Resource identifier
     pub resource_id: String,
-    
+
     /// Scenarios
     pub scenarios: Vec<ScenarioResult>,
-    
+
     /// Recommended scenario for planning
     pub recommended_scenario: CostScenario,
-    
+
     /// Cost at risk (P90 - P50)
     pub cost_at_risk: f64,
-    
+
     /// Maximum potential cost (P99)
     pub maximum_potential_cost: f64,
 }
@@ -297,13 +301,13 @@ pub struct ScenarioAnalysis {
 pub struct ScenarioResult {
     /// Scenario type
     pub scenario: CostScenario,
-    
+
     /// Monthly cost for this scenario
     pub monthly_cost: f64,
-    
+
     /// Probability of this scenario or worse
     pub probability: f64,
-    
+
     /// Description
     pub description: String,
 }
@@ -363,9 +367,7 @@ impl ProbabilisticEstimate {
     pub fn cost_range_description(&self) -> String {
         format!(
             "${:.2} - ${:.2} (median: ${:.2})",
-            self.p10_monthly_cost,
-            self.p90_monthly_cost,
-            self.median_monthly_cost
+            self.p10_monthly_cost, self.p90_monthly_cost, self.median_monthly_cost
         )
     }
 }
@@ -377,14 +379,14 @@ mod tests {
     #[test]
     fn test_probabilistic_estimate() {
         let predictor = ProbabilisticPredictor::new(
-            100.0,  // base cost
-            0.8,    // confidence
+            100.0, // base cost
+            0.8,   // confidence
             "aws_instance".to_string(),
-            false,  // no cold start
+            false, // no cold start
         );
 
         let estimate = predictor.generate_estimate("aws_instance.test").unwrap();
-        
+
         assert_eq!(estimate.p50_monthly_cost, 100.0);
         assert!(estimate.p10_monthly_cost < estimate.p50_monthly_cost);
         assert!(estimate.p90_monthly_cost > estimate.p50_monthly_cost);
@@ -395,26 +397,24 @@ mod tests {
     #[test]
     fn test_risk_classification() {
         assert_eq!(ProbabilisticPredictor::classify_risk(0.10), RiskLevel::Low);
-        assert_eq!(ProbabilisticPredictor::classify_risk(0.20), RiskLevel::Moderate);
+        assert_eq!(
+            ProbabilisticPredictor::classify_risk(0.20),
+            RiskLevel::Moderate
+        );
         assert_eq!(ProbabilisticPredictor::classify_risk(0.40), RiskLevel::High);
-        assert_eq!(ProbabilisticPredictor::classify_risk(0.60), RiskLevel::VeryHigh);
+        assert_eq!(
+            ProbabilisticPredictor::classify_risk(0.60),
+            RiskLevel::VeryHigh
+        );
     }
 
     #[test]
     fn test_cold_start_increases_uncertainty() {
-        let with_cold_start = ProbabilisticPredictor::new(
-            100.0,
-            0.6,
-            "aws_instance".to_string(),
-            true,
-        );
+        let with_cold_start =
+            ProbabilisticPredictor::new(100.0, 0.6, "aws_instance".to_string(), true);
 
-        let without_cold_start = ProbabilisticPredictor::new(
-            100.0,
-            0.95,
-            "aws_instance".to_string(),
-            false,
-        );
+        let without_cold_start =
+            ProbabilisticPredictor::new(100.0, 0.95, "aws_instance".to_string(), false);
 
         let est1 = with_cold_start.generate_estimate("test1").unwrap();
         let est2 = without_cold_start.generate_estimate("test2").unwrap();
@@ -425,12 +425,8 @@ mod tests {
 
     #[test]
     fn test_scenario_analysis() {
-        let predictor = ProbabilisticPredictor::new(
-            200.0,
-            0.7,
-            "aws_lambda_function".to_string(),
-            false,
-        );
+        let predictor =
+            ProbabilisticPredictor::new(200.0, 0.7, "aws_lambda_function".to_string(), false);
 
         let estimate = predictor.generate_estimate("aws_lambda.api").unwrap();
         let analysis = estimate.to_scenario_analysis();
@@ -443,7 +439,8 @@ mod tests {
     #[test]
     fn test_resource_specific_uncertainty() {
         let ec2 = ProbabilisticPredictor::new(100.0, 0.9, "aws_instance".to_string(), false);
-        let lambda = ProbabilisticPredictor::new(100.0, 0.9, "aws_lambda_function".to_string(), false);
+        let lambda =
+            ProbabilisticPredictor::new(100.0, 0.9, "aws_lambda_function".to_string(), false);
 
         let ec2_est = ec2.generate_estimate("ec2").unwrap();
         let lambda_est = lambda.generate_estimate("lambda").unwrap();

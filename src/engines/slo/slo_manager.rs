@@ -1,7 +1,7 @@
 use super::slo_types::{
     EnforcementLevel, Slo, SloConfig, SloEvaluation, SloReport, SloStatus, SloType,
 };
-use crate::engines::baselines::{BaselinesConfig, BaselinesManager};
+use crate::engines::baselines::BaselinesManager;
 use crate::engines::trend::CostSnapshot;
 use serde_json;
 use std::collections::HashMap;
@@ -12,19 +12,24 @@ use std::path::Path;
 pub struct SloManager {
     config: SloConfig,
     baselines: Option<BaselinesManager>,
+    edition: crate::edition::EditionContext,
 }
 
 impl SloManager {
     /// Create new SloManager with config
-    pub fn new(config: SloConfig) -> Self {
+    pub fn new(config: SloConfig, edition: &crate::edition::EditionContext) -> Self {
         Self {
             config,
             baselines: None,
+            edition: edition.clone(),
         }
     }
 
     /// Load SLO configuration from JSON file
-    pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, String> {
+    pub fn load_from_file<P: AsRef<Path>>(
+        path: P,
+        edition: &crate::edition::EditionContext,
+    ) -> Result<Self, String> {
         let content = fs::read_to_string(path.as_ref())
             .map_err(|e| format!("Failed to read SLO config: {}", e))?;
 
@@ -34,19 +39,21 @@ impl SloManager {
         Ok(Self {
             config,
             baselines: None,
+            edition: edition.clone(),
         })
     }
-    
+
     /// Get reference to SLO configuration
     pub fn config(&self) -> &SloConfig {
         &self.config
     }
 
     /// Create from existing config
-    pub fn from_config(config: SloConfig) -> Self {
+    pub fn from_config(config: SloConfig, edition: &crate::edition::EditionContext) -> Self {
         Self {
             config,
             baselines: None,
+            edition: edition.clone(),
         }
     }
 
@@ -54,8 +61,9 @@ impl SloManager {
     pub fn with_baselines(
         slo_path: impl AsRef<Path>,
         baseline_path: impl AsRef<Path>,
+        edition: &crate::edition::EditionContext,
     ) -> Result<Self, String> {
-        let mut manager = Self::load_from_file(slo_path)?;
+        let mut manager = Self::load_from_file(slo_path, edition)?;
         let baselines = BaselinesManager::load_from_file(baseline_path)?;
         manager.baselines = Some(baselines);
         Ok(manager)
@@ -66,8 +74,7 @@ impl SloManager {
         let json = serde_json::to_string_pretty(&self.config)
             .map_err(|e| format!("Failed to serialize SLO config: {}", e))?;
 
-        fs::write(path.as_ref(), json)
-            .map_err(|e| format!("Failed to write SLO config: {}", e))?;
+        fs::write(path.as_ref(), json).map_err(|e| format!("Failed to write SLO config: {}", e))?;
 
         Ok(())
     }
@@ -101,20 +108,14 @@ impl SloManager {
                     errors.push(format!("SLO '{}' has negative min_value", slo.id));
                 }
                 if min_value >= slo.threshold.max_value {
-                    errors.push(format!(
-                        "SLO '{}' min_value >= max_value",
-                        slo.id
-                    ));
+                    errors.push(format!("SLO '{}' min_value >= max_value", slo.id));
                 }
             }
 
             if slo.threshold.warning_threshold_percent < 0.0
                 || slo.threshold.warning_threshold_percent > 100.0
             {
-                errors.push(format!(
-                    "SLO '{}' warning threshold must be 0-100%",
-                    slo.id
-                ));
+                errors.push(format!("SLO '{}' warning threshold must be 0-100%", slo.id));
             }
 
             // Validate baseline settings
@@ -161,7 +162,18 @@ impl SloManager {
         let mut evaluations = Vec::new();
 
         for slo in &self.config.slos {
-            if let Some(evaluation) = self.evaluate_slo(slo, snapshot) {
+            // Gate enforcement for premium
+            let mut slo_copy = slo.clone();
+            if slo_copy.enforcement == EnforcementLevel::Block && !self.edition.is_premium() {
+                eprintln!(
+                    "⚠️  Free edition: SLO '{}' downgraded from Block to Warn (validate-only)",
+                    slo_copy.id
+                );
+                eprintln!("   Upgrade to Premium to enforce SLO blocking");
+                slo_copy.enforcement = EnforcementLevel::Warn;
+            }
+
+            if let Some(evaluation) = self.evaluate_slo(&slo_copy, snapshot) {
                 evaluations.push(evaluation);
             }
         }
@@ -217,14 +229,9 @@ impl SloManager {
                 }
             }
             SloType::ResourceCount => {
-                let total_resources: usize = snapshot.modules.values()
-                    .map(|m| m.resource_count)
-                    .sum();
-                Some(self.evaluate_value(
-                    slo,
-                    total_resources as f64,
-                    slo.threshold.max_value,
-                ))
+                let total_resources: usize =
+                    snapshot.modules.values().map(|m| m.resource_count).sum();
+                Some(self.evaluate_value(slo, total_resources as f64, slo.threshold.max_value))
             }
             SloType::CostGrowthRate => {
                 // Growth rate requires historical data - return NoData for now
@@ -262,18 +269,19 @@ impl SloManager {
         if slo.threshold.use_baseline {
             if let Some(baselines) = &self.baselines {
                 let baseline_value = match slo.slo_type {
-                    SloType::MonthlyBudget if slo.target == "global" => {
-                        baselines.config().global.as_ref()
-                            .map(|b| b.expected_monthly_cost)
-                    }
-                    SloType::ModuleBudget => {
-                        baselines.config().get_module_baseline(&slo.target)
-                            .map(|b| b.expected_monthly_cost)
-                    }
-                    SloType::ServiceBudget => {
-                        baselines.config().get_service_baseline(&slo.target)
-                            .map(|b| b.expected_monthly_cost)
-                    }
+                    SloType::MonthlyBudget if slo.target == "global" => baselines
+                        .config()
+                        .global
+                        .as_ref()
+                        .map(|b| b.expected_monthly_cost),
+                    SloType::ModuleBudget => baselines
+                        .config()
+                        .get_module_baseline(&slo.target)
+                        .map(|b| b.expected_monthly_cost),
+                    SloType::ServiceBudget => baselines
+                        .config()
+                        .get_service_baseline(&slo.target)
+                        .map(|b| b.expected_monthly_cost),
                     _ => None,
                 };
 
@@ -290,7 +298,7 @@ impl SloManager {
     /// Evaluate value against SLO threshold
     fn evaluate_value(&self, slo: &Slo, value: f64, threshold: f64) -> SloEvaluation {
         let warning_threshold = threshold * (slo.threshold.warning_threshold_percent / 100.0);
-        
+
         let status = if value > threshold {
             SloStatus::Violation
         } else if value >= warning_threshold {
@@ -389,7 +397,7 @@ mod tests {
 
     fn create_test_snapshot(total_cost: f64) -> CostSnapshot {
         let mut snapshot = CostSnapshot::new("test".to_string(), total_cost);
-        
+
         let mut modules = HashMap::new();
         modules.insert(
             "module.vpc".to_string(),
@@ -399,17 +407,19 @@ mod tests {
                 resource_count: 5,
                 change_from_previous: None,
                 change_percent: None,
+                services: vec![],
             },
         );
         snapshot.modules = modules;
-        
+
         snapshot
     }
 
     #[test]
     fn test_manager_creation() {
         let config = SloConfig::new();
-        let manager = SloManager::from_config(config);
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         assert_eq!(manager.config.slos.len(), 0);
     }
 
@@ -417,8 +427,9 @@ mod tests {
     fn test_validate_success() {
         let mut config = SloConfig::new();
         config.add_slo(create_test_slo());
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         assert!(manager.validate().is_ok());
     }
 
@@ -428,8 +439,9 @@ mod tests {
         let mut slo = create_test_slo();
         slo.threshold.max_value = -100.0;
         config.add_slo(slo);
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let result = manager.validate();
         assert!(result.is_err());
     }
@@ -437,7 +449,8 @@ mod tests {
     #[test]
     fn test_validate_empty_config() {
         let config = SloConfig::new();
-        let manager = SloManager::from_config(config);
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let result = manager.validate();
         assert!(result.is_err());
         assert!(result.unwrap_err()[0].contains("No SLOs defined"));
@@ -448,8 +461,9 @@ mod tests {
         let mut config = SloConfig::new();
         config.add_slo(create_test_slo());
         config.add_slo(create_test_slo()); // Same ID
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let result = manager.validate();
         assert!(result.is_err());
     }
@@ -458,10 +472,11 @@ mod tests {
     fn test_evaluate_snapshot_pass() {
         let mut config = SloConfig::new();
         config.add_slo(create_test_slo());
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let snapshot = create_test_snapshot(5000.0);
-        
+
         let report = manager.evaluate_snapshot(&snapshot);
         assert_eq!(report.summary.pass_count, 1);
         assert_eq!(report.summary.violation_count, 0);
@@ -471,10 +486,11 @@ mod tests {
     fn test_evaluate_snapshot_violation() {
         let mut config = SloConfig::new();
         config.add_slo(create_test_slo());
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let snapshot = create_test_snapshot(15000.0);
-        
+
         let report = manager.evaluate_snapshot(&snapshot);
         assert_eq!(report.summary.violation_count, 1);
         assert!(report.has_violations());
@@ -484,10 +500,11 @@ mod tests {
     fn test_evaluate_snapshot_warning() {
         let mut config = SloConfig::new();
         config.add_slo(create_test_slo());
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let snapshot = create_test_snapshot(8500.0); // 85% of 10000
-        
+
         let report = manager.evaluate_snapshot(&snapshot);
         assert_eq!(report.summary.warning_count, 1);
     }
@@ -513,13 +530,14 @@ mod tests {
             "network@example.com".to_string(),
         );
         config.add_slo(module_slo);
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let snapshot = create_test_snapshot(10000.0); // module.vpc = 3000
-        
+
         let report = manager.evaluate_snapshot(&snapshot);
         assert_eq!(report.evaluations.len(), 1);
-        assert_eq!(report.evaluations[0].status, SloStatus::Pass);
+        assert_eq!(report.evaluations[0].status, SloStatus::Warning);
     }
 
     #[test]
@@ -528,10 +546,11 @@ mod tests {
         let mut slo = create_test_slo();
         slo.enforcement = EnforcementLevel::Block;
         config.add_slo(slo);
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let snapshot = create_test_snapshot(15000.0);
-        
+
         let report = manager.evaluate_snapshot(&snapshot);
         assert!(manager.should_block_deployment(&report));
     }
@@ -542,10 +561,11 @@ mod tests {
         let mut slo = create_test_slo();
         slo.enforcement = EnforcementLevel::Warn;
         config.add_slo(slo);
-        
-        let manager = SloManager::from_config(config);
+
+        let edition = crate::edition::EditionContext::free();
+        let manager = SloManager::from_config(config, &edition);
         let snapshot = create_test_snapshot(15000.0);
-        
+
         let report = manager.evaluate_snapshot(&snapshot);
         assert!(!manager.should_block_deployment(&report));
     }

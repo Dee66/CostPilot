@@ -10,22 +10,22 @@ use std::collections::HashMap;
 pub struct PolicyVersion {
     /// Version number (semantic versioning)
     pub version: String,
-    
+
     /// Policy content snapshot
     pub content: PolicyContent,
-    
+
     /// Version metadata
     pub metadata: VersionMetadata,
-    
+
     /// Who created this version
     pub author: String,
-    
+
     /// When created
     pub created_at: String,
-    
+
     /// Change description
     pub change_description: String,
-    
+
     /// Parent version (if any)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_version: Option<String>,
@@ -36,16 +36,16 @@ pub struct PolicyVersion {
 pub struct PolicyContent {
     /// Policy ID
     pub id: String,
-    
+
     /// Policy name
     pub name: String,
-    
+
     /// Policy description
     pub description: String,
-    
+
     /// Policy rules (stored as JSON)
     pub rules: Value,
-    
+
     /// Policy configuration
     pub config: HashMap<String, Value>,
 }
@@ -55,13 +55,13 @@ pub struct PolicyContent {
 pub struct VersionMetadata {
     /// Checksum of content (SHA-256)
     pub checksum: String,
-    
+
     /// Size in bytes
     pub size_bytes: usize,
-    
+
     /// Whether this is a major version change
     pub is_major: bool,
-    
+
     /// Tags for this version
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub tags: Vec<String>,
@@ -72,10 +72,10 @@ pub struct VersionMetadata {
 pub struct PolicyHistory {
     /// Policy ID
     pub policy_id: String,
-    
+
     /// All versions (ordered by creation time)
     pub versions: Vec<PolicyVersion>,
-    
+
     /// Current active version
     pub current_version: String,
 }
@@ -85,7 +85,7 @@ impl PolicyHistory {
     pub fn new(policy_id: String, initial_content: PolicyContent, author: String) -> Self {
         let version = Self::generate_version_number(None, false);
         let checksum = Self::calculate_checksum(&initial_content);
-        
+
         let initial_version = PolicyVersion {
             version: version.clone(),
             content: initial_content.clone(),
@@ -180,11 +180,11 @@ impl PolicyHistory {
         reason: String,
     ) -> Result<String, HistoryError> {
         // Verify target version exists
-        let target = self
-            .get_version(&target_version)
-            .ok_or_else(|| HistoryError::VersionNotFound {
-                version: target_version.clone(),
-            })?;
+        let target =
+            self.get_version(&target_version)
+                .ok_or_else(|| HistoryError::VersionNotFound {
+                    version: target_version.clone(),
+                })?;
 
         // Create a new version based on the target content
         let rollback_content = target.content.clone();
@@ -309,10 +309,7 @@ pub struct VersionDiff {
 impl VersionDiff {
     /// Check if any content changed
     pub fn has_changes(&self) -> bool {
-        self.name_changed
-            || self.description_changed
-            || self.rules_changed
-            || self.config_changed
+        self.name_changed || self.description_changed || self.rules_changed || self.config_changed
     }
 
     /// Get summary of changes
@@ -500,12 +497,21 @@ mod tests {
 
         let content2 = create_test_content("test-policy", "Version 2", 2);
         history
-            .add_version(content2, "author@example.com".to_string(), "v2".to_string(), false)
+            .add_version(
+                content2,
+                "author@example.com".to_string(),
+                "v2".to_string(),
+                false,
+            )
             .unwrap();
 
         // Rollback to 1.0.0
         let rollback_version = history
-            .rollback("1.0.0".to_string(), "admin@example.com".to_string(), "Revert changes".to_string())
+            .rollback(
+                "1.0.0".to_string(),
+                "admin@example.com".to_string(),
+                "Revert changes".to_string(),
+            )
             .unwrap();
 
         assert_eq!(rollback_version, "1.0.2");
@@ -524,7 +530,9 @@ mod tests {
             "author@example.com".to_string(),
         );
 
-        history.tag_version("1.0.0", "production".to_string()).unwrap();
+        history
+            .tag_version("1.0.0", "production".to_string())
+            .unwrap();
 
         let version = history.get_version("1.0.0").unwrap();
         assert!(version.metadata.tags.contains(&"production".to_string()));
@@ -545,19 +553,34 @@ mod tests {
 
         // Patch version
         let v2 = history
-            .add_version(create_test_content("test-policy", "Test v2", 2), "author".to_string(), "patch".to_string(), false)
+            .add_version(
+                create_test_content("test-policy", "Test v2", 2),
+                "author".to_string(),
+                "patch".to_string(),
+                false,
+            )
             .unwrap();
         assert_eq!(v2, "1.0.1");
 
         // Another patch
         let v3 = history
-            .add_version(create_test_content("test-policy", "Test v3", 3), "author".to_string(), "patch".to_string(), false)
+            .add_version(
+                create_test_content("test-policy", "Test v3", 3),
+                "author".to_string(),
+                "patch".to_string(),
+                false,
+            )
             .unwrap();
         assert_eq!(v3, "1.0.2");
 
         // Major version
         let v4 = history
-            .add_version(create_test_content("test-policy", "Test v4", 4), "author".to_string(), "major".to_string(), true)
+            .add_version(
+                create_test_content("test-policy", "Test v4", 4),
+                "author".to_string(),
+                "major".to_string(),
+                true,
+            )
             .unwrap();
         assert_eq!(v4, "2.0.0");
     }

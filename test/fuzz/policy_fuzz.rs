@@ -4,7 +4,8 @@
 mod policy_fuzz_tests {
     use proptest::prelude::*;
     use costpilot::engines::policy::{PolicyEngine, Policy, PolicyRule};
-    use costpilot::engines::shared::models::Detection;
+    use costpilot::engines::shared::models::{Detection, Severity, ChangeAction};
+    use serde_json::json;
 
     fn arb_policy_rule() -> impl Strategy<Value = PolicyRule> {
         (
@@ -41,15 +42,20 @@ mod policy_fuzz_tests {
             0.0f64..10.0f64,
             0.0f64..1.0f64,
         ).prop_map(|(id, resource_type, issue, severity, confidence)| {
-            Detection {
-                resource_id: id,
-                resource_type,
-                issue,
-                severity,
-                confidence,
-                monthly_cost: 100.0,
-                fix_snippet: None,
-            }
+            let sev = if severity < 3.0 {
+                Severity::Low
+            } else if severity < 6.0 {
+                Severity::Medium
+            } else {
+                Severity::High
+            };
+            Detection::builder()
+                .resource_id(id)
+                .rule_id("test_rule")
+                .message(issue)
+                .severity(sev)
+                .estimated_cost(100.0)
+                .build()
         })
     }
 

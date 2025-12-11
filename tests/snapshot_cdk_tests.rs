@@ -3,15 +3,6 @@
 use insta::assert_json_snapshot;
 use serde_json::json;
 
-/// Helper to create a basic CDK diff JSON
-fn create_cdk_diff(resources: Vec<serde_json::Value>) -> serde_json::Value {
-    json!({
-        "Resources": resources.into_iter().map(|r| {
-            (r["LogicalId"].as_str().unwrap().to_string(), r)
-        }).collect::<serde_json::Map<String, serde_json::Value>>()
-    })
-}
-
 #[test]
 fn snapshot_cdk_lambda_function_addition() {
     let diff = json!({

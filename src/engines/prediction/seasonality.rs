@@ -1,20 +1,20 @@
 // Seasonality detection - identify periodic cost patterns over time
 
+use crate::engines::shared::error_model::Result;
 use serde::{Deserialize, Serialize};
-use crate::engines::shared::error_model::{Result, CostPilotError, ErrorCategory};
 
 /// Seasonal pattern detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeasonalityAnalysis {
     /// Whether seasonality was detected
     pub has_seasonality: bool,
-    
+
     /// Detected seasonal patterns
     pub patterns: Vec<SeasonalPattern>,
-    
+
     /// Overall seasonality strength (0.0 - 1.0)
     pub strength: f64,
-    
+
     /// Recommended adjustment factor for current period
     pub adjustment_factor: f64,
 }
@@ -24,19 +24,19 @@ pub struct SeasonalityAnalysis {
 pub struct SeasonalPattern {
     /// Pattern type
     pub pattern_type: PatternType,
-    
+
     /// Periodicity in days
     pub period_days: u32,
-    
+
     /// Pattern strength (0.0 - 1.0)
     pub strength: f64,
-    
+
     /// Peak multiplier (relative to baseline)
     pub peak_multiplier: f64,
-    
+
     /// Trough multiplier (relative to baseline)
     pub trough_multiplier: f64,
-    
+
     /// Description
     pub description: String,
 }
@@ -69,10 +69,10 @@ pub struct CostDataPoint {
 pub struct SeasonalityDetector {
     /// Historical cost data
     data_points: Vec<CostDataPoint>,
-    
+
     /// Minimum data points required
     min_data_points: usize,
-    
+
     /// Significance threshold for pattern detection
     significance_threshold: f64,
 }
@@ -82,7 +82,7 @@ impl SeasonalityDetector {
     pub fn new() -> Self {
         Self {
             data_points: Vec::new(),
-            min_data_points: 30, // Need at least 30 data points
+            min_data_points: 30,          // Need at least 30 data points
             significance_threshold: 0.15, // 15% variation
         }
     }
@@ -163,12 +163,13 @@ impl SeasonalityDetector {
 
         let weekday_avg = weekday_costs.iter().sum::<f64>() / weekday_costs.len() as f64;
         let weekend_avg = weekend_costs.iter().sum::<f64>() / weekend_costs.len() as f64;
-        let overall_avg = (weekday_avg * weekday_costs.len() as f64 + weekend_avg * weekend_costs.len() as f64) 
+        let overall_avg = (weekday_avg * weekday_costs.len() as f64
+            + weekend_avg * weekend_costs.len() as f64)
             / (weekday_costs.len() + weekend_costs.len()) as f64;
 
         // Check if variation is significant
         let max_variation = ((weekday_avg - weekend_avg).abs() / overall_avg).max(0.0);
-        
+
         if max_variation < self.significance_threshold {
             return Ok(None);
         }
@@ -197,8 +198,8 @@ impl SeasonalityDetector {
     fn detect_monthly_pattern(&self) -> Result<Option<SeasonalPattern>> {
         // Group data by day of month
         let mut early_month: Vec<f64> = Vec::new(); // Days 1-10
-        let mut mid_month: Vec<f64> = Vec::new();   // Days 11-20
-        let mut late_month: Vec<f64> = Vec::new();  // Days 21-31
+        let mut mid_month: Vec<f64> = Vec::new(); // Days 11-20
+        let mut late_month: Vec<f64> = Vec::new(); // Days 21-31
 
         for point in &self.data_points {
             let day_of_month = self.get_day_of_month(point.timestamp);
@@ -218,9 +219,9 @@ impl SeasonalityDetector {
         let early_avg = early_month.iter().sum::<f64>() / early_month.len() as f64;
         let mid_avg = mid_month.iter().sum::<f64>() / mid_month.len() as f64;
         let late_avg = late_month.iter().sum::<f64>() / late_month.len() as f64;
-        let overall_avg = (early_avg * early_month.len() as f64 
-            + mid_avg * mid_month.len() as f64 
-            + late_avg * late_month.len() as f64) 
+        let overall_avg = (early_avg * early_month.len() as f64
+            + mid_avg * mid_month.len() as f64
+            + late_avg * late_month.len() as f64)
             / (early_month.len() + mid_month.len() + late_month.len()) as f64;
 
         // Find max variation
@@ -275,8 +276,9 @@ impl SeasonalityDetector {
             let phase = self.calculate_phase(now, pattern.period_days);
             // Peak at phase 0.5, trough at phase 0.0/1.0
             let phase_factor = (phase * 2.0 * std::f64::consts::PI).sin();
-            let adjustment = 1.0 + (pattern.peak_multiplier - 1.0) * phase_factor * pattern.strength;
-            
+            let adjustment =
+                1.0 + (pattern.peak_multiplier - 1.0) * phase_factor * pattern.strength;
+
             total_adjustment += adjustment * pattern.strength;
             weight_sum += pattern.strength;
         }
@@ -307,13 +309,13 @@ impl Default for SeasonalityDetector {
 pub struct SeasonalAdjustedPrediction {
     /// Base prediction (without seasonality)
     pub base_cost: f64,
-    
+
     /// Seasonal adjustment factor applied
     pub adjustment_factor: f64,
-    
+
     /// Final seasonally-adjusted cost
     pub adjusted_cost: f64,
-    
+
     /// Seasonality analysis
     pub seasonality: SeasonalityAnalysis,
 }
@@ -341,11 +343,16 @@ impl SeasonalAdjustedPrediction {
         let mut explanation = format!(
             "Seasonal adjustment: {:.1}% {} from baseline\n",
             (self.adjustment_factor - 1.0).abs() * 100.0,
-            if self.adjustment_factor > 1.0 { "above" } else { "below" }
+            if self.adjustment_factor > 1.0 {
+                "above"
+            } else {
+                "below"
+            }
         );
 
         for pattern in &self.seasonality.patterns {
-            explanation.push_str(&format!("  - {}: {:.0}% variation\n", 
+            explanation.push_str(&format!(
+                "  - {}: {:.0}% variation\n",
                 match pattern.pattern_type {
                     PatternType::Weekly => "Weekly pattern",
                     PatternType::Monthly => "Monthly pattern",
@@ -367,11 +374,16 @@ mod tests {
 
     #[test]
     fn test_no_seasonality_with_insufficient_data() {
-        let detector = SeasonalityDetector::new()
-            .with_data(vec![
-                CostDataPoint { timestamp: 1000, cost: 100.0 },
-                CostDataPoint { timestamp: 2000, cost: 105.0 },
-            ]);
+        let detector = SeasonalityDetector::new().with_data(vec![
+            CostDataPoint {
+                timestamp: 1000,
+                cost: 100.0,
+            },
+            CostDataPoint {
+                timestamp: 2000,
+                cost: 105.0,
+            },
+        ]);
 
         let result = detector.detect_seasonality().unwrap();
         assert!(!result.has_seasonality);
@@ -392,31 +404,32 @@ mod tests {
         let result = detector.detect_seasonality().unwrap();
 
         assert!(result.has_seasonality);
-        assert!(result.patterns.iter().any(|p| p.pattern_type == PatternType::Weekly));
+        assert!(result
+            .patterns
+            .iter()
+            .any(|p| p.pattern_type == PatternType::Weekly));
     }
 
     #[test]
     fn test_seasonal_adjustment() {
         let seasonality = SeasonalityAnalysis {
             has_seasonality: true,
-            patterns: vec![
-                SeasonalPattern {
-                    pattern_type: PatternType::Weekly,
-                    period_days: 7,
-                    strength: 0.25,
-                    peak_multiplier: 1.3,
-                    trough_multiplier: 0.7,
-                    description: "Weekly pattern".to_string(),
-                },
-            ],
+            patterns: vec![SeasonalPattern {
+                pattern_type: PatternType::Weekly,
+                period_days: 7,
+                strength: 0.25,
+                peak_multiplier: 1.3,
+                trough_multiplier: 0.7,
+                description: "Weekly pattern".to_string(),
+            }],
             strength: 0.25,
             adjustment_factor: 1.15,
         };
 
         let prediction = SeasonalAdjustedPrediction::new(100.0, seasonality);
-        
+
         assert_eq!(prediction.base_cost, 100.0);
         assert_eq!(prediction.adjustment_factor, 1.15);
-        assert_eq!(prediction.adjusted_cost, 115.0);
+        assert!((prediction.adjusted_cost - 115.0).abs() < 1e-6);
     }
 }

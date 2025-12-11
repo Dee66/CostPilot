@@ -4,9 +4,11 @@ use crate::engines::shared::models::ResourceChange;
 use serde_json::Value;
 
 /// Extract resource changes from Terraform plan
-pub fn extract_resource_changes(plan: &Value) -> Result<Vec<ResourceChange>, Box<dyn std::error::Error>> {
+pub fn extract_resource_changes(
+    plan: &Value,
+) -> Result<Vec<ResourceChange>, Box<dyn std::error::Error>> {
     let mut changes = Vec::new();
-    
+
     // Extract resource_changes array from plan
     let resource_changes = plan
         .get("resource_changes")
@@ -38,9 +40,7 @@ fn parse_resource_change(resource: &Value) -> Result<ResourceChange, Box<dyn std
         .ok_or("Missing type")?
         .to_string();
 
-    let change_obj = resource
-        .get("change")
-        .ok_or("Missing change object")?;
+    let change_obj = resource.get("change").ok_or("Missing change object")?;
 
     let actions = change_obj
         .get("actions")
@@ -83,5 +83,7 @@ fn parse_resource_change(resource: &Value) -> Result<ResourceChange, Box<dyn std
         monthly_cost: None,
         config: None,
         cost_impact: None,
+        before: None,
+        after: None,
     })
 }

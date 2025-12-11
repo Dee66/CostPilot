@@ -1,11 +1,11 @@
 // CI integration for exemption validation
 
-use chrono::Utc;
 use std::process;
+use chrono::Utc;
 
-use crate::errors::CostPilotError;
 use super::exemption_types::{ExemptionStatus, ExemptionsFile};
 use super::exemption_validator::ExemptionValidator;
+use crate::errors::CostPilotError;
 
 /// Exit codes for CI integration
 pub const EXIT_SUCCESS: i32 = 0;
@@ -51,8 +51,8 @@ impl CIExemptionCheck {
     /// Generate human-readable summary for CI output
     pub fn summary(&self) -> String {
         let mut output = String::new();
-        
-        output.push_str(&format!("Exemption Check Summary:\n"));
+
+        output.push_str(&"Exemption Check Summary:\n".to_string());
         output.push_str(&format!("  Total exemptions: {}\n", self.total_exemptions));
         output.push_str(&format!("  Active: {}\n", self.active_exemptions));
         output.push_str(&format!("  Expiring soon: {}\n", self.expiring_soon));
@@ -78,7 +78,7 @@ pub fn check_exemptions_for_ci(
     exemptions_file: &ExemptionsFile,
 ) -> Result<CIExemptionCheck, CostPilotError> {
     let validator = ExemptionValidator::new();
-    
+
     let mut result = CIExemptionCheck {
         total_exemptions: exemptions_file.exemptions.len(),
         active_exemptions: 0,
@@ -90,7 +90,7 @@ pub fn check_exemptions_for_ci(
 
     for exemption in &exemptions_file.exemptions {
         let status = validator.check_status(exemption);
-        
+
         match status {
             ExemptionStatus::Active => {
                 result.active_exemptions += 1;
@@ -122,13 +122,19 @@ pub fn validate_and_exit_ci(exemptions_file: &ExemptionsFile) -> ! {
     match check_exemptions_for_ci(exemptions_file) {
         Ok(check_result) => {
             println!("{}", check_result.summary());
-            
+
             if check_result.expired_exemptions > 0 {
-                eprintln!("\n❌ CI BLOCKED: {} expired exemption(s) found", check_result.expired_exemptions);
+                eprintln!(
+                    "\n❌ CI BLOCKED: {} expired exemption(s) found",
+                    check_result.expired_exemptions
+                );
                 eprintln!("Please remove or renew expired exemptions before proceeding.");
                 process::exit(EXIT_EXEMPTION_EXPIRED);
             } else if check_result.invalid_exemptions > 0 {
-                eprintln!("\n⚠️  WARNING: {} invalid exemption(s) found", check_result.invalid_exemptions);
+                eprintln!(
+                    "\n⚠️  WARNING: {} invalid exemption(s) found",
+                    check_result.invalid_exemptions
+                );
                 process::exit(EXIT_VALIDATION_ERROR);
             } else {
                 println!("\n✓ All exemptions are valid");
@@ -148,6 +154,18 @@ mod tests {
     use crate::engines::policy::exemption_types::PolicyExemption;
 
     fn create_test_exemption(id: &str, expires_at: &str) -> PolicyExemption {
+        // For expired exemptions (dates in 2024), use a created_at a few months before expiry
+        // For active exemptions (dates in 2026), use created_at of 2025-06-01
+        let created_at = if expires_at.starts_with("2024-01") {
+            "2024-01-01T00:00:00Z"
+        } else if expires_at.starts_with("2024-06") {
+            "2024-01-01T00:00:00Z"
+        } else if expires_at.starts_with("2024-12") {
+            "2024-01-01T00:00:00Z"
+        } else {
+            "2025-06-01T00:00:00Z"
+        };
+        
         PolicyExemption {
             id: id.to_string(),
             policy_name: "TEST_POLICY".to_string(),
@@ -155,7 +173,7 @@ mod tests {
             justification: "Test exemption".to_string(),
             expires_at: expires_at.to_string(),
             approved_by: "test@example.com".to_string(),
-            created_at: "2025-01-01T00:00:00Z".to_string(),
+            created_at: created_at.to_string(),
             ticket_ref: Some("TEST-001".to_string()),
         }
     }
@@ -165,8 +183,8 @@ mod tests {
         let exemptions_file = ExemptionsFile {
             version: "1.0".to_string(),
             exemptions: vec![
-                create_test_exemption("EXE-001", "2026-12-31"),
-                create_test_exemption("EXE-002", "2027-01-01"),
+                create_test_exemption("EXE-001", "2026-05-01"),
+                create_test_exemption("EXE-002", "2026-03-01"),
             ],
             metadata: None,
         };
@@ -185,7 +203,7 @@ mod tests {
             version: "1.0".to_string(),
             exemptions: vec![
                 create_test_exemption("EXE-001", "2024-01-01"), // Expired
-                create_test_exemption("EXE-002", "2026-12-31"), // Active
+                create_test_exemption("EXE-002", "2026-03-01"), // Active
             ],
             metadata: None,
         };
@@ -209,9 +227,7 @@ mod tests {
 
         let exemptions_file = ExemptionsFile {
             version: "1.0".to_string(),
-            exemptions: vec![
-                create_test_exemption("EXE-001", &expiring_str),
-            ],
+            exemptions: vec![create_test_exemption("EXE-001", &expiring_str)],
             metadata: None,
         };
 
@@ -229,14 +245,14 @@ mod tests {
             version: "1.0".to_string(),
             exemptions: vec![
                 create_test_exemption("EXE-001", "2024-01-01"), // Expired
-                create_test_exemption("EXE-002", "2026-12-31"), // Active
+                create_test_exemption("EXE-002", "2026-03-01"), // Active
             ],
             metadata: None,
         };
 
         let result = check_exemptions_for_ci(&exemptions_file).unwrap();
         let summary = result.summary();
-        
+
         assert!(summary.contains("Total exemptions: 2"));
         assert!(summary.contains("Active: 1"));
         assert!(summary.contains("Expired: 1"));

@@ -1,0 +1,142 @@
+# CostPilot Test Remediation Plan
+
+rust_summary:
+  total_tests: 0
+  passed: 0
+  failed: 0 (54 compilation errors)
+  ignored: 0
+  compilation_errors: 54
+  time: "N/A (compilation failed)"
+
+rust_error_buckets:
+  - bucket_id: E0061_arg_mismatch
+    count: 16
+    pattern: "this method takes 7 arguments but 5 arguments were supplied"
+    files:
+      - src/engines/autofix_safe/drift_safe_engine.rs
+      - src/engines/slo/slo_manager.rs
+      - src/engines/mapping/mod.rs
+    suggested_fix: "function-signature-update"
+    priority: P0
+    
+  - bucket_id: E0063_missing_fields
+    count: 10
+    pattern: "missing fields `after` and `before` in initializer of ResourceChange"
+    files:
+      - src/engines/detection/terraform/parser.rs
+      - src/engines/explain/anti_patterns.rs
+      - src/engines/autofix/autofix_engine.rs
+    suggested_fix: "model-mapping (use builder pattern)"
+    priority: P0
+    
+  - bucket_id: E0433_unresolved_import
+    count: 8
+    pattern: "failed to resolve: use of unresolved module `costpilot`"
+    files:
+      - src/engines/metering/chargeback.rs
+      - src/engines/policy/metadata_engine.rs
+      - src/engines/policy/policy_engine.rs
+    suggested_fix: "import-path-fix (use crate:: instead of costpilot::)"
+    priority: P0
+    
+  - bucket_id: E0599_method_not_found
+    count: 8
+    pattern: "no method named X found for Result"
+    files:
+      - src/engines/trend/mod.rs
+    suggested_fix: "result-unwrapping (call .unwrap() before method)"
+    priority: P1
+    
+  - bucket_id: E0308_type_mismatch
+    count: 5
+    pattern: "mismatched types"
+    files:
+      - src/engines/detection/terraform/parser.rs
+      - src/engines/explain/anti_patterns.rs
+    suggested_fix: "type-conversion"
+    priority: P1
+    
+  - bucket_id: E0596_mutability
+    count: 2
+    pattern: "cannot borrow as mutable"
+    files:
+      - src/engines/mapping/graph_builder.rs
+    suggested_fix: "add mut keyword"
+    priority: P2
+    
+  - bucket_id: E0716_lifetime
+    count: 2
+    pattern: "temporary value dropped while borrowed"
+    files:
+      - src/engines/policy/compliance.rs
+    suggested_fix: "lifetime-fix (extract to let binding)"
+    priority: P2
+
+python_summary:
+  status: "Not run - Rust compilation must succeed first"
+  total_tests: 0
+  passed: 0
+  failed: 0
+  skipped: 0
+
+priority_p0_tasks:
+  - task_id: P0-1
+    title: "Fix E0433 unresolved imports in test modules"
+    description: "Replace `use costpilot::` with `use crate::` in #[cfg(test)] modules"
+    files:
+      - src/engines/metering/chargeback.rs
+      - src/engines/metering/pr_tracker.rs
+      - src/engines/policy/metadata_engine.rs
+      - src/engines/policy/policy_engine.rs
+      - src/engines/policy/exemption_ci.rs
+      - src/engines/performance/budgets.rs
+      - src/engines/slo/burn_rate.rs
+    steps:
+      - "Find all #[cfg(test)] modules with `use costpilot::`"
+      - "Replace with `use crate::`"
+    estimated_effort: "5 minutes"
+    
+  - task_id: P0-2
+    title: "Fix E0063 ResourceChange missing fields"
+    description: "Convert remaining struct literals to builder pattern with old_config/new_config"
+    files:
+      - src/engines/detection/terraform/parser.rs
+      - src/engines/explain/anti_patterns.rs
+    steps:
+      - "Find ResourceChange { ... } in tests"
+      - "Convert to builder pattern with .old_config()/.new_config()"
+    estimated_effort: "10 minutes"
+    
+  - task_id: P0-3
+    title: "Fix E0061 function argument mismatches"
+    description: "Add missing EditionContext and other parameters to function calls"
+    files:
+      - src/engines/autofix_safe/drift_safe_engine.rs
+      - src/engines/slo/slo_manager.rs
+      - src/engines/mapping/mod.rs
+    steps:
+      - "Check function signature for required parameters"
+      - "Add &EditionContext::free() or other missing args"
+    estimated_effort: "15 minutes"
+
+priority_p1_tasks:
+  - task_id: P1-1
+    title: "Fix E0599 Result unwrapping"
+    description: "Add .unwrap() before calling methods on Result types"
+    files:
+      - src/engines/trend/mod.rs
+    steps:
+      - "Find engine.method() where engine is Result"
+      - "Replace with engine.unwrap().method()"
+    estimated_effort: "5 minutes"
+
+priority_p2_tasks:
+  - task_id: P2-1
+    title: "Fix mutability and lifetime issues"
+    files:
+      - src/engines/mapping/graph_builder.rs
+      - src/engines/policy/compliance.rs
+    estimated_effort: "10 minutes"
+
+next_action:
+  instruction: "Execute P0-1, P0-2, P0-3 in order to achieve compilation success"

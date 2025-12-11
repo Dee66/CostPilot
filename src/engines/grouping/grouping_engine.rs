@@ -1,10 +1,10 @@
 // Unified grouping engine for cost allocation and attribution
 
 use crate::engines::grouping::{
-    by_module::{group_by_module, ModuleGroup, generate_module_tree},
-    by_service::{group_by_service, ServiceGroup, generate_service_report},
-    by_environment::{group_by_environment, EnvironmentGroup, generate_environment_report},
     attribution::{AttributionPipeline, AttributionReport},
+    by_environment::{generate_environment_report, group_by_environment, EnvironmentGroup},
+    by_module::{generate_module_tree, group_by_module, ModuleGroup},
+    by_service::{generate_service_report, group_by_service, ServiceGroup},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -56,7 +56,8 @@ impl GroupingEngine {
         &self,
         resources: &[(String, String, f64, HashMap<String, String>)], // (address, type, cost, tags)
     ) -> AttributionReport {
-        self.attribution_pipeline.generate_attribution_report(resources)
+        self.attribution_pipeline
+            .generate_attribution_report(resources)
     }
 
     /// Generate comprehensive grouping report with all dimensions
@@ -245,15 +246,26 @@ mod tests {
     #[test]
     fn test_grouping_engine_creation() {
         let engine = GroupingEngine::new();
-        assert!(engine.attribution_pipeline().tag_mappings.contains_key("environment"));
+        assert!(engine
+            .attribution_pipeline()
+            .tag_mappings
+            .contains_key("environment"));
     }
 
     #[test]
     fn test_group_by_module() {
         let engine = GroupingEngine::new();
         let resources = vec![
-            ("aws_instance.web".to_string(), "aws_instance".to_string(), 100.0),
-            ("module.vpc.aws_vpc.main".to_string(), "aws_vpc".to_string(), 50.0),
+            (
+                "aws_instance.web".to_string(),
+                "aws_instance".to_string(),
+                100.0,
+            ),
+            (
+                "module.vpc.aws_vpc.main".to_string(),
+                "aws_vpc".to_string(),
+                50.0,
+            ),
         ];
 
         let groups = engine.group_by_module(&resources);
@@ -266,9 +278,12 @@ mod tests {
         let mut tags = HashMap::new();
         tags.insert("Environment".to_string(), "production".to_string());
 
-        let resources = vec![
-            ("aws_instance.web".to_string(), "aws_instance".to_string(), tags.clone(), 100.0),
-        ];
+        let resources = vec![(
+            "aws_instance.web".to_string(),
+            "aws_instance".to_string(),
+            tags.clone(),
+            100.0,
+        )];
 
         let report = engine.generate_comprehensive_report(&resources);
         assert_eq!(report.total_resources, 1);

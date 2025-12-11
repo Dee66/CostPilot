@@ -3,8 +3,8 @@
 pub mod runtime;
 
 pub use runtime::{
-    SandboxLimits, EngineBudget, ValidationResult,
-    validate_input_size, validate_json_depth, MemoryTracker,
+    validate_input_size, validate_json_depth, EngineBudget, MemoryTracker, SandboxLimits,
+    ValidationResult,
 };
 
 #[cfg(target_arch = "wasm32")]

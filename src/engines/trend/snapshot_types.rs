@@ -7,35 +7,35 @@ use std::collections::HashMap;
 pub struct CostSnapshot {
     /// Unique identifier for this snapshot
     pub id: String,
-    
+
     /// ISO 8601 timestamp when snapshot was taken
     pub timestamp: String,
-    
+
     /// Git commit hash (if available)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub commit_hash: Option<String>,
-    
+
     /// Branch name
     #[serde(skip_serializing_if = "Option::is_none")]
     pub branch: Option<String>,
-    
+
     /// Total monthly cost
     pub total_monthly_cost: f64,
-    
+
     /// Breakdown by module
     pub modules: HashMap<String, ModuleCost>,
-    
+
     /// Breakdown by service
     pub services: HashMap<String, f64>,
-    
+
     /// Detected regressions from baseline
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub regressions: Vec<Regression>,
-    
+
     /// SLO violations detected
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub slo_violations: Vec<SloViolation>,
-    
+
     /// Metadata about the snapshot
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<SnapshotMetadata>,
@@ -46,21 +46,21 @@ pub struct CostSnapshot {
 pub struct ModuleCost {
     /// Module name/path
     pub name: String,
-    
+
     /// Monthly cost for this module
     pub monthly_cost: f64,
-    
+
     /// Resource count in module
     pub resource_count: usize,
-    
+
     /// Cost change from previous snapshot (if available)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub change_from_previous: Option<f64>,
-    
+
     /// Percentage change from previous
     #[serde(skip_serializing_if = "Option::is_none")]
     pub change_percent: Option<f64>,
-    
+
     /// Service-level breakdown
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub services: Vec<ServiceCost>,
@@ -78,22 +78,22 @@ pub struct ServiceCost {
 pub struct Regression {
     /// Type of regression
     pub regression_type: RegressionType,
-    
+
     /// Affected resource or module
     pub affected: String,
-    
+
     /// Baseline cost
     pub baseline_cost: f64,
-    
+
     /// Current cost
     pub current_cost: f64,
-    
+
     /// Cost increase amount
     pub increase_amount: f64,
-    
+
     /// Percentage increase
     pub increase_percent: f64,
-    
+
     /// Severity level
     pub severity: String,
 }
@@ -104,13 +104,13 @@ pub struct Regression {
 pub enum RegressionType {
     /// New resource added
     NewResource,
-    
+
     /// Resource cost increased
     CostIncrease,
-    
+
     /// Module budget exceeded
     BudgetExceeded,
-    
+
     /// Unexpected service cost
     UnexpectedService,
 }
@@ -120,16 +120,16 @@ pub enum RegressionType {
 pub struct SloViolation {
     /// SLO name
     pub slo_name: String,
-    
+
     /// Affected resource or module
     pub affected: String,
-    
+
     /// SLO limit
     pub limit: f64,
-    
+
     /// Actual value
     pub actual: f64,
-    
+
     /// Severity level
     pub severity: String,
 }
@@ -140,15 +140,15 @@ pub struct SnapshotMetadata {
     /// Who/what triggered the snapshot
     #[serde(skip_serializing_if = "Option::is_none")]
     pub triggered_by: Option<String>,
-    
+
     /// CI/CD job or run ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ci_run_id: Option<String>,
-    
+
     /// PR number if applicable
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pr_number: Option<u32>,
-    
+
     /// Environment (dev, staging, prod)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub environment: Option<String>,
@@ -159,10 +159,10 @@ pub struct SnapshotMetadata {
 pub struct TrendHistory {
     /// Schema version
     pub version: String,
-    
+
     /// List of snapshots (ordered by timestamp)
     pub snapshots: Vec<CostSnapshot>,
-    
+
     /// Configuration for trend analysis
     #[serde(skip_serializing_if = "Option::is_none")]
     pub config: Option<TrendConfig>,
@@ -174,15 +174,15 @@ pub struct TrendConfig {
     /// Maximum number of snapshots to retain
     #[serde(default = "default_max_snapshots")]
     pub max_snapshots: usize,
-    
+
     /// Regression threshold percentage
     #[serde(default = "default_regression_threshold")]
     pub regression_threshold_percent: f64,
-    
+
     /// Enable automatic snapshot rotation
     #[serde(default = "default_true")]
     pub enable_rotation: bool,
-    
+
     /// Days to retain snapshots
     #[serde(default = "default_retention_days")]
     pub retention_days: u32,
@@ -234,8 +234,7 @@ impl CostSnapshot {
 
     /// Parse timestamp to DateTime
     pub fn get_timestamp(&self) -> Result<DateTime<Utc>, chrono::ParseError> {
-        DateTime::parse_from_rfc3339(&self.timestamp)
-            .map(|dt| dt.with_timezone(&Utc))
+        DateTime::parse_from_rfc3339(&self.timestamp).map(|dt| dt.with_timezone(&Utc))
     }
 
     /// Add a module cost entry
@@ -334,7 +333,7 @@ mod tests {
     fn test_add_module() {
         let mut snapshot = CostSnapshot::new("snap-001".to_string(), 1000.0);
         snapshot.add_module("vpc".to_string(), 500.0, 10);
-        
+
         assert_eq!(snapshot.modules.len(), 1);
         assert_eq!(snapshot.modules.get("vpc").unwrap().monthly_cost, 500.0);
     }
@@ -344,10 +343,10 @@ mod tests {
         let mut history = TrendHistory::new();
         let snapshot1 = CostSnapshot::new("snap-001".to_string(), 1000.0);
         let snapshot2 = CostSnapshot::new("snap-002".to_string(), 1200.0);
-        
+
         history.add_snapshot(snapshot1);
         history.add_snapshot(snapshot2);
-        
+
         assert_eq!(history.snapshots.len(), 2);
         assert_eq!(history.latest().unwrap().id, "snap-002");
     }
@@ -357,10 +356,10 @@ mod tests {
         let mut history = TrendHistory::new();
         let snapshot1 = CostSnapshot::new("snap-001".to_string(), 1000.0);
         let snapshot2 = CostSnapshot::new("snap-002".to_string(), 1200.0);
-        
+
         history.add_snapshot(snapshot1);
         history.add_snapshot(snapshot2);
-        
+
         let delta = history.calculate_delta("snap-001", "snap-002");
         assert_eq!(delta, Some(200.0));
     }
@@ -385,7 +384,7 @@ mod tests {
             increase_percent: 50.0,
             severity: "HIGH".to_string(),
         };
-        
+
         let json = serde_json::to_string(&regression).unwrap();
         assert!(json.contains("cost_increase"));
     }

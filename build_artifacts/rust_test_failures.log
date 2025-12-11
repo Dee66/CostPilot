@@ -1,0 +1,1616 @@
+   Compiling costpilot v1.0.0 (/home/dee/workspace/AI/GuardSuite/CostPilot)
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `costpilot`
+   --> src/engines/autofix/autofix_engine.rs:159:9
+    |
+159 |     use costpilot::engines::shared::models::ChangeAction;
+    |         ^^^^^^^^^ use of unresolved module or unlinked crate `costpilot`
+    |
+    = help: if you wanted to use a crate named `costpilot`, use `cargo add costpilot` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `costpilot`
+   --> src/engines/autofix/snippet_generator.rs:340:9
+    |
+340 |     use costpilot::engines::shared::models::ChangeAction;
+    |         ^^^^^^^^^ use of unresolved module or unlinked crate `costpilot`
+    |
+    = help: if you wanted to use a crate named `costpilot`, use `cargo add costpilot` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `costpilot`
+   --> src/engines/detection/detection_engine.rs:237:9
+    |
+237 |     use costpilot::engines::shared::models::ChangeAction;
+    |         ^^^^^^^^^ use of unresolved module or unlinked crate `costpilot`
+    |
+    = help: if you wanted to use a crate named `costpilot`, use `cargo add costpilot` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `costpilot`
+   --> src/engines/detection/severity.rs:114:9
+    |
+114 |     use costpilot::engines::shared::models::ChangeAction;
+    |         ^^^^^^^^^ use of unresolved module or unlinked crate `costpilot`
+    |
+    = help: if you wanted to use a crate named `costpilot`, use `cargo add costpilot` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `costpilot`
+   --> src/engines/explain/anti_patterns.rs:257:9
+    |
+257 |     use costpilot::engines::shared::models::ChangeAction;
+    |         ^^^^^^^^^ use of unresolved module or unlinked crate `costpilot`
+    |
+    = help: if you wanted to use a crate named `costpilot`, use `cargo add costpilot` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `costpilot`
+   --> src/engines/explain/explain_engine.rs:417:9
+    |
+417 |     use costpilot::engines::shared::models::ChangeAction;
+    |         ^^^^^^^^^ use of unresolved module or unlinked crate `costpilot`
+    |
+    = help: if you wanted to use a crate named `costpilot`, use `cargo add costpilot` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `costpilot`
+   --> src/engines/explain/root_cause.rs:199:9
+    |
+199 |     use costpilot::engines::shared::models::ChangeAction;
+    |         ^^^^^^^^^ use of unresolved module or unlinked crate `costpilot`
+    |
+    = help: if you wanted to use a crate named `costpilot`, use `cargo add costpilot` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `costpilot`
+  --> src/engines/prediction/confidence.rs:90:9
+   |
+90 |     use costpilot::engines::shared::models::ChangeAction;
+   |         ^^^^^^^^^ use of unresolved module or unlinked crate `costpilot`
+   |
+   = help: if you wanted to use a crate named `costpilot`, use `cargo add costpilot` to add it to your `Cargo.toml`
+
+warning: unused import: `CostEstimate`
+   --> src/engines/autofix/autofix_engine.rs:161:56
+    |
+161 |     use crate::engines::shared::models::{ChangeAction, CostEstimate, RegressionType, Severity};
+    |                                                        ^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `serde_json::json`
+   --> src/engines/autofix/autofix_engine.rs:162:9
+    |
+162 |     use serde_json::json;
+    |         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+   --> src/engines/autofix/autofix_engine.rs:163:9
+    |
+163 |     use std::collections::HashMap;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `CostEstimate`
+   --> src/engines/autofix/snippet_generator.rs:342:56
+    |
+342 |     use crate::engines::shared::models::{ChangeAction, CostEstimate, RegressionType, Severity};
+    |                                                        ^^^^^^^^^^^^
+
+warning: unused import: `serde_json::json`
+   --> src/engines/autofix/snippet_generator.rs:343:9
+    |
+343 |     use serde_json::json;
+    |         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+   --> src/engines/autofix/snippet_generator.rs:344:9
+    |
+344 |     use std::collections::HashMap;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+   --> src/engines/explain/explain_engine.rs:420:9
+    |
+420 |     use std::collections::HashMap;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `UsageContext`
+ --> src/engines/metering/chargeback.rs:3:88
+  |
+3 | use crate::engines::metering::usage_meter::{TeamUsageSummary, UserUsage, ProjectUsage, UsageContext};
+  |                                                                                        ^^^^^^^^^^^^
+
+warning: unused import: `std::time::Duration`
+ --> src/engines/metering/chargeback.rs:7:5
+  |
+7 | use std::time::Duration;
+  |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `chrono::Utc`
+ --> src/engines/metering/chargeback.rs:8:5
+  |
+8 | use chrono::Utc;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src/engines/policy/metadata_engine.rs:7:5
+  |
+7 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src/engines/policy/policy_engine.rs:8:5
+  |
+8 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `serde_json::json`
+  --> src/engines/prediction/confidence.rs:93:9
+   |
+93 |     use serde_json::json;
+   |         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/engines/prediction/confidence.rs:94:9
+   |
+94 |     use std::collections::HashMap;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ProjectUsage`, `UsageContext`, and `UserUsage`
+ --> src/engines/metering/chargeback.rs:3:63
+  |
+3 | use crate::engines::metering::usage_meter::{TeamUsageSummary, UserUsage, ProjectUsage, UsageContext};
+  |                                                               ^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `UsageContext`
+ --> src/engines/metering/pr_tracker.rs:3:58
+  |
+3 | use crate::engines::metering::usage_meter::{Attribution, UsageContext, UsageEvent, UsageEventType};
+  |                                                          ^^^^^^^^^^^^
+
+warning: unused import: `Duration`
+ --> src/engines/performance/budgets.rs:5:17
+  |
+5 | use std::time::{Duration, Instant};
+  |                 ^^^^^^^^
+
+warning: unused import: `chrono::Utc`
+ --> src/engines/policy/exemption_ci.rs:4:5
+  |
+4 | use chrono::Utc;
+  |     ^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/engines/slo/burn_rate.rs:23:5
+   |
+23 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::monthly`: Use monthly_cost instead
+   --> src/cli/scan.rs:179:17
+    |
+179 |                 monthly: None,
+    |                 ^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::yearly`: Use monthly_cost * 12 instead
+   --> src/cli/scan.rs:180:17
+    |
+180 |                 yearly: None,
+    |                 ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::estimate`: Use monthly_cost instead
+   --> src/cli/scan.rs:183:17
+    |
+183 |                 estimate: None,
+    |                 ^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::lower`: Use prediction_interval_low instead
+   --> src/cli/scan.rs:184:17
+    |
+184 |                 lower: None,
+    |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::upper`: Use prediction_interval_high instead
+   --> src/cli/scan.rs:185:17
+    |
+185 |                 upper: None,
+    |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::confidence`: Use confidence_score instead
+   --> src/cli/scan.rs:186:17
+    |
+186 |                 confidence: None,
+    |                 ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::monthly`: Use monthly_cost instead
+   --> src/cli/scan.rs:279:17
+    |
+279 |                 monthly: None,
+    |                 ^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::yearly`: Use monthly_cost * 12 instead
+   --> src/cli/scan.rs:280:17
+    |
+280 |                 yearly: None,
+    |                 ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::estimate`: Use monthly_cost instead
+   --> src/cli/scan.rs:283:17
+    |
+283 |                 estimate: None,
+    |                 ^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::lower`: Use prediction_interval_low instead
+   --> src/cli/scan.rs:284:17
+    |
+284 |                 lower: None,
+    |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::upper`: Use prediction_interval_high instead
+   --> src/cli/scan.rs:285:17
+    |
+285 |                 upper: None,
+    |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::confidence`: Use confidence_score instead
+   --> src/cli/scan.rs:286:17
+    |
+286 |                 confidence: None,
+    |                 ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::ResourceChange::before`: Use old_config instead
+  --> src/cli/utils.rs:86:9
+   |
+86 |         before: None,
+   |         ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::ResourceChange::after`: Use new_config instead
+  --> src/cli/utils.rs:87:9
+   |
+87 |         after: None,
+   |         ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/detection/detection_engine.rs:132:17
+    |
+132 |                 resource_type: None,
+    |                 ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/detection/detection_engine.rs:133:17
+    |
+133 |                 issue: None,
+    |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/detection/detection_engine.rs:134:17
+    |
+134 |                 confidence: None,
+    |                 ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/detection/detection_engine.rs:135:17
+    |
+135 |                 monthly_cost: None,
+    |                 ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/detection/detection_engine.rs:156:29
+    |
+156 | ...                   resource_type: None,
+    |                       ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/detection/detection_engine.rs:157:29
+    |
+157 | ...                   issue: None,
+    |                       ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/detection/detection_engine.rs:158:29
+    |
+158 | ...                   confidence: None,
+    |                       ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/detection/detection_engine.rs:159:29
+    |
+159 | ...                   monthly_cost: None,
+    |                       ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/detection/detection_engine.rs:179:25
+    |
+179 |                         resource_type: None,
+    |                         ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/detection/detection_engine.rs:180:25
+    |
+180 |                         issue: None,
+    |                         ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/detection/detection_engine.rs:181:25
+    |
+181 |                         confidence: None,
+    |                         ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/detection/detection_engine.rs:182:25
+    |
+182 |                         monthly_cost: None,
+    |                         ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/detection/detection_engine.rs:202:17
+    |
+202 |                 resource_type: None,
+    |                 ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/detection/detection_engine.rs:203:17
+    |
+203 |                 issue: None,
+    |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/detection/detection_engine.rs:204:17
+    |
+204 |                 confidence: None,
+    |                 ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/detection/detection_engine.rs:205:17
+    |
+205 |                 monthly_cost: None,
+    |                 ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::ResourceChange::before`: Use old_config instead
+  --> src/engines/detection/terraform/parser.rs:77:17
+   |
+77 |                 before: None,
+   |                 ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::ResourceChange::after`: Use new_config instead
+  --> src/engines/detection/terraform/parser.rs:78:17
+   |
+78 |                 after: None,
+   |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::monthly`: Use monthly_cost instead
+   --> src/engines/prediction/prediction_engine.rs:351:21
+    |
+351 |                     monthly: None,
+    |                     ^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::yearly`: Use monthly_cost * 12 instead
+   --> src/engines/prediction/prediction_engine.rs:352:21
+    |
+352 |                     yearly: None,
+    |                     ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::estimate`: Use monthly_cost instead
+   --> src/engines/prediction/prediction_engine.rs:355:21
+    |
+355 |                     estimate: None,
+    |                     ^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::lower`: Use prediction_interval_low instead
+   --> src/engines/prediction/prediction_engine.rs:356:21
+    |
+356 |                     lower: None,
+    |                     ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::upper`: Use prediction_interval_high instead
+   --> src/engines/prediction/prediction_engine.rs:357:21
+    |
+357 |                     upper: None,
+    |                     ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::confidence`: Use confidence_score instead
+   --> src/engines/prediction/prediction_engine.rs:358:21
+    |
+358 |                     confidence: None,
+    |                     ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::monthly`: Use monthly_cost instead
+   --> src/engines/prediction/prediction_engine.rs:405:13
+    |
+405 |             monthly: None,
+    |             ^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::yearly`: Use monthly_cost * 12 instead
+   --> src/engines/prediction/prediction_engine.rs:406:13
+    |
+406 |             yearly: None,
+    |             ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::estimate`: Use monthly_cost instead
+   --> src/engines/prediction/prediction_engine.rs:409:13
+    |
+409 |             estimate: None,
+    |             ^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::lower`: Use prediction_interval_low instead
+   --> src/engines/prediction/prediction_engine.rs:410:13
+    |
+410 |             lower: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::upper`: Use prediction_interval_high instead
+   --> src/engines/prediction/prediction_engine.rs:411:13
+    |
+411 |             upper: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::confidence`: Use confidence_score instead
+   --> src/engines/prediction/prediction_engine.rs:412:13
+    |
+412 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::monthly`: Use monthly_cost instead
+   --> src/engines/shared/models.rs:319:13
+    |
+319 |             monthly: None,
+    |             ^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::yearly`: Use monthly_cost * 12 instead
+   --> src/engines/shared/models.rs:320:13
+    |
+320 |             yearly: None,
+    |             ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::estimate`: Use monthly_cost instead
+   --> src/engines/shared/models.rs:323:13
+    |
+323 |             estimate: None,
+    |             ^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::lower`: Use prediction_interval_low instead
+   --> src/engines/shared/models.rs:324:13
+    |
+324 |             lower: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::upper`: Use prediction_interval_high instead
+   --> src/engines/shared/models.rs:325:13
+    |
+325 |             upper: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::confidence`: Use confidence_score instead
+   --> src/engines/shared/models.rs:326:13
+    |
+326 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::monthly`: Use monthly_cost instead
+   --> src/engines/shared/models.rs:344:13
+    |
+344 |             monthly: None,
+    |             ^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::yearly`: Use monthly_cost * 12 instead
+   --> src/engines/shared/models.rs:345:13
+    |
+345 |             yearly: None,
+    |             ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::estimate`: Use monthly_cost instead
+   --> src/engines/shared/models.rs:348:13
+    |
+348 |             estimate: None,
+    |             ^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::lower`: Use prediction_interval_low instead
+   --> src/engines/shared/models.rs:349:13
+    |
+349 |             lower: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::upper`: Use prediction_interval_high instead
+   --> src/engines/shared/models.rs:350:13
+    |
+350 |             upper: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::CostEstimate::confidence`: Use confidence_score instead
+   --> src/engines/shared/models.rs:351:13
+    |
+351 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::ResourceChange::before`: Use old_config instead
+   --> src/engines/shared/models.rs:467:13
+    |
+467 |             before: None,
+    |             ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::ResourceChange::after`: Use new_config instead
+   --> src/engines/shared/models.rs:468:13
+    |
+468 |             after: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::ResourceChange::before`: Use old_config instead
+   --> src/engines/shared/models.rs:491:13
+    |
+491 |             before: None,
+    |             ^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::ResourceChange::after`: Use new_config instead
+   --> src/engines/shared/models.rs:492:13
+    |
+492 |             after: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/shared/models.rs:619:13
+    |
+619 |             resource_type: None,
+    |             ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/shared/models.rs:620:13
+    |
+620 |             issue: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/shared/models.rs:621:13
+    |
+621 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/shared/models.rs:622:13
+    |
+622 |             monthly_cost: None,
+    |             ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/shared/models.rs:651:13
+    |
+651 |             resource_type: None,
+    |             ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/shared/models.rs:652:13
+    |
+652 |             issue: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/shared/models.rs:653:13
+    |
+653 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/shared/models.rs:654:13
+    |
+654 |             monthly_cost: None,
+    |             ^^^^^^^^^^^^^^^^^^
+
+warning: method `Timeout` should have a snake case name
+  --> src/errors.rs:34:12
+   |
+34 |     pub fn Timeout(message: String) -> Self {
+   |            ^^^^^^^ help: convert the identifier to snake case: `timeout`
+   |
+   = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: method `InvalidJson` should have a snake case name
+  --> src/errors.rs:38:12
+   |
+38 |     pub fn InvalidJson(message: String) -> Self {
+   |            ^^^^^^^^^^^ help: convert the identifier to snake case: `invalid_json`
+
+warning: method `CircuitBreaker` should have a snake case name
+  --> src/errors.rs:42:12
+   |
+42 |     pub fn CircuitBreaker(message: String) -> Self {
+   |            ^^^^^^^^^^^^^^ help: convert the identifier to snake case: `circuit_breaker`
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/autofix/autofix_engine.rs:176:13
+    |
+176 |             resource_type: None,
+    |             ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/autofix/autofix_engine.rs:177:13
+    |
+177 |             issue: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/autofix/autofix_engine.rs:178:13
+    |
+178 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/autofix/autofix_engine.rs:179:13
+    |
+179 |             monthly_cost: None,
+    |             ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/autofix/autofix_engine.rs:209:13
+    |
+209 |             resource_type: None,
+    |             ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/autofix/autofix_engine.rs:210:13
+    |
+210 |             issue: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/autofix/autofix_engine.rs:211:13
+    |
+211 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/autofix/autofix_engine.rs:212:13
+    |
+212 |             monthly_cost: None,
+    |             ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/autofix/snippet_generator.rs:365:13
+    |
+365 |             resource_type: None,
+    |             ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/autofix/snippet_generator.rs:366:13
+    |
+366 |             issue: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/autofix/snippet_generator.rs:367:13
+    |
+367 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/autofix/snippet_generator.rs:368:13
+    |
+368 |             monthly_cost: None,
+    |             ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/autofix/snippet_generator.rs:411:13
+    |
+411 |             resource_type: None,
+    |             ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/autofix/snippet_generator.rs:412:13
+    |
+412 |             issue: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/autofix/snippet_generator.rs:413:13
+    |
+413 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/autofix/snippet_generator.rs:414:13
+    |
+414 |             monthly_cost: None,
+    |             ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/autofix/snippet_generator.rs:456:13
+    |
+456 |             resource_type: None,
+    |             ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/autofix/snippet_generator.rs:457:13
+    |
+457 |             issue: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/autofix/snippet_generator.rs:458:13
+    |
+458 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/autofix/snippet_generator.rs:459:13
+    |
+459 |             monthly_cost: None,
+    |             ^^^^^^^^^^^^^^^^^^
+
+error[E0061]: this method takes 7 arguments but 5 arguments were supplied
+   --> src/engines/autofix_safe/drift_safe_engine.rs:487:32
+    |
+487 |           let operation = engine.create_operation(
+    |  ________________________________^^^^^^^^^^^^^^^^-
+488 | |             "aws_instance.web".to_string(),
+489 | |             "aws_instance".to_string(),
+490 | |             "Downsize to t3.medium".to_string(),
+491 | |             &current,
+492 | |             &proposed,
+493 | |         );
+    | |_________- two arguments of type `f64` and `f64` are missing
+    |
+note: method defined here
+   --> src/engines/autofix_safe/drift_safe_engine.rs:48:12
+    |
+ 48 |     pub fn create_operation(
+    |            ^^^^^^^^^^^^^^^^
+...
+ 55 |         current_cost: f64,
+    |         -----------------
+ 56 |         proposed_cost: f64,
+    |         ------------------
+help: provide the arguments
+    |
+493 |         let operation = engine.create_operation(
+...
+498 |             &proposed,
+499 ~             /* f64 */,
+500 +             /* f64 */,
+501 ~         );
+    |
+
+error[E0061]: this method takes 7 arguments but 5 arguments were supplied
+   --> src/engines/autofix_safe/drift_safe_engine.rs:532:36
+    |
+532 |           let mut operation = engine.create_operation(
+    |  ____________________________________^^^^^^^^^^^^^^^^-
+533 | |             "aws_instance.web".to_string(),
+534 | |             "aws_instance".to_string(),
+535 | |             "Downsize".to_string(),
+536 | |             &current,
+537 | |             &proposed,
+538 | |         );
+    | |_________- two arguments of type `f64` and `f64` are missing
+    |
+note: method defined here
+   --> src/engines/autofix_safe/drift_safe_engine.rs:48:12
+    |
+ 48 |     pub fn create_operation(
+    |            ^^^^^^^^^^^^^^^^
+...
+ 55 |         current_cost: f64,
+    |         -----------------
+ 56 |         proposed_cost: f64,
+    |         ------------------
+help: provide the arguments
+    |
+538 |         let mut operation = engine.create_operation(
+...
+543 |             &proposed,
+544 ~             /* f64 */,
+545 +             /* f64 */,
+546 ~         );
+    |
+
+error[E0061]: this method takes 7 arguments but 5 arguments were supplied
+   --> src/engines/autofix_safe/drift_safe_engine.rs:551:36
+    |
+551 |           let mut operation = engine.create_operation(
+    |  ____________________________________^^^^^^^^^^^^^^^^-
+552 | |             "aws_instance.web".to_string(),
+553 | |             "aws_instance".to_string(),
+554 | |             "Downsize".to_string(),
+555 | |             &current,
+556 | |             &proposed,
+557 | |         );
+    | |_________- two arguments of type `f64` and `f64` are missing
+    |
+note: method defined here
+   --> src/engines/autofix_safe/drift_safe_engine.rs:48:12
+    |
+ 48 |     pub fn create_operation(
+    |            ^^^^^^^^^^^^^^^^
+...
+ 55 |         current_cost: f64,
+    |         -----------------
+ 56 |         proposed_cost: f64,
+    |         ------------------
+help: provide the arguments
+    |
+557 |         let mut operation = engine.create_operation(
+...
+562 |             &proposed,
+563 ~             /* f64 */,
+564 +             /* f64 */,
+565 ~         );
+    |
+
+error[E0061]: this method takes 7 arguments but 5 arguments were supplied
+   --> src/engines/autofix_safe/drift_safe_engine.rs:574:36
+    |
+574 |           let mut operation = engine.create_operation(
+    |  ____________________________________^^^^^^^^^^^^^^^^-
+575 | |             "aws_instance.web".to_string(),
+576 | |             "aws_instance".to_string(),
+577 | |             "Downsize".to_string(),
+578 | |             &current,
+579 | |             &proposed,
+580 | |         );
+    | |_________- two arguments of type `f64` and `f64` are missing
+    |
+note: method defined here
+   --> src/engines/autofix_safe/drift_safe_engine.rs:48:12
+    |
+ 48 |     pub fn create_operation(
+    |            ^^^^^^^^^^^^^^^^
+...
+ 55 |         current_cost: f64,
+    |         -----------------
+ 56 |         proposed_cost: f64,
+    |         ------------------
+help: provide the arguments
+    |
+580 |         let mut operation = engine.create_operation(
+...
+585 |             &proposed,
+586 ~             /* f64 */,
+587 +             /* f64 */,
+588 ~         );
+    |
+
+error[E0308]: mismatched types
+   --> src/engines/detection/severity.rs:121:185
+    |
+121 | ...g()).action(ChangeAction::Update).monthly_cost(Some(None)).module_path(None).tags(HashMap::new()).build();
+    |                                      ------------ ^^^^^^^^^^ expected `f64`, found `Option<Option<_>>`
+    |                                      |
+    |                                      arguments to this method are incorrect
+    |
+    = note: expected type `f64`
+               found enum `std::option::Option<std::option::Option<_>>`
+note: method defined here
+   --> src/engines/shared/models.rs:431:12
+    |
+431 |     pub fn monthly_cost(mut self, val: f64) -> Self {
+    |            ^^^^^^^^^^^^           --------
+
+error[E0277]: the trait bound `std::string::String: From<std::option::Option<_>>` is not satisfied
+   --> src/engines/detection/severity.rs:121:209
+    |
+121 | ...ost(Some(None)).module_path(None).tags(HashMap::new()).build();
+    |                    ----------- ^^^^ the trait `From<std::option::Option<_>>` is not implemented for `std::string::String`
+    |                    |
+    |                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `From<T>`:
+              `std::string::String` implements `From<&mut str>`
+              `std::string::String` implements `From<&std::string::String>`
+              `std::string::String` implements `From<&str>`
+              `std::string::String` implements `From<Box<str>>`
+              `std::string::String` implements `From<Cow<'_, str>>`
+              `std::string::String` implements `From<Id>`
+              `std::string::String` implements `From<Uuid>`
+              `std::string::String` implements `From<char>`
+              `std::string::String` implements `From<clap::builder::Str>`
+    = note: required for `std::option::Option<_>` to implement `Into<std::string::String>`
+note: required by a bound in `ResourceChangeBuilder::module_path`
+   --> src/engines/shared/models.rs:411:44
+    |
+411 |     pub fn module_path(mut self, val: impl Into<String>) -> Self {
+    |                                            ^^^^^^^^^^^^ required by this bound in `ResourceChangeBuilder::module_path`
+
+error[E0308]: mismatched types
+   --> src/engines/detection/terraform/parser.rs:188:39
+    |
+188 |         assert_eq!(determine_action(&["create"]).unwrap(), ChangeAction::Create);
+    |                                       ^^^^^^^^ expected `String`, found `&str`
+    |
+help: try using a conversion method
+    |
+188 |         assert_eq!(determine_action(&["create".to_string()]).unwrap(), ChangeAction::Create);
+    |                                               ++++++++++++
+
+error[E0308]: mismatched types
+   --> src/engines/detection/terraform/parser.rs:189:39
+    |
+189 |         assert_eq!(determine_action(&["delete"]).unwrap(), ChangeAction::Delete);
+    |                                       ^^^^^^^^ expected `String`, found `&str`
+    |
+help: try using a conversion method
+    |
+189 |         assert_eq!(determine_action(&["delete".to_string()]).unwrap(), ChangeAction::Delete);
+    |                                               ++++++++++++
+
+error[E0308]: mismatched types
+   --> src/engines/detection/terraform/parser.rs:190:39
+    |
+190 |         assert_eq!(determine_action(&["update"]).unwrap(), ChangeAction::Update);
+    |                                       ^^^^^^^^ expected `String`, found `&str`
+    |
+help: try using a conversion method
+    |
+190 |         assert_eq!(determine_action(&["update".to_string()]).unwrap(), ChangeAction::Update);
+    |                                               ++++++++++++
+
+error[E0308]: mismatched types
+   --> src/engines/detection/terraform/parser.rs:192:32
+    |
+192 |             determine_action(&["delete", "create"]).unwrap(),
+    |                                ^^^^^^^^ expected `String`, found `&str`
+    |
+help: try using a conversion method
+    |
+192 |             determine_action(&["delete".to_string(), "create"]).unwrap(),
+    |                                        ++++++++++++
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/explain/explain_engine.rs:448:13
+    |
+448 |             resource_type: None,
+    |             ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/explain/explain_engine.rs:449:13
+    |
+449 |             issue: None,
+    |             ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/explain/explain_engine.rs:450:13
+    |
+450 |             confidence: None,
+    |             ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/explain/explain_engine.rs:451:13
+    |
+451 |             monthly_cost: None,
+    |             ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/explain/explain_engine.rs:483:17
+    |
+483 |                 resource_type: None,
+    |                 ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/explain/explain_engine.rs:484:17
+    |
+484 |                 issue: None,
+    |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/explain/explain_engine.rs:485:17
+    |
+485 |                 confidence: None,
+    |                 ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/explain/explain_engine.rs:486:17
+    |
+486 |                 monthly_cost: None,
+    |                 ^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::resource_type`: Detection no longer stores resource_type directly
+   --> src/engines/explain/explain_engine.rs:497:17
+    |
+497 |                 resource_type: None,
+    |                 ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::issue`: Use message instead
+   --> src/engines/explain/explain_engine.rs:498:17
+    |
+498 |                 issue: None,
+    |                 ^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::confidence`: Use confidence_score instead
+   --> src/engines/explain/explain_engine.rs:499:17
+    |
+499 |                 confidence: None,
+    |                 ^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `engines::shared::models::Detection::monthly_cost`: Use estimated_cost instead
+   --> src/engines/explain/explain_engine.rs:500:17
+    |
+500 |                 monthly_cost: None,
+    |                 ^^^^^^^^^^^^^^^^^^
+
+warning: `costpilot` (lib) generated 80 warnings (4 duplicates) (run `cargo fix --lib -p costpilot` to apply 5 suggestions)
+error: mismatched closing delimiter: `]`
+  --> tests/golden_mapping_tests.rs:9:23
+   |
+ 9 |             GraphNode {
+   |                       ^ unclosed delimiter
+...
+24 |         ],
+   |         ^ mismatched closing delimiter
+
+error: mismatched closing delimiter: `]`
+  --> tests/golden_mapping_tests.rs:35:23
+   |
+35 |             GraphNode {
+   |                       ^ unclosed delimiter
+...
+74 |         ],
+   |         ^ mismatched closing delimiter
+
+error: mismatched closing delimiter: `]`
+   --> tests/golden_mapping_tests.rs:85:23
+    |
+ 85 |             GraphNode {
+    |                       ^ unclosed delimiter
+...
+116 |         ],
+    |         ^ mismatched closing delimiter
+
+error: mismatched closing delimiter: `]`
+   --> tests/golden_mapping_tests.rs:127:23
+    |
+127 |             GraphNode {
+    |                       ^ unclosed delimiter
+...
+150 |         ],
+    |         ^ mismatched closing delimiter
+
+error: mismatched closing delimiter: `]`
+   --> tests/golden_mapping_tests.rs:161:23
+    |
+161 |             GraphNode {
+    |                       ^ unclosed delimiter
+...
+184 |         ],
+    |         ^ mismatched closing delimiter
+
+error: mismatched closing delimiter: `]`
+   --> tests/golden_mapping_tests.rs:204:23
+    |
+204 |             GraphNode {
+    |                       ^ unclosed delimiter
+...
+227 |         ],
+    |         ^ mismatched closing delimiter
+
+error: this file contains an unclosed delimiter
+   --> tests/golden_mapping_tests.rs:232:3
+    |
+192 | fn golden_empty_graph() {
+    |                         - unclosed delimiter
+193 |     let graph = DependencyGraph {
+    |                                 - this delimiter might not be properly closed...
+...
+198 | }
+    | - ...as it matches this but it has different indentation
+...
+232 | }
+    |  ^
+
+error: could not compile `costpilot` (test "golden_mapping_tests") due to 7 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: mismatched closing delimiter: `}`
+  --> tests/mapping_json_validation_tests.rs:13:23
+   |
+13 |     let changes = vec![
+   |                       ^ unclosed delimiter
+...
+21 |         },
+   |         ^ mismatched closing delimiter
+
+error: unexpected closing delimiter: `}`
+  --> tests/mapping_json_validation_tests.rs:30:9
+   |
+18 |             .new_config(Some(serde_json::json!({"cidr_block": "10.0.0.0/16".unwrap())
+   |                                                - the nearest open delimiter         - missing open `(` for this delimiter
+...
+26 |             .new_config(Some(serde_json::json!({
+   |                                                - the nearest open delimiter
+27 |                 "vpc_id": "aws_vpc.main".unwrap())
+   |                                                  - missing open `(` for this delimiter
+...
+30 |         },
+   |         ^ unexpected closing delimiter
+
+error: could not compile `costpilot` (test "mapping_json_validation_tests") due to 2 previous errors
+warning: unused import: `std::time::Duration`
+ --> tests/exemption_ci_tests.rs:1:5
+  |
+1 | use std::time::Duration;
+  |     ^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0063]: missing fields `after` and `before` in initializer of `models::ResourceChange`
+   --> src/engines/mapping/graph_builder.rs:549:9
+    |
+549 |         ResourceChange {
+    |         ^^^^^^^^^^^^^^ missing `after` and `before`
+
+warning: `costpilot` (test "exemption_ci_tests") generated 1 warning (run `cargo fix --test "exemption_ci_tests"` to apply 1 suggestion)
+error[E0560]: struct `graph_types::GraphMetadata` has no field named `timestamp`
+   --> src/engines/mapping/graphviz_generator.rs:418:17
+    |
+418 |                 timestamp: None,
+    |                 ^^^^^^^^^ `graph_types::GraphMetadata` does not have this field
+    |
+    = note: available fields are: `has_cycles`, `cycles`
+
+error[E0560]: struct `graph_types::GraphMetadata` has no field named `timestamp`
+   --> src/engines/mapping/json_exporter.rs:437:17
+    |
+437 |                 timestamp: None,
+    |                 ^^^^^^^^^ `graph_types::GraphMetadata` does not have this field
+    |
+    = note: available fields are: `has_cycles`, `cycles`
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+   --> src/engines/mapping/mod.rs:381:22
+    |
+381 |         let engine = MappingEngine::new();
+    |                      ^^^^^^^^^^^^^^^^^^-- argument #1 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/mapping/mod.rs:25:12
+    |
+ 25 |     pub fn new(edition: &crate::edition::EditionContext) -> Self {
+    |            ^^^ ----------------------------------------
+help: provide the argument
+    |
+381 |         let engine = MappingEngine::new(/* &EditionContext */);
+    |                                         +++++++++++++++++++++
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+   --> src/engines/mapping/mod.rs:387:22
+    |
+387 |         let engine = MappingEngine::new();
+    |                      ^^^^^^^^^^^^^^^^^^-- argument #1 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/mapping/mod.rs:25:12
+    |
+ 25 |     pub fn new(edition: &crate::edition::EditionContext) -> Self {
+    |            ^^^ ----------------------------------------
+help: provide the argument
+    |
+387 |         let engine = MappingEngine::new(/* &EditionContext */);
+    |                                         +++++++++++++++++++++
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+   --> src/engines/mapping/mod.rs:402:22
+    |
+402 |         let engine = MappingEngine::new();
+    |                      ^^^^^^^^^^^^^^^^^^-- argument #1 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/mapping/mod.rs:25:12
+    |
+ 25 |     pub fn new(edition: &crate::edition::EditionContext) -> Self {
+    |            ^^^ ----------------------------------------
+help: provide the argument
+    |
+402 |         let engine = MappingEngine::new(/* &EditionContext */);
+    |                                         +++++++++++++++++++++
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+   --> src/engines/mapping/mod.rs:415:22
+    |
+415 |         let engine = MappingEngine::new();
+    |                      ^^^^^^^^^^^^^^^^^^-- argument #1 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/mapping/mod.rs:25:12
+    |
+ 25 |     pub fn new(edition: &crate::edition::EditionContext) -> Self {
+    |            ^^^ ----------------------------------------
+help: provide the argument
+    |
+415 |         let engine = MappingEngine::new(/* &EditionContext */);
+    |                                         +++++++++++++++++++++
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+   --> src/engines/mapping/mod.rs:451:22
+    |
+451 |         let engine = MappingEngine::new();
+    |                      ^^^^^^^^^^^^^^^^^^-- argument #1 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/mapping/mod.rs:25:12
+    |
+ 25 |     pub fn new(edition: &crate::edition::EditionContext) -> Self {
+    |            ^^^ ----------------------------------------
+help: provide the argument
+    |
+451 |         let engine = MappingEngine::new(/* &EditionContext */);
+    |                                         +++++++++++++++++++++
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/engines/policy/approval_workflow.rs:667:30
+    |
+667 |         let result = manager.approve("test-policy", "unauthorized@example.com".to_string(), None);
+    |                              ^^^^^^^                                                        ---- argument #3 of type `std::string::String` is missing
+    |
+note: method defined here
+   --> src/engines/policy/approval_workflow.rs:132:12
+    |
+132 |     pub fn approve(
+    |            ^^^^^^^
+...
+136 |         approval_reference: String,
+    |         --------------------------
+help: provide the argument
+    |
+667 |         let result = manager.approve("test-policy", "unauthorized@example.com".to_string(), /* std::string::String */, None);
+    |                                                                                             ++++++++++++++++++++++++++
+
+error[E0063]: missing fields `breakdown`, `confidence`, `daily` and 7 other fields in initializer of `models::CostEstimate`
+   --> src/engines/policy/policy_engine.rs:428:20
+    |
+428 |         let cost = CostEstimate {
+    |                    ^^^^^^^^^^^^ missing `breakdown`, `confidence`, `daily` and 7 other fields
+
+error[E0063]: missing fields `breakdown`, `confidence`, `daily` and 7 other fields in initializer of `models::CostEstimate`
+   --> src/engines/policy/policy_engine.rs:522:20
+    |
+522 |         let cost = CostEstimate {
+    |                    ^^^^^^^^^^^^ missing `breakdown`, `confidence`, `daily` and 7 other fields
+
+error[E0063]: missing field `require_justification` in initializer of `policy_types::NatGatewayPolicy`
+   --> src/engines/policy/policy_engine.rs:634:36
+    |
+634 |                 nat_gateways: Some(NatGatewayPolicy { max_count: 1 }),
+    |                                    ^^^^^^^^^^^^^^^^ missing `require_justification`
+
+error[E0063]: missing fields `breakdown`, `confidence`, `daily` and 7 other fields in initializer of `models::CostEstimate`
+   --> src/engines/policy/policy_engine.rs:674:20
+    |
+674 |         let cost = CostEstimate {
+    |                    ^^^^^^^^^^^^ missing `breakdown`, `confidence`, `daily` and 7 other fields
+
+error[E0063]: missing field `services` in initializer of `snapshot_types::ModuleCost`
+   --> src/engines/slo/slo_manager.rs:404:13
+    |
+404 |             ModuleCost {
+    |             ^^^^^^^^^^ missing `services`
+
+error[E0063]: missing field `services` in initializer of `snapshot_types::ModuleCost`
+   --> src/engines/trend/trend_diff.rs:460:13
+    |
+460 |             ModuleCost {
+    |             ^^^^^^^^^^ missing `services`
+
+error[E0063]: missing field `services` in initializer of `snapshot_types::ModuleCost`
+   --> src/engines/trend/trend_diff.rs:472:13
+    |
+472 |             ModuleCost {
+    |             ^^^^^^^^^^ missing `services`
+
+error[E0063]: missing field `services` in initializer of `snapshot_types::ModuleCost`
+   --> src/engines/trend/trend_diff.rs:500:13
+    |
+500 |             ModuleCost {
+    |             ^^^^^^^^^^ missing `services`
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src/engines/trend/mod.rs:340:22
+    |
+340 |         let engine = TrendEngine::new(temp_dir.path());
+    |                      ^^^^^^^^^^^^^^^^----------------- argument #2 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/trend/mod.rs:29:12
+    |
+ 29 |     pub fn new<P: AsRef<std::path::Path>>(
+    |            ^^^
+ 30 |         storage_dir: P,
+ 31 |         edition: &crate::edition::EditionContext,
+    |         ----------------------------------------
+help: provide the argument
+    |
+340 |         let engine = TrendEngine::new(temp_dir.path(), /* &EditionContext */);
+    |                                                      +++++++++++++++++++++++
+
+error[E0599]: no method named `load_history` found for enum `std::result::Result<T, E>` in the current scope
+   --> src/engines/trend/mod.rs:343:30
+    |
+343 |         let history = engine.load_history();
+    |                              ^^^^^^^^^^^^ method not found in `std::result::Result<trend::TrendEngine, CostPilotError>`
+    |
+note: the method `load_history` exists on the type `trend::TrendEngine`
+   --> src/engines/trend/mod.rs:106:5
+    |
+106 |     pub fn load_history(&self) -> Result<TrendHistory, CostPilotError> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider using `Result::expect` to unwrap the `trend::TrendEngine` value, panicking if the value is a `Result::Err`
+    |
+343 |         let history = engine.expect("REASON").load_history();
+    |                             +++++++++++++++++
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src/engines/trend/mod.rs:350:22
+    |
+350 |         let engine = TrendEngine::new(temp_dir.path());
+    |                      ^^^^^^^^^^^^^^^^----------------- argument #2 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/trend/mod.rs:29:12
+    |
+ 29 |     pub fn new<P: AsRef<std::path::Path>>(
+    |            ^^^
+ 30 |         storage_dir: P,
+ 31 |         edition: &crate::edition::EditionContext,
+    |         ----------------------------------------
+help: provide the argument
+    |
+350 |         let engine = TrendEngine::new(temp_dir.path(), /* &EditionContext */);
+    |                                                      +++++++++++++++++++++++
+
+error[E0599]: no method named `extract_module_name` found for enum `std::result::Result<T, E>` in the current scope
+   --> src/engines/trend/mod.rs:353:20
+    |
+353 |             engine.extract_module_name("module.vpc.aws_nat_gateway.main"),
+    |                    ^^^^^^^^^^^^^^^^^^^ method not found in `std::result::Result<trend::TrendEngine, CostPilotError>`
+    |
+note: the method `extract_module_name` exists on the type `trend::TrendEngine`
+   --> src/engines/trend/mod.rs:299:5
+    |
+299 |     fn extract_module_name(&self, resource_id: &str) -> String {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider using `Result::expect` to unwrap the `trend::TrendEngine` value, panicking if the value is a `Result::Err`
+    |
+353 |             engine.expect("REASON").extract_module_name("module.vpc.aws_nat_gateway.main"),
+    |                   +++++++++++++++++
+
+error[E0599]: no method named `extract_module_name` found for enum `std::result::Result<T, E>` in the current scope
+   --> src/engines/trend/mod.rs:356:27
+    |
+356 |         assert_eq!(engine.extract_module_name("aws_instance.web"), "root");
+    |                           ^^^^^^^^^^^^^^^^^^^ method not found in `std::result::Result<trend::TrendEngine, CostPilotError>`
+    |
+note: the method `extract_module_name` exists on the type `trend::TrendEngine`
+   --> src/engines/trend/mod.rs:299:5
+    |
+299 |     fn extract_module_name(&self, resource_id: &str) -> String {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider using `Result::expect` to unwrap the `trend::TrendEngine` value, panicking if the value is a `Result::Err`
+    |
+356 |         assert_eq!(engine.expect("REASON").extract_module_name("aws_instance.web"), "root");
+    |                          +++++++++++++++++
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src/engines/trend/mod.rs:362:22
+    |
+362 |         let engine = TrendEngine::new(temp_dir.path());
+    |                      ^^^^^^^^^^^^^^^^----------------- argument #2 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/trend/mod.rs:29:12
+    |
+ 29 |     pub fn new<P: AsRef<std::path::Path>>(
+    |            ^^^
+ 30 |         storage_dir: P,
+ 31 |         edition: &crate::edition::EditionContext,
+    |         ----------------------------------------
+help: provide the argument
+    |
+362 |         let engine = TrendEngine::new(temp_dir.path(), /* &EditionContext */);
+    |                                                      +++++++++++++++++++++++
+
+error[E0599]: no method named `extract_service_name` found for enum `std::result::Result<T, E>` in the current scope
+   --> src/engines/trend/mod.rs:365:20
+    |
+365 |             engine.extract_service_name("aws_nat_gateway"),
+    |                    ^^^^^^^^^^^^^^^^^^^^ method not found in `std::result::Result<trend::TrendEngine, CostPilotError>`
+
+error[E0599]: no method named `extract_service_name` found for enum `std::result::Result<T, E>` in the current scope
+   --> src/engines/trend/mod.rs:368:27
+    |
+368 |         assert_eq!(engine.extract_service_name("aws_s3_bucket"), "S3 Bucket");
+    |                           ^^^^^^^^^^^^^^^^^^^^ method not found in `std::result::Result<trend::TrendEngine, CostPilotError>`
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src/engines/trend/mod.rs:374:22
+    |
+374 |         let engine = TrendEngine::new(temp_dir.path());
+    |                      ^^^^^^^^^^^^^^^^----------------- argument #2 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/trend/mod.rs:29:12
+    |
+ 29 |     pub fn new<P: AsRef<std::path::Path>>(
+    |            ^^^
+ 30 |         storage_dir: P,
+ 31 |         edition: &crate::edition::EditionContext,
+    |         ----------------------------------------
+help: provide the argument
+    |
+374 |         let engine = TrendEngine::new(temp_dir.path(), /* &EditionContext */);
+    |                                                      +++++++++++++++++++++++
+
+error[E0599]: no method named `detect_regressions` found for enum `std::result::Result<T, E>` in the current scope
+   --> src/engines/trend/mod.rs:379:34
+    |
+379 |         let regressions = engine.detect_regressions(&current, &baseline, 10.0);
+    |                                  ^^^^^^^^^^^^^^^^^^ method not found in `std::result::Result<trend::TrendEngine, CostPilotError>`
+    |
+note: the method `detect_regressions` exists on the type `trend::TrendEngine`
+   --> src/engines/trend/mod.rs:130:5
+    |
+130 | /     pub fn detect_regressions(
+131 | |         &self,
+132 | |         snapshot: &CostSnapshot,
+133 | |         baseline: &CostSnapshot,
+134 | |         threshold_percent: f64,
+135 | |     ) -> Vec<Regression> {
+    | |________________________^
+help: consider using `Result::expect` to unwrap the `trend::TrendEngine` value, panicking if the value is a `Result::Err`
+    |
+379 |         let regressions = engine.expect("REASON").detect_regressions(&current, &baseline, 10.0);
+    |                                 +++++++++++++++++
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src/engines/trend/mod.rs:390:22
+    |
+390 |         let engine = TrendEngine::new(temp_dir.path());
+    |                      ^^^^^^^^^^^^^^^^----------------- argument #2 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/trend/mod.rs:29:12
+    |
+ 29 |     pub fn new<P: AsRef<std::path::Path>>(
+    |            ^^^
+ 30 |         storage_dir: P,
+ 31 |         edition: &crate::edition::EditionContext,
+    |         ----------------------------------------
+help: provide the argument
+    |
+390 |         let engine = TrendEngine::new(temp_dir.path(), /* &EditionContext */);
+    |                                                      +++++++++++++++++++++++
+
+error[E0599]: no method named `detect_baseline_violations` found for enum `std::result::Result<T, E>` in the current scope
+   --> src/engines/trend/mod.rs:407:33
+    |
+407 |         let violations = engine.detect_baseline_violations(&snapshot, &baselines);
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `std::result::Result<trend::TrendEngine, CostPilotError>`
+    |
+note: the method `detect_baseline_violations` exists on the type `trend::TrendEngine`
+   --> src/engines/trend/mod.rs:204:5
+    |
+204 | /     pub fn detect_baseline_violations(
+205 | |         &self,
+206 | |         snapshot: &CostSnapshot,
+207 | |         baselines: &BaselinesManager,
+208 | |     ) -> Vec<BaselineViolation> {
+    | |_______________________________^
+help: consider using `Result::expect` to unwrap the `trend::TrendEngine` value, panicking if the value is a `Result::Err`
+    |
+407 |         let violations = engine.expect("REASON").detect_baseline_violations(&snapshot, &baselines);
+    |                                +++++++++++++++++
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src/engines/trend/mod.rs:421:22
+    |
+421 |         let engine = TrendEngine::new(temp_dir.path());
+    |                      ^^^^^^^^^^^^^^^^----------------- argument #2 of type `&EditionContext` is missing
+    |
+note: associated function defined here
+   --> src/engines/trend/mod.rs:29:12
+    |
+ 29 |     pub fn new<P: AsRef<std::path::Path>>(
+    |            ^^^
+ 30 |         storage_dir: P,
+ 31 |         edition: &crate::edition::EditionContext,
+    |         ----------------------------------------
+help: provide the argument
+    |
+421 |         let engine = TrendEngine::new(temp_dir.path(), /* &EditionContext */);
+    |                                                      +++++++++++++++++++++++
+
+error[E0063]: missing field `services` in initializer of `snapshot_types::ModuleCost`
+   --> src/engines/trend/mod.rs:440:13
+    |
+440 |             ModuleCost {
+    |             ^^^^^^^^^^ missing `services`
+
+error[E0599]: no method named `annotate_with_baselines` found for enum `std::result::Result<T, E>` in the current scope
+   --> src/engines/trend/mod.rs:450:16
+    |
+450 |         engine.annotate_with_baselines(&mut snapshot, &baselines);
+    |                ^^^^^^^^^^^^^^^^^^^^^^^ method not found in `std::result::Result<trend::TrendEngine, CostPilotError>`
+    |
+note: the method `annotate_with_baselines` exists on the type `trend::TrendEngine`
+   --> src/engines/trend/mod.rs:266:5
+    |
+266 | /     pub fn annotate_with_baselines(
+267 | |         &self,
+268 | |         snapshot: &mut CostSnapshot,
+269 | |         baselines: &BaselinesManager,
+270 | |     ) {
+    | |_____^
+help: consider using `Result::expect` to unwrap the `trend::TrendEngine` value, panicking if the value is a `Result::Err`
+    |
+450 |         engine.expect("REASON").annotate_with_baselines(&mut snapshot, &baselines);
+    |               +++++++++++++++++
+
+error[E0596]: cannot borrow `builder` as mutable, as it is not declared as mutable
+   --> src/engines/mapping/graph_builder.rs:568:22
+    |
+568 |         let result = builder.build_graph(&changes);
+    |                      ^^^^^^^ cannot borrow as mutable
+    |
+help: consider changing this to be mutable
+    |
+565 |         let mut builder = GraphBuilder::new();
+    |             +++
+
+error[E0596]: cannot borrow `builder` as mutable, as it is not declared as mutable
+   --> src/engines/mapping/graph_builder.rs:583:22
+    |
+583 |         let result = builder.build_graph(&changes);
+    |                      ^^^^^^^ cannot borrow as mutable
+    |
+help: consider changing this to be mutable
+    |
+577 |         let mut builder = GraphBuilder::new();
+    |             +++
+
+error[E0716]: temporary value dropped while borrowed
+   --> src/engines/policy/compliance.rs:641:23
+    |
+641 |           let results = AuditQuery::new(&log)
+    |  _______________________^
+642 | |             .with_event_type(AuditEventType::PolicyActivated)
+    | |_____________________________________________________________^ creates a temporary value which is freed while still in use
+643 |               .execute();
+    |                         - temporary value is freed at the end of this statement
+644 |
+645 |           assert_eq!(results.len(), 1);
+    |                      ------- borrow later used here
+    |
+help: consider using a `let` binding to create a longer lived value
+    |
+641 ~         let binding = AuditQuery::new(&log)
+642 +             .with_event_type(AuditEventType::PolicyActivated);
+643 ~         let results = binding
+    |
+
+error[E0716]: temporary value dropped while borrowed
+   --> src/engines/policy/compliance.rs:662:23
+    |
+662 |           let results = AuditQuery::new(&log)
+    |  _______________________^
+663 | |             .with_event_type(AuditEventType::PolicyActivated)
+664 | |             .with_actor("admin".to_string())
+665 | |             .with_severity(AuditSeverity::High)
+    | |_______________________________________________^ creates a temporary value which is freed while still in use
+666 |               .execute();
+    |                         - temporary value is freed at the end of this statement
+667 |
+668 |           assert_eq!(results.len(), 1);
+    |                      ------- borrow later used here
+    |
+help: consider using a `let` binding to create a longer lived value
+    |
+662 ~         let binding = AuditQuery::new(&log)
+663 +             .with_event_type(AuditEventType::PolicyActivated)
+664 +             .with_actor("admin".to_string())
+665 +             .with_severity(AuditSeverity::High);
+666 ~         let results = binding
+    |
+
+warning: variable does not need to be mutable
+   --> src/engines/trend/snapshot_manager.rs:365:13
+    |
+365 |         let mut snapshot = CostSnapshot::new("test-001".to_string(), -100.0);
+    |             ----^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0061, E0063, E0277, E0308, E0433, E0560, E0596, E0599, E0716.
+For more information about an error, try `rustc --explain E0061`.
+warning: `costpilot` (lib test) generated 115 warnings (68 duplicates)
+error: could not compile `costpilot` (lib test) due to 54 previous errors; 115 warnings emitted
