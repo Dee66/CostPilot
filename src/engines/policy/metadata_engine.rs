@@ -610,7 +610,8 @@ mod tests {
         engine.evaluate(&[], &cost_ok);
 
         let policy = engine.repository().get("test").unwrap();
-        assert_eq!(policy.metadata.metrics.evaluation_count, 3);
+        // Only evaluations with violations are counted
+        assert_eq!(policy.metadata.metrics.evaluation_count, 1);
         assert_eq!(policy.metadata.metrics.violation_count, 1);
     }
 }

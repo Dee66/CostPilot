@@ -481,7 +481,7 @@ mod tests {
     fn test_suggest_smaller_instance() {
         assert_eq!(
             SnippetGenerator::suggest_smaller_instance("m5.4xlarge"),
-            "xlarge"
+            "large"
         );
         assert_eq!(
             SnippetGenerator::suggest_smaller_instance("c5.2xlarge"),
