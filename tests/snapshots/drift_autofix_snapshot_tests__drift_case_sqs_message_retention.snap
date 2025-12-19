@@ -1,0 +1,26 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_sqs_queue.tasks",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "message_retention_seconds": 1209600
+        },
+        "before": {
+          "message_retention_seconds": 345600
+        }
+      },
+      "mode": "managed",
+      "name": "tasks",
+      "type": "aws_sqs_queue"
+    }
+  ]
+}

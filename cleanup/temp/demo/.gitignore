@@ -1,0 +1,7 @@
+
+# CostPilot
+.costpilot/snapshots/
+.costpilot/cache/
+tfplan.json
+tfplan.binary
+cost-report.md

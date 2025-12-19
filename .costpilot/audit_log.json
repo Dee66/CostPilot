@@ -1,0 +1,41 @@
+{
+  "entries": [
+    {
+      "sequence": 0,
+      "event": {
+        "id": "audit_2e03a98780006a76",
+        "event_type": "policy_state_change",
+        "timestamp": "2025-12-19T12:15:01.398901327Z",
+        "actor": "test_user",
+        "resource_id": "test_policy",
+        "resource_type": "policy",
+        "severity": "low",
+        "description": "Test event",
+        "metadata": {},
+        "success": true
+      },
+      "hash": "30f6ae9f0043010a8190c89530d5281357298f50699a00ab251364f82a51c073",
+      "previous_hash": "153921536002551f17d87a181f9c7d7b27b2e911645f5f89102405ef04ddc043",
+      "signature": "ed4a711f31aeb4b6e7e0f1320548531c798613241dc25a9372ab893928eb65c7"
+    },
+    {
+      "sequence": 1,
+      "event": {
+        "id": "audit_ae0c3d79fe99011c",
+        "event_type": "policy_approval",
+        "timestamp": "2025-12-19T12:15:01.399439648Z",
+        "actor": "test_user",
+        "resource_id": "test_policy",
+        "resource_type": "policy",
+        "severity": "medium",
+        "description": "Test approval",
+        "metadata": {},
+        "success": true
+      },
+      "hash": "9c528ce4baacf68d072c9ad3e8917de8a1b85249241a0ca911770171fa357358",
+      "previous_hash": "30f6ae9f0043010a8190c89530d5281357298f50699a00ab251364f82a51c073",
+      "signature": "57dc96857b479e8fee35a3812cd2334ae7e8a3cbc3f76e7588d8df3c9d47544e"
+    }
+  ],
+  "genesis_hash": "153921536002551f17d87a181f9c7d7b27b2e911645f5f89102405ef04ddc043"
+}

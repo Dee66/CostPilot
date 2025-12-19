@@ -1,0 +1,43 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_security_group.app",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "name": "app-sg"
+        },
+        "before": null
+      },
+      "mode": "managed",
+      "name": "app",
+      "type": "aws_security_group"
+    },
+    {
+      "address": "aws_instance.app",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "security_groups": [
+            "app-sg"
+          ]
+        },
+        "before": {
+          "security_groups": []
+        }
+      },
+      "mode": "managed",
+      "name": "app",
+      "type": "aws_instance"
+    }
+  ]
+}

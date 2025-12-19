@@ -1,0 +1,5 @@
+---
+source: tests/golden_mapping_tests.rs
+expression: stdout
+---
+Autofix snippet generation not yet implemented

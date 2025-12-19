@@ -19,6 +19,7 @@ pub fn detect_edition() -> Result<EditionContext, String> {
     let mut edition = EditionContext::free();
 
     // Attempt to load ProEngine (fails silently for Free mode)
+    #[cfg(not(target_arch = "wasm32"))]
     if let Err(e) = crate::pro_engine::load_pro_engine(&mut edition) {
         eprintln!("⚠️  Failed to load Premium engine: {}", e);
         eprintln!("   Running in Free mode");

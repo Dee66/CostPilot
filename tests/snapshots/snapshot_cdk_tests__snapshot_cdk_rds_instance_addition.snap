@@ -1,0 +1,19 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "Database": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "AllocatedStorage": "100",
+        "DBInstanceClass": "db.t3.medium",
+        "Engine": "postgres",
+        "EngineVersion": "14.6",
+        "StorageType": "gp3"
+      },
+      "Type": "AWS::RDS::DBInstance"
+    }
+  }
+}

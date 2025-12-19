@@ -1,0 +1,30 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_batch_compute_environment.jobs",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "compute_resources": {
+            "max_vcpus": 128
+          }
+        },
+        "before": {
+          "compute_resources": {
+            "max_vcpus": 64
+          }
+        }
+      },
+      "mode": "managed",
+      "name": "jobs",
+      "type": "aws_batch_compute_environment"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+Explanation for /tmp/tmpyacmndgt.json:
+
+Predicted monthly cost: $10.00
+Confidence: 65.0%
+
+Reasoning:
+• Identify Resource
+• Infer /tmp/tmpyacmndgt.json
+• Calculate Confidence
+• Calculate Prediction Interval
+

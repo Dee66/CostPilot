@@ -1,0 +1,51 @@
+---
+source: tests/snapshot_terraform_tests.rs
+expression: plan
+---
+{
+  "configuration": {
+    "root_module": {}
+  },
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_vpc.main",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "cidr_block": "10.0.0.0/16"
+        }
+      },
+      "type": "aws_vpc"
+    },
+    {
+      "address": "aws_subnet.public",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "cidr_block": "10.0.1.0/24",
+          "vpc_id": "aws_vpc.main"
+        }
+      },
+      "type": "aws_subnet"
+    },
+    {
+      "address": "aws_instance.web",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "instance_type": "t3.medium",
+          "subnet_id": "aws_subnet.public"
+        }
+      },
+      "type": "aws_instance"
+    }
+  ],
+  "terraform_version": "1.5.0"
+}

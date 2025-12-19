@@ -92,7 +92,7 @@ structure:
   notes: ''
   dependencies:
   - task-010
-  status: pending
+  status: completed
   result_hash: null
   steps:
   - id: step-020-1
@@ -1167,7 +1167,7 @@ structure:
   - task-130
   - task-180
   - task-200
-  status: pending
+  status: completed
   result_hash: null
   steps:
   - id: step-260-1

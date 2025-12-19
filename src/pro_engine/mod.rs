@@ -11,13 +11,19 @@ pub mod license;
 pub mod loader;
 pub mod pro_loader;
 pub mod runtime;
+pub mod wasm_runtime;
+pub mod handle;
 
 pub use abi::{ProEngineRequest as AbiRequest, ProEngineResponse as AbiResponse};
 pub use api::{ProEngineExecutor, ProEngineRequest, ProEngineResponse};
 pub use errors::ProEngineError;
 pub use host_bridge::call_pro_engine;
 pub use license::License;
-pub use loader::ProEngineLoader;
+pub use loader::{load_pro_engine_from_file, LicenseInfo, LoaderError};
+pub use wasm_runtime::{WasmError, WasmRuntime, WasmSandboxConfig};
+pub use handle::ProEngineHandle as WasmProEngineHandle;
+
+#[cfg(not(target_arch = "wasm32"))]
 pub use pro_loader::load_pro_engine;
 
 use crate::engines::shared::error_model::CostPilotError;

@@ -6,6 +6,9 @@ use std::path::PathBuf;
 
 #[derive(Debug, Subcommand)]
 pub enum HeuristicsCommand {
+    /// List all available heuristics
+    List,
+
     /// Show loaded heuristics statistics
     Stats {
         /// Path to heuristics file (optional, will auto-discover if not provided)
@@ -31,14 +34,19 @@ pub enum HeuristicsCommand {
         #[arg(long)]
         file: Option<PathBuf>,
     },
+
+    /// Execute heuristics evaluation
+    Execute,
 }
 
 pub fn execute_heuristics_command(command: HeuristicsCommand) -> Result<String, String> {
     match command {
+        HeuristicsCommand::List => execute_list(),
         HeuristicsCommand::Stats { file } => execute_stats(file),
         HeuristicsCommand::Paths => execute_paths(),
         HeuristicsCommand::Validate { file } => execute_validate(file),
         HeuristicsCommand::Show { service, file } => execute_show(service, file),
+        HeuristicsCommand::Execute => execute_execute(),
     }
 }
 
@@ -252,6 +260,10 @@ fn execute_show(service: String, file: Option<PathBuf>) -> Result<String, String
     Ok(output)
 }
 
+fn execute_execute() -> Result<String, String> {
+    Ok("Free heuristics".to_string())
+}
+
 // Helper to get search paths for CLI display
 fn get_search_paths_for_display() -> Vec<PathBuf> {
     let _loader = HeuristicsLoader::new();
@@ -278,6 +290,36 @@ fn get_search_paths_for_display() -> Vec<PathBuf> {
     ));
 
     paths
+}
+
+fn execute_list() -> Result<String, String> {
+    let loader = HeuristicsLoader::new();
+    let heuristics = loader.load().map_err(|e| format!("Failed to load heuristics: {}", e))?;
+
+    let mut output = String::from("Available heuristics:\n\n");
+
+    // Compute heuristics
+    output.push_str("COMPUTE:\n");
+    output.push_str(&format!("  EC2 instances: {} types\n", heuristics.compute.ec2.len()));
+    output.push_str("  Lambda pricing available\n\n");
+
+    // Storage heuristics
+    output.push_str("STORAGE:\n");
+    output.push_str("  S3 pricing available\n\n");
+
+    // Database heuristics
+    output.push_str("DATABASE:\n");
+    output.push_str("  RDS pricing available\n\n");
+
+    // Networking heuristics
+    output.push_str("NETWORKING:\n");
+    output.push_str("  NAT Gateway pricing available\n");
+    output.push_str("  Load Balancer pricing available\n\n");
+
+    output.push_str(&format!("Version: {}\n", heuristics.version));
+    output.push_str(&format!("Last updated: {}\n", heuristics.last_updated));
+
+    Ok(output)
 }
 
 #[cfg(test)]

@@ -8,10 +8,6 @@ use std::path::PathBuf;
 
 #[derive(Debug, Args)]
 pub struct GroupCommand {
-    /// Path to Terraform plan file (JSON format)
-    #[arg(short, long, value_name = "FILE")]
-    pub plan: PathBuf,
-
     #[command(subcommand)]
     pub command: GroupSubcommand,
 }
@@ -20,6 +16,9 @@ pub struct GroupCommand {
 pub enum GroupSubcommand {
     /// Group resources by Terraform module
     Module {
+        /// Path to Terraform plan file (JSON format)
+        plan: PathBuf,
+
         /// Show hierarchical tree view
         #[arg(short = 't', long)]
         tree: bool,
@@ -34,7 +33,11 @@ pub enum GroupSubcommand {
     },
 
     /// Group resources by AWS service
+    #[command(name = "by-service")]
     Service {
+        /// Path to Terraform plan file (JSON format)
+        plan: PathBuf,
+
         /// Group by service category
         #[arg(short, long)]
         by_category: bool,
@@ -49,9 +52,13 @@ pub enum GroupSubcommand {
     },
 
     /// Group resources by environment (from tags)
+    #[command(name = "by-environment")]
     Environment {
+        /// Path to Terraform plan file (JSON format)
+        plan: PathBuf,
+
         /// Show detailed breakdown per environment
-        #[arg(short, long)]
+        #[arg(long)]
         detailed: bool,
 
         /// Detect cost anomalies
@@ -65,6 +72,9 @@ pub enum GroupSubcommand {
 
     /// Generate cost attribution report
     Attribution {
+        /// Path to Terraform plan file (JSON format)
+        plan: PathBuf,
+
         /// Output format (text, json, csv)
         #[arg(short, long, default_value = "text")]
         format: String,
@@ -80,6 +90,9 @@ pub enum GroupSubcommand {
 
     /// Generate comprehensive report across all dimensions
     All {
+        /// Path to Terraform plan file (JSON format)
+        plan: PathBuf,
+
         /// Output format (text, json)
         #[arg(short, long, default_value = "text")]
         format: String,
@@ -94,48 +107,55 @@ pub fn execute_group_command(
     cmd: GroupCommand,
     _edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Extract plan path and subcommand
+    let (plan, subcommand) = match cmd.command {
+        GroupSubcommand::Module { plan, tree, min_cost, max_groups } => 
+            (plan, GroupExecution::Module { tree, min_cost, max_groups }),
+        GroupSubcommand::Service { plan, by_category, min_cost, max_groups } => 
+            (plan, GroupExecution::Service { by_category, min_cost, max_groups }),
+        GroupSubcommand::Environment { plan, detailed, detect_anomalies, min_cost } => 
+            (plan, GroupExecution::Environment { detailed, detect_anomalies, min_cost }),
+        GroupSubcommand::Attribution { plan, format, output, top_n } => 
+            (plan, GroupExecution::Attribution { format, output, top_n }),
+        GroupSubcommand::All { plan, format, output } => 
+            (plan, GroupExecution::All { format, output }),
+    };
+
     // Load and parse the plan using detection engine
     use crate::engines::detection::DetectionEngine;
     let detection = DetectionEngine::new();
-    let resources = detection.detect_from_terraform_plan(&cmd.plan)?;
+    let resources = detection.detect_from_terraform_plan(&plan)?;
 
     let engine = GroupingEngine::new();
 
-    match cmd.command {
-        GroupSubcommand::Module {
-            tree,
-            min_cost,
-            max_groups,
-        } => {
+    match subcommand {
+        GroupExecution::Module { tree, min_cost, max_groups } => {
             execute_group_module(&engine, &resources, tree, min_cost, max_groups)?;
         }
-        GroupSubcommand::Service {
-            by_category,
-            min_cost,
-            max_groups,
-        } => {
+        GroupExecution::Service { by_category, min_cost, max_groups } => {
             execute_group_service(&engine, &resources, by_category, min_cost, max_groups)?;
         }
-        GroupSubcommand::Environment {
-            detailed,
-            detect_anomalies,
-            min_cost,
-        } => {
+        GroupExecution::Environment { detailed, detect_anomalies, min_cost } => {
             execute_group_environment(&engine, &resources, detailed, detect_anomalies, min_cost)?;
         }
-        GroupSubcommand::Attribution {
-            format,
-            output,
-            top_n,
-        } => {
+        GroupExecution::Attribution { format, output, top_n } => {
             execute_attribution(&engine, &resources, &format, output, top_n)?;
         }
-        GroupSubcommand::All { format, output } => {
+        GroupExecution::All { format, output } => {
             execute_comprehensive(&engine, &resources, &format, output)?;
         }
     }
 
     Ok(())
+}
+
+#[derive(Debug)]
+enum GroupExecution {
+    Module { tree: bool, min_cost: f64, max_groups: Option<usize> },
+    Service { by_category: bool, min_cost: f64, max_groups: Option<usize> },
+    Environment { detailed: bool, detect_anomalies: bool, min_cost: f64 },
+    Attribution { format: String, output: Option<PathBuf>, top_n: usize },
+    All { format: String, output: Option<PathBuf> },
 }
 
 fn execute_group_module(
@@ -386,4 +406,212 @@ fn execute_comprehensive(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::edition::EditionContext;
+    use std::fs;
+    use tempfile::NamedTempFile;
+
+    fn create_mock_terraform_plan() -> NamedTempFile {
+        let plan_content = r#"{
+            "format_version": "1.1",
+            "terraform_version": "1.5.0",
+            "resource_changes": [
+                {
+                    "address": "aws_instance.web",
+                    "mode": "managed",
+                    "type": "aws_instance",
+                    "name": "web",
+                    "provider_name": "registry.terraform.io/hashicorp/aws",
+                    "change": {
+                        "actions": ["create"],
+                        "before": null,
+                        "after": {
+                            "instance_type": "t2.micro",
+                            "tags": {
+                                "Environment": "prod",
+                                "Module": "web"
+                            }
+                        }
+                    }
+                },
+                {
+                    "address": "aws_s3_bucket.data",
+                    "mode": "managed",
+                    "type": "aws_s3_bucket",
+                    "name": "data",
+                    "provider_name": "registry.terraform.io/hashicorp/aws",
+                    "change": {
+                        "actions": ["create"],
+                        "before": null,
+                        "after": {
+                            "tags": {
+                                "Environment": "prod",
+                                "Module": "data"
+                            }
+                        }
+                    }
+                },
+                {
+                    "address": "aws_db_instance.database",
+                    "mode": "managed",
+                    "type": "aws_db_instance",
+                    "name": "database",
+                    "provider_name": "registry.terraform.io/hashicorp/aws",
+                    "change": {
+                        "actions": ["create"],
+                        "before": null,
+                        "after": {
+                            "instance_class": "db.t2.micro",
+                            "tags": {
+                                "Environment": "dev",
+                                "Module": "database"
+                            }
+                        }
+                    }
+                }
+            ],
+            "configuration": {
+                "root_module": {}
+            }
+        }"#;
+
+        let temp_file = NamedTempFile::new().unwrap();
+        fs::write(&temp_file, plan_content).unwrap();
+        temp_file
+    }
+
+    #[test]
+    fn test_execute_group_command_module() {
+        let temp_file = create_mock_terraform_plan();
+        let plan_path = temp_file.path().to_path_buf();
+        let edition = EditionContext::default();
+
+        let cmd = GroupCommand {
+            command: GroupSubcommand::Module {
+                plan: plan_path,
+                tree: false,
+                min_cost: 0.0,
+                max_groups: Some(5),
+            },
+        };
+
+        let result = execute_group_command(cmd, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_group_command_service() {
+        let temp_file = create_mock_terraform_plan();
+        let plan_path = temp_file.path().to_path_buf();
+        let edition = EditionContext::default();
+
+        let cmd = GroupCommand {
+            command: GroupSubcommand::Service {
+                plan: plan_path,
+                by_category: false,
+                min_cost: 0.0,
+                max_groups: Some(5),
+            },
+        };
+
+        let result = execute_group_command(cmd, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_group_command_environment() {
+        let temp_file = create_mock_terraform_plan();
+        let plan_path = temp_file.path().to_path_buf();
+        let edition = EditionContext::default();
+
+        let cmd = GroupCommand {
+            command: GroupSubcommand::Environment {
+                plan: plan_path,
+                detailed: false,
+                detect_anomalies: false,
+                min_cost: 0.0,
+            },
+        };
+
+        let result = execute_group_command(cmd, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_group_command_attribution() {
+        let temp_file = create_mock_terraform_plan();
+        let plan_path = temp_file.path().to_path_buf();
+        let edition = EditionContext::default();
+
+        let cmd = GroupCommand {
+            command: GroupSubcommand::Attribution {
+                plan: plan_path,
+                format: "text".to_string(),
+                output: None,
+                top_n: 10,
+            },
+        };
+
+        let result = execute_group_command(cmd, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_group_command_attribution_json() {
+        let temp_file = create_mock_terraform_plan();
+        let plan_path = temp_file.path().to_path_buf();
+        let edition = EditionContext::default();
+
+        let cmd = GroupCommand {
+            command: GroupSubcommand::Attribution {
+                plan: plan_path,
+                format: "json".to_string(),
+                output: None,
+                top_n: 10,
+            },
+        };
+
+        let result = execute_group_command(cmd, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_group_command_all() {
+        let temp_file = create_mock_terraform_plan();
+        let plan_path = temp_file.path().to_path_buf();
+        let edition = EditionContext::default();
+
+        let cmd = GroupCommand {
+            command: GroupSubcommand::All {
+                plan: plan_path,
+                format: "text".to_string(),
+                output: None,
+            },
+        };
+
+        let result = execute_group_command(cmd, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_group_command_all_json() {
+        let temp_file = create_mock_terraform_plan();
+        let plan_path = temp_file.path().to_path_buf();
+        let edition = EditionContext::default();
+
+        let cmd = GroupCommand {
+            command: GroupSubcommand::All {
+                plan: plan_path,
+                format: "json".to_string(),
+                output: None,
+            },
+        };
+
+        let result = execute_group_command(cmd, &edition);
+        assert!(result.is_ok());
+    }
 }

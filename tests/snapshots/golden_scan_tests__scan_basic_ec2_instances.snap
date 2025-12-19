@@ -1,0 +1,18 @@
+---
+source: tests/golden_scan_tests.rs
+expression: stdout
+---
+🔍 CostPilot Scan
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Step 1: Detection
+   Found 2 resource changes
+
+💰 Step 2: Cost Prediction
+   Estimated monthly cost: $300.00
+   (2 resources analyzed)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 Summary
+   Resources changed: 2
+   Monthly cost: $300.00

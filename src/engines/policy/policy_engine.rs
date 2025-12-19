@@ -79,13 +79,23 @@ impl PolicyEngine {
 
     /// Check if a violation is exempted
     fn is_violation_exempted(&self, policy_name: &str, resource_id: &str) -> bool {
+        self.check_violation_exempted(policy_name, resource_id).is_some()
+    }
+
+    /// Check if a violation is exempted, returning the exemption ID if found
+    fn check_violation_exempted(&self, policy_name: &str, resource_id: &str) -> Option<String> {
         if let Some(exemptions) = &self.exemptions {
             let matches =
                 self.exemption_validator
                     .find_exemptions(exemptions, policy_name, resource_id);
-            !matches.is_empty()
+            if !matches.is_empty() {
+                // Return the first matching exemption ID
+                Some(matches[0].id.clone())
+            } else {
+                None
+            }
         } else {
-            false
+            None
         }
     }
 
@@ -98,7 +108,9 @@ impl PolicyEngine {
             // Check if exceeds limit
             if monthly_cost > global.monthly_limit {
                 // Check for exemption
-                if !self.is_violation_exempted("global_budget", "global") {
+                if let Some(exemption_id) = self.check_violation_exempted("global_budget", "global") {
+                    result.add_applied_exemption(exemption_id);
+                } else {
                     result.add_violation(PolicyViolation {
                         policy_name: "global_budget".to_string(),
                         severity: "CRITICAL".to_string(),

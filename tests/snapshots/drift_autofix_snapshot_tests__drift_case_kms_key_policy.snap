@@ -1,0 +1,26 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_kms_key.data",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\"}]}"
+        },
+        "before": {
+          "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+        }
+      },
+      "mode": "managed",
+      "name": "data",
+      "type": "aws_kms_key"
+    }
+  ]
+}

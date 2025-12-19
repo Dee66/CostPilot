@@ -1,6 +1,5 @@
 ---
 source: tests/golden_mapping_tests.rs
-assertion_line: 221
 expression: json_output
 ---
 {
@@ -10,7 +9,9 @@ expression: json_output
     "has_cycles": false,
     "max_depth": 0,
     "node_count": 3,
-    "total_cost": 45.0
+    "timestamp": "2024-01-01T00:00:00Z",
+    "total_cost": 45.0,
+    "version": "1.0.0"
   },
   "nodes": [
     {

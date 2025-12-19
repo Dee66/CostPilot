@@ -1,0 +1,30 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "Deployment": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "RestApi"
+        },
+        "StageName": "prod"
+      },
+      "Type": "AWS::ApiGateway::Deployment"
+    },
+    "RestApi": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL"
+          ]
+        },
+        "Name": "MyApi"
+      },
+      "Type": "AWS::ApiGateway::RestApi"
+    }
+  }
+}

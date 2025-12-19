@@ -1,0 +1,29 @@
+---
+source: tests/snapshot_terraform_tests.rs
+expression: plan
+---
+{
+  "configuration": {
+    "root_module": {}
+  },
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_nat_gateway.main",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "connectivity_type": "public",
+          "subnet_id": "subnet-12345"
+        },
+        "before": null
+      },
+      "mode": "managed",
+      "name": "main",
+      "type": "aws_nat_gateway"
+    }
+  ],
+  "terraform_version": "1.5.0"
+}

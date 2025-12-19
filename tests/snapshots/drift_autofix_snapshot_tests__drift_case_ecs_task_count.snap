@@ -1,0 +1,26 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_ecs_service.app",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "desired_count": 4
+        },
+        "before": {
+          "desired_count": 2
+        }
+      },
+      "mode": "managed",
+      "name": "app",
+      "type": "aws_ecs_service"
+    }
+  ]
+}

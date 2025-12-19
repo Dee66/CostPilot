@@ -411,6 +411,8 @@ mod tests {
                 cost_impact: None,
             }],
             metadata: GraphMetadata {
+                version: "1.0.0".to_string(),
+                timestamp: "2024-01-01T00:00:00Z".to_string(),
                 node_count: 2,
                 edge_count: 1,
                 max_depth: 1,

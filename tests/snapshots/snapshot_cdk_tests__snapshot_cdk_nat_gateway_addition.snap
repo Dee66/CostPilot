@@ -1,0 +1,30 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "EIP": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "Domain": "vpc"
+      },
+      "Type": "AWS::EC2::EIP"
+    },
+    "NatGateway": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "EIP",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "PublicSubnet"
+        }
+      },
+      "Type": "AWS::EC2::NatGateway"
+    }
+  }
+}

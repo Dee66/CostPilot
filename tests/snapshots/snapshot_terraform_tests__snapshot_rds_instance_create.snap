@@ -1,0 +1,31 @@
+---
+source: tests/snapshot_terraform_tests.rs
+expression: plan
+---
+{
+  "configuration": {
+    "root_module": {}
+  },
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_db_instance.main",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "allocated_storage": 100,
+          "engine": "postgres",
+          "engine_version": "14.6",
+          "instance_class": "db.t3.medium"
+        },
+        "before": null
+      },
+      "mode": "managed",
+      "name": "main",
+      "type": "aws_db_instance"
+    }
+  ],
+  "terraform_version": "1.5.0"
+}

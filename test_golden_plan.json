@@ -1,0 +1,120 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.web",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "web",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": {
+            "instance_type": "t3.large",
+            "ami": "ami-12345678",
+            "tags": {
+              "Name": "web-server",
+              "Environment": "prod"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.db",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "db",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": {
+            "instance_type": "t3.xlarge",
+            "ami": "ami-87654321",
+            "tags": {
+              "Name": "db-server",
+              "Environment": "prod"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_instance.web",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_type": "t3.large",
+          "ami": "ami-12345678",
+          "tags": {
+            "Name": "web-server",
+            "Environment": "prod"
+          }
+        }
+      },
+      "type": "aws_instance",
+      "name": "web"
+    },
+    {
+      "address": "aws_instance.db",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_type": "t3.xlarge",
+          "ami": "ami-87654321",
+          "tags": {
+            "Name": "db-server",
+            "Environment": "prod"
+          }
+        }
+      },
+      "type": "aws_instance",
+      "name": "db"
+    }
+  ],
+  "configuration": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.web",
+          "mode": "managed",
+          "type": "aws_instance",
+          "expressions": {
+            "instance_type": {
+              "constant_value": "t3.large"
+            },
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "web-server",
+                "Environment": "prod"
+              }
+            }
+          }
+        },
+        {
+          "address": "aws_instance.db",
+          "mode": "managed",
+          "type": "aws_instance",
+          "expressions": {
+            "instance_type": {
+              "constant_value": "t3.xlarge"
+            },
+            "ami": {
+              "constant_value": "ami-87654321"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "db-server",
+                "Environment": "prod"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

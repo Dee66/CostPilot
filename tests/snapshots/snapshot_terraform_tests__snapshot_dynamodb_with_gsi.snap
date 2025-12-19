@@ -1,0 +1,35 @@
+---
+source: tests/snapshot_terraform_tests.rs
+expression: plan
+---
+{
+  "configuration": {
+    "root_module": {}
+  },
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_dynamodb_table.users",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "billing_mode": "PROVISIONED",
+          "global_secondary_index": [
+            {
+              "name": "EmailIndex",
+              "read_capacity": 10,
+              "write_capacity": 10
+            }
+          ],
+          "name": "users",
+          "read_capacity": 20,
+          "write_capacity": 20
+        }
+      },
+      "type": "aws_dynamodb_table"
+    }
+  ],
+  "terraform_version": "1.5.0"
+}

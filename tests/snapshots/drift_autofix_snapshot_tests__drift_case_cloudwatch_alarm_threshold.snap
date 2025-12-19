@@ -1,0 +1,28 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_cloudwatch_metric_alarm.cpu",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "comparison_operator": "GreaterThanThreshold",
+          "threshold": 90.0
+        },
+        "before": {
+          "comparison_operator": "GreaterThanThreshold",
+          "threshold": 80.0
+        }
+      },
+      "mode": "managed",
+      "name": "cpu",
+      "type": "aws_cloudwatch_metric_alarm"
+    }
+  ]
+}

@@ -50,7 +50,7 @@ Triggered by:
 “Next item”, “Continue”, “Proceed”, “Do the next one”, “Keep going”.
 
 Steps:
-1. Load docs/checklist.md.
+1. Load docs/test_checklist.md.
 2. Find the next incomplete item.
 3. Implement ONLY that item.
 4. Modify/create files as required.
@@ -71,7 +71,7 @@ Output exactly: “Blocker: conflict detected.”
 
 FILE RULES:
 - You may create or modify any file except this one.
-- You may update docs/checklist.md only to mark items complete.
+- You may update docs/test_checklist.md only to mark items complete.
 - Do not restructure, rewrite, or reorder the checklist.
 - Do not modify or rewrite the spec.
 

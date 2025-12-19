@@ -11,7 +11,6 @@ use std::path::PathBuf;
 #[derive(Debug, Args)]
 pub struct ScanCommand {
     /// Path to Terraform plan JSON file
-    #[arg(short, long, value_name = "FILE")]
     plan: PathBuf,
 
     /// Enable detailed explanations
@@ -25,10 +24,6 @@ pub struct ScanCommand {
     /// Path to exemptions file
     #[arg(long, value_name = "FILE")]
     exemptions: Option<PathBuf>,
-
-    /// Output format
-    #[arg(short, long, value_enum, default_value = "markdown")]
-    format: OutputFormat,
 
     /// Fail on critical severity issues
     #[arg(long)]
@@ -225,8 +220,43 @@ impl ScanCommand {
                         violation.message
                     );
                 }
+            } else if !policy_result.warnings.is_empty() {
+                println!(
+                    "   {} {}",
+                    "⚠".yellow(),
+                    format!(
+                        "{} policy warnings (Free edition: enforcement disabled)",
+                        policy_result.warnings.len()
+                    )
+                    .yellow()
+                );
+                for warning in &policy_result.warnings {
+                    println!(
+                        "     • {}",
+                        warning
+                    );
+                }
             } else {
                 println!("   {} All policies passed", "✅".green());
+            }
+
+            // Display applied exemptions
+            if !policy_result.applied_exemptions.is_empty() {
+                println!(
+                    "   {} {}",
+                    "ℹ".blue(),
+                    format!(
+                        "{} exemptions applied",
+                        policy_result.applied_exemptions.len()
+                    )
+                    .blue()
+                );
+                for exemption_id in &policy_result.applied_exemptions {
+                    println!(
+                        "     • EXEMPTION_APPLIED: {}",
+                        exemption_id.bright_blue()
+                    );
+                }
             }
             println!();
         }
@@ -265,7 +295,13 @@ impl ScanCommand {
 
         if let Some(policy_path) = &self.policy {
             let policy_config = PolicyLoader::load_from_file(policy_path)?;
-            let policy_engine = PolicyEngine::new(policy_config, edition);
+            let policy_engine = if let Some(exemptions_path) = &self.exemptions {
+                let exemption_validator = ExemptionValidator::new();
+                let exemptions = exemption_validator.load_from_file(exemptions_path)?;
+                PolicyEngine::with_exemptions(policy_config, exemptions, edition)
+            } else {
+                PolicyEngine::new(policy_config, edition)
+            };
 
             // Convert estimates to CostEstimate for policy evaluation
             let total_cost_estimate = CostEstimate {
@@ -347,7 +383,6 @@ mod tests {
             explain: false,
             policy: None,
             exemptions: None,
-            format: OutputFormat::Markdown,
             fail_on_critical: false,
             autofix: false,
         };

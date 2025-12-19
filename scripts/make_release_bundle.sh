@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage: make_release_bundle.sh <version> <platform> <out_dir>
+# Creates deterministic ZIP and TAR.GZ release bundles with SBOM
+
+if [[ $# -ne 3 ]]; then
+  echo "ERROR: Usage: make_release_bundle.sh <version> <platform> <out_dir>" >&2
+  exit 1
+fi
+
+VERSION="$1"
+PLATFORM="$2"
+OUT_DIR="$3"
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BINARY_PATH="${PROJECT_ROOT}/target/release/costpilot"
+
+if [[ ! -f "$BINARY_PATH" ]]; then
+  echo "ERROR: Binary not found: $BINARY_PATH" >&2
+  exit 1
+fi
+
+mkdir -p "$OUT_DIR"
+
+# Create temporary staging directory
+TMPDIR=$(mktemp -d)
+trap "rm -rf '$TMPDIR'" EXIT
+
+BUNDLE_NAME="costpilot-${VERSION}-${PLATFORM}"
+STAGE_DIR="${TMPDIR}/${BUNDLE_NAME}"
+mkdir -p "$STAGE_DIR/bin"
+
+# Copy binary
+cp "$BINARY_PATH" "$STAGE_DIR/bin/costpilot"
+chmod 755 "$STAGE_DIR/bin/costpilot"
+
+# Copy documentation
+[[ -f "${PROJECT_ROOT}/README.md" ]] && cp "${PROJECT_ROOT}/README.md" "$STAGE_DIR/"
+[[ -f "${PROJECT_ROOT}/LICENSE" ]] && cp "${PROJECT_ROOT}/LICENSE" "$STAGE_DIR/"
+
+# Copy examples if present
+if [[ -d "${PROJECT_ROOT}/examples" ]]; then
+  mkdir -p "$STAGE_DIR/examples"
+  cp -r "${PROJECT_ROOT}/examples/"*.json "$STAGE_DIR/examples/" 2>/dev/null || true
+fi
+
+# Generate SBOM
+SBOM_SCRIPT="${PROJECT_ROOT}/packaging/sbom/generate_sbom.sh"
+if [[ -x "$SBOM_SCRIPT" ]]; then
+  bash "$SBOM_SCRIPT" "$STAGE_DIR" "$STAGE_DIR/sbom.spdx.json" >/dev/null
+else
+  echo '{"spdxVersion":"SPDX-2.3","dataLicense":"CC0-1.0","SPDXID":"SPDXRef-DOCUMENT","name":"CostPilot"}' > "$STAGE_DIR/sbom.spdx.json"
+fi
+
+# Deterministic timestamp
+if [[ -n "${DEV_FAST:-}" ]]; then
+  MTIME_ARG=""
+else
+  BUILD_TIME="${SOURCE_DATE_EPOCH:-0}"
+  MTIME_ARG="--mtime=@${BUILD_TIME}"
+fi
+
+# Create deterministic TAR.GZ
+TAR_OUTPUT="${OUT_DIR}/${BUNDLE_NAME}.tar.gz"
+if [[ -n "${DEV_FAST:-}" ]]; then
+  tar -czf "$TAR_OUTPUT" -C "$TMPDIR" "$BUNDLE_NAME"
+else
+  tar --sort=name $MTIME_ARG --owner=0 --group=0 --numeric-owner \
+    -czf "$TAR_OUTPUT" -C "$TMPDIR" "$BUNDLE_NAME"
+fi
+
+# Create deterministic ZIP
+ZIP_OUTPUT="${OUT_DIR}/${BUNDLE_NAME}.zip"
+ZIP_OUTPUT_ABS="$(cd "$OUT_DIR" && pwd)/${BUNDLE_NAME}.zip"
+
+if [[ -n "${DEV_FAST:-}" ]]; then
+  (cd "$TMPDIR" && zip -q -r "$ZIP_OUTPUT_ABS" "$BUNDLE_NAME")
+else
+  # Use Python for deterministic ZIP if available
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$TMPDIR" "$BUNDLE_NAME" "$ZIP_OUTPUT_ABS" <<'EOF'
+import sys, os, zipfile
+from pathlib import Path
+
+tmpdir, bundle_name, output = sys.argv[1:4]
+bundle_path = Path(tmpdir) / bundle_name
+
+with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zf:
+    for root, dirs, files in sorted(os.walk(bundle_path)):
+        dirs.sort()
+        for file in sorted(files):
+            file_path = Path(root) / file
+            arcname = str(file_path.relative_to(tmpdir))
+            zinfo = zipfile.ZipInfo(arcname)
+            zinfo.date_time = (1980, 1, 1, 0, 0, 0)
+            zinfo.external_attr = 0o644 << 16
+            if file_path.name == 'costpilot':
+                zinfo.external_attr = 0o755 << 16
+            with open(file_path, 'rb') as f:
+                zf.writestr(zinfo, f.read(), compress_type=zipfile.ZIP_DEFLATED)
+EOF
+  else
+    # Fallback to zip command
+    (cd "$TMPDIR" && TZ=UTC zip -q -X -r "$ZIP_OUTPUT" "$BUNDLE_NAME")
+  fi
+fi
+
+# Generate checksums
+(
+  cd "$OUT_DIR"
+  sha256sum "$(basename "$TAR_OUTPUT")" "$(basename "$ZIP_OUTPUT")" | sort > sha256sum.txt
+)
+
+echo "BUNDLE: ${TAR_OUTPUT}"

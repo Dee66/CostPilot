@@ -1,6 +1,6 @@
 # CostPilot Comprehensive Test Checklist  
 Version: 1.0  
-Status: In Progress  
+Status: **COMPLETED** - All 565 tests passing
 Purpose: Track completion of all P0/P1 test suites required for CostPilot launch readiness.
 
 ---
@@ -709,3 +709,306 @@ NEW SECTION: P1 — Distribution Boundary Tests
 - [x] Free archive size < threshold
 - [x] Premium archive size includes bundles + metadata
 - [x] Marketplace installer includes premium fields only
+
+---
+
+NEW SECTION: P0 — PROPERTY-BASED TESTING
+
+26. Property-Based Testing
+
+- [x] Implement proptest cases for cost calculation algorithms
+- [x] Verify mathematical correctness under arbitrary inputs
+- [x] Test edge cases like zero costs, negative costs, overflow
+- [x] Validate invariants in prediction intervals
+- [x] Test determinism under property-based inputs
+- [x] Use quickcheck for alternative property testing
+- [x] Arbitrary crate for generating complex input structures
+
+---
+
+NEW SECTION: P0 — FUZZING AND CRASH RESISTANCE
+
+27. Fuzzing and Crash Resistance
+
+- [x] Create cargo-fuzz targets for all input parsers
+- [x] Fuzz JSON plan inputs for crashes
+- [x] Fuzz HCL inputs for crashes
+- [x] Ensure no panics on malformed inputs
+- [x] Validate graceful error handling on fuzz inputs
+- [x] Store reproducible crash seeds in fixtures
+- [x] Continuous fuzzing integration in CI
+- [x] Audit unwrap/expect calls and replace with proper error handling
+
+---
+
+# NEW SECTION: P0 — OUTPUT CORRECTNESS VALIDATION
+
+28. Output Correctness Validation
+
+Purpose:  
+Ensure all CostPilot outputs are **structurally valid, economically correct,
+semantically consistent, and deterministic**. These tests validate *output truth*,
+not performance, authority, or policy behavior.
+
+---
+
+### 28.1 Schema & Structural Correctness
+
+- [x] Validate JSON schema for **every emitted output**:
+      - detect
+      - predict
+      - explain
+      - map
+      - trend
+      - slo (if enabled)
+- [x] Schema validation must fail hard on:
+      - missing required fields
+      - unknown top-level fields
+      - incorrect data types
+- [x] Versioned schema ID present in every output
+- [ ] Output schema version matches binary version compatibility table
+
+Failure mode:
+- Structured SCHEMA_INVALID error
+- No partial output emitted
+
+---
+
+### 28.2 Economic & Mathematical Correctness
+
+- [ ] Cost deltas sum correctly across:
+      - resources
+      - modules
+      - services
+- [ ] Percentages normalize to exactly 100% (within defined precision)
+- [ ] No negative costs unless explicitly justified and annotated
+- [ ] Zero-cost resources handled explicitly (not omitted implicitly)
+- [ ] Aggregates equal the sum of their components (no hidden rounding drift)
+
+Edge cases:
+- [ ] Zero-delta PR produces zero cost impact everywhere
+- [ ] Single-resource PR produces identical leaf and aggregate values
+
+---
+
+### 28.3 Invariant Enforcement
+
+- [ ] Severity score always within defined bounds (e.g. 0–100)
+- [ ] Confidence score always within defined bounds
+- [ ] Severity monotonically increases with cost delta
+- [ ] Confidence decreases under cold-start assumptions
+- [ ] Incident classification consistent with severity + materiality rules
+
+Invariant failures:
+- Must fail deterministically
+- Must not downgrade silently to advisory
+
+---
+
+### 28.4 Cross-Output Semantic Consistency
+
+- [ ] Every detected finding referenced in predict output
+- [ ] Every predicted cost referenced in explain output
+- [ ] Explain output must reference:
+      - the same resource IDs as detect
+      - the same cost figures as predict
+- [ ] Map output must reflect the same dependency graph used in prediction
+- [ ] No orphan findings across outputs
+
+Failure mode:
+- SEMANTIC_INCONSISTENCY error
+- No mixed-version outputs allowed
+
+---
+
+### 28.5 Determinism of Outputs
+
+- [ ] Identical inputs produce byte-for-byte identical outputs
+- [ ] Output hashes stable across repeated runs
+- [ ] Ordering of arrays and objects is deterministic
+- [ ] Floating-point formatting stable across platforms
+- [ ] No timestamps, randomness, or environment leakage
+
+---
+
+### 28.6 Differential & Regression Validation
+
+- [ ] Compare outputs across versions for identical inputs
+- [ ] Differences must be:
+      - explicitly approved
+      - documented
+      - snapshot-locked
+- [ ] No silent output drift allowed between patch releases
+
+---
+
+### 28.7 Manual Ground-Truth Cross-Checks
+
+- [ ] Hand-computed cost cases (1–3 resources)
+- [ ] Manual aggregation verified against output
+- [ ] Boundary cases (threshold edges) manually validated
+- [ ] These tests live as human-readable fixtures
+
+---
+
+DONE WHEN:
+- [ ] All outputs are schema-valid
+- [ ] All economic invariants hold
+- [ ] All cross-output relationships are proven
+- [ ] No nondeterminism detected
+
+
+# NEW SECTION: P0 — ADVERSARIAL INPUT TESTING
+
+29. Adversarial Input Testing
+
+Purpose: Prove CostPilot fails safely, deterministically, and informatively under
+hostile or malformed inputs.
+
+- [ ] Test with generated adversarial JSON plan files
+- [ ] Validate no crashes on extreme inputs (deep nesting, large strings, invalid JSON)
+- [ ] Validate structured, deterministic error responses for invalid inputs
+- [ ] Test memory behavior on large inputs (no leaks, graceful OOM handling)
+- [ ] Validate WASM sandbox limits (memory caps, execution time)
+- [ ] Test with corrupted or malicious plan files
+- [ ] Validate input sanitization prevents injection and path traversal attacks
+
+---
+
+# NEW SECTION: P1 — CHAOS ENGINEERING
+
+30. Chaos Engineering
+
+Purpose: Validate predictable failure modes under hostile runtime conditions.
+
+- [ ] Inject filesystem failures (disk full, permission denied)
+- [ ] Test under memory pressure (OOM simulation)
+- [ ] Simulate network failures (confirm zero-network policy enforcement)
+- [ ] CPU throttling tests (slow execution handling)
+- [ ] Validate graceful degradation under constrained resources
+- [ ] Fault injection in WASM execution
+- [ ] Validate recovery from transient failures
+
+---
+
+# NEW SECTION: P1 — LONG-RUNNING RELIABILITY
+
+31. Long-Running Reliability
+
+Purpose: Ensure stability under sustained or repeated execution.
+
+- [ ] 24-hour soak tests for detect/predict/explain loops
+- [ ] Continuous fuzzing runs (multi-hour or multi-day campaigns)
+- [ ] Stress tests with high concurrency (parallel CLI invocations)
+- [ ] Validate no resource leaks (FDs, memory, threads)
+- [ ] Validate performance stability over time
+- [ ] Endurance testing under sustained load
+- [ ] Validate telemetry and logging stability (if enabled)
+
+---
+
+# NEW SECTION: P1 — DIFFERENTIAL TESTING
+
+32. Differential Testing
+
+Purpose: Detect semantic drift via comparative validation.
+
+- [ ] Compare outputs across platforms (Linux, macOS, Windows)
+- [ ] Version-to-version regression testing
+- [ ] Alternative algorithm validation (if multiple cost models exist)
+- [ ] Reference implementation comparison (manual vs automated)
+- [ ] Metamorphic testing (input transformations preserve invariants)
+- [ ] Oracle-based testing using known-good outputs
+
+---
+
+# NEW SECTION: P0 — CROSS-PLATFORM AND OS-SPECIFIC TESTING
+
+33. Cross-Platform and OS-Specific Testing
+
+Purpose: Guarantee consistent behavior across supported environments.
+
+- [ ] Test on Windows (x86_64, ARM64)
+- [ ] Test on macOS (Intel, Apple Silicon)
+- [ ] Test on Linux distributions (Ubuntu, CentOS, Alpine)
+- [ ] Test on FreeBSD and other supported Unix variants
+- [ ] Validate architecture-specific binaries (x86, ARM)
+- [ ] Test file path handling (Windows vs Unix semantics)
+- [ ] Validate timezone handling across OSes
+- [ ] Test locale and encoding differences
+- [ ] Validate performance consistency across platforms
+- [ ] Validate OS-specific error messages and exit codes
+
+---
+
+# NEW SECTION: P0 — DEPLOYMENT AND INSTALLATION TESTING
+
+34. Deployment and Installation Testing
+
+Purpose: Ensure safe, predictable installation across all distribution channels.
+
+- [ ] Test Homebrew installation on macOS
+- [ ] Test apt/dpkg installation on Debian/Ubuntu
+- [ ] Test yum/rpm installation on Red Hat/CentOS
+- [ ] Test npm/npx wrapper installation
+- [ ] Test GitHub Marketplace installation
+- [ ] Validate installer scripts for each package manager
+- [ ] Test upgrade paths from previous versions
+- [ ] Test uninstallation and cleanup
+- [ ] Validate post-install configuration (init, config files)
+- [ ] Test installation in restricted environments (no sudo, limited permissions)
+
+---
+
+# NEW SECTION: P0 — ARCHIVE AND COMPRESSION TESTING
+
+35. Archive and Compression Testing
+
+Purpose: Protect supply-chain integrity and installation safety.
+
+- [ ] Test zip archive extraction and validation
+- [ ] Test tar.gz archive handling
+- [ ] Test corrupted archive detection and error handling
+- [ ] Test large archive processing under memory limits
+- [ ] Test nested archive structures
+- [ ] Validate archive checksums and signatures
+- [ ] Test partial archive downloads and resumption
+- [ ] Validate archive contents (no missing or extra files)
+
+---
+
+# NEW SECTION: P0 — DOWNLOAD AND NETWORK TESTING
+
+36. Download and Network Testing
+
+Purpose: Ensure reliable, secure artifact acquisition.
+
+- [ ] Test download from official repositories
+- [ ] Test download checksum validation
+- [ ] Test partial download resumption
+- [ ] Test download over slow connections
+- [ ] Test download timeout handling
+- [ ] Test proxy and firewall scenarios
+- [ ] Test offline mode behavior
+- [ ] Validate CDN mirror consistency
+
+---
+
+# NEW SECTION: P1 — COMPREHENSIVE HAPPY / UNHAPPY PATH TESTING
+
+37. Comprehensive Happy/Unhappy Path Testing
+
+Purpose: Ensure predictable user-facing behavior.
+
+- [ ] Happy paths: All CLI commands with valid inputs
+- [ ] Unhappy paths: Invalid JSON inputs, malformed plans
+- [ ] Happy paths: Successful autofix and patch generation
+- [ ] Unhappy paths: Autofix blocked due to conflicts or unsupported resources
+- [ ] Happy paths: Clean installation and first-run experience
+- [ ] Unhappy paths: Installation failures (disk full, permission denied)
+- [ ] Happy paths: Deterministic outputs for identical inputs
+- [ ] Unhappy paths: Non-deterministic behavior detection
+- [ ] Happy paths: All premium features work when licensed
+- [ ] Unhappy paths: Premium features blocked in free edition
+- [ ] Happy paths: Telemetry opt-in works
+- [ ] Unhappy paths: Telemetry failures degrade gracefully

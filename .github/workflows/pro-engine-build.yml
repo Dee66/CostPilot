@@ -1,0 +1,63 @@
+name: Pro Engine Build
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build-pro-engine:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install cryptography
+      
+      - name: Generate encryption key
+        run: |
+          echo "PRO_ENGINE_ENC_KEY=$(openssl rand -hex 32)" >> $GITHUB_ENV
+      
+      - name: Build Pro Engine WASM
+        env:
+          TARGET: linux-amd64
+        run: bash premium/engine_build/build_pro_engine.sh
+      
+      - name: Validate build artifacts
+        env:
+          TARGET: linux-amd64
+        run: bash premium/engine_build/validate_build.sh
+      
+      - name: Upload encrypted WASM
+        uses: actions/upload-artifact@v4
+        with:
+          name: pro-engine-linux-amd64.wasm.enc
+          path: dist/pro-engine-linux-amd64.wasm.enc
+      
+      - name: Upload metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: pro-engine-linux-amd64.meta.json
+          path: dist/pro-engine-linux-amd64.meta.json
+      
+      - name: Upload checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: pro-engine-linux-amd64.sha256
+          path: dist/pro-engine-linux-amd64.sha256
+      
+      - name: Verify no unencrypted WASM leaked
+        run: |
+          if find dist/ -name "*.wasm" -not -name "*.wasm.enc" | grep -q .; then
+            echo "ERROR: Unencrypted WASM found in dist/"
+            exit 1
+          fi
+          echo "✓ No unencrypted WASM in dist/"

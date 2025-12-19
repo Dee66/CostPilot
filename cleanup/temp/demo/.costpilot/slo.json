@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "slos": [
+    {
+      "name": "Monthly Cost Budget",
+      "target": 5000.0,
+      "error_budget_percent": 10,
+      "window_days": 30,
+      "breach_action": "alert"
+    },
+    {
+      "name": "Cost Stability",
+      "target_volatility_percent": 15,
+      "window_days": 7,
+      "breach_action": "warn"
+    }
+  ]
+}

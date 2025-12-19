@@ -1,0 +1,58 @@
+# CostPilot Configuration
+version: 1.0.0
+
+# Detection settings
+detection:
+  enabled: true
+  severity_threshold: LOW  # LOW, MEDIUM, HIGH, CRITICAL
+  
+  # Anti-pattern detection
+  anti_patterns:
+    - nat_gateway_overuse
+    - overprovisioned_ec2
+    - s3_missing_lifecycle
+    - unbounded_lambda_concurrency
+    - dynamodb_pay_per_request_default
+
+# Prediction settings
+prediction:
+  enabled: true
+  confidence_threshold: 0.5  # 0.0 - 1.0
+  
+  # Cost thresholds
+  thresholds:
+    warning: 100   # Monthly cost in USD
+    critical: 500  # Monthly cost in USD
+
+# Explain settings
+explain:
+  enabled: true
+  max_patterns: 5  # Top N patterns to explain
+  include_assumptions: true
+  include_calculation_steps: true
+
+# Autofix settings
+autofix:
+  mode: snippet  # snippet, patch (Pro), drift-safe (Beta)
+  enabled: true
+  require_approval: true  # For patch mode
+
+# Policy evaluation
+policy:
+  enabled: false  # Enable in Phase 2
+  policy_file: .costpilot/policy.yml
+
+# Reporting
+reporting:
+  format: markdown  # markdown, json, text
+  show_summary: true
+  show_details: true
+  show_snippets: true
+
+# Zero-IAM enforcement
+security:
+  enforce_zero_iam: true
+  enforce_wasm_sandbox: true
+  max_file_size_mb: 20
+  sandbox_memory_mb: 256
+  sandbox_timeout_ms: 2000

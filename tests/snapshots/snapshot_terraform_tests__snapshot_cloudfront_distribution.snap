@@ -1,0 +1,26 @@
+---
+source: tests/snapshot_terraform_tests.rs
+expression: plan
+---
+{
+  "configuration": {
+    "root_module": {}
+  },
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_cloudfront_distribution.cdn",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "enabled": true,
+          "price_class": "PriceClass_100"
+        }
+      },
+      "type": "aws_cloudfront_distribution"
+    }
+  ],
+  "terraform_version": "1.5.0"
+}

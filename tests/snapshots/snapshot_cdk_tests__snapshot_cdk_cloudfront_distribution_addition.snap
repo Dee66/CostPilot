@@ -1,0 +1,29 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "CdnDistribution": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "DistributionConfig": {
+          "Enabled": true,
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "Bucket",
+                  "DomainName"
+                ]
+              },
+              "Id": "S3Origin"
+            }
+          ],
+          "PriceClass": "PriceClass_100"
+        }
+      },
+      "Type": "AWS::CloudFront::Distribution"
+    }
+  }
+}

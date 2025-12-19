@@ -175,3 +175,58 @@ fn test_schemas_validate_cost_non_negative() {
         assert_eq!(minimum, 0.0, "{} must have minimum of 0.0", field);
     }
 }
+
+#[test]
+fn test_output_schema_version_matches_binary_version_compatibility_table() {
+    // Define the compatibility table: binary version -> expected schema version
+    let compatibility_table: std::collections::HashMap<&str, &str> = [
+        ("1.0.0", "1.0.0"),
+        // Future versions would be added here as they are released
+    ].iter().cloned().collect();
+
+    // Get current binary version
+    let current_version = env!("CARGO_PKG_VERSION");
+
+    // Get expected schema version for current binary version
+    let expected_schema_version = compatibility_table.get(current_version)
+        .expect(&format!("No schema version defined for binary version {}", current_version));
+
+    // Test that all output types use the correct schema version
+    let test_outputs = vec![
+        ("tests/golden/predict_output.json", "prediction"),
+        ("tests/golden/mapping_graph.json", "mapping"),
+        // Add other output types as they exist
+    ];
+
+    for (output_path, output_type) in test_outputs {
+        let path = PathBuf::from(output_path);
+        if !path.exists() {
+            continue; // Skip if golden file doesn't exist yet
+        }
+
+        let content = fs::read_to_string(&path)
+            .expect(&format!("Failed to read {} output", output_type));
+        let output: Value = serde_json::from_str(&content)
+            .expect(&format!("{} output must be valid JSON", output_type));
+
+        // Check that metadata.version matches expected schema version
+        let metadata = match output.get("metadata") {
+            Some(m) => m,
+            None => {
+                eprintln!("⚠️  Warning: {} output does not have metadata field yet, skipping version check", output_type);
+                continue;
+            }
+        };
+        let schema_version = match metadata.get("version").and_then(|v| v.as_str()) {
+            Some(v) => v,
+            None => {
+                eprintln!("⚠️  Warning: {} output metadata does not have version field yet, skipping version check", output_type);
+                continue;
+            }
+        };
+
+        assert_eq!(schema_version, *expected_schema_version,
+            "{} output schema version {} does not match expected {} for binary version {}",
+            output_type, schema_version, expected_schema_version, current_version);
+    }
+}

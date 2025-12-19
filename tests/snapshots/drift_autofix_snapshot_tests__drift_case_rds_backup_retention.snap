@@ -1,0 +1,26 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_db_instance.main",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "backup_retention_period": 14
+        },
+        "before": {
+          "backup_retention_period": 7
+        }
+      },
+      "mode": "managed",
+      "name": "main",
+      "type": "aws_db_instance"
+    }
+  ]
+}

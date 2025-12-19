@@ -15,12 +15,14 @@
 pub mod baselines;
 pub mod config;
 pub mod error;
+pub mod output;
 pub mod policy;
 pub mod slo;
 
 pub use baselines::BaselinesValidator;
 pub use config::ConfigValidator;
 pub use error::{ValidationError, ValidationResult, ValidationWarning};
+pub use output::OutputValidator;
 pub use policy::PolicyValidator;
 pub use slo::SloValidator;
 
@@ -159,6 +161,11 @@ pub enum FileType {
 /// Validate any supported configuration file
 pub fn validate_file(path: impl AsRef<Path>) -> ValidationResult<ValidationReport> {
     let path = path.as_ref();
+
+    // Check if file exists first
+    if !path.exists() {
+        return Err(ValidationError::new(format!("No such file: {}", path.display())));
+    }
 
     // Detect file type from name/extension
     let file_type = detect_file_type(path)?;

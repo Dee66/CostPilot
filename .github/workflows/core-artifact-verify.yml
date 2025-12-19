@@ -1,0 +1,70 @@
+name: Core Artifact Verification
+
+on:
+  workflow_run:
+    workflows: ["Core Build"]
+    types:
+      - completed
+
+jobs:
+  verify-artifacts:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    strategy:
+      matrix:
+        platform:
+          - linux-x64
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip
+          path: artifacts/
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils bc
+      
+      - name: Verify ZIP artifact
+        env:
+          SOURCE_DATE_EPOCH: ${{ github.event.workflow_run.head_commit.timestamp }}
+        run: |
+          chmod +x packaging/core_release/verify_artifact.sh
+          bash packaging/core_release/verify_artifact.sh \
+            ${{ matrix.platform }} \
+            artifacts/costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip
+      
+      - name: Download TAR.GZ artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz
+          path: artifacts/
+      
+      - name: Verify TAR.GZ artifact
+        env:
+          SOURCE_DATE_EPOCH: ${{ github.event.workflow_run.head_commit.timestamp }}
+        run: |
+          bash packaging/core_release/verify_artifact.sh \
+            ${{ matrix.platform }} \
+            artifacts/costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz
+      
+      - name: Report verification status
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ All artifacts verified successfully"
+          else
+            echo "❌ Artifact verification failed"
+            exit 1
+          fi

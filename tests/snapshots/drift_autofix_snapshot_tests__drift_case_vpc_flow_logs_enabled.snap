@@ -1,0 +1,25 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_flow_log.vpc",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "traffic_type": "ALL",
+          "vpc_id": "vpc-12345"
+        },
+        "before": null
+      },
+      "mode": "managed",
+      "name": "vpc",
+      "type": "aws_flow_log"
+    }
+  ]
+}

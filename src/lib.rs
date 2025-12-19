@@ -2,6 +2,7 @@
 
 pub mod artifact;
 pub mod cli;
+pub mod config;
 pub mod edition;
 pub mod engines;
 pub mod errors;
@@ -48,6 +49,7 @@ pub use validation::{
     validate_file, BaselinesValidator, ConfigValidator, PolicyValidator, SloValidator,
     ValidationError, ValidationReport, ValidationWarning,
 };
+pub use config::{load_product_spec, load_product_spec_from_path, ProductSpec, ConfigError};
 pub use wasm::{EngineBudget, SandboxLimits as WasmSandboxLimits, ValidationResult};
 
 /// CostPilot version

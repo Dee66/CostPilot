@@ -1,0 +1,76 @@
+name: Core Artifact Signing
+
+on:
+  workflow_run:
+    workflows: ["Core Build"]
+    types:
+      - completed
+
+jobs:
+  sign-artifacts:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    strategy:
+      matrix:
+        platform:
+          - linux-x64
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+      
+      - name: Download ZIP artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip
+          path: artifacts/
+      
+      - name: Download TAR.GZ artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz
+          path: artifacts/
+      
+      - name: Sign ZIP artifact
+        run: |
+          chmod +x packaging/core_release/sign_artifacts.sh
+          bash packaging/core_release/sign_artifacts.sh \
+            artifacts/costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip
+      
+      - name: Sign TAR.GZ artifact
+        run: |
+          bash packaging/core_release/sign_artifacts.sh \
+            artifacts/costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz
+      
+      - name: Upload ZIP signature
+        uses: actions/upload-artifact@v4
+        with:
+          name: costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip.sha256
+          path: artifacts/costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip.sha256
+          retention-days: 90
+      
+      - name: Upload TAR.GZ signature
+        uses: actions/upload-artifact@v4
+        with:
+          name: costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz.sha256
+          path: artifacts/costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz.sha256
+          retention-days: 90
+      
+      - name: Verify signed artifacts
+        env:
+          SOURCE_DATE_EPOCH: ${{ github.event.workflow_run.head_commit.timestamp }}
+        run: |
+          chmod +x packaging/core_release/verify_artifact.sh
+          bash packaging/core_release/verify_artifact.sh \
+            ${{ matrix.platform }} \
+            artifacts/costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip
+          
+          bash packaging/core_release/verify_artifact.sh \
+            ${{ matrix.platform }} \
+            artifacts/costpilot-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz

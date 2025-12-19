@@ -152,6 +152,7 @@ pub struct PolicyViolation {
 pub struct PolicyResult {
     pub violations: Vec<PolicyViolation>,
     pub warnings: Vec<String>,
+    pub applied_exemptions: Vec<String>,
     pub passed: bool,
 }
 
@@ -166,6 +167,7 @@ impl PolicyResult {
         Self {
             violations: Vec::new(),
             warnings: Vec::new(),
+            applied_exemptions: Vec::new(),
             passed: true,
         }
     }
@@ -177,5 +179,9 @@ impl PolicyResult {
 
     pub fn add_warning(&mut self, warning: String) {
         self.warnings.push(warning);
+    }
+
+    pub fn add_applied_exemption(&mut self, exemption_id: String) {
+        self.applied_exemptions.push(exemption_id);
     }
 }

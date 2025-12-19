@@ -1,10 +1,44 @@
 // Golden file tests for mapping output
 
+use assert_cmd::Command;
+use chrono;
 use costpilot::engines::mapping::{
     DependencyGraph, GraphNode, GraphEdge, GraphMetadata, EdgeType,
 };
 
 #[test]
+fn golden_map_basic_ec2_instances() {
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("map").arg("tests/test_golden_plan.json");
+
+    let output = cmd.output().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    insta::assert_snapshot!("map_basic_ec2_instances", stdout);
+}
+
+#[test]
+fn golden_autofix_snippet_basic() {
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("autofix-snippet");
+
+    let output = cmd.output().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    insta::assert_snapshot!("autofix_snippet_basic", stdout);
+}
+
+#[test]
+fn golden_autofix_patch_basic() {
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("autofix-patch");
+
+    let output = cmd.output().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    insta::assert_snapshot!("autofix_patch_basic", stdout);
+}
+
 fn golden_simple_dependency_graph() {
     let graph = DependencyGraph {
         nodes: vec![
@@ -33,6 +67,8 @@ fn golden_simple_dependency_graph() {
             has_cycles: false,
             cycles: vec![],
             total_cost: Some(0.0),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            timestamp: chrono::Utc::now().to_rfc3339(),
         },
     };
 
@@ -104,6 +140,8 @@ fn golden_complex_web_app_graph() {
             has_cycles: false,
             cycles: vec![],
             total_cost: Some(119.13),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            timestamp: "2024-01-01T00:00:00Z".to_string(),
         },
     };
 
@@ -160,6 +198,8 @@ fn golden_database_tier_graph() {
             has_cycles: false,
             cycles: vec![],
             total_cost: Some(87.60),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            timestamp: "2024-01-01T00:00:00Z".to_string(),
         },
     };
 
@@ -179,6 +219,8 @@ fn golden_empty_graph() {
             has_cycles: false,
             cycles: vec![],
             total_cost: Some(0.0),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            timestamp: "2024-01-01T00:00:00Z".to_string(),
         },
     };
 
@@ -214,6 +256,8 @@ fn golden_isolated_resources() {
             has_cycles: false,
             cycles: vec![],
             total_cost: Some(45.0),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            timestamp: "2024-01-01T00:00:00Z".to_string(),
         },
     };
 
