@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
+import os
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: slo command not present."""
 
 import subprocess
 import tempfile
 from pathlib import Path
 import json
+import os
+
+# Path to the local costpilot binary
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'target', 'debug', 'costpilot')
 
 
 def test_slo_command_not_present():
     """Test slo command not available in Free Edition."""
     result = subprocess.run(
-        ["costpilot", "slo", "--help"],
+        [COSTPILOT_PATH, "slo", "--help"],
         capture_output=True,
         text=True,
         timeout=10
     )
-    
+
     # Should fail - slo not available in Free
     assert result.returncode != 0, "slo command should not exist in Free Edition"
-    
+
     # Check error message
     error = result.stderr.lower()
     assert "not found" in error or "unknown" in error or "free" in error or "premium" in error, \
@@ -29,7 +35,7 @@ def test_slo_with_config_rejected():
     """Test slo with config is rejected."""
     with tempfile.TemporaryDirectory() as tmpdir:
         slo_path = Path(tmpdir) / "slo.json"
-        
+
         slo_content = {
             "version": "1.0.0",
             "objectives": [
@@ -40,17 +46,17 @@ def test_slo_with_config_rejected():
                 }
             ]
         }
-        
+
         with open(slo_path, 'w') as f:
             json.dump(slo_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "slo", "--config", str(slo_path)],
+            [COSTPILOT_PATH, "slo", "--config", str(slo_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         assert result.returncode != 0, "slo should be rejected"
 
@@ -58,12 +64,12 @@ def test_slo_with_config_rejected():
 def test_slo_not_in_help():
     """Test slo not listed in help."""
     result = subprocess.run(
-        ["costpilot", "--help"],
+        [COSTPILOT_PATH, "--help"],
         capture_output=True,
         text=True,
         timeout=10
     )
-    
+
     # slo should not appear in help as a command
     help_text = result.stdout.lower()
     # Allow mentions in descriptions but not as subcommand
@@ -74,11 +80,11 @@ def test_slo_not_in_help():
 def test_slo_subcommand_rejected():
     """Test slo subcommand variations rejected."""
     commands = [
-        ["costpilot", "slo"],
-        ["costpilot", "slo", "check"],
-        ["costpilot", "slo", "validate"],
+        [COSTPILOT_PATH, "slo"],
+        [COSTPILOT_PATH, "slo", "check"],
+        [COSTPILOT_PATH, "slo", "validate"],
     ]
-    
+
     for cmd in commands:
         result = subprocess.run(
             cmd,
@@ -86,7 +92,7 @@ def test_slo_subcommand_rejected():
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         assert result.returncode != 0, f"Command {cmd} should be rejected"
 
@@ -95,7 +101,7 @@ def test_slo_with_baseline_rejected():
     """Test slo with baseline rejected."""
     with tempfile.TemporaryDirectory() as tmpdir:
         baseline_path = Path(tmpdir) / "baseline.json"
-        
+
         baseline_content = {
             "resources": [
                 {
@@ -105,17 +111,17 @@ def test_slo_with_baseline_rejected():
                 }
             ]
         }
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "slo", "--baseline", str(baseline_path)],
+            [COSTPILOT_PATH, "slo", "--baseline", str(baseline_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         assert result.returncode != 0, "slo --baseline should be rejected"
 
@@ -123,12 +129,12 @@ def test_slo_with_baseline_rejected():
 def test_slo_burn_rate_rejected():
     """Test slo burn-rate subcommand rejected."""
     result = subprocess.run(
-        ["costpilot", "slo", "burn-rate"],
+        [COSTPILOT_PATH, "slo", "burn-rate"],
         capture_output=True,
         text=True,
         timeout=10
     )
-    
+
     # Should fail
     assert result.returncode != 0, "slo burn-rate should be rejected"
 

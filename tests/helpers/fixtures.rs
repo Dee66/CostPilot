@@ -1,5 +1,5 @@
 /// Test fixtures for CostPilot tests
-/// 
+///
 /// Provides pre-built test data for Terraform plans, CDK diffs, CloudFormation templates,
 /// policies, and other resources used in testing.
 

@@ -1,5 +1,5 @@
 /// Comprehensive error handling and edge case tests
-/// 
+///
 /// Tests for invalid inputs, malformed data, boundary conditions,
 /// network failures, timeouts, resource exhaustion, corrupted files,
 /// invalid configurations, concurrent access scenarios, memory and
@@ -112,17 +112,17 @@ mod error_handling_tests {
         let mut temp_file = NamedTempFile::new().unwrap();
         temp_file.write_all(b"{}").unwrap();
         let path = temp_file.path().to_path_buf();
-        
+
         // On Unix, remove read permission
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).unwrap();
         }
-        
+
         let result = validate_file(path.to_str().unwrap().as_bytes());
         assert!(result.is_err());
-        
+
         // Restore permissions for cleanup
         #[cfg(unix)]
         {
@@ -143,9 +143,9 @@ mod error_handling_tests {
         let temp_dir = tempfile::tempdir().unwrap();
         let file_path = temp_dir.path().join("file");
         let link_path = temp_dir.path().join("link");
-        
+
         fs::write(&file_path, "{}").unwrap();
-        
+
         #[cfg(unix)]
         {
             std::os::unix::fs::symlink(&file_path, &link_path).unwrap();
@@ -161,7 +161,7 @@ mod error_handling_tests {
         // Write invalid UTF-8
         temp_file.write_all(&[0xFF, 0xFE, 0xFD]).unwrap();
         temp_file.flush().unwrap();
-        
+
         let result = validate_file(temp_file.path().to_str().unwrap().as_bytes());
         assert!(result.is_err());
     }
@@ -296,10 +296,10 @@ mod error_handling_tests {
     fn test_validate_file_concurrent_reads() {
         use std::thread;
         use std::sync::Arc;
-        
+
         let json_data = Arc::new(b"{\"test\": \"data\"}".to_vec());
         let mut handles = vec![];
-        
+
         for _ in 0..10 {
             let data = Arc::clone(&json_data);
             handles.push(thread::spawn(move || {
@@ -307,7 +307,7 @@ mod error_handling_tests {
                 assert!(result.is_ok());
             }));
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -677,7 +677,7 @@ mod error_handling_tests {
             std::fs::write(temp_file.path(), b"{}").unwrap();
             temp_files.push(temp_file);
         }
-        
+
         // Validate all files
         for temp_file in &temp_files {
             let result = validate_file(temp_file.path().to_str().unwrap().as_bytes());
@@ -693,7 +693,7 @@ mod error_handling_tests {
         }
         json.pop(); // Remove last comma
         json.push('}');
-        
+
         let result = validate_file(json.as_bytes());
         assert!(result.is_ok());
     }
@@ -712,10 +712,10 @@ mod error_handling_tests {
     fn test_validate_file_many_concurrent_validations() {
         use std::thread;
         use std::sync::Arc;
-        
+
         let json_data = Arc::new(b"{\"test\": \"concurrent\"}".to_vec());
         let mut handles = vec![];
-        
+
         for _ in 0..50 {
             let data = Arc::clone(&json_data);
             handles.push(thread::spawn(move || {
@@ -725,7 +725,7 @@ mod error_handling_tests {
                 }
             }));
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -739,7 +739,7 @@ mod error_handling_tests {
             allocations.push(vec![0u8; 1000]);
         }
         drop(allocations);
-        
+
         let result = validate_file(b"{\"test\": \"fragmented\"}");
         assert!(result.is_ok());
     }
@@ -760,7 +760,7 @@ mod error_handling_tests {
             let file_path = temp_dir.path().join(format!("file{}.json", i));
             std::fs::write(&file_path, b"{\"id\": " + &i.to_string().as_bytes() + b"}").unwrap();
         }
-        
+
         // Validate a few
         for i in 0..10 {
             let file_path = temp_dir.path().join(format!("file{}.json", i));
@@ -794,13 +794,13 @@ mod error_handling_tests {
         // Test opening many file handles
         let temp_file = NamedTempFile::new().unwrap();
         std::fs::write(temp_file.path(), b"{\"handles\": \"test\"}").unwrap();
-        
+
         let mut file_handles = vec![];
         for _ in 0..10 {
             let file = std::fs::File::open(temp_file.path()).unwrap();
             file_handles.push(file);
         }
-        
+
         let result = validate_file(temp_file.path().to_str().unwrap().as_bytes());
         assert!(result.is_ok());
     }

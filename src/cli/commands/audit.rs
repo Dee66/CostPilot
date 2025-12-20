@@ -492,10 +492,10 @@ mod tests {
     fn test_load_audit_log_nonexistent() {
         let temp_dir = tempdir().unwrap();
         let log_path = temp_dir.path().join("nonexistent.json");
-        
+
         let result = load_audit_log(Some(log_path));
         assert!(result.is_ok());
-        
+
         let log = result.unwrap();
         assert_eq!(log.entry_count(), 0);
     }
@@ -504,7 +504,7 @@ mod tests {
     fn test_save_and_load_audit_log() {
         let temp_dir = tempdir().unwrap();
         let log_path = temp_dir.path().join("test_audit.json");
-        
+
         // Create a log with an event
         let mut log = AuditLog::new();
         let event = AuditEvent::new(
@@ -515,10 +515,10 @@ mod tests {
             "Test policy change".to_string(),
         );
         log.append(event).unwrap();
-        
+
         // Save it
         save_audit_log(&log, Some(log_path.clone())).unwrap();
-        
+
         // Load it back
         let loaded_log = load_audit_log(Some(log_path)).unwrap();
         assert_eq!(loaded_log.entry_count(), 1);
@@ -529,11 +529,11 @@ mod tests {
         // Use a temporary file for test isolation
         let temp_dir = tempdir().unwrap();
         let log_path = temp_dir.path().join("empty_audit.json");
-        
+
         // Create empty log
         let log = AuditLog::new();
         save_audit_log(&log, Some(log_path.clone())).unwrap();
-        
+
         let result = cmd_audit_view_with_path(
             None, None, None, None, None, "text", false, Some(log_path)
         );
@@ -545,7 +545,7 @@ mod tests {
         // Use a temporary file for test isolation
         let temp_dir = tempdir().unwrap();
         let log_path = temp_dir.path().join("test_audit.json");
-        
+
         // Create log with events and save to temp path
         let mut log = AuditLog::new();
         let event1 = AuditEvent::new(
@@ -565,12 +565,12 @@ mod tests {
         log.append(event1).unwrap();
         log.append(event2).unwrap();
         save_audit_log(&log, Some(log_path.clone())).unwrap();
-        
+
         let result = cmd_audit_view_with_path(
             None, None, None, None, None, "text", false, Some(log_path.clone())
         );
         assert!(result.is_ok());
-        
+
         let result = cmd_audit_view_with_path(
             Some("policy_state_change".to_string()), None, None, None, None, "text", false, Some(log_path)
         );
@@ -584,13 +584,13 @@ mod tests {
 
         let result = cmd_audit_verify("text", false);
         assert!(result.is_ok());
-        
+
         let result = cmd_audit_verify("json", false);
         let _ = std::fs::remove_file(AUDIT_LOG_PATH);
-        
+
         let result = cmd_audit_stats("text", false);
         assert!(result.is_ok());
-        
+
         let result = cmd_audit_stats("json", false);
         assert!(result.is_ok());
     }
@@ -599,10 +599,10 @@ mod tests {
     fn test_cmd_audit_compliance() {
         // Clean up any existing audit log to ensure test isolation
         let _ = std::fs::remove_file(AUDIT_LOG_PATH);
-        
+
         let result = cmd_audit_compliance("SOC2".to_string(), 30, "text", false);
         assert!(result.is_ok());
-        
+
         let result = cmd_audit_compliance("GDPR".to_string(), 30, "json", false);
         assert!(result.is_ok());
     }
@@ -611,7 +611,7 @@ mod tests {
     fn test_cmd_audit_record() {
         // Clean up any existing audit log to ensure test isolation
         let _ = std::fs::remove_file(AUDIT_LOG_PATH);
-        
+
         let result = cmd_audit_record(
             "policy_state_change".to_string(),
             "test_user".to_string(),
@@ -622,7 +622,7 @@ mod tests {
             false
         );
         assert!(result.is_ok());
-        
+
         let result = cmd_audit_record(
             "policy_approval".to_string(),
             "test_user".to_string(),

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: deny any premium installer metadata fields."""
 
 import subprocess
@@ -9,16 +11,16 @@ from pathlib import Path
 def test_cargo_metadata_no_premium():
     """Test Cargo.toml metadata doesn't mention premium."""
     cargo_path = Path("Cargo.toml")
-    
+
     if not cargo_path.exists():
         return
-    
+
     with open(cargo_path) as f:
         content = f.read().lower()
-    
+
     # Should not mention premium features in metadata
     premium_terms = ["premium", "pro edition", "enterprise edition"]
-    
+
     for term in premium_terms:
         assert term not in content, f"Cargo.toml mentions {term}"
 
@@ -26,19 +28,19 @@ def test_cargo_metadata_no_premium():
 def test_package_json_no_premium():
     """Test package.json doesn't advertise premium features."""
     package_path = Path("package.json")
-    
+
     if not package_path.exists():
         return
-    
+
     with open(package_path) as f:
         data = json.load(f)
-    
+
     # Check description
     if "description" in data:
         desc = data["description"].lower()
         assert "premium" not in desc, "package.json description mentions premium"
         assert "pro edition" not in desc, "package.json description mentions Pro"
-    
+
     # Check keywords
     if "keywords" in data:
         keywords = [k.lower() for k in data["keywords"]]
@@ -49,17 +51,17 @@ def test_package_json_no_premium():
 def test_vscode_extension_metadata():
     """Test VS Code extension metadata is Free Edition."""
     extension_path = Path("vscode-extension/package.json")
-    
+
     if not extension_path.exists():
         return
-    
+
     with open(extension_path) as f:
         data = json.load(f)
-    
+
     # Check display name
     if "displayName" in data:
         name = data["displayName"].lower()
-        
+
         # Should say Community or Free or just CostPilot
         if "community" in name or "free" in name:
             # Good
@@ -68,11 +70,11 @@ def test_vscode_extension_metadata():
             # Should not say Pro or Premium
             assert "pro" not in name, "Extension displayName claims Pro"
             assert "premium" not in name, "Extension displayName claims Premium"
-    
+
     # Check description
     if "description" in data:
         desc = data["description"].lower()
-        
+
         # Should not advertise premium features
         premium_features = ["autofix", "slo monitoring", "advanced analytics"]
         for feature in premium_features:
@@ -83,17 +85,17 @@ def test_vscode_extension_metadata():
 def test_readme_no_premium_claims():
     """Test README doesn't claim premium features included."""
     readme_path = Path("README.md")
-    
+
     if not readme_path.exists():
         return
-    
+
     with open(readme_path) as f:
         content = f.read()
-    
+
     # Should clearly state Free Edition limitations
     # Or should say "Free Edition" / "Community Edition"
     content_lower = content.lower()
-    
+
     if "community edition" in content_lower or "free edition" in content_lower:
         # Good - clearly stated
         pass
@@ -109,16 +111,16 @@ def test_installer_scripts_no_premium():
         "install.sh",
         "setup.py",
     ]
-    
+
     for script in install_scripts:
         path = Path(script)
         if path.exists():
             with open(path) as f:
                 content = f.read().lower()
-            
+
             # Should not install premium components
             premium_components = ["costpilot-pro", "costpilot_pro", "premium.bundle"]
-            
+
             for component in premium_components:
                 assert component not in content, f"{script} installs {component}"
 
@@ -130,16 +132,16 @@ def test_release_notes_no_premium_features():
         "RELEASES.md",
         "docs/RELEASES.md",
     ]
-    
+
     for path in release_files:
         file = Path(path)
         if file.exists():
             with open(file) as f:
                 content = f.read()
-            
+
             # If mentions autofix/patch/slo, should clarify they're Pro-only
             premium_features = ["autofix", "patch", "slo"]
-            
+
             for feature in premium_features:
                 if feature in content.lower():
                     # Should mention "Pro" or "Premium" nearby

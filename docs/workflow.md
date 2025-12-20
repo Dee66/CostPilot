@@ -1,7 +1,7 @@
 # WORKFLOW RULES (v2.3)
 
-This file defines the execution workflow.  
-Copilot must load and obey all rules in this file.  
+This file defines the execution workflow.
+Copilot must load and obey all rules in this file.
 Do not summarize or restate this file.
 
 ----------------------------------------

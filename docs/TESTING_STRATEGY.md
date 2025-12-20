@@ -255,19 +255,19 @@ tests/golden/
 #[test]
 fn test_full_scan_pipeline() {
     let plan = load_fixture("integration/full_app.json");
-    
+
     // Detection
     let detection = detect_changes(&plan);
     assert_eq!(detection.resources.len(), 15);
-    
+
     // Prediction
     let prediction = predict_costs(&detection);
     assert!(prediction.monthly_delta > 0.0);
-    
+
     // Explain
     let explanation = explain_prediction(&prediction);
     assert!(!explanation.reasoning_chain.is_empty());
-    
+
     // Autofix
     let autofix = generate_autofix(&detection, &prediction);
     assert!(autofix.has_recommendations());
@@ -293,7 +293,7 @@ fn test_cli_scan_command() {
     let temp = TempDir::new().unwrap();
     let plan = temp.child("plan.json");
     plan.write_str(SAMPLE_PLAN).unwrap();
-    
+
     Command::cargo_bin("costpilot")
         .unwrap()
         .arg("scan")
@@ -627,7 +627,7 @@ fn test_<component>_<scenario>_<expected_outcome>() {
 ### Assertion Patterns:
 ```rust
 // Use descriptive messages
-assert_eq!(result.monthly_cost, 30.368, 
+assert_eq!(result.monthly_cost, 30.368,
     "EC2 t3.medium should cost $30.368/month");
 
 // Use helper assertions
@@ -766,6 +766,6 @@ fn test_invalid_heuristics_returns_error() {
 
 ---
 
-**Last Updated:** 2025-12-06  
-**Version:** 1.0.0  
+**Last Updated:** 2025-12-06
+**Version:** 1.0.0
 **Status:** Foundation Phase Active

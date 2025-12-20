@@ -34,7 +34,7 @@ pub struct ResourceChange {
     /// Optional cost impact details
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub cost_impact: Option<CostImpact>,
-    
+
     // Legacy compatibility fields (tests only, not serialized)
     #[serde(skip_serializing, default)]
     #[deprecated(note = "Use old_config instead")]
@@ -70,7 +70,7 @@ pub struct CostEstimate {
     pub heuristic_reference: Option<String>,
     #[serde(default)]
     pub cold_start_inference: bool,
-    
+
     // Legacy compatibility fields (tests only, not serialized)
     #[serde(skip_serializing, default)]
     #[deprecated(note = "Use monthly_cost instead")]
@@ -150,7 +150,7 @@ pub struct Detection {
     pub fix_snippet: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub estimated_cost: Option<f64>,
-    
+
     // Legacy compatibility fields (tests only, not serialized)
     #[serde(skip_serializing, default)]
     #[deprecated(note = "Detection no longer stores resource_type directly")]
@@ -295,15 +295,15 @@ impl CostEstimateBuilder {
             .or(self.monthly)
             .or(self.estimate)
             .unwrap_or(0.0);
-        
+
         let prediction_interval_low = self.prediction_interval_low
             .or(self.lower)
             .unwrap_or(monthly_cost * 0.8);
-        
+
         let prediction_interval_high = self.prediction_interval_high
             .or(self.upper)
             .unwrap_or(monthly_cost * 1.2);
-        
+
         let confidence_score = self.confidence_score
             .or(self.confidence)
             .unwrap_or(0.85);
@@ -599,7 +599,7 @@ impl DetectionBuilder {
         let severity = self.severity.unwrap_or(Severity::Low);
         let message = self.message.or(self.issue).unwrap_or_else(|| "".to_string());
         let estimated_cost = self.estimated_cost.or(self.monthly_cost);
-        
+
         let severity_score = self.severity_score.unwrap_or_else(|| match severity {
             Severity::Critical => 90,
             Severity::High => 70,
@@ -638,7 +638,7 @@ impl Detection {
             Severity::Medium => 50,
             Severity::Low => 30,
         };
-        
+
         Self {
             rule_id,
             severity,

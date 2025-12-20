@@ -145,7 +145,7 @@ pub fn aggregate_module_hierarchy(groups: &[ModuleGroup]) -> Vec<ModuleGroup> {
             }
 
             let parent_group = aggregated.entry(parent.clone()).or_insert_with(|| {
-                
+
                 ModuleGroup::new(parent.clone())
             });
 

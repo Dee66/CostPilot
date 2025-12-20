@@ -156,7 +156,7 @@ if [ -d "${BUNDLE_DIR}/schemas" ]; then
         "slo.schema.json"
         "project.schema.json"
     )
-    
+
     for schema in "${SCHEMA_FILES[@]}"; do
         if [ ! -f "${BUNDLE_DIR}/schemas/${schema}" ]; then
             echo "  ⚠ Schema missing: ${schema} (optional)"
@@ -177,19 +177,19 @@ echo "Checking edition..."
 # For non-Windows, test binary execution
 if [[ "${PLATFORM}" != *"windows"* ]]; then
     VERSION_OUTPUT=$(cd "${BUNDLE_DIR}" && ./${BINARY_NAME} --version 2>&1 || true)
-    
+
     if ! echo "${VERSION_OUTPUT}" | grep -q "(Free)"; then
         echo "ERROR: Binary does not report Free edition"
         echo "Output: ${VERSION_OUTPUT}"
         exit 1
     fi
-    
+
     if echo "${VERSION_OUTPUT}" | grep -qi "(Premium)"; then
         echo "ERROR: Binary reports Premium edition (should be Free)"
         echo "Output: ${VERSION_OUTPUT}"
         exit 1
     fi
-    
+
     echo "  ✓ Edition: Free"
 else
     echo "  ⚠ Edition check skipped (Windows binary)"
@@ -203,23 +203,23 @@ echo "Checking deterministic timestamps..."
 
 if [ -n "${SOURCE_DATE_EPOCH:-}" ]; then
     EXPECTED_TIME="${SOURCE_DATE_EPOCH}"
-    
+
     # Check all files have correct mtime
     TIMESTAMP_VIOLATIONS=0
     while IFS= read -r -d '' file; do
         FILE_MTIME=$(stat -c %Y "${file}" 2>/dev/null || stat -f %m "${file}" 2>/dev/null || echo "0")
-        
+
         if [ "${FILE_MTIME}" != "${EXPECTED_TIME}" ]; then
             echo "  ✗ Timestamp mismatch: ${file}"
             TIMESTAMP_VIOLATIONS=$((TIMESTAMP_VIOLATIONS + 1))
         fi
     done < <(find "${BUNDLE_DIR}" -type f -print0)
-    
+
     if [ ${TIMESTAMP_VIOLATIONS} -gt 0 ]; then
         echo "ERROR: ${TIMESTAMP_VIOLATIONS} files have incorrect timestamps"
         exit 1
     fi
-    
+
     echo "  ✓ All timestamps match SOURCE_DATE_EPOCH"
 else
     echo "  ⚠ SOURCE_DATE_EPOCH not set, skipping timestamp validation"
@@ -278,25 +278,25 @@ if [ -f "${SIGNATURE_FILE}" ]; then
         echo "ERROR: Neither sha256sum nor shasum found"
         exit 1
     fi
-    
+
     # Get artifact directory and filename
     ARTIFACT_DIR=$(dirname "${ARTIFACT_PATH}")
     ARTIFACT_FILE=$(basename "${ARTIFACT_PATH}")
-    
+
     # Read stored hash
     STORED_HASH=$(cut -d' ' -f1 "${SIGNATURE_FILE}")
-    
+
     # Calculate current hash
     cd "${ARTIFACT_DIR}"
     CURRENT_HASH=$(${HASH_CMD} "${ARTIFACT_FILE}" | cut -d' ' -f1)
-    
+
     if [ "${STORED_HASH}" != "${CURRENT_HASH}" ]; then
         echo "ERROR: SHA-256 signature mismatch"
         echo "  Expected: ${STORED_HASH}"
         echo "  Actual:   ${CURRENT_HASH}"
         exit 1
     fi
-    
+
     echo "  ✓ SHA-256: ${STORED_HASH}"
 else
     echo "  ⚠ No signature file found (expected: ${SIGNATURE_FILE})"

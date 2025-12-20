@@ -34,9 +34,9 @@ if command -v openssl &> /dev/null; then
     # Decode base64 signature
     TEMP_SIG=$(mktemp)
     trap "rm -f ${TEMP_SIG}" EXIT
-    
+
     base64 -d "${SIGNATURE_FILE}" > "${TEMP_SIG}" 2>/dev/null
-    
+
     # Try raw verification first
     if openssl pkeyutl -verify -pubin -inkey "${PUBLIC_KEY}" -rawin -in "${ARTIFACT}" -sigfile "${TEMP_SIG}" 2>/dev/null; then
         echo "✓ Verified: $(basename "${ARTIFACT}")"
@@ -45,9 +45,9 @@ if command -v openssl &> /dev/null; then
         # Fallback: verify digest
         DIGEST_FILE=$(mktemp)
         trap "rm -f ${DIGEST_FILE} ${TEMP_SIG}" EXIT
-        
+
         openssl dgst -sha256 -binary "${ARTIFACT}" > "${DIGEST_FILE}"
-        
+
         if openssl pkeyutl -verify -pubin -inkey "${PUBLIC_KEY}" -in "${DIGEST_FILE}" -sigfile "${TEMP_SIG}" 2>/dev/null; then
             echo "✓ Verified: $(basename "${ARTIFACT}")"
             exit 0

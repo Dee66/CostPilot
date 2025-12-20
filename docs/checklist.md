@@ -45,13 +45,13 @@ structure:
     automation_expectation: partial
 ## 📊 Overall Progress
 
-<div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" style="width:94%; background:#e6eef0; border-radius:8px; padding:6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);">
-  <div style="width:100.0%; background:linear-gradient(90deg,#2e7d32,#4caf50,#66bb6a); color:#fff; padding:10px 12px; text-align:right; border-radius:6px; font-weight:700; transition:width 0.5s ease;">
-    <span style="display:inline-block; background:rgba(0,0,0,0.12); padding:4px 8px; border-radius:999px; font-size:0.95em;">100% · 26/26</span>
+<div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="96" style="width:94%; background:#e6eef0; border-radius:8px; padding:6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);">
+  <div style="width:96.0%; background:linear-gradient(90deg,#2e7d32,#4caf50,#66bb6a); color:#fff; padding:10px 12px; text-align:right; border-radius:6px; font-weight:700; transition:width 0.5s ease;">
+    <span style="display:inline-block; background:rgba(0,0,0,0.12); padding:4px 8px; border-radius:999px; font-size:0.95em;">96% · 26/27</span>
   </div>
 </div>
 
-**Target:** All 26 checklist tasks completed and validated
+**Target:** All 27 checklist tasks completed and validated
 
 ---
 
@@ -1185,3 +1185,40 @@ structure:
     - id: ac-260-2
       type: manual_review
       reviewer: Deon Prinsloo
+- id: task-270
+  phase: phase-06
+  title: Gate Sustainability Analytics Behind Premium Licensing
+  description: Implement license checks in sustainability testing scripts to restrict access to Founding Engineer Edition ($29/month) only. Free tier users should not have access to carbon footprint, energy efficiency, fairness testing, transparency validation, or social impact assessment.
+  automation_level: partial
+  severity: high
+  retry_policy: manual
+  notes: ''
+  dependencies:
+  - task-260
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-270-1
+    action: add_license_check
+    description: Add license token validation to scripts/run_sustainability_testing.sh.
+    acceptance_criteria:
+    - id: ac-270-1
+      type: command
+      command: ./scripts/run_sustainability_testing.sh --help | grep -i "license"
+      expected_exit_code: 0
+  - id: step-270-2
+    action: update_dashboard
+    description: Update docs/sustainability-dashboard.md with premium-only messaging.
+    acceptance_criteria:
+    - id: ac-270-2
+      type: file_contains
+      target: docs/sustainability-dashboard.md
+      pattern: premium.*license
+  - id: step-270-3
+    action: test_gating
+    description: Verify scripts fail gracefully without a valid license.
+    acceptance_criteria:
+    - id: ac-270-3
+      type: command
+      command: ./scripts/run_sustainability_testing.sh carbon 2>&1 | grep -i "license\|premium"
+      expected_exit_code: 1

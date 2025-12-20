@@ -236,18 +236,18 @@ mod tests {
         let metadata = r#"{"alg":"AES256-GCM","salt":"test-salt"}"#;
         let metadata_bytes = metadata.as_bytes();
         let metadata_len = (metadata_bytes.len() as u32).to_be_bytes();
-        
+
         let nonce = [1u8; 12];
         let ciphertext = b"encrypted data";
         let signature = [2u8; 64];
-        
+
         let mut bundle_bytes = Vec::new();
         bundle_bytes.extend_from_slice(&metadata_len);
         bundle_bytes.extend_from_slice(metadata_bytes);
         bundle_bytes.extend_from_slice(&nonce);
         bundle_bytes.extend_from_slice(ciphertext);
         bundle_bytes.extend_from_slice(&signature);
-        
+
         let bundle = parse_bundle(&bundle_bytes).unwrap();
         assert_eq!(bundle.ciphertext, ciphertext);
         assert_eq!(bundle.nonce, nonce);
@@ -275,21 +275,21 @@ mod tests {
         let nonce = [0u8; 12];
         let ciphertext = b"data";
         let signature = [0u8; 64];
-        
+
         let mut bundle_bytes = Vec::new();
         bundle_bytes.extend_from_slice(&metadata_len);
         bundle_bytes.extend_from_slice(invalid_json);
         bundle_bytes.extend_from_slice(&nonce);
         bundle_bytes.extend_from_slice(ciphertext);
         bundle_bytes.extend_from_slice(&signature);
-        
+
         assert!(matches!(parse_bundle(&bundle_bytes), Err(LoaderError::InvalidFormat)));
     }
 
     #[test]
     fn test_verify_signature_valid() {
         use ed25519_dalek::Signer;
-        
+
         // Use a fixed key for deterministic test
         let secret_key_bytes = [1u8; 32];
         let secret_key = ed25519_dalek::SecretKey::from(secret_key_bytes);
@@ -297,15 +297,15 @@ mod tests {
         let public_key = ed25519_dalek::VerifyingKey::from(&signing_key);
         let keypair_bytes = [secret_key_bytes, public_key.to_bytes()].concat();
         let signing_key = ed25519_dalek::SigningKey::from_keypair_bytes(&keypair_bytes.try_into().unwrap()).unwrap();
-        
+
         let data = b"test data";
         let mut signed_data = Vec::new();
         signed_data.extend_from_slice(b"{}"); // metadata_bytes
         signed_data.extend_from_slice(&[0u8; 12]); // nonce
         signed_data.extend_from_slice(data);
-        
+
         let signature = signing_key.sign(&signed_data);
-        
+
         let bundle = EncryptedBundle {
             ciphertext: data.to_vec(),
             nonce: [0u8; 12],
@@ -313,7 +313,7 @@ mod tests {
             metadata: serde_json::json!({"test": "value"}),
             metadata_bytes: b"{}".to_vec(),
         };
-        
+
         assert!(verify_signature(&bundle, &public_key.to_bytes()).is_ok());
     }
 
@@ -326,7 +326,7 @@ mod tests {
             metadata: serde_json::json!({}),
             metadata_bytes: vec![],
         };
-        
+
         assert!(matches!(verify_signature(&bundle, &[0u8; 31]), Err(LoaderError::SignatureInvalid)));
     }
 
@@ -339,7 +339,7 @@ mod tests {
             metadata: serde_json::json!({}),
             metadata_bytes: vec![],
         };
-        
+
         let key = [0u8; 32];
         assert!(matches!(verify_signature(&bundle, &key), Err(LoaderError::SignatureInvalid)));
     }
@@ -352,7 +352,7 @@ mod tests {
             expires: None,
             machine_binding: Some("test-binding".to_string()),
         };
-        
+
         let salt = b"test-salt";
         let key = derive_decryption_key(&license, salt).unwrap();
         assert_eq!(key.len(), 32);
@@ -366,7 +366,7 @@ mod tests {
             expires: None,
             machine_binding: None,
         };
-        
+
         let salt = b"salt";
         assert!(matches!(derive_decryption_key(&license, salt), Err(LoaderError::MissingKeyMaterial)));
     }
@@ -375,18 +375,18 @@ mod tests {
     fn test_decrypt_bundle_valid() {
         // For testing decryption, we need to encrypt some data first.
         use aes_gcm::aead::Aead;
-        
+
         let key = [1u8; 32];
         let cipher = Aes256Gcm::new(&key.into());
         let nonce = Nonce::from_slice(&[2u8; 12]);
         let aad = b"metadata";
         let plaintext = b"test plaintext";
-        
+
         let ciphertext = cipher.encrypt(nonce, aes_gcm::aead::Payload {
             msg: plaintext,
             aad,
         }).unwrap();
-        
+
         let bundle = EncryptedBundle {
             ciphertext,
             nonce: (*nonce).into(),
@@ -394,7 +394,7 @@ mod tests {
             metadata: serde_json::json!({}),
             metadata_bytes: aad.to_vec(),
         };
-        
+
         let decrypted = decrypt_bundle(&bundle, &key).unwrap();
         assert_eq!(decrypted, plaintext);
     }
@@ -408,7 +408,7 @@ mod tests {
             metadata: serde_json::json!({}),
             metadata_bytes: vec![],
         };
-        
+
         let wrong_key = [0u8; 32];
         assert!(matches!(decrypt_bundle(&bundle, &wrong_key), Err(LoaderError::DecryptionFailed)));
     }
@@ -421,10 +421,10 @@ mod tests {
             expires: None,
             machine_binding: None,
         };
-        
+
         let path = PathBuf::from("nonexistent.wasm");
         let key = [0u8; 32];
-        
+
         assert!(matches!(load_pro_engine_from_file(&path, &license, &key), Err(LoaderError::Io(_))));
     }
 
@@ -436,14 +436,14 @@ mod tests {
             expires: None,
             machine_binding: None,
         };
-        
+
         // Create a temp file with invalid data
         let mut temp_file = NamedTempFile::new().unwrap();
         temp_file.write_all(b"not a wasm file").unwrap();
         temp_file.flush().unwrap();
-        
+
         let key = [0u8; 32];
-        
+
         // This will fail at parse_bundle since it's not a valid bundle
         assert!(matches!(load_pro_engine_from_file(temp_file.path(), &license, &key), Err(LoaderError::InvalidFormat)));
     }

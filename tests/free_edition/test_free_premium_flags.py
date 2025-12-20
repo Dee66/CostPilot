@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: premium-only flags rejected."""
 
 import subprocess
@@ -11,7 +13,7 @@ def test_mode_flag_rejected():
     """Test --mode flag rejected in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -22,17 +24,17 @@ def test_mode_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--mode", "pro"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--mode", "pro"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail or ignore
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -45,7 +47,7 @@ def test_license_flag_rejected():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         license_path = Path(tmpdir) / "license.key"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -56,19 +58,19 @@ def test_license_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         license_path.write_text("fake-license-key")
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--license", str(license_path)],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--license", str(license_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -81,7 +83,7 @@ def test_bundle_flag_rejected():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         bundle_path = Path(tmpdir) / "bundle.bin"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -92,19 +94,19 @@ def test_bundle_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         bundle_path.write_bytes(b"fake-bundle")
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--bundle", str(bundle_path)],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--bundle", str(bundle_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -116,7 +118,7 @@ def test_premium_flag_rejected():
     """Test --premium flag rejected in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -127,17 +129,17 @@ def test_premium_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--premium"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--premium"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -149,7 +151,7 @@ def test_pro_flag_rejected():
     """Test --pro flag rejected in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -160,17 +162,17 @@ def test_pro_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--pro"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--pro"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -182,7 +184,7 @@ def test_enterprise_flag_rejected():
     """Test --enterprise flag rejected in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -193,17 +195,17 @@ def test_enterprise_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--enterprise"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--enterprise"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -215,7 +217,7 @@ def test_multiple_premium_flags_rejected():
     """Test multiple premium flags rejected together."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -226,17 +228,17 @@ def test_multiple_premium_flags_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--mode", "pro", "--premium"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--mode", "pro", "--premium"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()

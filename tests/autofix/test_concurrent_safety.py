@@ -17,7 +17,7 @@ def test_concurrent_patch_file_locking():
         policy_path = Path(tmpdir) / "policy.json"
         output_dir = Path(tmpdir) / "patches"
         output_dir.mkdir()
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -28,7 +28,7 @@ def test_concurrent_patch_file_locking():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -40,13 +40,13 @@ def test_concurrent_patch_file_locking():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Launch multiple concurrent patch operations
         processes = []
         for i in range(5):
@@ -57,11 +57,11 @@ def test_concurrent_patch_file_locking():
                 stderr=subprocess.PIPE
             )
             processes.append(proc)
-        
+
         # Wait for all
         for proc in processes:
             proc.wait()
-        
+
         # All should complete without corruption
         # Check if any generated outputs
         patch_files = list(output_dir.glob("*.json"))
@@ -81,7 +81,7 @@ def test_concurrent_same_output_serialized():
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
         output_path = Path(tmpdir) / "patch.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -92,18 +92,18 @@ def test_concurrent_same_output_serialized():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": []
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Launch concurrent writes to same file
         processes = []
         for i in range(3):
@@ -113,10 +113,10 @@ def test_concurrent_same_output_serialized():
                 stderr=subprocess.PIPE
             )
             processes.append(proc)
-        
+
         # Wait
         results = [proc.wait() for proc in processes]
-        
+
         # At least one should fail (file locked) or all serialize correctly
         if output_path.exists():
             with open(output_path) as f:
@@ -131,21 +131,21 @@ def test_concurrent_different_templates():
     """Concurrent patches on different templates must not interfere."""
     with tempfile.TemporaryDirectory() as tmpdir:
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": []
         }
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Create multiple templates
         templates = []
         for i in range(5):
             template_path = Path(tmpdir) / f"template_{i}.json"
             output_path = Path(tmpdir) / f"patch_{i}.json"
-            
+
             template_content = {
                 "Resources": {
                     f"Lambda{i}": {
@@ -156,12 +156,12 @@ def test_concurrent_different_templates():
                     }
                 }
             }
-            
+
             with open(template_path, 'w') as f:
                 json.dump(template_content, f)
-            
+
             templates.append((template_path, output_path))
-        
+
         # Launch concurrent operations
         processes = []
         for template_path, output_path in templates:
@@ -171,11 +171,11 @@ def test_concurrent_different_templates():
                 stderr=subprocess.PIPE
             )
             processes.append(proc)
-        
+
         # Wait
         for proc in processes:
             proc.wait()
-        
+
         # All outputs should be independent and valid
         for template_path, output_path in templates:
             if output_path.exists():
@@ -193,23 +193,23 @@ def test_lock_file_cleanup():
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
         output_path = Path(tmpdir) / "patch.json"
-        
+
         template_content = {"Resources": {}}
         policy_content = {"version": "1.0.0", "rules": []}
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Run autofix
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--output", str(output_path)],
             capture_output=True,
             text=True
         )
-        
+
         # Check for lock files
         lock_files = list(Path(tmpdir).glob("*.lock"))
         assert len(lock_files) == 0, "Lock files should be cleaned up"
@@ -220,7 +220,7 @@ def test_concurrent_policy_updates():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -231,39 +231,39 @@ def test_concurrent_policy_updates():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         def run_patch(policy_version):
             """Run patch with specific policy version."""
             policy_content = {
                 "version": policy_version,
                 "rules": []
             }
-            
+
             # Each thread gets own policy file
             thread_policy = Path(tmpdir) / f"policy_{policy_version}.json"
             with open(thread_policy, 'w') as f:
                 json.dump(policy_content, f)
-            
+
             result = subprocess.run(
                 ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(thread_policy), "--dry-run"],
                 capture_output=True,
                 text=True
             )
             return result.returncode
-        
+
         # Concurrent operations with different policy versions
         threads = []
         for i in range(3):
             thread = threading.Thread(target=run_patch, args=(f"{i}.0.0",))
             threads.append(thread)
             thread.start()
-        
+
         for thread in threads:
             thread.join()
-        
+
         # All should complete safely
         assert True
 
@@ -273,7 +273,7 @@ def test_parallel_validation_determinism():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda1": {"Type": "AWS::Lambda::Function", "Properties": {"MemorySize": 1024}},
@@ -281,18 +281,18 @@ def test_parallel_validation_determinism():
                 "Lambda3": {"Type": "AWS::Lambda::Function", "Properties": {"MemorySize": 4096}}
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": []
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Run multiple times
         results = []
         for i in range(3):
@@ -302,7 +302,7 @@ def test_parallel_validation_determinism():
                 text=True
             )
             results.append(result.stdout)
-        
+
         # All runs should produce identical output
         if len(results) > 1 and all(r == results[0] for r in results):
             assert True, "Parallel validation is deterministic"

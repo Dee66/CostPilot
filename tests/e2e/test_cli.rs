@@ -1,5 +1,5 @@
 /// End-to-end CLI tests
-/// 
+///
 /// Tests all CLI commands with real file I/O and command execution.
 
 #[cfg(test)]
@@ -19,7 +19,7 @@ mod e2e_cli_tests {
         // let temp = TempDir::new().unwrap();
         // let plan_file = temp.child("plan.json");
         // plan_file.write_str(SAMPLE_PLAN).unwrap();
-        // 
+        //
         // Command::cargo_bin("costpilot")
         //     .unwrap()
         //     .arg("scan")

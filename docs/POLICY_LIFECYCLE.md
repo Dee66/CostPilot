@@ -46,7 +46,7 @@ The Enterprise Policy Lifecycle system provides enterprise-grade governance for 
 
 ```
 Draft → Review → Approved → Active → Deprecated → Archived
-  ↓       ↓         ↓                      ↓          
+  ↓       ↓         ↓                      ↓
   └───────┴─────────┴──────────────────────┴────→ Archived
 ```
 
@@ -443,17 +443,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Install CostPilot
         run: cargo install costpilot
-      
+
       - name: Detect Changed Policies
         id: policies
         run: |
           git diff --name-only origin/main... | \
             grep '.costpilot/policies/' | \
             tee policies.txt
-      
+
       - name: Submit Policies for Approval
         run: |
           for policy in $(cat policies.txt); do
@@ -461,7 +461,7 @@ jobs:
               --policy $policy \
               --approvers policy-team@company.com,finops-lead@company.com
           done
-      
+
       - name: Comment on PR
         uses: actions/github-script@v6
         with:
@@ -493,7 +493,7 @@ jobs:
         run: |
           POLICY_ID=$(echo "${{ github.event.comment.body }}" | grep -oP '/approve-policy \K\S+')
           echo "policy_id=$POLICY_ID" >> $GITHUB_OUTPUT
-      
+
       - name: Approve Policy
         run: |
           costpilot policy approve ${{ steps.extract.outputs.policy_id }} \

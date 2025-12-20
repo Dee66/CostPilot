@@ -1,5 +1,5 @@
 /// Unit tests for Detection Engine
-/// 
+///
 /// Tests Terraform/CDK/CloudFormation parsing, resource normalization,
 /// and cost change detection.
 

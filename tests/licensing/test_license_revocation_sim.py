@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 
 def test_revoked_license_denies_pro_features():
     """Verify revoked license denies Pro features."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.license', delete=False) as f:
         revoked_license = {
             "customer_id": "test-revoked",
@@ -27,20 +27,20 @@ def test_revoked_license_denies_pro_features():
         }
         json.dump(revoked_license, f)
         license_path = f.name
-    
+
     try:
         binary_path = Path(__file__).parent.parent.parent / "target" / "release" / "costpilot"
         assert binary_path.exists(), f"Binary not found"
-        
+
         print("✓ Revoked license denies Pro features")
-        
+
     finally:
         os.unlink(license_path)
 
 
 def test_revocation_with_valid_signature():
     """Verify revocation is honored even with valid signature."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.license', delete=False) as f:
         revoked_but_signed = {
             "customer_id": "test-revoked-signed",
@@ -52,17 +52,17 @@ def test_revocation_with_valid_signature():
         }
         json.dump(revoked_but_signed, f)
         license_path = f.name
-    
+
     try:
         print("✓ Revocation honored despite valid signature")
-        
+
     finally:
         os.unlink(license_path)
 
 
 def test_revocation_list_check():
     """Verify offline revocation list is checked."""
-    
+
     # Create revocation list
     with tempfile.NamedTemporaryFile(mode='w', suffix='.revoked', delete=False) as f:
         revocation_list = {
@@ -75,17 +75,17 @@ def test_revocation_list_check():
         }
         json.dump(revocation_list, f)
         revocation_path = f.name
-    
+
     try:
         print("✓ Offline revocation list check validated")
-        
+
     finally:
         os.unlink(revocation_path)
 
 
 def test_non_revoked_license_works():
     """Verify non-revoked license continues to work."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.license', delete=False) as f:
         valid_license = {
             "customer_id": "test-valid",
@@ -96,26 +96,26 @@ def test_non_revoked_license_works():
         }
         json.dump(valid_license, f)
         license_path = f.name
-    
+
     try:
         print("✓ Non-revoked license works correctly")
-        
+
     finally:
         os.unlink(license_path)
 
 
 if __name__ == "__main__":
     print("Testing license revocation simulation...")
-    
+
     try:
         test_revoked_license_denies_pro_features()
         test_revocation_with_valid_signature()
         test_revocation_list_check()
         test_non_revoked_license_works()
-        
+
         print("\n✅ All license revocation tests passed")
         sys.exit(0)
-        
+
     except AssertionError as e:
         print(f"\n❌ Test failed: {e}", file=sys.stderr)
         sys.exit(1)

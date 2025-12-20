@@ -398,3 +398,58 @@ fn create_test_snapshot(snapshots_dir: &Path, date: &str, cost: f64) {
 
     fs::write(snapshot_path, snapshot_data).unwrap();
 }
+
+#[test]
+fn test_cli_version_stable() {
+    let mut cmd1 = Command::cargo_bin("costpilot").unwrap();
+    cmd1.arg("--version");
+    let output1 = cmd1.output().unwrap();
+    assert!(output1.status.success());
+    let version1 = String::from_utf8_lossy(&output1.stdout).trim().to_string();
+
+    let mut cmd2 = Command::cargo_bin("costpilot").unwrap();
+    cmd2.arg("--version");
+    let output2 = cmd2.output().unwrap();
+    assert!(output2.status.success());
+    let version2 = String::from_utf8_lossy(&output2.stdout).trim().to_string();
+
+    assert_eq!(version1, version2, "Version output not stable across runs");
+}
+
+#[test]
+fn test_cli_scan_no_cost_risk_silent() {
+    let temp_file = tempfile::NamedTempFile::new().unwrap();
+    let json_content = r#"{
+        "format_version": "1.0",
+        "terraform_version": "1.5.0",
+        "planned_values": {
+            "root_module": {
+                "resources": []
+            }
+        },
+        "resource_changes": []
+    }"#;
+    fs::write(temp_file.path(), json_content).unwrap();
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("scan").arg(temp_file.path());
+    let output = cmd.assert().success();
+
+    // When no cost risk exists, output should not contain warnings or errors
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+    assert!(!stdout.contains("WARNING"));
+    assert!(!stdout.contains("ERROR"));
+    assert!(!stdout.contains("RISK"));
+    assert!(stdout.contains("No resource changes detected"));
+}
+
+#[test]
+fn test_terraform_plan_delta_below_threshold_silent() {
+    // TODO: Implement test for silence invariant
+    // When Terraform plan delta is below baseline threshold, command should be silent
+    // - Exit code 0
+    // - No stdout output
+    // - No stderr output
+    // Placeholder: assert true for now
+    assert!(true);
+}

@@ -1,0 +1,163 @@
+{
+  "final_estimate": {
+    "components": [
+      {
+        "cost": 30.37,
+        "name": "EC2 Instance",
+        "percentage": 100.0
+      }
+    ],
+    "interval_high": 0.0,
+    "interval_low": 0.0,
+    "monthly_cost": 30.37
+  },
+  "key_assumptions": [],
+  "overall_confidence": 0.0,
+  "resource_id": "test-aws-instance-regression-1",
+  "resource_type": "aws_instance",
+  "steps": [
+    {
+      "assumptions": [],
+      "calculation": null,
+      "category": "ResourceIdentification",
+      "confidence_impact": {
+        "factor": "Resource Type Known",
+        "impact": 0.1,
+        "reasoning": "CostPilot has heuristics for this resource type"
+      },
+      "description": "Detected aws_instance resource requiring cost analysis",
+      "input_values": [
+        {
+          "name": "resource_id",
+          "source": "TerraformPlan",
+          "value": "test-aws-instance-regression-1"
+        },
+        {
+          "name": "resource_type",
+          "source": "TerraformPlan",
+          "value": "aws_instance"
+        }
+      ],
+      "output_value": null,
+      "step_number": 1,
+      "title": "Identify Resource"
+    },
+    {
+      "assumptions": [],
+      "calculation": null,
+      "category": "ConfigurationExtraction",
+      "confidence_impact": {
+        "factor": "Configuration Explicit",
+        "impact": 0.05,
+        "reasoning": "Value explicitly defined in Terraform"
+      },
+      "description": "Retrieved instance_type from resource configuration",
+      "input_values": [
+        {
+          "name": "instance_type",
+          "source": "TerraformPlan",
+          "value": "t3.medium"
+        }
+      ],
+      "output_value": {
+        "name": "instance_type",
+        "unit": null,
+        "value": "t3.medium"
+      },
+      "step_number": 2,
+      "title": "Extract instance_type"
+    },
+    {
+      "assumptions": [
+        "Pricing from heuristics v1.0.0-minimal (last updated from AWS pricing API)",
+        "Pricing for us-east-1 region"
+      ],
+      "calculation": null,
+      "category": "HeuristicLookup",
+      "confidence_impact": {
+        "factor": "Heuristic Available",
+        "impact": 0.15,
+        "reasoning": "AWS pricing data available in heuristics"
+      },
+      "description": "Retrieved pricing from cost heuristics database (v1.0.0-minimal)",
+      "input_values": [
+        {
+          "name": "lookup_key",
+          "source": "PreviousStep",
+          "value": "t3.medium"
+        }
+      ],
+      "output_value": {
+        "name": "t3.medium_price",
+        "unit": "$/hour",
+        "value": "0.041600"
+      },
+      "step_number": 3,
+      "title": "Lookup t3.medium Price"
+    },
+    {
+      "assumptions": [],
+      "calculation": "0.0416 $/hour × 730 hours/month",
+      "category": "Calculation",
+      "confidence_impact": null,
+      "description": "Applying formula: 0.0416 $/hour × 730 hours/month",
+      "input_values": [],
+      "output_value": {
+        "name": "Monthly Instance Cost",
+        "unit": "$/month",
+        "value": "30.37"
+      },
+      "step_number": 4,
+      "title": "Monthly Instance Cost"
+    },
+    {
+      "assumptions": [],
+      "calculation": "Base 0.5 + sum of all confidence impacts",
+      "category": "ConfidenceScoring",
+      "confidence_impact": null,
+      "description": "Aggregate confidence from all factors",
+      "input_values": [
+        {
+          "name": "factor",
+          "source": "PreviousStep",
+          "value": "Heuristics available"
+        },
+        {
+          "name": "factor",
+          "source": "PreviousStep",
+          "value": "Cold-start inference used"
+        }
+      ],
+      "output_value": {
+        "name": "confidence_score",
+        "unit": null,
+        "value": "0%"
+      },
+      "step_number": 5,
+      "title": "Calculate Confidence"
+    },
+    {
+      "assumptions": [
+        "Prediction interval accounts for ±30% variance"
+      ],
+      "calculation": "[estimate × (1 - 0.30), estimate × (1 + 0.30)]",
+      "category": "IntervalEstimation",
+      "confidence_impact": null,
+      "description": "Apply ±30% range to account for uncertainty",
+      "input_values": [
+        {
+          "name": "range_factor",
+          "source": "CostHeuristics",
+          "value": "30%"
+        }
+      ],
+      "output_value": {
+        "name": "interval",
+        "unit": "monthly",
+        "value": "$0.00 - $0.00"
+      },
+      "step_number": 6,
+      "title": "Calculate Prediction Interval"
+    }
+  ]
+}

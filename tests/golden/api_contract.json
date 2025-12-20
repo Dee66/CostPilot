@@ -3,7 +3,7 @@
   "description": "CostPilot API Contract - Stable Public API Surface",
   "last_updated": "2025-12-07",
   "breaking_change_policy": "Major version bump required for any breaking changes",
-  
+
   "public_structs": {
     "ResourceChange": {
       "fields": [
@@ -107,7 +107,7 @@
       }
     }
   },
-  
+
   "public_enums": {
     "ErrorCategory": [
       "InvalidInput",
@@ -147,7 +147,7 @@
       "Compliance"
     ]
   },
-  
+
   "public_methods": {
     "DetectionEngine": {
       "new": "() -> Self",
@@ -183,7 +183,7 @@
       "check_slo": "(&TotalCost, &[CostEstimate]) -> SloResult"
     }
   },
-  
+
   "cli_commands": {
     "scan": {
       "args": ["plan-file"],
@@ -222,7 +222,7 @@
       "flags": ["--ci", "--output-dir"]
     }
   },
-  
+
   "output_formats": {
     "json": {
       "mime_type": "application/json",
@@ -241,7 +241,7 @@
       "header_style": "atx"
     }
   },
-  
+
   "error_codes": {
     "validation": "E100-E199",
     "policy": "E200-E299",
@@ -251,7 +251,7 @@
     "prediction": "PREDICT_xxx",
     "autofix": "AUTOFIX_xxx"
   },
-  
+
   "performance_budgets": {
     "prediction_latency_ms": 300,
     "mapping_latency_ms": 500,
@@ -260,7 +260,7 @@
     "slo_eval_latency_ms": 150,
     "wasm_memory_mb": 256
   },
-  
+
   "determinism_guarantees": [
     "Identical inputs produce identical outputs",
     "No network calls (zero-IAM)",
@@ -270,7 +270,7 @@
     "Stable markdown wrapping (80 chars)",
     "Deterministic error IDs"
   ],
-  
+
   "backwards_compatibility_policy": {
     "major_version": "Breaking changes allowed",
     "minor_version": "New features, backwards compatible",

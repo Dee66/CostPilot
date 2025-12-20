@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 // Output validation module for CostPilot JSON outputs
 //
 // This module validates that all CostPilot outputs conform to their canonical schemas:

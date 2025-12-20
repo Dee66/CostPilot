@@ -1,5 +1,5 @@
 /// Deep coverage tests for Trend Engine
-/// 
+///
 /// Tests for trend analysis with various data patterns, trend detection algorithms,
 /// forecasting accuracy, and edge cases.
 
@@ -41,7 +41,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "aws.ec2.instance1".to_string(),
@@ -55,7 +55,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         assert!(snapshot.total_monthly_cost > 0.0);
         assert_eq!(snapshot.modules.len(), 1);
@@ -66,7 +66,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "module1.aws.ec2.instance1".to_string(),
@@ -102,7 +102,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, Some("abc123".to_string()), Some("main".to_string())).unwrap();
         assert_eq!(snapshot.total_monthly_cost, 160.0);
         assert_eq!(snapshot.modules.len(), 2);
@@ -116,7 +116,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "test.resource".to_string(),
@@ -130,11 +130,11 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         let path = engine.save_snapshot(&snapshot).unwrap();
         assert!(path.exists());
-        
+
         // Load history should include the snapshot
         let history = engine.load_history().unwrap();
         assert!(history.snapshots.len() >= 1);
@@ -145,7 +145,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         // Create some snapshots first
         let estimates = vec![
             CostEstimate {
@@ -160,10 +160,10 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         engine.save_snapshot(&snapshot).unwrap();
-        
+
         let svg = engine.generate_svg().unwrap();
         assert!(svg.contains("<svg"));
         assert!(svg.contains("</svg>"));
@@ -174,11 +174,11 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let output_path = temp_dir.path().join("trend.html");
         engine.generate_html(&output_path, "Test Trend").unwrap();
         assert!(output_path.exists());
-        
+
         let content = std::fs::read_to_string(&output_path).unwrap();
         assert!(content.contains("<html>"));
         assert!(content.contains("Test Trend"));
@@ -190,7 +190,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "test.resource".to_string(),
@@ -204,10 +204,10 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let baseline = engine.create_snapshot(estimates.clone(), None, None).unwrap();
         let current = engine.create_snapshot(estimates, None, None).unwrap();
-        
+
         let regressions = engine.detect_regressions(&current, &baseline, 10.0);
         assert_eq!(regressions.len(), 0);
     }
@@ -217,7 +217,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let baseline_estimates = vec![
             CostEstimate {
                 resource_id: "test.resource".to_string(),
@@ -231,7 +231,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let current_estimates = vec![
             CostEstimate {
                 resource_id: "test.resource".to_string(),
@@ -245,10 +245,10 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let baseline = engine.create_snapshot(baseline_estimates, None, None).unwrap();
         let current = engine.create_snapshot(current_estimates, None, None).unwrap();
-        
+
         let regressions = engine.detect_regressions(&current, &baseline, 10.0);
         assert_eq!(regressions.len(), 1);
         assert_eq!(regressions[0].regression_type, RegressionType::CostIncrease);
@@ -260,7 +260,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let baseline_estimates = vec![
             CostEstimate {
                 resource_id: "module1.test.resource".to_string(),
@@ -274,7 +274,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let current_estimates = vec![
             CostEstimate {
                 resource_id: "module1.test.resource".to_string(),
@@ -299,10 +299,10 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let baseline = engine.create_snapshot(baseline_estimates, None, None).unwrap();
         let current = engine.create_snapshot(current_estimates, None, None).unwrap();
-        
+
         let regressions = engine.detect_regressions(&current, &baseline, 10.0);
         assert!(regressions.len() >= 2); // total increase and module increase
         let module_regression = regressions.iter().find(|r| r.affected == "module1").unwrap();
@@ -314,7 +314,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let baseline_estimates = vec![
             CostEstimate {
                 resource_id: "module1.test.resource".to_string(),
@@ -328,7 +328,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let current_estimates = vec![
             CostEstimate {
                 resource_id: "module1.test.resource".to_string(),
@@ -353,10 +353,10 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let baseline = engine.create_snapshot(baseline_estimates, None, None).unwrap();
         let current = engine.create_snapshot(current_estimates, None, None).unwrap();
-        
+
         let regressions = engine.detect_regressions(&current, &baseline, 10.0);
         let new_module_regression = regressions.iter().find(|r| r.regression_type == RegressionType::NewResource).unwrap();
         assert_eq!(new_module_regression.affected, "module2");
@@ -368,7 +368,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "test.resource".to_string(),
@@ -382,7 +382,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, Some("abc123def".to_string()), Some("feature-branch".to_string())).unwrap();
         assert_eq!(snapshot.commit_hash, Some("abc123def".to_string()));
         assert_eq!(snapshot.branch, Some("feature-branch".to_string()));
@@ -393,7 +393,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let snapshot = engine.create_snapshot(vec![], None, None).unwrap();
         assert_eq!(snapshot.total_monthly_cost, 0.0);
         assert_eq!(snapshot.modules.len(), 0);
@@ -405,7 +405,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "single.resource".to_string(),
@@ -419,7 +419,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         assert_eq!(snapshot.total_monthly_cost, 25.0);
         assert_eq!(snapshot.modules.len(), 1);
@@ -431,7 +431,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let mut estimates = vec![];
         for i in 0..100 {
             estimates.push(CostEstimate {
@@ -446,7 +446,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             });
         }
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         assert_eq!(snapshot.total_monthly_cost, 1000.0);
         assert_eq!(snapshot.modules.len(), 10);
@@ -457,7 +457,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "free.resource".to_string(),
@@ -471,7 +471,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         assert_eq!(snapshot.total_monthly_cost, 0.0);
     }
@@ -481,7 +481,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "expensive.resource".to_string(),
@@ -506,7 +506,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         assert_eq!(snapshot.total_monthly_cost, 1000.01);
     }
@@ -516,7 +516,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "test.resource".to_string(),
@@ -530,7 +530,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         assert!(!snapshot.timestamp.is_empty());
         // Should be ISO 8601 format
@@ -615,7 +615,7 @@ mod trend_engine_deep_tests {
         let mut outlier = snapshots[4].clone();
         outlier.total_monthly_cost = 1000.0;
         snapshots.insert(4, outlier);
-        
+
         let trend = analyze_trend_direction(&snapshots);
         // Should still detect stable trend despite outlier
         assert_eq!(trend, TrendDirection::Stable);
@@ -735,7 +735,7 @@ mod trend_engine_deep_tests {
         let mut anomaly = snapshots[5].clone();
         anomaly.total_monthly_cost = 500.0;
         snapshots[5] = anomaly;
-        
+
         let anomalies = detect_anomalies(&snapshots, 2.0);
         assert!(anomalies.contains(&5));
     }
@@ -772,7 +772,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         // Should handle empty history gracefully
         let svg = engine.generate_svg().unwrap();
         assert!(svg.contains("<svg"));
@@ -783,11 +783,11 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         // Create a corrupted snapshot file
         let snapshot_path = temp_dir.path().join("snapshot_001.json");
         std::fs::write(&snapshot_path, "invalid json").unwrap();
-        
+
         // Should handle corruption gracefully
         let history = engine.load_history();
         // Might return error or skip corrupted file
@@ -799,7 +799,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "large.resource".to_string(),
@@ -813,7 +813,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         assert_eq!(snapshot.total_monthly_cost, 1_000_000_000.0);
     }
@@ -823,7 +823,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "测试.资源".to_string(),
@@ -837,7 +837,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
         assert_eq!(snapshot.total_monthly_cost, 50.0);
     }
@@ -846,11 +846,11 @@ mod trend_engine_deep_tests {
     fn test_concurrent_snapshot_creation() {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
-        
+
         // Test concurrent access (basic - would need proper async for full test)
         let engine1 = TrendEngine::new(temp_dir.path(), &edition).unwrap();
         let engine2 = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "concurrent.resource".to_string(),
@@ -864,10 +864,10 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot1 = engine1.create_snapshot(estimates.clone(), None, None).unwrap();
         let snapshot2 = engine2.create_snapshot(estimates, None, None).unwrap();
-        
+
         assert_eq!(snapshot1.total_monthly_cost, 50.0);
         assert_eq!(snapshot2.total_monthly_cost, 50.0);
         assert_ne!(snapshot1.id, snapshot2.id); // Different IDs
@@ -878,7 +878,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         // Create many snapshots
         for i in 0..100 {
             let estimates = vec![
@@ -894,11 +894,11 @@ mod trend_engine_deep_tests {
                     breakdown: HashMap::new(),
                 }
             ];
-            
+
             let snapshot = engine.create_snapshot(estimates, None, None).unwrap();
             engine.save_snapshot(&snapshot).unwrap();
         }
-        
+
         let history = engine.load_history().unwrap();
         assert!(history.snapshots.len() >= 100);
     }
@@ -916,7 +916,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let estimates = vec![
             CostEstimate {
                 resource_id: "test.resource".to_string(),
@@ -930,10 +930,10 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let snapshot1 = engine.create_snapshot(estimates.clone(), None, None).unwrap();
         let snapshot2 = engine.create_snapshot(estimates, None, None).unwrap();
-        
+
         assert_ne!(snapshot1.id, snapshot2.id);
     }
 
@@ -942,11 +942,11 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         let output_path = temp_dir.path().join("special_chars.html");
         engine.generate_html(&output_path, "Test <>&\"'").unwrap();
         assert!(output_path.exists());
-        
+
         let content = std::fs::read_to_string(&output_path).unwrap();
         assert!(content.contains("Test &lt;&gt;&amp;&quot;&#x27;"));
     }
@@ -956,7 +956,7 @@ mod trend_engine_deep_tests {
         let temp_dir = TempDir::new().unwrap();
         let edition = EditionContext::premium();
         let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
-        
+
         // Test with zero baseline
         let baseline_estimates = vec![
             CostEstimate {
@@ -971,7 +971,7 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let current_estimates = vec![
             CostEstimate {
                 resource_id: "zero.resource".to_string(),
@@ -985,10 +985,10 @@ mod trend_engine_deep_tests {
                 breakdown: HashMap::new(),
             }
         ];
-        
+
         let baseline = engine.create_snapshot(baseline_estimates, None, None).unwrap();
         let current = engine.create_snapshot(current_estimates, None, None).unwrap();
-        
+
         let regressions = engine.detect_regressions(&current, &baseline, 10.0);
         assert!(regressions.len() >= 1);
         // Should handle division by zero gracefully
@@ -1061,12 +1061,12 @@ mod trend_engine_deep_tests {
         if snapshots.len() < 2 {
             return TrendDirection::Unknown;
         }
-        
+
         let first = snapshots.first().unwrap().total_monthly_cost;
         let last = snapshots.last().unwrap().total_monthly_cost;
         let change = last - first;
         let threshold = first * 0.05; // 5% threshold
-        
+
         if change > threshold {
             TrendDirection::Increasing
         } else if change < -threshold {
@@ -1080,11 +1080,11 @@ mod trend_engine_deep_tests {
         if snapshots.len() < 2 {
             return None;
         }
-        
+
         let costs: Vec<f64> = snapshots.iter().map(|s| s.total_monthly_cost).collect();
         let slope = calculate_trend_slope(snapshots)?;
         let last = *costs.last()?;
-        
+
         Some(last + slope * steps as f64)
     }
 
@@ -1092,7 +1092,7 @@ mod trend_engine_deep_tests {
         if snapshots.len() < window {
             return None;
         }
-        
+
         let recent: Vec<f64> = snapshots.iter().rev().take(window).map(|s| s.total_monthly_cost).collect();
         let avg = recent.iter().sum::<f64>() / recent.len() as f64;
         Some(avg)
@@ -1102,7 +1102,7 @@ mod trend_engine_deep_tests {
         if snapshots.is_empty() {
             return None;
         }
-        
+
         let mut smoothed = snapshots.first()?.total_monthly_cost;
         for snapshot in snapshots.iter().skip(1) {
             smoothed = alpha * snapshot.total_monthly_cost + (1.0 - alpha) * smoothed;
@@ -1114,7 +1114,7 @@ mod trend_engine_deep_tests {
         let forecast = forecast_next_value(snapshots, 1)?;
         let costs: Vec<f64> = snapshots.iter().map(|s| s.total_monthly_cost).collect();
         let std_dev = calculate_std_dev(&costs);
-        
+
         // Simple confidence interval
         let margin = 1.96 * std_dev; // 95% confidence
         Some((forecast, forecast - margin, forecast + margin))
@@ -1124,13 +1124,13 @@ mod trend_engine_deep_tests {
         if historical.len() != actual.len() {
             return 0.0;
         }
-        
+
         let mut total_error = 0.0;
         for (hist, act) in historical.iter().zip(actual) {
             let error = (hist.total_monthly_cost - act.total_monthly_cost).abs();
             total_error += error / hist.total_monthly_cost.max(0.01); // Avoid division by zero
         }
-        
+
         let avg_error = total_error / historical.len() as f64;
         (1.0 - avg_error.min(1.0)) * 100.0 // Convert to percentage
     }
@@ -1139,44 +1139,44 @@ mod trend_engine_deep_tests {
         if snapshots.len() < 2 {
             return None;
         }
-        
+
         let n = snapshots.len() as f64;
         let costs: Vec<f64> = snapshots.iter().map(|s| s.total_monthly_cost).collect();
         let x_mean = (n - 1.0) / 2.0;
         let y_mean = costs.iter().sum::<f64>() / n;
-        
+
         let mut numerator = 0.0;
         let mut denominator = 0.0;
-        
+
         for (i, &y) in costs.iter().enumerate() {
             let x = i as f64;
             numerator += (x - x_mean) * (y - y_mean);
             denominator += (x - x_mean).powi(2);
         }
-        
+
         if denominator == 0.0 {
             return None;
         }
-        
+
         Some(numerator / denominator)
     }
 
     fn decompose_seasonal(snapshots: &[CostSnapshot], period: usize) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
         let costs: Vec<f64> = snapshots.iter().map(|s| s.total_monthly_cost).collect();
         let n = costs.len();
-        
+
         // Simple seasonal decomposition (moving average for trend)
         let trend: Vec<f64> = costs.windows(period).map(|w| w.iter().sum::<f64>() / period as f64).collect();
         let mut seasonal = vec![0.0; n];
         let mut residual = vec![0.0; n];
-        
+
         for i in 0..n {
             if i < trend.len() {
                 seasonal[i] = costs[i] - trend[i];
                 residual[i] = costs[i] - trend[i] - seasonal[i % period];
             }
         }
-        
+
         (trend, seasonal, residual)
     }
 
@@ -1184,7 +1184,7 @@ mod trend_engine_deep_tests {
         let costs: Vec<f64> = snapshots.iter().map(|s| s.total_monthly_cost).collect();
         let mean = costs.iter().sum::<f64>() / costs.len() as f64;
         let std_dev = calculate_std_dev(&costs);
-        
+
         costs.iter().enumerate()
             .filter(|(_, &cost)| (cost - mean).abs() > threshold * std_dev)
             .map(|(i, _)| i)
@@ -1195,10 +1195,10 @@ mod trend_engine_deep_tests {
         if snapshots.len() < 3 {
             return None;
         }
-        
+
         let slope1 = calculate_trend_slope(&snapshots[0..snapshots.len()/2])?;
         let slope2 = calculate_trend_slope(&snapshots[snapshots.len()/2..])?;
-        
+
         if (slope1 > 0.0 && slope2 < 0.0) || (slope1 < 0.0 && slope2 > 0.0) {
             Some(snapshots.len() / 2)
         } else {
@@ -1209,17 +1209,17 @@ mod trend_engine_deep_tests {
     fn multi_step_forecast(snapshots: &[CostSnapshot], steps: usize) -> Option<Vec<f64>> {
         let mut forecasts = Vec::with_capacity(steps);
         let mut current_snapshots = snapshots.to_vec();
-        
+
         for _ in 0..steps {
             let next = forecast_next_value(&current_snapshots, 1)?;
             forecasts.push(next);
-            
+
             // Add the forecast as a new snapshot for next iteration
             let mut new_snapshot = current_snapshots.last()?.clone();
             new_snapshot.total_monthly_cost = next;
             current_snapshots.push(new_snapshot);
         }
-        
+
         Some(forecasts)
     }
 

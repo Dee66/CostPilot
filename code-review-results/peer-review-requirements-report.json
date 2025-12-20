@@ -1,0 +1,25 @@
+{
+  "peer_review_requirements": {
+    "timestamp": "2025-12-20T12:34:18+02:00",
+    "commit": "7429a077082c13532500a83cbe65c91f646fd1d1",
+    "total_issues": 1,
+    "blockers": 1,
+    "checks_performed": [
+      "pr_size_analysis",
+      "required_reviewers",
+      "documentation_updates",
+      "test_coverage",
+      "code_style",
+      "breaking_changes",
+      "commit_quality"
+    ],
+    "recommendations": [
+      "Ensure appropriate reviewers are assigned",
+      "Keep PRs small and focused",
+      "Add tests for new functionality",
+      "Follow coding standards and formatting",
+      "Update documentation for API changes",
+      "Use conventional commit messages"
+    ]
+  }
+}

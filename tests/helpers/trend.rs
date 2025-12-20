@@ -1,5 +1,5 @@
 /// Trend analysis test helpers for snapshot management
-/// 
+///
 /// Provides deterministic snapshot ID generation matching production algorithm.
 
 use sha2::{Sha256, Digest};

@@ -1,0 +1,224 @@
+# CostPilot Edge Case: Extreme Cost Values
+# Test data for handling extreme and edge case cost values
+
+# Zero cost
+zero_cost:
+  metadata:
+    test_case: "zero_cost"
+    description: "Resource with zero cost"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "free-tier-ec2"
+        provider: "aws"
+        attributes:
+          instance_type: "t2.micro"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: 0.00
+          currency: "USD"
+
+# Negative cost (shouldn't happen but test handling)
+negative_cost:
+  metadata:
+    test_case: "negative_cost"
+    description: "Resource with negative cost estimate"
+    expected_behavior: "cost_validation_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "negative-cost-ec2"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.large"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: -50.00
+          currency: "USD"
+
+# Extremely high cost
+extremely_high_cost:
+  metadata:
+    test_case: "extremely_high_cost"
+    description: "Resource with extremely high cost"
+    expected_behavior: "cost_threshold_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "expensive-ec2"
+        provider: "aws"
+        attributes:
+          instance_type: "p4d.24xlarge"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: 50000.00
+          currency: "USD"
+
+# Fractional cost (very small)
+fractional_cost:
+  metadata:
+    test_case: "fractional_cost"
+    description: "Resource with very small fractional cost"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_lambda_function"
+        name: "micro-lambda"
+        provider: "aws"
+        attributes:
+          runtime: "python3.9"
+          memory_size: 128
+        cost_estimate:
+          monthly: 0.000001
+          currency: "USD"
+
+# Maximum float value
+max_float_cost:
+  metadata:
+    test_case: "max_float_cost"
+    description: "Resource with maximum float cost value"
+    expected_behavior: "numerical_limit_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "max-cost-ec2"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: 1.7976931348623157e+308
+          currency: "USD"
+
+# NaN cost
+nan_cost:
+  metadata:
+    test_case: "nan_cost"
+    description: "Resource with NaN cost value"
+    expected_behavior: "invalid_cost_error"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "nan-cost-ec2"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: .NaN
+          currency: "USD"
+
+# Infinity cost
+infinity_cost:
+  metadata:
+    test_case: "infinity_cost"
+    description: "Resource with infinity cost value"
+    expected_behavior: "invalid_cost_error"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "infinity-cost-ec2"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: .Inf
+          currency: "USD"
+
+# Scientific notation extremes
+scientific_notation_large:
+  metadata:
+    test_case: "scientific_notation_large"
+    description: "Cost in scientific notation (large)"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "scientific-large"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: 1.23e6
+          currency: "USD"
+
+scientific_notation_small:
+  metadata:
+    test_case: "scientific_notation_small"
+    description: "Cost in scientific notation (small)"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "scientific-small"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: 1.23e-6
+          currency: "USD"
+
+# Multiple currencies
+multiple_currencies:
+  metadata:
+    test_case: "multiple_currencies"
+    description: "Plan with multiple currencies"
+    expected_behavior: "currency_conversion_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "usd-resource"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+        cost_estimate:
+          monthly: 10.00
+          currency: "USD"
+      - type: "aws_instance"
+        name: "eur-resource"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "eu-west-1"
+        cost_estimate:
+          monthly: 8.50
+          currency: "EUR"
+
+# Cost with many decimal places
+high_precision_cost:
+  metadata:
+    test_case: "high_precision_cost"
+    description: "Cost with many decimal places"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_lambda_function"
+        name: "precise-lambda"
+        provider: "aws"
+        attributes:
+          runtime: "python3.9"
+        cost_estimate:
+          monthly: 0.123456789012345678901234567890
+          currency: "USD"
+
+# Zero with decimal
+zero_decimal_cost:
+  metadata:
+    test_case: "zero_decimal_cost"
+    description: "Zero cost with decimal places"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_s3_bucket"
+        name: "free-bucket"
+        provider: "aws"
+        attributes:
+          region: "us-east-1"
+        cost_estimate:
+          monthly: 0.000
+          currency: "USD"

@@ -1,0 +1,8 @@
+{
+  "scenario_name": "network_partitioning",
+  "metrics_collected": 124,
+  "average_cpu_usage": 50,
+  "average_memory_usage": 49,
+  "max_errors_detected": 9,
+  "chaos_resilience_score": 75
+}

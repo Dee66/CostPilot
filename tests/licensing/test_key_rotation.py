@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 
 def test_ed25519_signature_verification():
     """Verify Ed25519 signature algorithm verification."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.sig', delete=False) as f:
         signature_data = {
             "algorithm": "Ed25519",
@@ -25,20 +25,20 @@ def test_ed25519_signature_verification():
         }
         json.dump(signature_data, f)
         sig_path = f.name
-    
+
     try:
         binary_path = Path(__file__).parent.parent.parent / "target" / "release" / "costpilot"
         assert binary_path.exists(), f"Binary not found"
-        
+
         print("✓ Ed25519 signature verification validated")
-        
+
     finally:
         os.unlink(sig_path)
 
 
 def test_key_rotation_with_version():
     """Verify key rotation with version tracking."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.key', delete=False) as f:
         key_version = {
             "key_id": "signing-key-v2",
@@ -49,17 +49,17 @@ def test_key_rotation_with_version():
         }
         json.dump(key_version, f)
         key_path = f.name
-    
+
     try:
         print("✓ Key rotation with version tracking validated")
-        
+
     finally:
         os.unlink(key_path)
 
 
 def test_old_key_still_valid():
     """Verify old signing key still validates existing licenses."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.oldkey', delete=False) as f:
         old_key = {
             "key_id": "signing-key-v1",
@@ -71,17 +71,17 @@ def test_old_key_still_valid():
         }
         json.dump(old_key, f)
         oldkey_path = f.name
-    
+
     try:
         print("✓ Old key still validates existing licenses")
-        
+
     finally:
         os.unlink(oldkey_path)
 
 
 def test_revoked_key_rejected():
     """Verify revoked signing key is rejected."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.revoked', delete=False) as f:
         revoked_key = {
             "key_id": "signing-key-compromised",
@@ -92,17 +92,17 @@ def test_revoked_key_rejected():
         }
         json.dump(revoked_key, f)
         revoked_path = f.name
-    
+
     try:
         print("✓ Revoked signing key rejection validated")
-        
+
     finally:
         os.unlink(revoked_path)
 
 
 def test_key_bundle_with_multiple_versions():
     """Verify key bundle with multiple versions works correctly."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.bundle', delete=False) as f:
         key_bundle = {
             "keys": [
@@ -114,17 +114,17 @@ def test_key_bundle_with_multiple_versions():
         }
         json.dump(key_bundle, f)
         bundle_path = f.name
-    
+
     try:
         print("✓ Key bundle with multiple versions validated")
-        
+
     finally:
         os.unlink(bundle_path)
 
 
 def test_signature_with_unknown_key():
     """Verify signature with unknown key ID is rejected."""
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.unknown', delete=False) as f:
         unknown_sig = {
             "key_id": "unknown-key-id",
@@ -133,17 +133,17 @@ def test_signature_with_unknown_key():
         }
         json.dump(unknown_sig, f)
         unknown_path = f.name
-    
+
     try:
         print("✓ Signature with unknown key ID rejection validated")
-        
+
     finally:
         os.unlink(unknown_path)
 
 
 if __name__ == "__main__":
     print("Testing signature algorithm and key rotation...")
-    
+
     try:
         test_ed25519_signature_verification()
         test_key_rotation_with_version()
@@ -151,10 +151,10 @@ if __name__ == "__main__":
         test_revoked_key_rejected()
         test_key_bundle_with_multiple_versions()
         test_signature_with_unknown_key()
-        
+
         print("\n✅ All key rotation tests passed")
         sys.exit(0)
-        
+
     except AssertionError as e:
         print(f"\n❌ Test failed: {e}", file=sys.stderr)
         sys.exit(1)

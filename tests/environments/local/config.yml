@@ -1,0 +1,45 @@
+environment:
+  name: local
+  type: development
+  isolation: container
+  cleanup: automatic
+
+database:
+  type: sqlite
+  path: ":memory:"
+  migrations: auto
+
+external_services:
+  mock_all: true
+  aws:
+    endpoint: http://localhost:4566
+    region: us-east-1
+  azure:
+    endpoint: http://localhost:10000
+  gcp:
+    endpoint: http://localhost:8080
+
+logging:
+  level: debug
+  format: json
+  output: console
+
+monitoring:
+  enabled: false
+  metrics: disabled
+
+security:
+  authentication: disabled
+  authorization: disabled
+  encryption: disabled
+
+networking:
+  host: localhost
+  ports:
+    - 8080
+    - 4566
+
+resources:
+  memory: 2GB
+  cpu: 2
+  disk: 10GB

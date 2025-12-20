@@ -3,6 +3,9 @@
 #[cfg(test)]
 mod tests {
     use std::path::Path;
+    use std::process::Command;
+    use std::fs;
+    use sha2::{Sha256, Digest};
 
     const WASM_FILE_PATH: &str = "target/wasm32-unknown-unknown/release/costpilot.wasm";
     const MAX_SIZE_BYTES: usize = 10 * 1024 * 1024; // 10 MB
@@ -241,5 +244,37 @@ mod tests {
         println!("  costpilot_core.wasm (2 MB) - always loaded");
         println!("  costpilot_prediction.wasm (500 KB) - on-demand");
         println!("  costpilot_mapping.wasm (600 KB) - on-demand");
+    }
+
+    #[test]
+    fn test_wasm_checksum_reproducible() {
+        // Build first time
+        let output1 = Command::new("cargo")
+            .args(&["build", "--target", "wasm32-wasip1", "--release", "--lib", "--features", "wasm"])
+            .output()
+            .expect("Failed to build WASM first time");
+        assert!(output1.status.success());
+
+        let wasm_path = "target/wasm32-wasip1/release/costpilot.wasm";
+        assert!(Path::new(wasm_path).exists());
+
+        let data1 = fs::read(wasm_path).unwrap();
+        let mut hasher1 = Sha256::new();
+        hasher1.update(&data1);
+        let hash1 = hasher1.finalize();
+
+        // Build second time
+        let output2 = Command::new("cargo")
+            .args(&["build", "--target", "wasm32-wasip1", "--release", "--lib", "--features", "wasm"])
+            .output()
+            .expect("Failed to build WASM second time");
+        assert!(output2.status.success());
+
+        let data2 = fs::read(wasm_path).unwrap();
+        let mut hasher2 = Sha256::new();
+        hasher2.update(&data2);
+        let hash2 = hasher2.finalize();
+
+        assert_eq!(hash1, hash2, "WASM bundle checksum not reproducible");
     }
 }

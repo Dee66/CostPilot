@@ -21,8 +21,13 @@ fi
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
 # Normalized timestamp (no fractional seconds)
-BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-BUILD_TIME_TOUCH=$(date -u +"%Y%m%d%H%M.%S")
+if [ -n "${SOURCE_DATE_EPOCH}" ]; then
+    BUILD_TIME=$(date -u -d "@${SOURCE_DATE_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ")
+    BUILD_TIME_TOUCH=$(date -u -d "@${SOURCE_DATE_EPOCH}" +"%Y%m%d%H%M.%S")
+else
+    BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    BUILD_TIME_TOUCH=$(date -u +"%Y%m%d%H%M.%S")
+fi
 
 # Output paths
 OUTPUT_TAR="${DIST_DIR}/costpilot-${VERSION}-${PLATFORM}.tar.gz"
@@ -84,10 +89,10 @@ find "${BUNDLE_DIR}" -exec touch -t "${BUILD_TIME_TOUCH}" {} \;
 
 # Create TAR.GZ (deterministic)
 cd "${STAGE}"
-tar --sort=name --mtime="${BUILD_TIME}" --owner=0 --group=0 --numeric-owner -cf - "costpilot-${VERSION}-${PLATFORM}" | gzip -n -9 > "${PROJECT_ROOT}/${OUTPUT_TAR}"
+tar --sort=name --mtime="${BUILD_TIME}" --owner=0 --group=0 --numeric-owner -cf - "costpilot-${VERSION}-${PLATFORM}" | gzip -n -9 > "${OUTPUT_TAR}"
 
 # Create ZIP (deterministic)
-zip -q -X -r "${PROJECT_ROOT}/${OUTPUT_ZIP}" "costpilot-${VERSION}-${PLATFORM}"
+zip -q -X -r "${OUTPUT_ZIP}" "costpilot-${VERSION}-${PLATFORM}"
 
 cd "${PROJECT_ROOT}"
 

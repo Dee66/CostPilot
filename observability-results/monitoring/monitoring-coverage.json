@@ -1,0 +1,6 @@
+{
+  "metrics_expected": 6,
+  "metrics_found": 2,
+  "coverage_percentage": 33,
+  "comprehensive_coverage": false
+}

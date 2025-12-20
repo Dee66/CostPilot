@@ -11,41 +11,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+
       - name: Run ProEngine loader tests
         run: cargo test --test pro_engine_loader_unit_tests
-      
+
       - name: Run WASM runtime tests
         run: cargo test --test wasm_runtime_tests
-      
+
       - name: Run Pro Engine loader tests
         run: cargo test --test pro_engine_loader_tests
-      
+
       - name: Build release
         run: cargo build --release
-      
+
       - name: Package
         env:
           TARGET: linux-amd64
         run: bash build/package/make_release.sh
-      
+
       - name: Validate archives
         run: |
           bash build/package/validate_release.sh dist/costpilot-linux-amd64.zip
           bash build/package/validate_release.sh dist/costpilot-linux-amd64.tar.gz
-      
+
       - name: Verify release policy
         run: bash packaging/signing/verify_release_policy.sh
-      
+
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-linux-amd64.zip
           path: dist/costpilot-linux-amd64.zip
-      
+
       - name: Upload TAR.GZ
         uses: actions/upload-artifact@v4
         with:
@@ -56,36 +56,36 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
-      
+
       - name: Build release
         run: cargo build --release --target aarch64-apple-darwin
-      
+
       - name: Copy binary to standard location
         run: |
           mkdir -p target/release
           cp target/aarch64-apple-darwin/release/costpilot target/release/
-      
+
       - name: Package
         env:
           TARGET: macos-arm64
         run: bash build/package/make_release.sh
-      
+
       - name: Validate archives
         run: |
           bash build/package/validate_release.sh dist/costpilot-macos-arm64.zip
           bash build/package/validate_release.sh dist/costpilot-macos-arm64.tar.gz
-      
+
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-macos-arm64.zip
           path: dist/costpilot-macos-arm64.zip
-      
+
       - name: Upload TAR.GZ
         uses: actions/upload-artifact@v4
         with:
@@ -96,36 +96,36 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-apple-darwin
-      
+
       - name: Build release
         run: cargo build --release --target x86_64-apple-darwin
-      
+
       - name: Copy binary to standard location
         run: |
           mkdir -p target/release
           cp target/x86_64-apple-darwin/release/costpilot target/release/
-      
+
       - name: Package
         env:
           TARGET: macos-amd64
         run: bash build/package/make_release.sh
-      
+
       - name: Validate archives
         run: |
           bash build/package/validate_release.sh dist/costpilot-macos-amd64.zip
           bash build/package/validate_release.sh dist/costpilot-macos-amd64.tar.gz
-      
+
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-macos-amd64.zip
           path: dist/costpilot-macos-amd64.zip
-      
+
       - name: Upload TAR.GZ
         uses: actions/upload-artifact@v4
         with:
@@ -136,31 +136,31 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+
       - name: Build release
         run: cargo build --release
-      
+
       - name: Package
         shell: bash
         env:
           TARGET: windows-amd64
         run: bash build/package/make_release.sh
-      
+
       - name: Validate archives
         shell: bash
         run: |
           bash build/package/validate_release.sh dist/costpilot-windows-amd64.zip
           bash build/package/validate_release.sh dist/costpilot-windows-amd64.tar.gz
-      
+
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-windows-amd64.zip
           path: dist/costpilot-windows-amd64.zip
-      
+
       - name: Upload TAR.GZ
         uses: actions/upload-artifact@v4
         with:
@@ -173,35 +173,35 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist/
           merge-multiple: true
-      
+
       - name: Generate checksum file
         working-directory: dist
         run: |
           sha256sum *.zip *.tar.gz | sort > sha256sum.txt
           cat sha256sum.txt
-      
+
       - name: Generate ephemeral signing key (CI-only)
         run: |
           mkdir -p build/keys
           chmod +x packaging/signing/generate_keypair.sh
           bash packaging/signing/generate_keypair.sh build/keys ci_signing
-      
+
       - name: Sign checksums (Ed25519)
         run: |
           chmod +x packaging/signing/sign_checksum_ed25519.sh
           bash packaging/signing/sign_checksum_ed25519.sh dist/sha256sum.txt build/keys/ci_signing.pem dist/sha256sum.txt.sig
-      
+
       - name: Verify signature (CI smoke)
         run: |
           chmod +x packaging/signing/verify_checksum_ed25519.sh
           bash packaging/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/keys/ci_signing.pub.pem
-      
+
       - name: Generate license token (dev)
         if: env.RELEASE_SIGNING == 'true'
         env:
@@ -214,7 +214,7 @@ jobs:
             "dev@example.com" \
             "2026-12-31T23:59:59Z" \
             "dist/license.json"
-      
+
       - name: Sign checksums
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -224,7 +224,7 @@ jobs:
         run: |
           chmod +x packaging/signing/sign_checksums.sh
           bash packaging/signing/sign_checksums.sh dist dist/sha256sum.txt dist/sha256sum.sig
-      
+
       - name: Verify signature
         env:
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
@@ -235,7 +235,7 @@ jobs:
           else
             bash packaging/signing/verify_signature.sh dist/sha256sum.txt dist/sha256sum.sig
           fi
-      
+
       - name: Verify release bundles
         env:
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
@@ -245,7 +245,7 @@ jobs:
             [[ -f "$artifact" ]] || continue
             bash packaging/verify_release_bundle.sh "$artifact" dist/sha256sum.txt dist/sha256sum.sig packaging/signing/public.key || true
           done
-      
+
       - name: Verify publisher signature (release)
         if: secrets.PUBLISHER_PUBKEY != ''
         env:
@@ -254,7 +254,7 @@ jobs:
           echo "$PUBLISHER_PUBKEY" > build/publisher.pub.pem
           chmod +x packaging/signing/verify_checksum_ed25519.sh
           bash packaging/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/publisher.pub.pem
-      
+
       - name: Upload checksum and signature
         uses: actions/upload-artifact@v4
         with:
@@ -263,7 +263,7 @@ jobs:
             dist/sha256sum.txt
             dist/sha256sum.sig
             dist/license.json
-      
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:

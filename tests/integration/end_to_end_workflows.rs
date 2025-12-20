@@ -1,5 +1,5 @@
 /// Comprehensive integration tests for end-to-end workflows
-/// 
+///
 /// Tests complete pipelines combining multiple engines, CLI interactions,
 /// data flow validation, and configuration scenarios.
 
@@ -20,7 +20,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help"])
             .output()
             .expect("Failed to run costpilot --help");
-        
+
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains("CostPilot"));
@@ -33,7 +33,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--version"])
             .output()
             .expect("Failed to run costpilot --version");
-        
+
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains(env!("CARGO_PKG_VERSION")));
@@ -45,7 +45,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "invalid-command"])
             .output()
             .expect("Failed to run invalid command");
-        
+
         assert!(!output.status.success());
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(stderr.contains("error") || stderr.contains("Error"));
@@ -57,7 +57,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "scan"])
             .output()
             .expect("Failed to run scan without args");
-        
+
         assert!(!output.status.success());
     }
 
@@ -66,12 +66,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("config.yml");
         fs::write(&config_path, "edition: free\nbaselines: {}\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_path.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed to run with config");
-        
+
         assert!(output.status.success());
     }
 
@@ -80,12 +80,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("invalid.yml");
         fs::write(&config_path, "invalid: yaml: content: [unclosed").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_path.to_str().unwrap(), "--version"])
             .output()
             .expect("Failed to run with invalid config");
-        
+
         // Should either succeed (ignore invalid config) or fail gracefully
         let _ = output.status.success() || !String::from_utf8_lossy(&output.stderr).is_empty();
     }
@@ -97,7 +97,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help"])
             .output()
             .expect("Failed to run help");
-        
+
         assert!(output.status.success());
     }
 
@@ -107,7 +107,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "-v", "--help"])
             .output()
             .expect("Failed to run verbose help");
-        
+
         assert!(output.status.success());
     }
 
@@ -117,7 +117,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "-q", "--help"])
             .output()
             .expect("Failed to run quiet help");
-        
+
         assert!(output.status.success());
         // Quiet should still show essential output
         assert!(!output.stdout.is_empty());
@@ -130,7 +130,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--json", "--help"])
             .output()
             .expect("Failed to run json help");
-        
+
         // May or may not support --json
         let _ = output.status.success();
     }
@@ -142,7 +142,7 @@ mod integration_tests {
             .env("COSTPILOT_CONFIG", "/tmp/test")
             .output()
             .expect("Failed to run with env var");
-        
+
         assert!(output.status.success());
     }
 
@@ -155,10 +155,10 @@ mod integration_tests {
             .stdout(std::process::Stdio::piped())
             .spawn()
             .unwrap();
-        
+
         output.stdin.unwrap().write_all(input).unwrap();
         let output = output.wait_with_output().unwrap();
-        
+
         // Validate command may not exist, but should not crash
         let _ = output.status.success();
     }
@@ -168,12 +168,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test.json");
         fs::write(&file_path, b"{}").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "validate", file_path.to_str().unwrap()])
             .output()
             .expect("Failed to validate file");
-        
+
         // Should succeed or fail gracefully
         let _ = output.status.success();
     }
@@ -185,12 +185,12 @@ mod integration_tests {
         let file2 = temp_dir.path().join("test2.json");
         fs::write(&file1, b"{}").unwrap();
         fs::write(&file2, b"[]").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "validate", file1.to_str().unwrap(), file2.to_str().unwrap()])
             .output()
             .expect("Failed to validate multiple files");
-        
+
         let _ = output.status.success();
     }
 
@@ -199,12 +199,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test.json");
         fs::write(&file_path, b"{}").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "validate", temp_dir.path().to_str().unwrap()])
             .output()
             .expect("Failed to validate directory");
-        
+
         let _ = output.status.success();
     }
 
@@ -214,12 +214,12 @@ mod integration_tests {
         fs::write(temp_dir.path().join("test1.json"), b"{}").unwrap();
         fs::write(temp_dir.path().join("test2.json"), b"[]").unwrap();
         fs::write(temp_dir.path().join("other.txt"), b"text").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "validate", &format!("{}/*.json", temp_dir.path().display())])
             .output()
             .expect("Failed to validate with glob");
-        
+
         let _ = output.status.success();
     }
 
@@ -227,13 +227,13 @@ mod integration_tests {
     fn test_cli_output_redirection() {
         let temp_dir = TempDir::new().unwrap();
         let output_file = temp_dir.path().join("output.txt");
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--help"])
             .stdout(std::fs::File::create(&output_file).unwrap())
             .output()
             .expect("Failed to redirect output");
-        
+
         assert!(output.status.success());
         assert!(output_file.exists());
         let content = fs::read_to_string(&output_file).unwrap();
@@ -244,13 +244,13 @@ mod integration_tests {
     fn test_cli_error_redirection() {
         let temp_dir = TempDir::new().unwrap();
         let error_file = temp_dir.path().join("error.txt");
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "invalid"])
             .stderr(std::fs::File::create(&error_file).unwrap())
             .output()
             .expect("Failed to redirect error");
-        
+
         assert!(!output.status.success());
         assert!(error_file.exists());
         let content = fs::read_to_string(&error_file).unwrap();
@@ -264,14 +264,14 @@ mod integration_tests {
             .stdout(std::process::Stdio::piped())
             .spawn()
             .unwrap();
-        
+
         let output2 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "validate", "-"])
             .stdin(output1.stdout.unwrap())
             .stdout(std::process::Stdio::piped())
             .spawn()
             .unwrap();
-        
+
         let final_output = output2.wait_with_output().unwrap();
         let _ = final_output.status.success();
     }
@@ -283,7 +283,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help"])
             .output()
             .expect("Failed to run long command");
-        
+
         assert!(output.status.success());
     }
 
@@ -293,7 +293,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help"])
             .output()
             .expect("Failed to run memory test");
-        
+
         assert!(output.status.success());
     }
 
@@ -303,14 +303,14 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help"])
             .output()
             .expect("Failed to run cpu test");
-        
+
         assert!(output.status.success());
     }
 
     #[test]
     fn test_cli_concurrent_executions() {
         use std::thread;
-        
+
         let mut handles = vec![];
         for _ in 0..5 {
             let handle = thread::spawn(|| {
@@ -322,7 +322,7 @@ mod integration_tests {
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -335,7 +335,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help"])
             .output()
             .expect("Failed to run signal test");
-        
+
         assert!(output.status.success());
     }
 
@@ -345,7 +345,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "invalid"])
             .output()
             .expect("Failed to run exit code test");
-        
+
         assert_eq!(output.status.code().unwrap(), 1); // Assuming 1 for error
     }
 
@@ -354,12 +354,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("tëst.json");
         fs::write(&file_path, b"{}").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "validate", file_path.to_str().unwrap()])
             .output()
             .expect("Failed to handle unicode");
-        
+
         let _ = output.status.success();
     }
 
@@ -370,7 +370,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help", &long_arg])
             .output()
             .expect("Failed to handle long args");
-        
+
         // May succeed or fail depending on OS limits
         let _ = output.status.success();
     }
@@ -383,7 +383,7 @@ mod integration_tests {
         for arg in args {
             cmd.arg(arg);
         }
-        
+
         let output = cmd.output().expect("Failed to handle many args");
         let _ = output.status.success();
     }
@@ -395,7 +395,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help", special])
             .output()
             .expect("Failed to handle special chars");
-        
+
         let _ = output.status.success();
     }
 
@@ -406,7 +406,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help", whitespace])
             .output()
             .expect("Failed to handle whitespace");
-        
+
         let _ = output.status.success();
     }
 
@@ -416,7 +416,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--help", ""])
             .output()
             .expect("Failed to handle empty arg");
-        
+
         let _ = output.status.success();
     }
 
@@ -426,7 +426,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--HELP"])
             .output()
             .expect("Failed to handle case");
-        
+
         // May or may not be case sensitive
         let _ = output.status.success();
     }
@@ -437,7 +437,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "-h"])
             .output()
             .expect("Failed to handle abbreviated");
-        
+
         assert!(output.status.success());
     }
 
@@ -447,7 +447,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "-vq"])
             .output()
             .expect("Failed to handle combined");
-        
+
         let _ = output.status.success();
     }
 
@@ -457,7 +457,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--verbose=1", "--help"])
             .output()
             .expect("Failed to handle flag values");
-        
+
         let _ = output.status.success();
     }
 
@@ -466,12 +466,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("config.yml");
         fs::write(&config_path, "verbose: true\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_path.to_str().unwrap(), "-q", "--help"])
             .output()
             .expect("Failed to handle precedence");
-        
+
         assert!(output.status.success());
     }
 
@@ -483,7 +483,7 @@ mod integration_tests {
             .env("COSTPILOT_QUIET", "0")
             .output()
             .expect("Failed to handle env override");
-        
+
         assert!(output.status.success());
     }
 
@@ -493,7 +493,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--config", "/nonexistent/config.yml", "--help"])
             .output()
             .expect("Failed to handle missing config");
-        
+
         // Should either succeed or fail gracefully
         let _ = output.status.success();
     }
@@ -503,12 +503,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("config.txt");
         fs::write(&config_path, "not yaml content").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_path.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed to handle invalid config format");
-        
+
         let _ = output.status.success();
     }
 
@@ -517,12 +517,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("config");
         fs::create_dir(&config_path).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_path.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed to handle config dir");
-        
+
         let _ = output.status.success();
     }
 
@@ -532,7 +532,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--config", "relative/config.yml", "--help"])
             .output()
             .expect("Failed to handle relative config");
-        
+
         let _ = output.status.success();
     }
 
@@ -542,7 +542,7 @@ mod integration_tests {
             .args(&["run", "--quiet", "--", "--config", "/tmp/config.yml", "--help"])
             .output()
             .expect("Failed to handle absolute config");
-        
+
         let _ = output.status.success();
     }
 
@@ -551,12 +551,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("config file.yml");
         fs::write(&config_path, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_path.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed to handle config with spaces");
-        
+
         assert!(output.status.success());
     }
 
@@ -565,12 +565,12 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("CONFIG.YML");
         fs::write(&config_path, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_path.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed to handle case insensitive config");
-        
+
         assert!(output.status.success());
     }
 
@@ -580,7 +580,7 @@ mod integration_tests {
         let real_config = temp_dir.path().join("real.yml");
         let link_config = temp_dir.path().join("link.yml");
         fs::write(&real_config, "edition: free\n").unwrap();
-        
+
         #[cfg(unix)]
         {
             std::os::unix::fs::symlink(&real_config, &link_config).unwrap();
@@ -588,7 +588,7 @@ mod integration_tests {
                 .args(&["run", "--quiet", "--", "--config", link_config.to_str().unwrap(), "--help"])
                 .output()
                 .expect("Failed to handle symlink config");
-            
+
             assert!(output.status.success());
         }
     }
@@ -598,20 +598,20 @@ mod integration_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("config.yml");
         fs::write(&config_path, "edition: free\n").unwrap();
-        
+
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             fs::set_permissions(&config_path, fs::Permissions::from_mode(0o000)).unwrap();
-            
+
             let output = Command::new("cargo")
                 .args(&["run", "--quiet", "--", "--config", config_path.to_str().unwrap(), "--help"])
                 .output()
                 .expect("Failed to handle permission denied config");
-            
+
             // Should fail or succeed depending on implementation
             let _ = output.status.success();
-            
+
             // Restore permissions
             fs::set_permissions(&config_path, fs::Permissions::from_mode(0o644)).unwrap();
         }
@@ -633,13 +633,13 @@ resource "aws_instance" "example" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         // Run full scan
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run full scan");
-        
+
         // Should succeed or provide meaningful error
         let _ = output.status.success() || !String::from_utf8_lossy(&output.stderr).is_empty();
     }
@@ -654,12 +654,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "detect", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run detection");
-        
+
         let _ = output.status.success();
     }
 
@@ -673,12 +673,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "predict", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run prediction");
-        
+
         let _ = output.status.success();
     }
 
@@ -692,12 +692,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "explain", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run explain");
-        
+
         let _ = output.status.success();
     }
 
@@ -711,12 +711,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "autofix", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run autofix");
-        
+
         let _ = output.status.success();
     }
 
@@ -730,12 +730,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "policy", "check", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run policy check");
-        
+
         let _ = output.status.success();
     }
 
@@ -749,12 +749,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "slo", "check", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run SLO check");
-        
+
         let _ = output.status.success();
     }
 
@@ -768,12 +768,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "baseline", "compare", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run baseline compare");
-        
+
         let _ = output.status.success();
     }
 
@@ -787,12 +787,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "trend", "analyze", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run trend analysis");
-        
+
         let _ = output.status.success();
     }
 
@@ -806,12 +806,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "map", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run mapping");
-        
+
         let _ = output.status.success();
     }
 
@@ -825,12 +825,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "group", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run grouping");
-        
+
         let _ = output.status.success();
     }
 
@@ -844,12 +844,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "attribute", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run attribution");
-        
+
         let _ = output.status.success();
     }
 
@@ -858,7 +858,7 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file1 = temp_dir.path().join("main.tf");
         let tf_file2 = temp_dir.path().join("variables.tf");
-        
+
         let content1 = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
@@ -869,15 +869,15 @@ variable "instance_type" {
   default = "t3.micro"
 }
 "#;
-        
+
         fs::write(&tf_file1, content1).unwrap();
         fs::write(&tf_file2, content2).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", temp_dir.path().to_str().unwrap()])
             .output()
             .expect("Failed to run multi-file scan");
-        
+
         let _ = output.status.success();
     }
 
@@ -886,7 +886,7 @@ variable "instance_type" {
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("costpilot.yml");
         let tf_file = temp_dir.path().join("main.tf");
-        
+
         let config_content = r#"
 edition: free
 baselines:
@@ -902,15 +902,15 @@ resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&config_file, config_content).unwrap();
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run pipeline with config");
-        
+
         let _ = output.status.success();
     }
 
@@ -919,22 +919,22 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let baseline_file = temp_dir.path().join("baseline.json");
         let tf_file = temp_dir.path().join("main.tf");
-        
+
         let baseline_content = r#"{"resources": []}"#;
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&baseline_file, baseline_content).unwrap();
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--baseline", baseline_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run pipeline with baseline");
-        
+
         let _ = output.status.success();
     }
 
@@ -943,7 +943,7 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let policy_file = temp_dir.path().join("policy.yml");
         let tf_file = temp_dir.path().join("main.tf");
-        
+
         let policy_content = r#"
 name: test_policy
 rules:
@@ -955,15 +955,15 @@ resource "aws_instance" "expensive" {
   instance_type = "m5.24xlarge"  # Very expensive
 }
 "#;
-        
+
         fs::write(&policy_file, policy_content).unwrap();
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--policy", policy_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run pipeline with policy violation");
-        
+
         // Should detect violation
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -975,7 +975,7 @@ resource "aws_instance" "expensive" {
         let temp_dir = TempDir::new().unwrap();
         let slo_file = temp_dir.path().join("slo.yml");
         let tf_file = temp_dir.path().join("main.tf");
-        
+
         let slo_content = r#"
 name: test_slo
 threshold: 50
@@ -986,15 +986,15 @@ resource "aws_instance" "expensive" {
   instance_type = "m5.24xlarge"
 }
 "#;
-        
+
         fs::write(&slo_file, slo_content).unwrap();
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--slo", slo_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run pipeline with SLO breach");
-        
+
         let _ = output.status.success();
     }
 
@@ -1008,12 +1008,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--dry-run", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run dry run");
-        
+
         assert!(output.status.success());
     }
 
@@ -1022,19 +1022,19 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let output_file = temp_dir.path().join("results.json");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--output", output_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with output file");
-        
+
         assert!(output.status.success());
         assert!(output_file.exists());
     }
@@ -1045,19 +1045,19 @@ resource "aws_instance" "test" {
         let tf_file = temp_dir.path().join("main.tf");
         let output_file1 = temp_dir.path().join("results1.json");
         let output_file2 = temp_dir.path().join("results2.json");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--output", output_file1.to_str().unwrap(), "--output", output_file2.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with multiple outputs");
-        
+
         let _ = output.status.success();
     }
 
@@ -1074,12 +1074,12 @@ resource "aws_instance" "test2" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--filter", "instance_type=t3.large", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with filters");
-        
+
         let _ = output.status.success();
     }
 
@@ -1096,12 +1096,12 @@ resource "aws_instance" "test2" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--exclude", "test2", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with exclusions");
-        
+
         let _ = output.status.success();
     }
 
@@ -1118,12 +1118,12 @@ resource "aws_instance" "test2" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--include", "test1", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with includes");
-        
+
         let _ = output.status.success();
     }
 
@@ -1141,12 +1141,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--tag", "Environment=test", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with tags");
-        
+
         let _ = output.status.success();
     }
 
@@ -1161,12 +1161,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--region", "us-east-1", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with regions");
-        
+
         let _ = output.status.success();
     }
 
@@ -1180,12 +1180,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--from", "2024-01-01", "--to", "2024-12-31", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with date range");
-        
+
         let _ = output.status.success();
     }
 
@@ -1199,12 +1199,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--min-cost", "10", "--max-cost", "100", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with cost threshold");
-        
+
         let _ = output.status.success();
     }
 
@@ -1224,12 +1224,12 @@ resource "aws_db_instance" "db" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--group-by", "resource_type", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with grouping");
-        
+
         let _ = output.status.success();
     }
 
@@ -1246,12 +1246,12 @@ resource "aws_instance" "expensive" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--sort-by", "cost", "--sort-order", "desc", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with sorting");
-        
+
         let _ = output.status.success();
     }
 
@@ -1268,12 +1268,12 @@ resource "aws_instance" "test{}" {{
 "#, i));
         }
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--page", "1", "--page-size", "10", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with pagination");
-        
+
         let _ = output.status.success();
     }
 
@@ -1282,19 +1282,19 @@ resource "aws_instance" "test{}" {{
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let csv_file = temp_dir.path().join("results.csv");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--format", "csv", "--output", csv_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with export format");
-        
+
         let _ = output.status.success();
     }
 
@@ -1308,12 +1308,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--summary", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with summary");
-        
+
         assert!(output.status.success());
     }
 
@@ -1327,12 +1327,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--details", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with details");
-        
+
         assert!(output.status.success());
     }
 
@@ -1346,12 +1346,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--recommendations", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with recommendations");
-        
+
         let _ = output.status.success();
     }
 
@@ -1365,12 +1365,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--autofix", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with autofix suggestions");
-        
+
         let _ = output.status.success();
     }
 
@@ -1379,22 +1379,22 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let state_file = temp_dir.path().join("terraform.tfstate");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         let state_content = r#"{"resources": []}"#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
         fs::write(&state_file, state_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--state", state_file.to_str().unwrap(), "drift", "detect", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run drift detection");
-        
+
         let _ = output.status.success();
     }
 
@@ -1403,22 +1403,22 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let baseline_file = temp_dir.path().join("baseline.json");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         let baseline_content = r#"{"resources": []}"#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
         fs::write(&baseline_file, baseline_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--baseline", baseline_file.to_str().unwrap(), "baseline", "compare", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run baseline comparison");
-        
+
         let _ = output.status.success();
     }
 
@@ -1427,22 +1427,22 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let history_file = temp_dir.path().join("history.json");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         let history_content = r#"{"data_points": []}"#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
         fs::write(&history_file, history_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--history", history_file.to_str().unwrap(), "trend", "analyze", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run trend analysis");
-        
+
         let _ = output.status.success();
     }
 
@@ -1451,7 +1451,7 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let allocation_file = temp_dir.path().join("allocation.yml");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
@@ -1462,15 +1462,15 @@ tags:
   - key: Team
     values: [engineering, product]
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
         fs::write(&allocation_file, allocation_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--allocation", allocation_file.to_str().unwrap(), "attribute", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run cost allocation");
-        
+
         let _ = output.status.success();
     }
 
@@ -1479,7 +1479,7 @@ tags:
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let budget_file = temp_dir.path().join("budget.yml");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
@@ -1489,15 +1489,15 @@ resource "aws_instance" "test" {
 monthly_budget: 100
 alert_threshold: 80
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
         fs::write(&budget_file, budget_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--budget", budget_file.to_str().unwrap(), "slo", "check", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run budget alerts");
-        
+
         let _ = output.status.success();
     }
 
@@ -1506,7 +1506,7 @@ alert_threshold: 80
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let approval_file = temp_dir.path().join("approvals.yml");
-        
+
         let tf_content = r#"
 resource "aws_instance" "expensive" {
   instance_type = "m5.24xlarge"
@@ -1518,15 +1518,15 @@ approvers:
   - user: admin
   - user: manager
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
         fs::write(&approval_file, approval_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--approval", approval_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run approval workflow");
-        
+
         let _ = output.status.success();
     }
 
@@ -1535,20 +1535,20 @@ approvers:
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let audit_file = temp_dir.path().join("audit.log");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--audit-log", audit_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with audit logging");
-        
+
         assert!(output.status.success());
         assert!(audit_file.exists());
     }
@@ -1558,20 +1558,20 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let metrics_file = temp_dir.path().join("metrics.json");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--metrics", metrics_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with metrics export");
-        
+
         assert!(output.status.success());
         assert!(metrics_file.exists());
     }
@@ -1581,21 +1581,21 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let plugin_dir = temp_dir.path().join("plugins");
-        
+
         fs::create_dir(&plugin_dir).unwrap();
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--plugin-dir", plugin_dir.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with plugin loading");
-        
+
         let _ = output.status.success();
     }
 
@@ -1604,7 +1604,7 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let pricing_file = temp_dir.path().join("pricing.yml");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
@@ -1615,15 +1615,15 @@ regions:
   us-east-1:
     t3.large: 0.10
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
         fs::write(&pricing_file, pricing_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--pricing", pricing_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run with custom pricing");
-        
+
         let _ = output.status.success();
     }
 
@@ -1631,7 +1631,7 @@ regions:
     fn test_pipeline_with_cloudformation() {
         let temp_dir = TempDir::new().unwrap();
         let cf_file = temp_dir.path().join("template.yml");
-        
+
         let cf_content = r#"
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
@@ -1640,14 +1640,14 @@ Resources:
     Properties:
       InstanceType: t3.large
 "#;
-        
+
         fs::write(&cf_file, cf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", cf_file.to_str().unwrap()])
             .output()
             .expect("Failed to run CloudFormation scan");
-        
+
         let _ = output.status.success();
     }
 
@@ -1655,7 +1655,7 @@ Resources:
     fn test_pipeline_with_kubernetes() {
         let temp_dir = TempDir::new().unwrap();
         let k8s_file = temp_dir.path().join("deployment.yml");
-        
+
         let k8s_content = r#"
 apiVersion: apps/v1
 kind: Deployment
@@ -1673,14 +1673,14 @@ spec:
             cpu: 100m
             memory: 128Mi
 "#;
-        
+
         fs::write(&k8s_file, k8s_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", k8s_file.to_str().unwrap()])
             .output()
             .expect("Failed to run Kubernetes scan");
-        
+
         let _ = output.status.success();
     }
 
@@ -1689,7 +1689,7 @@ spec:
         let temp_dir = TempDir::new().unwrap();
         let helm_dir = temp_dir.path().join("chart");
         fs::create_dir(&helm_dir).unwrap();
-        
+
         let values_file = helm_dir.join("values.yaml");
         let values_content = r#"
 replicaCount: 3
@@ -1700,14 +1700,14 @@ resources:
     cpu: 100m
     memory: 128Mi
 "#;
-        
+
         fs::write(&values_file, values_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", helm_dir.to_str().unwrap()])
             .output()
             .expect("Failed to run Helm chart scan");
-        
+
         let _ = output.status.success();
     }
 
@@ -1715,7 +1715,7 @@ resources:
     fn test_pipeline_with_docker_compose() {
         let temp_dir = TempDir::new().unwrap();
         let compose_file = temp_dir.path().join("docker-compose.yml");
-        
+
         let compose_content = r#"
 version: '3.8'
 services:
@@ -1727,14 +1727,14 @@ services:
           cpus: '0.50'
           memory: 512M
 "#;
-        
+
         fs::write(&compose_file, compose_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", compose_file.to_str().unwrap()])
             .output()
             .expect("Failed to run Docker Compose scan");
-        
+
         let _ = output.status.success();
     }
 
@@ -1742,7 +1742,7 @@ services:
     fn test_pipeline_with_ansible() {
         let temp_dir = TempDir::new().unwrap();
         let ansible_file = temp_dir.path().join("playbook.yml");
-        
+
         let ansible_content = r#"
 - hosts: all
   tasks:
@@ -1751,14 +1751,14 @@ services:
       instance_type: t3.large
       image: ami-12345678
 "#;
-        
+
         fs::write(&ansible_file, ansible_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", ansible_file.to_str().unwrap()])
             .output()
             .expect("Failed to run Ansible scan");
-        
+
         let _ = output.status.success();
     }
 
@@ -1766,7 +1766,7 @@ services:
     fn test_pipeline_with_pulumi() {
         let temp_dir = TempDir::new().unwrap();
         let pulumi_file = temp_dir.path().join("index.js");
-        
+
         let pulumi_content = r#"
 const aws = require("@pulumi/aws");
 
@@ -1775,14 +1775,14 @@ const instance = new aws.ec2.Instance("test", {
     ami: "ami-12345678"
 });
 "#;
-        
+
         fs::write(&pulumi_file, pulumi_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", pulumi_file.to_str().unwrap()])
             .output()
             .expect("Failed to run Pulumi scan");
-        
+
         let _ = output.status.success();
     }
 
@@ -1790,7 +1790,7 @@ const instance = new aws.ec2.Instance("test", {
     fn test_pipeline_with_cdk() {
         let temp_dir = TempDir::new().unwrap();
         let cdk_file = temp_dir.path().join("stack.ts");
-        
+
         let cdk_content = r#"
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -1806,14 +1806,14 @@ export class MyStack extends cdk.Stack {
   }
 }
 "#;
-        
+
         fs::write(&cdk_file, cdk_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", cdk_file.to_str().unwrap()])
             .output()
             .expect("Failed to run CDK scan");
-        
+
         let _ = output.status.success();
     }
 
@@ -1832,12 +1832,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "detect", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed detection to prediction flow");
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
         // Should contain detection results that can be used by prediction
         assert!(output.status.success() || !stdout.is_empty());
@@ -1854,12 +1854,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "predict", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed prediction to explain flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -1874,12 +1874,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "explain", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed explain to autofix flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -1894,12 +1894,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "autofix", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed autofix to policy flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -1914,12 +1914,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "policy", "check", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed policy to SLO flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -1934,12 +1934,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "slo", "check", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed SLO to baseline flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -1954,12 +1954,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "baseline", "compare", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed baseline to trend flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -1974,12 +1974,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "trend", "analyze", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed trend to mapping flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -1994,12 +1994,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "map", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed mapping to grouping flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -2014,12 +2014,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "group", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed grouping to attribution flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -2034,12 +2034,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "attribute", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed attribution to metering flow");
-        
+
         assert!(output.status.success());
     }
 
@@ -2054,12 +2054,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "meter", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed metering to escrow flow");
-        
+
         let _ = output.status.success();
     }
 
@@ -2074,12 +2074,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "escrow", "check", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed escrow to performance flow");
-        
+
         let _ = output.status.success();
     }
 
@@ -2094,12 +2094,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "performance", "analyze", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed performance to detection feedback");
-        
+
         assert!(output.status.success());
     }
 
@@ -2117,12 +2117,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed full pipeline data integrity");
-        
+
         // Should complete without data corruption
         assert!(output.status.success());
     }
@@ -2133,7 +2133,7 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file1 = temp_dir.path().join("main1.tf");
         let tf_file2 = temp_dir.path().join("main2.tf");
-        
+
         let content1 = r#"
 resource "aws_instance" "test1" {
   instance_type = "t3.large"
@@ -2144,22 +2144,22 @@ resource "aws_instance" "test2" {
   instance_type = "t3.micro"
 }
 "#;
-        
+
         fs::write(&tf_file1, content1).unwrap();
         fs::write(&tf_file2, content2).unwrap();
-        
+
         // Run scan on first file
         let output1 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file1.to_str().unwrap()])
             .output()
             .expect("Failed first scan");
-        
+
         // Run scan on second file
         let output2 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file2.to_str().unwrap()])
             .output()
             .expect("Failed second scan");
-        
+
         // Results should be different (no data leakage)
         assert!(output1.status.success());
         assert!(output2.status.success());
@@ -2176,18 +2176,18 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         // Run scan twice
         let output1 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed first cached scan");
-        
+
         let output2 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed second cached scan");
-        
+
         // Results should be consistent
         assert!(output1.status.success());
         assert!(output2.status.success());
@@ -2204,12 +2204,12 @@ resource "invalid_resource" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed error propagation test");
-        
+
         // Should either succeed or fail gracefully
         let _ = output.status.success();
     }
@@ -2225,12 +2225,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--timeout", "30", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed timeout handling");
-        
+
         assert!(output.status.success());
     }
 
@@ -2245,12 +2245,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed resource cleanup test");
-        
+
         assert!(output.status.success());
         // Check that no temporary files are left behind
     }
@@ -2259,7 +2259,7 @@ resource "aws_instance" "test" {
     fn test_engine_concurrent_access() {
         // Test engines handle concurrent access properly
         use std::thread;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let tf_content = r#"
@@ -2268,10 +2268,10 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let file_path = tf_file.to_str().unwrap().to_string();
         let mut handles = vec![];
-        
+
         for _ in 0..5 {
             let path = file_path.clone();
             let handle = thread::spawn(move || {
@@ -2283,7 +2283,7 @@ resource "aws_instance" "test" {
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -2300,12 +2300,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--memory-efficient", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed memory sharing test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2315,29 +2315,29 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let state_file = temp_dir.path().join("state.json");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         // First run
         let output1 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--state", state_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed first state persistence run");
-        
+
         assert!(output1.status.success());
         assert!(state_file.exists());
-        
+
         // Second run should use persisted state
         let output2 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--state", state_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed second state persistence run");
-        
+
         assert!(output2.status.success());
     }
 
@@ -2347,7 +2347,7 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         let tf_file = temp_dir.path().join("main.tf");
-        
+
         let config_content = r#"
 edition: premium
 engines:
@@ -2361,15 +2361,15 @@ resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&config_file, config_content).unwrap();
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed configuration sharing test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2389,12 +2389,12 @@ resource "aws_security_group" "example" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed dependency resolution test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2409,14 +2409,14 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--format", "json", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed output format consistency test");
-        
+
         assert!(output.status.success());
-        
+
         let stdout = String::from_utf8_lossy(&output.stdout);
         // Should be valid JSON
         serde_json::from_str::<serde_json::Value>(&stdout).unwrap();
@@ -2433,12 +2433,12 @@ resource "invalid_resource" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--format", "json", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed error format consistency test");
-        
+
         // Even if it fails, error should be in consistent format
         let _ = output.status.success();
     }
@@ -2457,13 +2457,13 @@ resource "aws_instance" "slow" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let start = std::time::Instant::now();
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed performance isolation test");
-        
+
         let elapsed = start.elapsed();
         assert!(output.status.success());
         assert!(elapsed < std::time::Duration::from_secs(30)); // Should complete reasonably fast
@@ -2480,12 +2480,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--max-memory", "100MB", "--max-cpu", "50", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed resource limit enforcement test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2495,7 +2495,7 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let plugin_dir = temp_dir.path().join("plugins");
         let tf_file = temp_dir.path().join("main.tf");
-        
+
         fs::create_dir(&plugin_dir).unwrap();
         let tf_content = r#"
 resource "aws_instance" "test" {
@@ -2503,12 +2503,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--plugin-dir", plugin_dir.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed plugin integration test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2523,12 +2523,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--api-version", "v1", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed API version compatibility test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2543,12 +2543,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed data validation test");
-        
+
         // Should either succeed (if validation is lenient) or fail with validation error
         let _ = output.status.success();
     }
@@ -2567,12 +2567,12 @@ resource "aws_instance" "test2" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--filter", "instance_type=t3.large", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed output filtering test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2587,12 +2587,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--aggregate", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed result aggregation test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2607,12 +2607,12 @@ resource "aws_instance" "test" {
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--incremental", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed incremental processing test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2622,28 +2622,28 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let cache_file = temp_dir.path().join("cache.json");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         // First run
         let output1 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--cache", cache_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed first cached run");
-        
+
         assert!(output1.status.success());
-        
+
         // Second run should use cache
         let output2 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--cache", cache_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed second cached run");
-        
+
         assert!(output2.status.success());
     }
 
@@ -2653,19 +2653,19 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let export_file = temp_dir.path().join("results.csv");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--export", export_file.to_str().unwrap(), "--format", "csv", "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed result export test");
-        
+
         assert!(output.status.success());
         assert!(export_file.exists());
     }
@@ -2676,22 +2676,22 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let import_file = temp_dir.path().join("import.json");
         let tf_file = temp_dir.path().join("main.tf");
-        
+
         let import_content = r#"{"results": []}"#;
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&import_file, import_content).unwrap();
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--import", import_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed result import test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2701,22 +2701,22 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let baseline_file = temp_dir.path().join("baseline.json");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
         let baseline_content = r#"{"results": []}"#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
         fs::write(&baseline_file, baseline_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--compare", baseline_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed result comparison test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2726,20 +2726,20 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let archive_file = temp_dir.path().join("archive.zip");
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--archive", archive_file.to_str().unwrap(), "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed result archiving test");
-        
+
         assert!(output.status.success());
         // Archive may or may not be created depending on implementation
     }
@@ -2750,20 +2750,20 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let webhook_url = "http://example.com/webhook";
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--webhook", webhook_url, "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed result notification test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2773,20 +2773,20 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let tf_file = temp_dir.path().join("main.tf");
         let dashboard_url = "http://example.com/dashboard";
-        
+
         let tf_content = r#"
 resource "aws_instance" "test" {
   instance_type = "t3.large"
 }
 "#;
-        
+
         fs::write(&tf_file, tf_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--dashboard", dashboard_url, "scan", tf_file.to_str().unwrap()])
             .output()
             .expect("Failed result dashboard test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2800,7 +2800,7 @@ resource "aws_instance" "test" {
             .args(&["run", "--quiet", "--", "--config", "/nonexistent/config.yml", "--help"])
             .output()
             .expect("Failed config file not found test");
-        
+
         // Should either succeed with defaults or fail gracefully
         let _ = output.status.success();
     }
@@ -2810,12 +2810,12 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("empty.yml");
         fs::write(&config_file, "").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed empty config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2824,12 +2824,12 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("invalid.yml");
         fs::write(&config_file, "invalid: yaml: content: [unclosed").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed invalid yaml config test");
-        
+
         // Should fail or succeed depending on validation strictness
         let _ = output.status.success();
     }
@@ -2839,12 +2839,12 @@ resource "aws_instance" "test" {
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("minimal.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed minimal config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2873,12 +2873,12 @@ slos:
     period: monthly
 "#;
         fs::write(&config_file, config_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed full config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2887,15 +2887,15 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let main_config = temp_dir.path().join("main.yml");
         let included_config = temp_dir.path().join("included.yml");
-        
+
         fs::write(&included_config, "edition: free\n").unwrap();
         fs::write(&main_config, &format!("includes:\n  - {}\nverbose: true\n", included_config.display())).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", main_config.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed nested includes config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2904,15 +2904,15 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config1 = temp_dir.path().join("config1.yml");
         let config2 = temp_dir.path().join("config2.yml");
-        
+
         fs::write(&config1, &format!("includes:\n  - {}\nedition: free\n", config2.display())).unwrap();
         fs::write(&config2, &format!("includes:\n  - {}\nverbose: true\n", config1.display())).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config1.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed circular includes config test");
-        
+
         // Should either succeed or fail gracefully
         let _ = output.status.success();
     }
@@ -2922,13 +2922,13 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("env.yml");
         fs::write(&config_file, "edition: ${COSTPILOT_EDITION:-free}\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .env("COSTPILOT_EDITION", "premium")
             .output()
             .expect("Failed env substitution config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -2937,12 +2937,12 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("schema.yml");
         fs::write(&config_file, "edition: invalid_edition\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed schema validation config test");
-        
+
         // Should fail due to invalid edition
         let _ = output.status.success();
     }
@@ -2952,12 +2952,12 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("types.yml");
         fs::write(&config_file, "timeout: \"not_a_number\"\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed type validation config test");
-        
+
         // Should fail due to invalid type
         let _ = output.status.success();
     }
@@ -2967,12 +2967,12 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("range.yml");
         fs::write(&config_file, "max_cpu: 150\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed range validation config test");
-        
+
         // Should fail due to out of range value
         let _ = output.status.success();
     }
@@ -2982,12 +2982,12 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("required.yml");
         fs::write(&config_file, "verbose: true\n").unwrap(); // Missing required edition
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed required fields config test");
-        
+
         // Should either succeed with defaults or fail
         let _ = output.status.success();
     }
@@ -2997,12 +2997,12 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("deprecated.yml");
         fs::write(&config_file, "edition: free\nold_field: value\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed deprecated fields config test");
-        
+
         assert!(output.status.success()); // Should warn but not fail
     }
 
@@ -3011,12 +3011,12 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("unknown.yml");
         fs::write(&config_file, "edition: free\nunknown_field: value\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed unknown fields config test");
-        
+
         // Should either succeed or warn
         let _ = output.status.success();
     }
@@ -3026,12 +3026,12 @@ slos:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("case.yml");
         fs::write(&config_file, "Edition: free\n").unwrap(); // Wrong case
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed case sensitivity config test");
-        
+
         // Should either succeed or fail depending on case sensitivity
         let _ = output.status.success();
     }
@@ -3047,12 +3047,12 @@ edition: free
 verbose: true
 "#;
         fs::write(&config_file, config_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed comments config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3067,12 +3067,12 @@ description: |
   string value
 "#;
         fs::write(&config_file, config_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed multiline config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3092,12 +3092,12 @@ policies:
     name: override
 "#;
         fs::write(&config_file, config_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed anchors config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3106,12 +3106,12 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("unicode.yml");
         fs::write(&config_file, "edition: free\nname: naïve\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed unicode config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3121,12 +3121,12 @@ policies:
         let config_file = temp_dir.path().join("bom.yml");
         let mut content = b"\xEF\xBB\xBFedition: free\n".to_vec(); // UTF-8 BOM
         fs::write(&config_file, &content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed BOM config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3136,12 +3136,12 @@ policies:
         let config_file = temp_dir.path().join("large.yml");
         let large_content = format!("edition: free\nlarge_field: \"{}\"\n", "x".repeat(100000));
         fs::write(&config_file, large_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed large config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3150,9 +3150,9 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let real_config = temp_dir.path().join("real.yml");
         let link_config = temp_dir.path().join("link.yml");
-        
+
         fs::write(&real_config, "edition: free\n").unwrap();
-        
+
         #[cfg(unix)]
         {
             std::os::unix::fs::symlink(&real_config, &link_config).unwrap();
@@ -3160,7 +3160,7 @@ policies:
                 .args(&["run", "--quiet", "--", "--config", link_config.to_str().unwrap(), "--help"])
                 .output()
                 .expect("Failed symlink config test");
-            
+
             assert!(output.status.success());
         }
     }
@@ -3170,13 +3170,13 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", "config.yml", "--help"])
             .current_dir(&temp_dir)
             .output()
             .expect("Failed relative path config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3185,12 +3185,12 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed absolute path config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3199,20 +3199,20 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             fs::set_permissions(&config_file, fs::Permissions::from_mode(0o000)).unwrap();
-            
+
             let output = Command::new("cargo")
                 .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
                 .output()
                 .expect("Failed permission denied config test");
-            
+
             // Should fail
             assert!(!output.status.success());
-            
+
             // Restore permissions
             fs::set_permissions(&config_file, fs::Permissions::from_mode(0o644)).unwrap();
         }
@@ -3223,10 +3223,10 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         use std::thread;
         let mut handles = vec![];
-        
+
         for _ in 0..10 {
             let config_path = config_file.to_str().unwrap().to_string();
             let handle = thread::spawn(move || {
@@ -3238,7 +3238,7 @@ policies:
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -3249,13 +3249,13 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         // This is hard to test reliably, but we can check that config is loaded at start
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed config modification test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3264,19 +3264,19 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         let backup_file = temp_dir.path().join("config.yml.backup");
-        
+
         fs::write(&config_file, "edition: free\n").unwrap();
         fs::copy(&config_file, &backup_file).unwrap();
-        
+
         // Corrupt original
         fs::write(&config_file, "invalid config").unwrap();
-        
+
         // Should use backup or fail gracefully
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--backup-config", backup_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed backup recovery config test");
-        
+
         let _ = output.status.success();
     }
 
@@ -3285,12 +3285,12 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "version: 1.0\nedition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed version compatibility config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3299,12 +3299,12 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "old_format: true\nedition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--migrate-config", "--help"])
             .output()
             .expect("Failed config migration test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3313,12 +3313,12 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\nunknown_field: value\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--strict-config", "--help"])
             .output()
             .expect("Failed strict config validation test");
-        
+
         // Should fail in strict mode
         let _ = output.status.success();
     }
@@ -3328,12 +3328,12 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\nunknown_field: value\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--lenient-config", "--help"])
             .output()
             .expect("Failed lenient config validation test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3342,12 +3342,12 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\nverbose: false\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "-v", "--help"])
             .output()
             .expect("Failed config override CLI test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3356,12 +3356,12 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\nverbose: true\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "-q", "--help"])
             .output()
             .expect("Failed CLI override config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3370,13 +3370,13 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .env("COSTPILOT_EDITION", "premium")
             .output()
             .expect("Failed environment override config test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3385,15 +3385,15 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config1 = temp_dir.path().join("config1.yml");
         let config2 = temp_dir.path().join("config2.yml");
-        
+
         fs::write(&config1, "edition: free\n").unwrap();
         fs::write(&config2, "verbose: true\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config1.to_str().unwrap(), "--config", config2.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed multiple config sources test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3402,15 +3402,15 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let config1 = temp_dir.path().join("config1.yml");
         let config2 = temp_dir.path().join("config2.yml");
-        
+
         fs::write(&config1, "edition: free\nverbose: false\n").unwrap();
         fs::write(&config2, "edition: premium\nverbose: true\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config1.to_str().unwrap(), "--config", config2.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed config conflict resolution test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3419,15 +3419,15 @@ policies:
         let temp_dir = TempDir::new().unwrap();
         let base_config = temp_dir.path().join("base.yml");
         let child_config = temp_dir.path().join("child.yml");
-        
+
         fs::write(&base_config, "edition: free\n").unwrap();
         fs::write(&child_config, "extends: base.yml\nverbose: true\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", child_config.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed config inheritance test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3444,12 +3444,12 @@ profiles:
     verbose: false
 "#;
         fs::write(&config_file, config_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--profile", "dev", "--help"])
             .output()
             .expect("Failed config profiles test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3458,15 +3458,15 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         let secrets_file = temp_dir.path().join("secrets.yml");
-        
+
         fs::write(&config_file, "edition: free\n").unwrap();
         fs::write(&secrets_file, "api_key: secret123\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--secrets", secrets_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed config secrets test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3477,7 +3477,7 @@ profiles:
             .args(&["run", "--quiet", "--", "--config", "https://example.com/config.yml", "--help"])
             .output()
             .expect("Failed remote config loading test");
-        
+
         // Should either succeed or fail gracefully
         let _ = output.status.success();
     }
@@ -3487,21 +3487,21 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         // First load
         let output1 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed first config cache test");
-        
+
         assert!(output1.status.success());
-        
+
         // Second load should use cache
         let output2 = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed second config cache test");
-        
+
         assert!(output2.status.success());
     }
 
@@ -3510,13 +3510,13 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         // This would require a long-running process to test properly
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--hot-reload", "--help"])
             .output()
             .expect("Failed config hot reload test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3525,14 +3525,14 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         let export_file = temp_dir.path().join("exported.yml");
-        
+
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--config", config_file.to_str().unwrap(), "--export-config", export_file.to_str().unwrap(), "--help"])
             .output()
             .expect("Failed config export test");
-        
+
         assert!(output.status.success());
         // Export file may or may not be created
     }
@@ -3542,15 +3542,15 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config1 = temp_dir.path().join("config1.yml");
         let config2 = temp_dir.path().join("config2.yml");
-        
+
         fs::write(&config1, "edition: free\n").unwrap();
         fs::write(&config2, "edition: premium\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--diff-config", config1.to_str().unwrap(), config2.to_str().unwrap()])
             .output()
             .expect("Failed config diff test");
-        
+
         let _ = output.status.success();
     }
 
@@ -3560,15 +3560,15 @@ profiles:
         let config1 = temp_dir.path().join("config1.yml");
         let config2 = temp_dir.path().join("config2.yml");
         let merged_file = temp_dir.path().join("merged.yml");
-        
+
         fs::write(&config1, "edition: free\n").unwrap();
         fs::write(&config2, "verbose: true\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--merge-config", config1.to_str().unwrap(), config2.to_str().unwrap(), merged_file.to_str().unwrap()])
             .output()
             .expect("Failed config merge test");
-        
+
         let _ = output.status.success();
     }
 
@@ -3577,12 +3577,12 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--validate-config", config_file.to_str().unwrap()])
             .output()
             .expect("Failed config validate test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3591,12 +3591,12 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--lint-config", config_file.to_str().unwrap()])
             .output()
             .expect("Failed config lint test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3605,12 +3605,12 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         fs::write(&config_file, "edition:free\n").unwrap(); // No spaces
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--format-config", config_file.to_str().unwrap()])
             .output()
             .expect("Failed config format test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3619,18 +3619,18 @@ profiles:
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         let minified_file = temp_dir.path().join("minified.yml");
-        
+
         let config_content = r#"
 edition: free
 verbose: true
 "#;
         fs::write(&config_file, config_content).unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--minify-config", config_file.to_str().unwrap(), minified_file.to_str().unwrap()])
             .output()
             .expect("Failed config minify test");
-        
+
         assert!(output.status.success());
     }
 
@@ -3639,14 +3639,14 @@ verbose: true
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         let encrypted_file = temp_dir.path().join("encrypted.yml");
-        
+
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--encrypt-config", config_file.to_str().unwrap(), encrypted_file.to_str().unwrap(), "--key", "testkey"])
             .output()
             .expect("Failed config encrypt test");
-        
+
         let _ = output.status.success();
     }
 
@@ -3655,13 +3655,13 @@ verbose: true
         let temp_dir = TempDir::new().unwrap();
         let encrypted_file = temp_dir.path().join("encrypted.yml");
         let decrypted_file = temp_dir.path().join("decrypted.yml");
-        
+
         // Assume encrypted file exists
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--decrypt-config", encrypted_file.to_str().unwrap(), decrypted_file.to_str().unwrap(), "--key", "testkey"])
             .output()
             .expect("Failed config decrypt test");
-        
+
         let _ = output.status.success();
     }
 
@@ -3670,14 +3670,14 @@ verbose: true
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         let signature_file = temp_dir.path().join("config.sig");
-        
+
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--sign-config", config_file.to_str().unwrap(), signature_file.to_str().unwrap(), "--key", "testkey"])
             .output()
             .expect("Failed config sign test");
-        
+
         let _ = output.status.success();
     }
 
@@ -3686,14 +3686,14 @@ verbose: true
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("config.yml");
         let signature_file = temp_dir.path().join("config.sig");
-        
+
         fs::write(&config_file, "edition: free\n").unwrap();
-        
+
         let output = Command::new("cargo")
             .args(&["run", "--quiet", "--", "--verify-config", config_file.to_str().unwrap(), signature_file.to_str().unwrap(), "--key", "testkey"])
             .output()
             .expect("Failed config verify test");
-        
+
         let _ = output.status.success();
     }
 }

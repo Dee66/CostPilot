@@ -24,25 +24,25 @@ echo "Generating Ed25519 signing keypair..."
 # Try openssl first (preferred)
 if command -v openssl &> /dev/null; then
     OPENSSL_VERSION=$(openssl version | cut -d' ' -f2 | cut -d'.' -f1-2)
-    
+
     # Generate Ed25519 private key
     openssl genpkey -algorithm Ed25519 -out "${PRIVATE_KEY}" 2>/dev/null
-    
+
     # Extract public key
     openssl pkey -in "${PRIVATE_KEY}" -pubout -out "${PUBLIC_KEY}" 2>/dev/null
-    
+
     # Verify keys were created
     if [ -f "${PRIVATE_KEY}" ] && [ -f "${PUBLIC_KEY}" ]; then
         chmod 600 "${PRIVATE_KEY}"
         chmod 644 "${PUBLIC_KEY}"
-        
+
         echo "✓ Ed25519 keypair generated successfully"
         echo "  Private key: ${PRIVATE_KEY} (DO NOT COMMIT)"
         echo "  Public key: ${PUBLIC_KEY}"
         echo ""
         echo "Public key fingerprint:"
         openssl pkey -in "${PUBLIC_KEY}" -pubin -text -noout | head -5
-        
+
         exit 0
     fi
 else

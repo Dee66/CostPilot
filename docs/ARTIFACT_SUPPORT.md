@@ -40,17 +40,17 @@ The Artifact Support system extends CostPilot beyond Terraform to support AWS CD
 
 ## Key Features
 
-✅ **CloudFormation Support** - Parse JSON/YAML CFN templates  
-✅ **CDK Support** - Parse CDK synthesized output  
-✅ **Format Detection** - Auto-detect IaC format  
-✅ **Normalization** - Convert to unified representation  
-✅ **Resource Mapping** - AWS::EC2::Instance → aws_ec2_instance  
-✅ **Property Mapping** - InstanceType → instance_type, ImageId → ami  
-✅ **Intrinsic Functions** - Resolve Ref, GetAtt, Sub, Join  
-✅ **Dependencies** - Extract DependsOn relationships  
-✅ **Parameters** - Support template parameters  
-✅ **Outputs** - Extract stack outputs  
-✅ **Metadata** - Preserve source metadata  
+✅ **CloudFormation Support** - Parse JSON/YAML CFN templates
+✅ **CDK Support** - Parse CDK synthesized output
+✅ **Format Detection** - Auto-detect IaC format
+✅ **Normalization** - Convert to unified representation
+✅ **Resource Mapping** - AWS::EC2::Instance → aws_ec2_instance
+✅ **Property Mapping** - InstanceType → instance_type, ImageId → ami
+✅ **Intrinsic Functions** - Resolve Ref, GetAtt, Sub, Join
+✅ **Dependencies** - Extract DependsOn relationships
+✅ **Parameters** - Support template parameters
+✅ **Outputs** - Extract stack outputs
+✅ **Metadata** - Preserve source metadata
 ✅ **Validation** - Check for duplicate IDs, missing dependencies
 
 ## Supported Formats
@@ -162,7 +162,7 @@ let tf_plan = normalized.to_terraform_plan();
 if let Some(instance) = artifact.get_resource("MyInstance") {
     println!("Type: {}", instance.resource_type);
     println!("Normalized: {}", instance.normalized_type());
-    
+
     // Get properties
     if let Some(instance_type) = instance.get_property_string("InstanceType") {
         println!("Instance type: {}", instance_type);
@@ -437,7 +437,7 @@ for artifact in artifacts {
     let stack_name = artifact.metadata.stack_name.unwrap();
     println!("Stack: {}", stack_name);
     println!("Region: {:?}", artifact.metadata.region);
-    
+
     // CDK-specific tags
     for (key, value) in &artifact.metadata.tags {
         if key.starts_with("cdk_") {

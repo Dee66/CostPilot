@@ -1,0 +1,109 @@
+# Alerting Configuration
+
+## Alert Rules
+alert_rules:
+  - name: high_cpu_usage
+    condition: cpu_usage > 80%
+    severity: warning
+    description: "CPU usage is above 80%"
+    channels: [slack, email]
+    cooldown: 300s
+
+  - name: high_memory_usage
+    condition: memory_usage > 85%
+    severity: warning
+    description: "Memory usage is above 85%"
+    channels: [slack, email]
+    cooldown: 300s
+
+  - name: high_error_rate
+    condition: error_rate > 5%
+    severity: error
+    description: "Error rate is above 5%"
+    channels: [slack, email, pager]
+    cooldown: 60s
+
+  - name: service_down
+    condition: health_check_failed
+    severity: critical
+    description: "Service health check failed"
+    channels: [slack, email, pager, sms]
+    cooldown: 30s
+
+  - name: database_connection_failed
+    condition: database_connections_failed > 0
+    severity: critical
+    description: "Database connection failures detected"
+    channels: [slack, email, pager]
+    cooldown: 60s
+
+## Notification Channels
+channels:
+  slack:
+    enabled: true
+    webhook_url: ${SLACK_WEBHOOK_URL}
+    channel: "#costpilot-alerts"
+    username: "CostPilot Monitor"
+
+  email:
+    enabled: true
+    smtp_server: ${SMTP_SERVER}
+    smtp_port: 587
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    from_address: alerts@costpilot.com
+    to_addresses:
+      - team@costpilot.com
+      - oncall@costpilot.com
+
+  pager:
+    enabled: true
+    service: pagerduty
+    integration_key: ${PAGERDUTY_INTEGRATION_KEY}
+
+  sms:
+    enabled: true
+    provider: twilio
+    account_sid: ${TWILIO_ACCOUNT_SID}
+    auth_token: ${TWILIO_AUTH_TOKEN}
+    from_number: ${TWILIO_FROM_NUMBER}
+    to_numbers:
+      - ${ONCALL_PHONE_NUMBER}
+
+## Escalation Policies
+escalation:
+  - level: 1
+    delay: 0s
+    channels: [slack]
+
+  - level: 2
+    delay: 300s
+    channels: [email]
+
+  - level: 3
+    delay: 600s
+    channels: [pager, sms]
+
+## Maintenance Windows
+maintenance_windows:
+  - name: nightly_maintenance
+    schedule: "0 2 * * *"
+    duration: 2h
+    description: "Nightly maintenance window"
+
+  - name: weekend_maintenance
+    schedule: "0 6 * * 0"
+    duration: 4h
+    description: "Weekend maintenance window"
+
+## Alert Aggregation
+aggregation:
+  enabled: true
+  group_by: [service, severity]
+  max_alerts_per_group: 10
+  aggregation_window: 300s
+
+## Alert History
+history:
+  retention_days: 90
+  max_entries: 10000

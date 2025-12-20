@@ -238,7 +238,7 @@ policies:
     name: "NAT Gateway Limit"
     severity: error
     rule: "count('aws_nat_gateway') <= 2"
-    
+
   - id: monthly_budget
     name: "Monthly Budget Cap"
     severity: critical
@@ -267,7 +267,7 @@ slos:
     type: monthly_cost
     target: 10000
     enforcement: warn
-    
+
   - name: dev_resource_count
     type: resource_count
     target: 50
@@ -287,17 +287,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Terraform Plan
         run: terraform plan -out=plan.tfplan
-      
+
       - name: Convert to JSON
         run: terraform show -json plan.tfplan > plan.json
-      
+
       - name: Run CostPilot
         run: |
           costpilot scan plan.json --format markdown > cost-report.md
-          
+
       - name: Comment on PR
         uses: actions/github-script@v6
         with:

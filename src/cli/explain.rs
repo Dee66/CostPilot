@@ -310,7 +310,7 @@ pub fn execute_explain_args(
 ) -> Result<String, String> {
     // Build config from provided arguments
     let mut config = serde_json::Map::new();
-    
+
     if let Some(instance_type) = &args.instance_type {
         config.insert("instance_type".to_string(), serde_json::Value::String(instance_type.clone()));
     }
@@ -354,12 +354,12 @@ pub fn execute_explain_args(
     let mut output = format!("Explanation for {}:\n\n", args.resource_type);
     output.push_str(&format!("Predicted monthly cost: ${:.2}\n", prediction.monthly_cost));
     output.push_str(&format!("Confidence: {:.1}%\n\n", prediction.confidence_score * 100.0));
-    
+
     output.push_str("Reasoning:\n");
     for step in &explanation.steps {
         output.push_str(&format!("• {}\n", step.title));
     }
-    
+
     Ok(output)
 }
 
@@ -386,10 +386,10 @@ mod tests {
         };
 
         let edition = EditionContext::default();
-        
+
         let result = execute_explain_args(args, &edition);
         assert!(result.is_ok());
-        
+
         let output = result.unwrap();
         assert!(output.contains("Explanation for aws_instance"));
         assert!(output.contains("Predicted monthly cost"));
@@ -409,11 +409,11 @@ mod tests {
         };
 
         let edition = EditionContext::default();
-        
+
         let result = execute_explain_args(args, &edition);
         // Should still succeed but with a low confidence prediction
         assert!(result.is_ok());
-        
+
         let output = result.unwrap();
         assert!(output.contains("Explanation for unknown_resource_type"));
     }

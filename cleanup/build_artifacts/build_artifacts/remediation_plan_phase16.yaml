@@ -27,7 +27,7 @@ remediation_items:
        mod tests {
            use super::*;
       +    use crate::engines::detect::Detection;
-       
+
            #[test]
            fn test_snippet_mode() {
       -        let detection = Detection {

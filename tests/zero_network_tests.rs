@@ -143,7 +143,7 @@ mod zero_network_tests {
             version: "1.0.0".to_string(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies {
-                nat_gateways: Some(NatGatewayPolicy { 
+                nat_gateways: Some(NatGatewayPolicy {
                     max_count: 2,
                     require_justification: false,
                 }),

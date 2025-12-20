@@ -23,13 +23,13 @@ fi
 # Check each pro bundle
 while IFS= read -r bundle; do
   [[ -z "$bundle" ]] && continue
-  
+
   # Check for signature file
   if [[ ! -f "${bundle}.sig" ]]; then
     echo "UNSIGNED_BUNDLE: ${bundle}" >&2
     exit 4
   fi
-  
+
   # Check if file is suspiciously large and unencrypted
   SIZE=$(stat -c%s "$bundle" 2>/dev/null || stat -f%z "$bundle")
   if [[ $SIZE -gt 5242880 ]]; then

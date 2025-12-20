@@ -18,7 +18,7 @@ rust_error_buckets:
       - src/engines/mapping/mod.rs
     suggested_fix: "function-signature-update"
     priority: P0
-    
+
   - bucket_id: E0063_missing_fields
     count: 10
     pattern: "missing fields `after` and `before` in initializer of ResourceChange"
@@ -28,7 +28,7 @@ rust_error_buckets:
       - src/engines/autofix/autofix_engine.rs
     suggested_fix: "model-mapping (use builder pattern)"
     priority: P0
-    
+
   - bucket_id: E0433_unresolved_import
     count: 8
     pattern: "failed to resolve: use of unresolved module `costpilot`"
@@ -38,7 +38,7 @@ rust_error_buckets:
       - src/engines/policy/policy_engine.rs
     suggested_fix: "import-path-fix (use crate:: instead of costpilot::)"
     priority: P0
-    
+
   - bucket_id: E0599_method_not_found
     count: 8
     pattern: "no method named X found for Result"
@@ -46,7 +46,7 @@ rust_error_buckets:
       - src/engines/trend/mod.rs
     suggested_fix: "result-unwrapping (call .unwrap() before method)"
     priority: P1
-    
+
   - bucket_id: E0308_type_mismatch
     count: 5
     pattern: "mismatched types"
@@ -55,7 +55,7 @@ rust_error_buckets:
       - src/engines/explain/anti_patterns.rs
     suggested_fix: "type-conversion"
     priority: P1
-    
+
   - bucket_id: E0596_mutability
     count: 2
     pattern: "cannot borrow as mutable"
@@ -63,7 +63,7 @@ rust_error_buckets:
       - src/engines/mapping/graph_builder.rs
     suggested_fix: "add mut keyword"
     priority: P2
-    
+
   - bucket_id: E0716_lifetime
     count: 2
     pattern: "temporary value dropped while borrowed"
@@ -95,7 +95,7 @@ priority_p0_tasks:
       - "Find all #[cfg(test)] modules with `use costpilot::`"
       - "Replace with `use crate::`"
     estimated_effort: "5 minutes"
-    
+
   - task_id: P0-2
     title: "Fix E0063 ResourceChange missing fields"
     description: "Convert remaining struct literals to builder pattern with old_config/new_config"
@@ -106,7 +106,7 @@ priority_p0_tasks:
       - "Find ResourceChange { ... } in tests"
       - "Convert to builder pattern with .old_config()/.new_config()"
     estimated_effort: "10 minutes"
-    
+
   - task_id: P0-3
     title: "Fix E0061 function argument mismatches"
     description: "Add missing EditionContext and other parameters to function calls"

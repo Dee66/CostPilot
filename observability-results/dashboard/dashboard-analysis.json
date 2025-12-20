@@ -1,0 +1,6 @@
+{
+  "realtime_updates": true,
+  "historical_views": true,
+  "dashboard_interactivity": false,
+  "dashboard_comprehensive": false
+}

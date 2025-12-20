@@ -7,7 +7,7 @@ export class CostPilotStatusBar {
 
     constructor(private context: vscode.ExtensionContext) {
         const config = vscode.workspace.getConfiguration('costpilot');
-        
+
         if (!config.get('statusBar.enabled', true)) {
             return;
         }
@@ -16,12 +16,12 @@ export class CostPilotStatusBar {
             vscode.StatusBarAlignment.Right,
             100
         );
-        
+
         this.statusBarItem.command = 'costpilot.showCostReport';
         this.statusBarItem.tooltip = 'Click to view cost report';
-        
+
         context.subscriptions.push(this.statusBarItem);
-        
+
         this.statusBarItem.text = '$(graph-line) CostPilot';
         this.statusBarItem.show();
     }

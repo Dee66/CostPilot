@@ -1,5 +1,5 @@
 /// Deep coverage tests for Detection Engine
-/// 
+///
 /// Tests for security detection with various rule combinations, false positive
 /// analysis, pattern matching, anomaly detection, and edge cases.
 
@@ -171,7 +171,7 @@ mod detection_engine_deep_tests {
             conditions: vec![],
             actions: vec![],
         };
-        
+
         let result = rule_engine.evaluate(&rule, &create_test_resource());
         assert!(result.is_some() || result.is_none()); // Either matches or doesn't
     }
@@ -1197,7 +1197,7 @@ mod detection_engine_deep_tests {
             conditions: vec![],
             actions: vec![],
         };
-        
+
         let result = rule_engine.evaluate(&rule, &create_test_resource());
         // Should handle gracefully
         assert!(result.is_some() || result.is_none());

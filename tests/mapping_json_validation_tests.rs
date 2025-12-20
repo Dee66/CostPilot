@@ -14,7 +14,7 @@ fn test_mapping_graph_produces_valid_json() {
         Default::default(),
         &edition,
     );
-    
+
     let changes = vec![
         ResourceChange::builder()
             .resource_id("aws_vpc.main".to_string())
@@ -32,10 +32,10 @@ fn test_mapping_graph_produces_valid_json() {
             .monthly_cost(0.0)
             .build(),
     ];
-    
+
     let graph = engine.build_graph(&changes).unwrap();
     let json = engine.export_json(&graph).unwrap();
-    
+
     // Validate it's parseable JSON
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
     assert!(parsed.is_object() || parsed.is_array());
@@ -49,7 +49,7 @@ fn test_mapping_graph_json_has_nodes_field() {
         Default::default(),
         &edition,
     );
-    
+
     let changes = vec![
         ResourceChange::builder()
             .resource_id("aws_instance.web".to_string())
@@ -58,12 +58,12 @@ fn test_mapping_graph_json_has_nodes_field() {
             .monthly_cost(70.0)
             .build(),
     ];
-    
+
     let graph = engine.build_graph(&changes).unwrap();
     let json = engine.export_json(&graph).unwrap();
-    
+
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
-    
+
     assert!(parsed.get("nodes").is_some(), "JSON should have 'nodes' field");
     assert!(parsed["nodes"].is_array(), "'nodes' should be an array");
 }
@@ -76,7 +76,7 @@ fn test_mapping_graph_json_has_edges_field() {
         Default::default(),
         &edition,
     );
-    
+
     let changes = vec![
         ResourceChange::builder()
             .resource_id("aws_vpc.main".to_string())
@@ -91,12 +91,12 @@ fn test_mapping_graph_json_has_edges_field() {
             .monthly_cost(0.0)
             .build(),
     ];
-    
+
     let graph = engine.build_graph(&changes).unwrap();
     let json = engine.export_json(&graph).unwrap();
-    
+
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
-    
+
     if let Some(edges) = parsed.get("edges") {
         assert!(edges.is_array(), "'edges' should be an array if present");
     }
@@ -110,7 +110,7 @@ fn test_mapping_graph_json_nodes_have_required_fields() {
         Default::default(),
         &edition,
     );
-    
+
     let changes = vec![
         ResourceChange::builder()
             .resource_id("aws_instance.web".to_string())
@@ -119,18 +119,18 @@ fn test_mapping_graph_json_nodes_have_required_fields() {
             .monthly_cost(70.0)
             .build(),
     ];
-    
+
     let graph = engine.build_graph(&changes).unwrap();
     let json = engine.export_json(&graph).unwrap();
-    
+
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
-    
+
     assert!(!nodes.is_empty(), "Should have at least one node");
-    
+
     let first_node = &nodes[0];
     assert!(first_node.get("id").is_some(), "Node should have 'id' field");
-    assert!(first_node.get("node_type").is_some() || first_node.get("resource_type").is_some(), 
+    assert!(first_node.get("node_type").is_some() || first_node.get("resource_type").is_some(),
         "Node should have 'node_type' or 'resource_type' field");
 }
 
@@ -142,12 +142,12 @@ fn test_mapping_graph_empty_produces_valid_json() {
         Default::default(),
         &edition,
     );
-    
+
     let changes = vec![];
-    
+
     let graph = engine.build_graph(&changes).unwrap();
     let json = engine.export_json(&graph).unwrap();
-    
+
     // Even empty graph should produce valid JSON
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
     assert!(parsed.is_object() || parsed.is_array());
@@ -161,7 +161,7 @@ fn test_mapping_graph_json_cost_fields_are_numbers() {
         Default::default(),
         &edition,
     );
-    
+
     let changes = vec![
         ResourceChange::builder()
             .resource_id("aws_instance.web".to_string())
@@ -170,16 +170,16 @@ fn test_mapping_graph_json_cost_fields_are_numbers() {
             .monthly_cost(70.08)
             .build(),
     ];
-    
+
     let graph = engine.build_graph(&changes).unwrap();
     let json = engine.export_json(&graph).unwrap();
-    
+
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
-    
+
     for node in nodes {
         if let Some(cost) = node.get("monthly_cost").or_else(|| node.get("cost")) {
-            assert!(cost.is_number() || cost.is_null(), 
+            assert!(cost.is_number() || cost.is_null(),
                 "Cost field should be a number or null: {:?}", cost);
         }
     }
@@ -193,7 +193,7 @@ fn test_mapping_graph_json_pretty_printed() {
         Default::default(),
         &edition,
     );
-    
+
     let changes = vec![
         ResourceChange::builder()
             .resource_id("aws_instance.web".to_string())
@@ -202,10 +202,10 @@ fn test_mapping_graph_json_pretty_printed() {
             .monthly_cost(70.0)
             .build(),
     ];
-    
+
     let graph = engine.build_graph(&changes).unwrap();
     let json = engine.export_json(&graph).unwrap();
-    
+
     // Pretty-printed JSON should have newlines
     assert!(json.contains('\n'), "JSON should be pretty-printed with newlines");
 }
@@ -218,7 +218,7 @@ fn test_mapping_graph_json_roundtrip() {
         Default::default(),
         &edition,
     );
-    
+
     let changes = vec![
         ResourceChange::builder()
             .resource_id("aws_vpc.main".to_string())
@@ -227,14 +227,14 @@ fn test_mapping_graph_json_roundtrip() {
             .monthly_cost(0.0)
             .build(),
     ];
-    
+
     let graph = engine.build_graph(&changes).unwrap();
     let json = engine.export_json(&graph).unwrap();
-    
+
     // Parse and re-serialize
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
     let re_serialized = serde_json::to_string_pretty(&parsed).unwrap();
-    
+
     // Should still be valid
     let re_parsed: serde_json::Value = serde_json::from_str(&re_serialized).unwrap();
     assert!(re_parsed.is_object() || re_parsed.is_array());

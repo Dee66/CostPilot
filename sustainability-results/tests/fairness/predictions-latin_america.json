@@ -1,0 +1,1164 @@
+[
+  {
+    "case_id": "latin_america-1",
+    "infrastructure_cost": 2496,
+    "region": "latin_america",
+    "expected_cost_prediction": 1115,
+    "predicted_cost": 374.448
+  },
+  {
+    "case_id": "latin_america-2",
+    "infrastructure_cost": 3561,
+    "region": "latin_america",
+    "expected_cost_prediction": 663,
+    "predicted_cost": 534.198
+  },
+  {
+    "case_id": "latin_america-3",
+    "infrastructure_cost": 3076,
+    "region": "latin_america",
+    "expected_cost_prediction": 687,
+    "predicted_cost": 461.448
+  },
+  {
+    "case_id": "latin_america-4",
+    "infrastructure_cost": 2773,
+    "region": "latin_america",
+    "expected_cost_prediction": 1355,
+    "predicted_cost": 415.998
+  },
+  {
+    "case_id": "latin_america-5",
+    "infrastructure_cost": 1760,
+    "region": "latin_america",
+    "expected_cost_prediction": 799,
+    "predicted_cost": 264.048
+  },
+  {
+    "case_id": "latin_america-6",
+    "infrastructure_cost": 2028,
+    "region": "latin_america",
+    "expected_cost_prediction": 1108,
+    "predicted_cost": 304.248
+  },
+  {
+    "case_id": "latin_america-7",
+    "infrastructure_cost": 5797,
+    "region": "latin_america",
+    "expected_cost_prediction": 637,
+    "predicted_cost": 869.598
+  },
+  {
+    "case_id": "latin_america-8",
+    "infrastructure_cost": 3362,
+    "region": "latin_america",
+    "expected_cost_prediction": 1281,
+    "predicted_cost": 504.34799999999996
+  },
+  {
+    "case_id": "latin_america-9",
+    "infrastructure_cost": 3325,
+    "region": "latin_america",
+    "expected_cost_prediction": 1219,
+    "predicted_cost": 498.798
+  },
+  {
+    "case_id": "latin_america-10",
+    "infrastructure_cost": 5297,
+    "region": "latin_america",
+    "expected_cost_prediction": 1135,
+    "predicted_cost": 794.598
+  },
+  {
+    "case_id": "latin_america-11",
+    "infrastructure_cost": 5417,
+    "region": "latin_america",
+    "expected_cost_prediction": 889,
+    "predicted_cost": 812.598
+  },
+  {
+    "case_id": "latin_america-12",
+    "infrastructure_cost": 4122,
+    "region": "latin_america",
+    "expected_cost_prediction": 1487,
+    "predicted_cost": 618.348
+  },
+  {
+    "case_id": "latin_america-13",
+    "infrastructure_cost": 1508,
+    "region": "latin_america",
+    "expected_cost_prediction": 1206,
+    "predicted_cost": 226.248
+  },
+  {
+    "case_id": "latin_america-14",
+    "infrastructure_cost": 5762,
+    "region": "latin_america",
+    "expected_cost_prediction": 563,
+    "predicted_cost": 864.348
+  },
+  {
+    "case_id": "latin_america-15",
+    "infrastructure_cost": 4162,
+    "region": "latin_america",
+    "expected_cost_prediction": 529,
+    "predicted_cost": 624.348
+  },
+  {
+    "case_id": "latin_america-16",
+    "infrastructure_cost": 5096,
+    "region": "latin_america",
+    "expected_cost_prediction": 932,
+    "predicted_cost": 764.448
+  },
+  {
+    "case_id": "latin_america-17",
+    "infrastructure_cost": 1218,
+    "region": "latin_america",
+    "expected_cost_prediction": 1303,
+    "predicted_cost": 182.748
+  },
+  {
+    "case_id": "latin_america-18",
+    "infrastructure_cost": 1714,
+    "region": "latin_america",
+    "expected_cost_prediction": 1162,
+    "predicted_cost": 257.14799999999997
+  },
+  {
+    "case_id": "latin_america-19",
+    "infrastructure_cost": 4919,
+    "region": "latin_america",
+    "expected_cost_prediction": 1396,
+    "predicted_cost": 737.898
+  },
+  {
+    "case_id": "latin_america-20",
+    "infrastructure_cost": 1839,
+    "region": "latin_america",
+    "expected_cost_prediction": 1206,
+    "predicted_cost": 275.89799999999997
+  },
+  {
+    "case_id": "latin_america-21",
+    "infrastructure_cost": 3087,
+    "region": "latin_america",
+    "expected_cost_prediction": 658,
+    "predicted_cost": 463.09799999999996
+  },
+  {
+    "case_id": "latin_america-22",
+    "infrastructure_cost": 2235,
+    "region": "latin_america",
+    "expected_cost_prediction": 907,
+    "predicted_cost": 335.298
+  },
+  {
+    "case_id": "latin_america-23",
+    "infrastructure_cost": 1616,
+    "region": "latin_america",
+    "expected_cost_prediction": 968,
+    "predicted_cost": 242.44799999999998
+  },
+  {
+    "case_id": "latin_america-24",
+    "infrastructure_cost": 4005,
+    "region": "latin_america",
+    "expected_cost_prediction": 622,
+    "predicted_cost": 600.798
+  },
+  {
+    "case_id": "latin_america-25",
+    "infrastructure_cost": 5924,
+    "region": "latin_america",
+    "expected_cost_prediction": 617,
+    "predicted_cost": 888.648
+  },
+  {
+    "case_id": "latin_america-26",
+    "infrastructure_cost": 1612,
+    "region": "latin_america",
+    "expected_cost_prediction": 1019,
+    "predicted_cost": 241.84799999999998
+  },
+  {
+    "case_id": "latin_america-27",
+    "infrastructure_cost": 1112,
+    "region": "latin_america",
+    "expected_cost_prediction": 1339,
+    "predicted_cost": 166.84799999999998
+  },
+  {
+    "case_id": "latin_america-28",
+    "infrastructure_cost": 3662,
+    "region": "latin_america",
+    "expected_cost_prediction": 1163,
+    "predicted_cost": 549.348
+  },
+  {
+    "case_id": "latin_america-29",
+    "infrastructure_cost": 3635,
+    "region": "latin_america",
+    "expected_cost_prediction": 1140,
+    "predicted_cost": 545.298
+  },
+  {
+    "case_id": "latin_america-30",
+    "infrastructure_cost": 3289,
+    "region": "latin_america",
+    "expected_cost_prediction": 1197,
+    "predicted_cost": 493.39799999999997
+  },
+  {
+    "case_id": "latin_america-31",
+    "infrastructure_cost": 5966,
+    "region": "latin_america",
+    "expected_cost_prediction": 509,
+    "predicted_cost": 894.948
+  },
+  {
+    "case_id": "latin_america-32",
+    "infrastructure_cost": 2677,
+    "region": "latin_america",
+    "expected_cost_prediction": 832,
+    "predicted_cost": 401.598
+  },
+  {
+    "case_id": "latin_america-33",
+    "infrastructure_cost": 3356,
+    "region": "latin_america",
+    "expected_cost_prediction": 955,
+    "predicted_cost": 503.448
+  },
+  {
+    "case_id": "latin_america-34",
+    "infrastructure_cost": 3033,
+    "region": "latin_america",
+    "expected_cost_prediction": 895,
+    "predicted_cost": 454.998
+  },
+  {
+    "case_id": "latin_america-35",
+    "infrastructure_cost": 2437,
+    "region": "latin_america",
+    "expected_cost_prediction": 648,
+    "predicted_cost": 365.598
+  },
+  {
+    "case_id": "latin_america-36",
+    "infrastructure_cost": 2810,
+    "region": "latin_america",
+    "expected_cost_prediction": 1002,
+    "predicted_cost": 421.548
+  },
+  {
+    "case_id": "latin_america-37",
+    "infrastructure_cost": 2021,
+    "region": "latin_america",
+    "expected_cost_prediction": 881,
+    "predicted_cost": 303.198
+  },
+  {
+    "case_id": "latin_america-38",
+    "infrastructure_cost": 1479,
+    "region": "latin_america",
+    "expected_cost_prediction": 1189,
+    "predicted_cost": 221.898
+  },
+  {
+    "case_id": "latin_america-39",
+    "infrastructure_cost": 2376,
+    "region": "latin_america",
+    "expected_cost_prediction": 935,
+    "predicted_cost": 356.448
+  },
+  {
+    "case_id": "latin_america-40",
+    "infrastructure_cost": 5635,
+    "region": "latin_america",
+    "expected_cost_prediction": 1358,
+    "predicted_cost": 845.298
+  },
+  {
+    "case_id": "latin_america-41",
+    "infrastructure_cost": 2012,
+    "region": "latin_america",
+    "expected_cost_prediction": 1244,
+    "predicted_cost": 301.848
+  },
+  {
+    "case_id": "latin_america-42",
+    "infrastructure_cost": 3922,
+    "region": "latin_america",
+    "expected_cost_prediction": 1464,
+    "predicted_cost": 588.348
+  },
+  {
+    "case_id": "latin_america-43",
+    "infrastructure_cost": 3506,
+    "region": "latin_america",
+    "expected_cost_prediction": 780,
+    "predicted_cost": 525.948
+  },
+  {
+    "case_id": "latin_america-44",
+    "infrastructure_cost": 1634,
+    "region": "latin_america",
+    "expected_cost_prediction": 1350,
+    "predicted_cost": 245.148
+  },
+  {
+    "case_id": "latin_america-45",
+    "infrastructure_cost": 3954,
+    "region": "latin_america",
+    "expected_cost_prediction": 1321,
+    "predicted_cost": 593.148
+  },
+  {
+    "case_id": "latin_america-46",
+    "infrastructure_cost": 2219,
+    "region": "latin_america",
+    "expected_cost_prediction": 902,
+    "predicted_cost": 332.89799999999997
+  },
+  {
+    "case_id": "latin_america-47",
+    "infrastructure_cost": 5138,
+    "region": "latin_america",
+    "expected_cost_prediction": 915,
+    "predicted_cost": 770.7479999999999
+  },
+  {
+    "case_id": "latin_america-48",
+    "infrastructure_cost": 2611,
+    "region": "latin_america",
+    "expected_cost_prediction": 1445,
+    "predicted_cost": 391.698
+  },
+  {
+    "case_id": "latin_america-49",
+    "infrastructure_cost": 2518,
+    "region": "latin_america",
+    "expected_cost_prediction": 979,
+    "predicted_cost": 377.748
+  },
+  {
+    "case_id": "latin_america-50",
+    "infrastructure_cost": 3277,
+    "region": "latin_america",
+    "expected_cost_prediction": 1123,
+    "predicted_cost": 491.59799999999996
+  },
+  {
+    "case_id": "latin_america-51",
+    "infrastructure_cost": 3671,
+    "region": "latin_america",
+    "expected_cost_prediction": 549,
+    "predicted_cost": 550.698
+  },
+  {
+    "case_id": "latin_america-52",
+    "infrastructure_cost": 5830,
+    "region": "latin_america",
+    "expected_cost_prediction": 696,
+    "predicted_cost": 874.548
+  },
+  {
+    "case_id": "latin_america-53",
+    "infrastructure_cost": 1667,
+    "region": "latin_america",
+    "expected_cost_prediction": 1208,
+    "predicted_cost": 250.09799999999998
+  },
+  {
+    "case_id": "latin_america-54",
+    "infrastructure_cost": 3912,
+    "region": "latin_america",
+    "expected_cost_prediction": 1102,
+    "predicted_cost": 586.848
+  },
+  {
+    "case_id": "latin_america-55",
+    "infrastructure_cost": 2050,
+    "region": "latin_america",
+    "expected_cost_prediction": 863,
+    "predicted_cost": 307.548
+  },
+  {
+    "case_id": "latin_america-56",
+    "infrastructure_cost": 5341,
+    "region": "latin_america",
+    "expected_cost_prediction": 678,
+    "predicted_cost": 801.198
+  },
+  {
+    "case_id": "latin_america-57",
+    "infrastructure_cost": 5398,
+    "region": "latin_america",
+    "expected_cost_prediction": 1068,
+    "predicted_cost": 809.7479999999999
+  },
+  {
+    "case_id": "latin_america-58",
+    "infrastructure_cost": 3980,
+    "region": "latin_america",
+    "expected_cost_prediction": 897,
+    "predicted_cost": 597.048
+  },
+  {
+    "case_id": "latin_america-59",
+    "infrastructure_cost": 3725,
+    "region": "latin_america",
+    "expected_cost_prediction": 1399,
+    "predicted_cost": 558.798
+  },
+  {
+    "case_id": "latin_america-60",
+    "infrastructure_cost": 5022,
+    "region": "latin_america",
+    "expected_cost_prediction": 929,
+    "predicted_cost": 753.348
+  },
+  {
+    "case_id": "latin_america-61",
+    "infrastructure_cost": 4939,
+    "region": "latin_america",
+    "expected_cost_prediction": 698,
+    "predicted_cost": 740.898
+  },
+  {
+    "case_id": "latin_america-62",
+    "infrastructure_cost": 1999,
+    "region": "latin_america",
+    "expected_cost_prediction": 926,
+    "predicted_cost": 299.89799999999997
+  },
+  {
+    "case_id": "latin_america-63",
+    "infrastructure_cost": 5610,
+    "region": "latin_america",
+    "expected_cost_prediction": 848,
+    "predicted_cost": 841.548
+  },
+  {
+    "case_id": "latin_america-64",
+    "infrastructure_cost": 2121,
+    "region": "latin_america",
+    "expected_cost_prediction": 1497,
+    "predicted_cost": 318.198
+  },
+  {
+    "case_id": "latin_america-65",
+    "infrastructure_cost": 5687,
+    "region": "latin_america",
+    "expected_cost_prediction": 893,
+    "predicted_cost": 853.098
+  },
+  {
+    "case_id": "latin_america-66",
+    "infrastructure_cost": 2199,
+    "region": "latin_america",
+    "expected_cost_prediction": 547,
+    "predicted_cost": 329.89799999999997
+  },
+  {
+    "case_id": "latin_america-67",
+    "infrastructure_cost": 2558,
+    "region": "latin_america",
+    "expected_cost_prediction": 1109,
+    "predicted_cost": 383.748
+  },
+  {
+    "case_id": "latin_america-68",
+    "infrastructure_cost": 4867,
+    "region": "latin_america",
+    "expected_cost_prediction": 787,
+    "predicted_cost": 730.098
+  },
+  {
+    "case_id": "latin_america-69",
+    "infrastructure_cost": 5356,
+    "region": "latin_america",
+    "expected_cost_prediction": 1481,
+    "predicted_cost": 803.448
+  },
+  {
+    "case_id": "latin_america-70",
+    "infrastructure_cost": 1810,
+    "region": "latin_america",
+    "expected_cost_prediction": 1470,
+    "predicted_cost": 271.548
+  },
+  {
+    "case_id": "latin_america-71",
+    "infrastructure_cost": 5399,
+    "region": "latin_america",
+    "expected_cost_prediction": 571,
+    "predicted_cost": 809.898
+  },
+  {
+    "case_id": "latin_america-72",
+    "infrastructure_cost": 2877,
+    "region": "latin_america",
+    "expected_cost_prediction": 852,
+    "predicted_cost": 431.598
+  },
+  {
+    "case_id": "latin_america-73",
+    "infrastructure_cost": 2992,
+    "region": "latin_america",
+    "expected_cost_prediction": 751,
+    "predicted_cost": 448.848
+  },
+  {
+    "case_id": "latin_america-74",
+    "infrastructure_cost": 4886,
+    "region": "latin_america",
+    "expected_cost_prediction": 1388,
+    "predicted_cost": 732.948
+  },
+  {
+    "case_id": "latin_america-75",
+    "infrastructure_cost": 4167,
+    "region": "latin_america",
+    "expected_cost_prediction": 610,
+    "predicted_cost": 625.098
+  },
+  {
+    "case_id": "latin_america-76",
+    "infrastructure_cost": 4207,
+    "region": "latin_america",
+    "expected_cost_prediction": 707,
+    "predicted_cost": 631.098
+  },
+  {
+    "case_id": "latin_america-77",
+    "infrastructure_cost": 2823,
+    "region": "latin_america",
+    "expected_cost_prediction": 826,
+    "predicted_cost": 423.498
+  },
+  {
+    "case_id": "latin_america-78",
+    "infrastructure_cost": 2434,
+    "region": "latin_america",
+    "expected_cost_prediction": 1019,
+    "predicted_cost": 365.14799999999997
+  },
+  {
+    "case_id": "latin_america-79",
+    "infrastructure_cost": 5024,
+    "region": "latin_america",
+    "expected_cost_prediction": 986,
+    "predicted_cost": 753.648
+  },
+  {
+    "case_id": "latin_america-80",
+    "infrastructure_cost": 2899,
+    "region": "latin_america",
+    "expected_cost_prediction": 1040,
+    "predicted_cost": 434.89799999999997
+  },
+  {
+    "case_id": "latin_america-81",
+    "infrastructure_cost": 3499,
+    "region": "latin_america",
+    "expected_cost_prediction": 779,
+    "predicted_cost": 524.898
+  },
+  {
+    "case_id": "latin_america-82",
+    "infrastructure_cost": 1055,
+    "region": "latin_america",
+    "expected_cost_prediction": 654,
+    "predicted_cost": 158.298
+  },
+  {
+    "case_id": "latin_america-83",
+    "infrastructure_cost": 1650,
+    "region": "latin_america",
+    "expected_cost_prediction": 1205,
+    "predicted_cost": 247.548
+  },
+  {
+    "case_id": "latin_america-84",
+    "infrastructure_cost": 2679,
+    "region": "latin_america",
+    "expected_cost_prediction": 1399,
+    "predicted_cost": 401.89799999999997
+  },
+  {
+    "case_id": "latin_america-85",
+    "infrastructure_cost": 2849,
+    "region": "latin_america",
+    "expected_cost_prediction": 1126,
+    "predicted_cost": 427.39799999999997
+  },
+  {
+    "case_id": "latin_america-86",
+    "infrastructure_cost": 2492,
+    "region": "latin_america",
+    "expected_cost_prediction": 1097,
+    "predicted_cost": 373.848
+  },
+  {
+    "case_id": "latin_america-87",
+    "infrastructure_cost": 5658,
+    "region": "latin_america",
+    "expected_cost_prediction": 1225,
+    "predicted_cost": 848.7479999999999
+  },
+  {
+    "case_id": "latin_america-88",
+    "infrastructure_cost": 5527,
+    "region": "latin_america",
+    "expected_cost_prediction": 1313,
+    "predicted_cost": 829.098
+  },
+  {
+    "case_id": "latin_america-89",
+    "infrastructure_cost": 1093,
+    "region": "latin_america",
+    "expected_cost_prediction": 973,
+    "predicted_cost": 163.998
+  },
+  {
+    "case_id": "latin_america-90",
+    "infrastructure_cost": 4395,
+    "region": "latin_america",
+    "expected_cost_prediction": 1053,
+    "predicted_cost": 659.298
+  },
+  {
+    "case_id": "latin_america-91",
+    "infrastructure_cost": 4799,
+    "region": "latin_america",
+    "expected_cost_prediction": 920,
+    "predicted_cost": 719.898
+  },
+  {
+    "case_id": "latin_america-92",
+    "infrastructure_cost": 4993,
+    "region": "latin_america",
+    "expected_cost_prediction": 1016,
+    "predicted_cost": 748.9979999999999
+  },
+  {
+    "case_id": "latin_america-93",
+    "infrastructure_cost": 1925,
+    "region": "latin_america",
+    "expected_cost_prediction": 797,
+    "predicted_cost": 288.798
+  },
+  {
+    "case_id": "latin_america-94",
+    "infrastructure_cost": 2117,
+    "region": "latin_america",
+    "expected_cost_prediction": 568,
+    "predicted_cost": 317.598
+  },
+  {
+    "case_id": "latin_america-95",
+    "infrastructure_cost": 5715,
+    "region": "latin_america",
+    "expected_cost_prediction": 1206,
+    "predicted_cost": 857.298
+  },
+  {
+    "case_id": "latin_america-96",
+    "infrastructure_cost": 5589,
+    "region": "latin_america",
+    "expected_cost_prediction": 705,
+    "predicted_cost": 838.398
+  },
+  {
+    "case_id": "latin_america-97",
+    "infrastructure_cost": 3408,
+    "region": "latin_america",
+    "expected_cost_prediction": 720,
+    "predicted_cost": 511.248
+  },
+  {
+    "case_id": "latin_america-98",
+    "infrastructure_cost": 5215,
+    "region": "latin_america",
+    "expected_cost_prediction": 1243,
+    "predicted_cost": 782.298
+  },
+  {
+    "case_id": "latin_america-99",
+    "infrastructure_cost": 3048,
+    "region": "latin_america",
+    "expected_cost_prediction": 1275,
+    "predicted_cost": 457.248
+  },
+  {
+    "case_id": "latin_america-100",
+    "infrastructure_cost": 4937,
+    "region": "latin_america",
+    "expected_cost_prediction": 1290,
+    "predicted_cost": 740.598
+  },
+  {
+    "case_id": "latin_america-101",
+    "infrastructure_cost": 4888,
+    "region": "latin_america",
+    "expected_cost_prediction": 541,
+    "predicted_cost": 733.2479999999999
+  },
+  {
+    "case_id": "latin_america-102",
+    "infrastructure_cost": 5070,
+    "region": "latin_america",
+    "expected_cost_prediction": 566,
+    "predicted_cost": 760.548
+  },
+  {
+    "case_id": "latin_america-103",
+    "infrastructure_cost": 4032,
+    "region": "latin_america",
+    "expected_cost_prediction": 1429,
+    "predicted_cost": 604.848
+  },
+  {
+    "case_id": "latin_america-104",
+    "infrastructure_cost": 4282,
+    "region": "latin_america",
+    "expected_cost_prediction": 1436,
+    "predicted_cost": 642.348
+  },
+  {
+    "case_id": "latin_america-105",
+    "infrastructure_cost": 1607,
+    "region": "latin_america",
+    "expected_cost_prediction": 1118,
+    "predicted_cost": 241.09799999999998
+  },
+  {
+    "case_id": "latin_america-106",
+    "infrastructure_cost": 5716,
+    "region": "latin_america",
+    "expected_cost_prediction": 708,
+    "predicted_cost": 857.448
+  },
+  {
+    "case_id": "latin_america-107",
+    "infrastructure_cost": 4062,
+    "region": "latin_america",
+    "expected_cost_prediction": 738,
+    "predicted_cost": 609.348
+  },
+  {
+    "case_id": "latin_america-108",
+    "infrastructure_cost": 4306,
+    "region": "latin_america",
+    "expected_cost_prediction": 1429,
+    "predicted_cost": 645.948
+  },
+  {
+    "case_id": "latin_america-109",
+    "infrastructure_cost": 1838,
+    "region": "latin_america",
+    "expected_cost_prediction": 1243,
+    "predicted_cost": 275.748
+  },
+  {
+    "case_id": "latin_america-110",
+    "infrastructure_cost": 4694,
+    "region": "latin_america",
+    "expected_cost_prediction": 625,
+    "predicted_cost": 704.148
+  },
+  {
+    "case_id": "latin_america-111",
+    "infrastructure_cost": 1075,
+    "region": "latin_america",
+    "expected_cost_prediction": 817,
+    "predicted_cost": 161.298
+  },
+  {
+    "case_id": "latin_america-112",
+    "infrastructure_cost": 4627,
+    "region": "latin_america",
+    "expected_cost_prediction": 1335,
+    "predicted_cost": 694.098
+  },
+  {
+    "case_id": "latin_america-113",
+    "infrastructure_cost": 1255,
+    "region": "latin_america",
+    "expected_cost_prediction": 788,
+    "predicted_cost": 188.298
+  },
+  {
+    "case_id": "latin_america-114",
+    "infrastructure_cost": 2337,
+    "region": "latin_america",
+    "expected_cost_prediction": 1480,
+    "predicted_cost": 350.598
+  },
+  {
+    "case_id": "latin_america-115",
+    "infrastructure_cost": 2570,
+    "region": "latin_america",
+    "expected_cost_prediction": 1243,
+    "predicted_cost": 385.548
+  },
+  {
+    "case_id": "latin_america-116",
+    "infrastructure_cost": 3402,
+    "region": "latin_america",
+    "expected_cost_prediction": 1202,
+    "predicted_cost": 510.34799999999996
+  },
+  {
+    "case_id": "latin_america-117",
+    "infrastructure_cost": 3819,
+    "region": "latin_america",
+    "expected_cost_prediction": 752,
+    "predicted_cost": 572.898
+  },
+  {
+    "case_id": "latin_america-118",
+    "infrastructure_cost": 1606,
+    "region": "latin_america",
+    "expected_cost_prediction": 590,
+    "predicted_cost": 240.94799999999998
+  },
+  {
+    "case_id": "latin_america-119",
+    "infrastructure_cost": 1953,
+    "region": "latin_america",
+    "expected_cost_prediction": 869,
+    "predicted_cost": 292.998
+  },
+  {
+    "case_id": "latin_america-120",
+    "infrastructure_cost": 2209,
+    "region": "latin_america",
+    "expected_cost_prediction": 1298,
+    "predicted_cost": 331.39799999999997
+  },
+  {
+    "case_id": "latin_america-121",
+    "infrastructure_cost": 2907,
+    "region": "latin_america",
+    "expected_cost_prediction": 809,
+    "predicted_cost": 436.098
+  },
+  {
+    "case_id": "latin_america-122",
+    "infrastructure_cost": 4461,
+    "region": "latin_america",
+    "expected_cost_prediction": 1077,
+    "predicted_cost": 669.198
+  },
+  {
+    "case_id": "latin_america-123",
+    "infrastructure_cost": 3885,
+    "region": "latin_america",
+    "expected_cost_prediction": 596,
+    "predicted_cost": 582.798
+  },
+  {
+    "case_id": "latin_america-124",
+    "infrastructure_cost": 1951,
+    "region": "latin_america",
+    "expected_cost_prediction": 1044,
+    "predicted_cost": 292.698
+  },
+  {
+    "case_id": "latin_america-125",
+    "infrastructure_cost": 1294,
+    "region": "latin_america",
+    "expected_cost_prediction": 849,
+    "predicted_cost": 194.148
+  },
+  {
+    "case_id": "latin_america-126",
+    "infrastructure_cost": 2136,
+    "region": "latin_america",
+    "expected_cost_prediction": 1054,
+    "predicted_cost": 320.448
+  },
+  {
+    "case_id": "latin_america-127",
+    "infrastructure_cost": 2212,
+    "region": "latin_america",
+    "expected_cost_prediction": 853,
+    "predicted_cost": 331.848
+  },
+  {
+    "case_id": "latin_america-128",
+    "infrastructure_cost": 1696,
+    "region": "latin_america",
+    "expected_cost_prediction": 884,
+    "predicted_cost": 254.44799999999998
+  },
+  {
+    "case_id": "latin_america-129",
+    "infrastructure_cost": 5617,
+    "region": "latin_america",
+    "expected_cost_prediction": 838,
+    "predicted_cost": 842.598
+  },
+  {
+    "case_id": "latin_america-130",
+    "infrastructure_cost": 4002,
+    "region": "latin_america",
+    "expected_cost_prediction": 1300,
+    "predicted_cost": 600.348
+  },
+  {
+    "case_id": "latin_america-131",
+    "infrastructure_cost": 2833,
+    "region": "latin_america",
+    "expected_cost_prediction": 765,
+    "predicted_cost": 424.998
+  },
+  {
+    "case_id": "latin_america-132",
+    "infrastructure_cost": 3937,
+    "region": "latin_america",
+    "expected_cost_prediction": 617,
+    "predicted_cost": 590.598
+  },
+  {
+    "case_id": "latin_america-133",
+    "infrastructure_cost": 3300,
+    "region": "latin_america",
+    "expected_cost_prediction": 1106,
+    "predicted_cost": 495.048
+  },
+  {
+    "case_id": "latin_america-134",
+    "infrastructure_cost": 3661,
+    "region": "latin_america",
+    "expected_cost_prediction": 1374,
+    "predicted_cost": 549.198
+  },
+  {
+    "case_id": "latin_america-135",
+    "infrastructure_cost": 4424,
+    "region": "latin_america",
+    "expected_cost_prediction": 1233,
+    "predicted_cost": 663.648
+  },
+  {
+    "case_id": "latin_america-136",
+    "infrastructure_cost": 3448,
+    "region": "latin_america",
+    "expected_cost_prediction": 1074,
+    "predicted_cost": 517.2479999999999
+  },
+  {
+    "case_id": "latin_america-137",
+    "infrastructure_cost": 1407,
+    "region": "latin_america",
+    "expected_cost_prediction": 1367,
+    "predicted_cost": 211.09799999999998
+  },
+  {
+    "case_id": "latin_america-138",
+    "infrastructure_cost": 3640,
+    "region": "latin_america",
+    "expected_cost_prediction": 1248,
+    "predicted_cost": 546.048
+  },
+  {
+    "case_id": "latin_america-139",
+    "infrastructure_cost": 5744,
+    "region": "latin_america",
+    "expected_cost_prediction": 1290,
+    "predicted_cost": 861.648
+  },
+  {
+    "case_id": "latin_america-140",
+    "infrastructure_cost": 1978,
+    "region": "latin_america",
+    "expected_cost_prediction": 1102,
+    "predicted_cost": 296.748
+  },
+  {
+    "case_id": "latin_america-141",
+    "infrastructure_cost": 5252,
+    "region": "latin_america",
+    "expected_cost_prediction": 900,
+    "predicted_cost": 787.848
+  },
+  {
+    "case_id": "latin_america-142",
+    "infrastructure_cost": 2085,
+    "region": "latin_america",
+    "expected_cost_prediction": 1108,
+    "predicted_cost": 312.798
+  },
+  {
+    "case_id": "latin_america-143",
+    "infrastructure_cost": 3873,
+    "region": "latin_america",
+    "expected_cost_prediction": 1210,
+    "predicted_cost": 580.9979999999999
+  },
+  {
+    "case_id": "latin_america-144",
+    "infrastructure_cost": 1644,
+    "region": "latin_america",
+    "expected_cost_prediction": 705,
+    "predicted_cost": 246.648
+  },
+  {
+    "case_id": "latin_america-145",
+    "infrastructure_cost": 2521,
+    "region": "latin_america",
+    "expected_cost_prediction": 923,
+    "predicted_cost": 378.198
+  },
+  {
+    "case_id": "latin_america-146",
+    "infrastructure_cost": 5424,
+    "region": "latin_america",
+    "expected_cost_prediction": 677,
+    "predicted_cost": 813.648
+  },
+  {
+    "case_id": "latin_america-147",
+    "infrastructure_cost": 5485,
+    "region": "latin_america",
+    "expected_cost_prediction": 1351,
+    "predicted_cost": 822.798
+  },
+  {
+    "case_id": "latin_america-148",
+    "infrastructure_cost": 3376,
+    "region": "latin_america",
+    "expected_cost_prediction": 1217,
+    "predicted_cost": 506.448
+  },
+  {
+    "case_id": "latin_america-149",
+    "infrastructure_cost": 2385,
+    "region": "latin_america",
+    "expected_cost_prediction": 1441,
+    "predicted_cost": 357.798
+  },
+  {
+    "case_id": "latin_america-150",
+    "infrastructure_cost": 3169,
+    "region": "latin_america",
+    "expected_cost_prediction": 1489,
+    "predicted_cost": 475.39799999999997
+  },
+  {
+    "case_id": "latin_america-151",
+    "infrastructure_cost": 2578,
+    "region": "latin_america",
+    "expected_cost_prediction": 1076,
+    "predicted_cost": 386.748
+  },
+  {
+    "case_id": "latin_america-152",
+    "infrastructure_cost": 3290,
+    "region": "latin_america",
+    "expected_cost_prediction": 1039,
+    "predicted_cost": 493.548
+  },
+  {
+    "case_id": "latin_america-153",
+    "infrastructure_cost": 1550,
+    "region": "latin_america",
+    "expected_cost_prediction": 1049,
+    "predicted_cost": 232.548
+  },
+  {
+    "case_id": "latin_america-154",
+    "infrastructure_cost": 5522,
+    "region": "latin_america",
+    "expected_cost_prediction": 990,
+    "predicted_cost": 828.348
+  },
+  {
+    "case_id": "latin_america-155",
+    "infrastructure_cost": 2468,
+    "region": "latin_america",
+    "expected_cost_prediction": 945,
+    "predicted_cost": 370.248
+  },
+  {
+    "case_id": "latin_america-156",
+    "infrastructure_cost": 4495,
+    "region": "latin_america",
+    "expected_cost_prediction": 1044,
+    "predicted_cost": 674.298
+  },
+  {
+    "case_id": "latin_america-157",
+    "infrastructure_cost": 5973,
+    "region": "latin_america",
+    "expected_cost_prediction": 987,
+    "predicted_cost": 895.9979999999999
+  },
+  {
+    "case_id": "latin_america-158",
+    "infrastructure_cost": 1285,
+    "region": "latin_america",
+    "expected_cost_prediction": 727,
+    "predicted_cost": 192.798
+  },
+  {
+    "case_id": "latin_america-159",
+    "infrastructure_cost": 1646,
+    "region": "latin_america",
+    "expected_cost_prediction": 1025,
+    "predicted_cost": 246.94799999999998
+  },
+  {
+    "case_id": "latin_america-160",
+    "infrastructure_cost": 5439,
+    "region": "latin_america",
+    "expected_cost_prediction": 623,
+    "predicted_cost": 815.898
+  },
+  {
+    "case_id": "latin_america-161",
+    "infrastructure_cost": 4633,
+    "region": "latin_america",
+    "expected_cost_prediction": 997,
+    "predicted_cost": 694.9979999999999
+  },
+  {
+    "case_id": "latin_america-162",
+    "infrastructure_cost": 1412,
+    "region": "latin_america",
+    "expected_cost_prediction": 1236,
+    "predicted_cost": 211.84799999999998
+  },
+  {
+    "case_id": "latin_america-163",
+    "infrastructure_cost": 1023,
+    "region": "latin_america",
+    "expected_cost_prediction": 620,
+    "predicted_cost": 153.498
+  },
+  {
+    "case_id": "latin_america-164",
+    "infrastructure_cost": 4365,
+    "region": "latin_america",
+    "expected_cost_prediction": 509,
+    "predicted_cost": 654.798
+  },
+  {
+    "case_id": "latin_america-165",
+    "infrastructure_cost": 2318,
+    "region": "latin_america",
+    "expected_cost_prediction": 720,
+    "predicted_cost": 347.748
+  },
+  {
+    "case_id": "latin_america-166",
+    "infrastructure_cost": 5627,
+    "region": "latin_america",
+    "expected_cost_prediction": 770,
+    "predicted_cost": 844.098
+  }
+]

@@ -8,74 +8,74 @@ on:
 jobs:
   build-core-linux:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+
       - name: Set deterministic build environment
         run: |
           echo "TZ=UTC" >> $GITHUB_ENV
           echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> $GITHUB_ENV
-      
+
       - name: Build core package
         run: bash packaging/core_release/build_core_package.sh
-      
+
       - name: Extract version
         id: version
         run: |
           VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-      
+
       - name: Verify no premium content
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          
+
           # Extract archives to temp location
           mkdir -p /tmp/verify
           cd /tmp/verify
           unzip -q ~/work/CostPilot/CostPilot/dist/costpilot-${VERSION}-linux-x64.zip
-          
+
           # Check for forbidden content
           VIOLATIONS=0
-          
+
           if find . -type d -name "premium" | grep -q .; then
             echo "ERROR: premium/ directory found in package"
             VIOLATIONS=$((VIOLATIONS + 1))
           fi
-          
+
           if find . -type f -name "*pro_engine*" | grep -q .; then
             echo "ERROR: pro_engine files found in package"
             VIOLATIONS=$((VIOLATIONS + 1))
           fi
-          
+
           if find . -type f -name "*.wasm*" | grep -q .; then
             echo "ERROR: WASM files found in package"
             VIOLATIONS=$((VIOLATIONS + 1))
           fi
-          
+
           if find . -type d -name "tests" | grep -q .; then
             echo "ERROR: tests/ directory found in package"
             VIOLATIONS=$((VIOLATIONS + 1))
           fi
-          
+
           if [ ${VIOLATIONS} -gt 0 ]; then
             echo "Package validation failed with ${VIOLATIONS} violations"
             exit 1
           fi
-          
+
           echo "✓ Package validation passed"
-      
+
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-${{ steps.version.outputs.version }}-linux-x64.zip
           path: dist/costpilot-${{ steps.version.outputs.version }}-linux-x64.zip
-      
+
       - name: Upload TAR.GZ
         uses: actions/upload-artifact@v4
         with:

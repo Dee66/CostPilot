@@ -6,6 +6,7 @@ pub mod config;
 pub mod edition;
 pub mod engines;
 pub mod errors;
+pub mod feature_flags;
 pub mod heuristics;
 pub mod pro_engine;
 pub mod security;
@@ -16,13 +17,13 @@ pub mod wasm;
 pub mod test_helpers {
     pub mod edition {
         pub use crate::edition::EditionContext;
-        
+
         pub fn premium() -> EditionContext {
             use crate::edition::{EditionMode, Capabilities, pro_handle::ProEngineHandle};
             use std::path::PathBuf;
-            
+
             let stub_handle = ProEngineHandle::stub(PathBuf::from("/tmp/test_pro.wasm"));
-            
+
             EditionContext {
                 mode: EditionMode::Premium,
                 license: None,

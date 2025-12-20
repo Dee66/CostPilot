@@ -11,7 +11,7 @@ def test_pro_engine_cost_output_stable():
     """Test that pro-engine cost output is stable."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -33,13 +33,13 @@ def test_pro_engine_cost_output_stable():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Run pro-engine multiple times
         costs = []
-        
+
         for _ in range(5):
             result = subprocess.run(
                 ["costpilot", "predict", "--plan", str(template_path), "--engine", "pro"],
@@ -47,9 +47,9 @@ def test_pro_engine_cost_output_stable():
                 text=True,
                 timeout=60
             )
-            
+
             costs.append(result.stdout)
-        
+
         # Cost output should be identical
         assert all(c == costs[0] for c in costs), \
             "Pro-engine cost output not stable"
@@ -59,7 +59,7 @@ def test_pro_engine_cost_breakdown_deterministic():
     """Test that pro-engine cost breakdown is deterministic."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda1": {
@@ -86,13 +86,13 @@ def test_pro_engine_cost_breakdown_deterministic():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Run with JSON output
         results = []
-        
+
         for _ in range(3):
             result = subprocess.run(
                 ["costpilot", "predict", "--plan", str(template_path), "--engine", "pro", "--format", "json"],
@@ -100,9 +100,9 @@ def test_pro_engine_cost_breakdown_deterministic():
                 text=True,
                 timeout=60
             )
-            
+
             results.append(result.stdout)
-        
+
         # Breakdown should be identical
         assert all(r == results[0] for r in results), \
             "Pro-engine cost breakdown not deterministic"
@@ -112,7 +112,7 @@ def test_pro_engine_vs_basic_comparison_stable():
     """Test that pro-engine vs basic-engine comparison is stable."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -124,10 +124,10 @@ def test_pro_engine_vs_basic_comparison_stable():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Run basic-engine
         basic_result = subprocess.run(
             ["costpilot", "predict", "--plan", str(template_path), "--engine", "basic"],
@@ -135,7 +135,7 @@ def test_pro_engine_vs_basic_comparison_stable():
             text=True,
             timeout=30
         )
-        
+
         # Run pro-engine
         pro_result = subprocess.run(
             ["costpilot", "predict", "--plan", str(template_path), "--engine", "pro"],
@@ -143,7 +143,7 @@ def test_pro_engine_vs_basic_comparison_stable():
             text=True,
             timeout=60
         )
-        
+
         # Both should complete successfully
         assert basic_result.returncode in [0, 1, 2, 101], "Basic-engine should complete"
         assert pro_result.returncode in [0, 1, 2, 101], "Pro-engine should complete"
@@ -154,7 +154,7 @@ def test_pro_engine_with_baseline_stable():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -166,7 +166,7 @@ def test_pro_engine_with_baseline_stable():
                 }
             }
         }
-        
+
         baseline_content = {
             "resources": [
                 {
@@ -180,16 +180,16 @@ def test_pro_engine_with_baseline_stable():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         # Run with baseline multiple times
         results = []
-        
+
         for _ in range(3):
             result = subprocess.run(
                 ["costpilot", "predict", "--plan", str(template_path), "--baseline", str(baseline_path), "--engine", "pro"],
@@ -197,9 +197,9 @@ def test_pro_engine_with_baseline_stable():
                 text=True,
                 timeout=60
             )
-            
+
             results.append(result.stdout)
-        
+
         # Output should be stable
         assert all(r == results[0] for r in results), \
             "Pro-engine with baseline not stable"
@@ -209,7 +209,7 @@ def test_pro_engine_monthly_estimate_consistent():
     """Test that pro-engine monthly estimate is consistent."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -229,13 +229,13 @@ def test_pro_engine_monthly_estimate_consistent():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Run multiple times
         estimates = []
-        
+
         for _ in range(5):
             result = subprocess.run(
                 ["costpilot", "predict", "--plan", str(template_path), "--engine", "pro", "--format", "json"],
@@ -243,9 +243,9 @@ def test_pro_engine_monthly_estimate_consistent():
                 text=True,
                 timeout=60
             )
-            
+
             estimates.append(result.stdout)
-        
+
         # Monthly estimate should be consistent
         assert all(e == estimates[0] for e in estimates), \
             "Pro-engine monthly estimate not consistent"
@@ -256,7 +256,7 @@ def test_pro_engine_trend_analysis_stable():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         trend_path = Path(tmpdir) / "trend.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -268,7 +268,7 @@ def test_pro_engine_trend_analysis_stable():
                 }
             }
         }
-        
+
         trend_content = {
             "history": [
                 {"date": "2024-01-01", "cost": 10.0},
@@ -278,16 +278,16 @@ def test_pro_engine_trend_analysis_stable():
                 {"date": "2024-01-05", "cost": 20.0}
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(trend_path, 'w') as f:
             json.dump(trend_content, f)
-        
+
         # Run trend analysis multiple times
         results = []
-        
+
         for _ in range(3):
             result = subprocess.run(
                 ["costpilot", "trend", "--plan", str(template_path), "--history", str(trend_path), "--engine", "pro"],
@@ -295,9 +295,9 @@ def test_pro_engine_trend_analysis_stable():
                 text=True,
                 timeout=60
             )
-            
+
             results.append(result.stdout)
-        
+
         # Trend analysis should be stable
         assert all(r == results[0] for r in results), \
             "Pro-engine trend analysis not stable"
@@ -307,7 +307,7 @@ def test_pro_engine_optimization_suggestions_stable():
     """Test that pro-engine optimization suggestions are stable."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -325,13 +325,13 @@ def test_pro_engine_optimization_suggestions_stable():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Run optimization analysis multiple times
         suggestions = []
-        
+
         for _ in range(3):
             result = subprocess.run(
                 ["costpilot", "optimize", "--plan", str(template_path), "--engine", "pro"],
@@ -339,9 +339,9 @@ def test_pro_engine_optimization_suggestions_stable():
                 text=True,
                 timeout=60
             )
-            
+
             suggestions.append(result.stdout)
-        
+
         # Optimization suggestions should be stable
         assert all(s == suggestions[0] for s in suggestions), \
             "Pro-engine optimization suggestions not stable"
@@ -351,7 +351,7 @@ def test_pro_engine_json_output_parseable():
     """Test that pro-engine JSON output is always parseable."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 f"Lambda{i}": {
@@ -364,10 +364,10 @@ def test_pro_engine_json_output_parseable():
                 for i in range(20)
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Run with JSON format
         for _ in range(5):
             result = subprocess.run(
@@ -376,7 +376,7 @@ def test_pro_engine_json_output_parseable():
                 text=True,
                 timeout=60
             )
-            
+
             if result.returncode == 0:
                 # Should be valid JSON
                 try:

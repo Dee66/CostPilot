@@ -1,0 +1,298 @@
+# CostPilot Performance Testing: Benchmarking
+# Test data for benchmarking and comparative analysis
+
+# Comparative analysis benchmarks
+baseline_vs_optimized:
+  metadata:
+    test_case: "baseline_vs_optimized"
+    description: "Compare baseline vs optimized performance"
+    benchmark_type: "comparative_analysis"
+  baseline_config:
+    algorithm: "naive"
+    caching: false
+    parallelization: false
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "baseline-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+  optimized_config:
+    algorithm: "optimized"
+    caching: true
+    parallelization: true
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "optimized-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+  expected_improvement:
+    response_time: "50%_faster"
+    memory_usage: "30%_less"
+    throughput: "2x_higher"
+
+memory_vs_speed_tradeoff:
+  metadata:
+    test_case: "memory_vs_speed_tradeoff"
+    description: "Benchmark memory vs speed tradeoffs"
+    benchmark_type: "tradeoff_analysis"
+  configurations:
+    memory_optimized:
+      cache_strategy: "minimal"
+      data_structures: "memory_efficient"
+      expected_memory: "< 100MB"
+      expected_speed: "baseline"
+    speed_optimized:
+      cache_strategy: "aggressive"
+      data_structures: "performance_optimized"
+      expected_memory: "< 200MB"
+      expected_speed: "2x_faster"
+    balanced:
+      cache_strategy: "adaptive"
+      data_structures: "balanced"
+      expected_memory: "< 150MB"
+      expected_speed: "1.5x_faster"
+
+# Regression detection benchmarks
+performance_regression_baseline:
+  metadata:
+    test_case: "performance_regression_baseline"
+    description: "Establish performance baseline for regression detection"
+    benchmark_type: "regression_baseline"
+    baseline_version: "v1.0.0"
+  metrics:
+    response_time_p50: "150ms"
+    response_time_p95: "500ms"
+    response_time_p99: "1000ms"
+    memory_usage: "80MB"
+    cpu_usage: "15%"
+    throughput: "100_req/sec"
+  sample_plan:
+    resources:
+      - type: "aws_instance"
+        name: "regression-test-ec2"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+
+regression_thresholds:
+  metadata:
+    test_case: "regression_thresholds"
+    description: "Define acceptable regression thresholds"
+    benchmark_type: "regression_detection"
+  thresholds:
+    response_time_degradation: "10%"  # Allow 10% slower
+    memory_increase: "20%"  # Allow 20% more memory
+    cpu_increase: "15%"  # Allow 15% more CPU
+    throughput_decrease: "5%"  # Allow 5% less throughput
+  alert_conditions:
+    critical: "exceeds_2x_threshold"
+    warning: "exceeds_1x_threshold"
+    info: "exceeds_0.5x_threshold"
+
+# Optimization opportunities benchmarks
+algorithm_comparison:
+  metadata:
+    test_case: "algorithm_comparison"
+    description: "Compare different algorithm implementations"
+    benchmark_type: "optimization_opportunities"
+  algorithms:
+    current:
+      name: "current_implementation"
+      complexity: "O(n^2)"
+      expected_performance: "baseline"
+    optimized:
+      name: "optimized_implementation"
+      complexity: "O(n log n)"
+      expected_performance: "2x_faster"
+    experimental:
+      name: "experimental_implementation"
+      complexity: "O(n)"
+      expected_performance: "5x_faster"
+  test_data_sizes:
+    small: 100
+    medium: 1000
+    large: 10000
+
+caching_strategy_benchmark:
+  metadata:
+    test_case: "caching_strategy_benchmark"
+    description: "Benchmark different caching strategies"
+    benchmark_type: "optimization_opportunities"
+  strategies:
+    no_cache:
+      hit_rate: "0%"
+      memory_usage: "minimal"
+      expected_speed: "baseline"
+    lru_cache:
+      hit_rate: "85%"
+      memory_usage: "moderate"
+      expected_speed: "3x_faster"
+    predictive_cache:
+      hit_rate: "95%"
+      memory_usage: "high"
+      expected_speed: "5x_faster"
+  cache_sizes:
+    small: "10MB"
+    medium: "50MB"
+    large: "200MB"
+
+parallelization_benchmark:
+  metadata:
+    test_case: "parallelization_benchmark"
+    description: "Benchmark parallelization improvements"
+    benchmark_type: "optimization_opportunities"
+  configurations:
+    single_threaded:
+      threads: 1
+      expected_speed: "baseline"
+      cpu_usage: "25%"
+    multi_threaded_4:
+      threads: 4
+      expected_speed: "3x_faster"
+      cpu_usage: "80%"
+    multi_threaded_8:
+      threads: 8
+      expected_speed: "5x_faster"
+      cpu_usage: "90%"
+
+# Industry standard benchmarks
+industry_standards_comparison:
+  metadata:
+    test_case: "industry_standards_comparison"
+    description: "Compare against industry standard benchmarks"
+    benchmark_type: "comparative_analysis"
+  standards:
+    techempower_web_framework:
+      metric: "requests_per_second"
+      current_score: 85000
+      target_score: 100000
+      category: "web_frameworks"
+    cost_analysis_tools:
+      metric: "plans_per_minute"
+      current_score: 120
+      target_score: 200
+      category: "finops_tools"
+  sample_workloads:
+    simple_plan:
+      resources: 5
+      complexity: "low"
+    complex_plan:
+      resources: 50
+      complexity: "high"
+    enterprise_plan:
+      resources: 500
+      complexity: "very_high"
+
+# Scalability benchmarks
+horizontal_scalability:
+  metadata:
+    test_case: "horizontal_scalability"
+    description: "Test horizontal scaling performance"
+    benchmark_type: "scalability_analysis"
+  scaling_factors:
+    "1x": { instances: 1, expected_throughput: "100_req/sec" }
+    "2x": { instances: 2, expected_throughput: "180_req/sec" }
+    "4x": { instances: 4, expected_throughput: "320_req/sec" }
+    "8x": { instances: 8, expected_throughput: "600_req/sec" }
+  efficiency_metrics:
+    linear_scaling: "80%"  # How close to linear scaling
+    overhead_per_instance: "5%"  # Coordination overhead
+
+vertical_scalability:
+  metadata:
+    test_case: "vertical_scalability"
+    description: "Test vertical scaling performance"
+    benchmark_type: "scalability_analysis"
+  instance_types:
+    t3_micro: { vcpu: 2, memory: "1GB", expected_throughput: "50_req/sec" }
+    t3_small: { vcpu: 2, memory: "2GB", expected_throughput: "80_req/sec" }
+    t3_medium: { vcpu: 2, memory: "4GB", expected_throughput: "120_req/sec" }
+    t3_large: { vcpu: 2, memory: "8GB", expected_throughput: "180_req/sec" }
+  scaling_efficiency:
+    cpu_bound_workload: "85%"
+    memory_bound_workload: "75%"
+
+# Resource utilization benchmarks
+cpu_utilization_benchmark:
+  metadata:
+    test_case: "cpu_utilization_benchmark"
+    description: "Benchmark CPU utilization efficiency"
+    benchmark_type: "resource_utilization"
+  workloads:
+    cpu_intensive:
+      description: "Complex cost calculations"
+      expected_cpu_usage: "70%"
+      expected_throughput: "200_req/sec"
+    io_intensive:
+      description: "Data loading and caching"
+      expected_cpu_usage: "30%"
+      expected_throughput: "150_req/sec"
+    mixed_workload:
+      description: "Balanced CPU and I/O"
+      expected_cpu_usage: "50%"
+      expected_throughput: "250_req/sec"
+
+memory_utilization_benchmark:
+  metadata:
+    test_case: "memory_utilization_benchmark"
+    description: "Benchmark memory utilization efficiency"
+    benchmark_type: "resource_utilization"
+  scenarios:
+    small_plans:
+      plan_size: "1KB"
+      expected_memory: "50MB"
+      expected_efficiency: "90%"
+    medium_plans:
+      plan_size: "100KB"
+      expected_memory: "100MB"
+      expected_efficiency: "85%"
+    large_plans:
+      plan_size: "10MB"
+      expected_memory: "500MB"
+      expected_efficiency: "75%"
+
+# Performance profiling benchmarks
+hotspot_analysis:
+  metadata:
+    test_case: "hotspot_analysis"
+    description: "Identify performance hotspots"
+    benchmark_type: "profiling_analysis"
+  profiling_targets:
+    cost_calculation_engine:
+      expected_cpu_time: "40%"
+      optimization_potential: "high"
+    data_loading:
+      expected_cpu_time: "25%"
+      optimization_potential: "medium"
+    caching_layer:
+      expected_cpu_time: "15%"
+      optimization_potential: "low"
+    serialization:
+      expected_cpu_time: "20%"
+      optimization_potential: "medium"
+
+memory_profile_analysis:
+  metadata:
+    test_case: "memory_profile_analysis"
+    description: "Analyze memory usage patterns"
+    benchmark_type: "profiling_analysis"
+  memory_regions:
+    heap_allocation:
+      expected_usage: "60%"
+      growth_pattern: "linear"
+    stack_usage:
+      expected_usage: "5%"
+      growth_pattern: "stable"
+    cache_memory:
+      expected_usage: "25%"
+      growth_pattern: "logarithmic"
+    temp_buffers:
+      expected_usage: "10%"
+      growth_pattern: "bursty"

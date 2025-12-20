@@ -1,0 +1,74 @@
+{
+  "measurements": [
+    {
+      "cycle": "1",
+      "duration_seconds": 1,
+      "energy_joules": 695,
+      "carbon_grams": 0.096000,
+      "timestamp": "2025-12-20T13:59:43+02:00"
+    },
+    {
+      "cycle": "2",
+      "duration_seconds": 1,
+      "energy_joules": 872,
+      "carbon_grams": 0.121000,
+      "timestamp": "2025-12-20T13:59:48+02:00"
+    },
+    {
+      "cycle": "3",
+      "duration_seconds": 1,
+      "energy_joules": 588,
+      "carbon_grams": 0.081000,
+      "timestamp": "2025-12-20T13:59:53+02:00"
+    },
+    {
+      "cycle": "4",
+      "duration_seconds": 1,
+      "energy_joules": 767,
+      "carbon_grams": 0.106000,
+      "timestamp": "2025-12-20T13:59:59+02:00"
+    },
+    {
+      "cycle": "5",
+      "duration_seconds": 1,
+      "energy_joules": 296,
+      "carbon_grams": 0.041000,
+      "timestamp": "2025-12-20T14:00:04+02:00"
+    },
+    {
+      "cycle": "6",
+      "duration_seconds": 1,
+      "energy_joules": 412,
+      "carbon_grams": 0.057000,
+      "timestamp": "2025-12-20T14:00:09+02:00"
+    },
+    {
+      "cycle": "7",
+      "duration_seconds": 1,
+      "energy_joules": 507,
+      "carbon_grams": 0.070000,
+      "timestamp": "2025-12-20T14:00:14+02:00"
+    },
+    {
+      "cycle": "8",
+      "duration_seconds": 1,
+      "energy_joules": 393,
+      "carbon_grams": 0.054000,
+      "timestamp": "2025-12-20T14:00:19+02:00"
+    },
+    {
+      "cycle": "9",
+      "duration_seconds": 1,
+      "energy_joules": 306,
+      "carbon_grams": 0.042000,
+      "timestamp": "2025-12-20T14:00:24+02:00"
+    },
+    {
+      "cycle": "10",
+      "duration_seconds": 1,
+      "energy_joules": 51,
+      "carbon_grams": 0.007000,
+      "timestamp": "2025-12-20T14:00:29+02:00"
+    }
+  ]
+}

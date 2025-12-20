@@ -71,7 +71,7 @@ export class CostPilotDiagnostics {
             case 'low':
                 return vscode.DiagnosticSeverity.Information;
             default:
-                return defaultSeverity === 'error' 
+                return defaultSeverity === 'error'
                     ? vscode.DiagnosticSeverity.Error
                     : vscode.DiagnosticSeverity.Warning;
         }

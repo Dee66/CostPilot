@@ -100,10 +100,10 @@ git push origin "$VERSION"
 if [[ ! "$VERSION" =~ - ]]; then
   MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
   echo "🏷️  Updating major version tag $MAJOR_VERSION..."
-  
+
   git tag -d "$MAJOR_VERSION" 2>/dev/null || true
   git push origin ":refs/tags/$MAJOR_VERSION" 2>/dev/null || true
-  
+
   git tag "$MAJOR_VERSION"
   git push origin "$MAJOR_VERSION"
 fi

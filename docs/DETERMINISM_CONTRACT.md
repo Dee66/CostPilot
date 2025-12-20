@@ -1,7 +1,7 @@
 # Execution Determinism Contract
 
-**Version:** 1.0.0  
-**Status:** Enforced  
+**Version:** 1.0.0
+**Status:** Enforced
 **Last Updated:** 2025-12-06
 
 ---
@@ -157,13 +157,13 @@ format!("Validation failed: {}", error_code)
 fn test_cross_platform_determinism() {
     let plan = load_fixture("fixtures/terraform/ec2_create.json");
     let result = full_scan(&plan);
-    
+
     // Generate hash of complete output
     let hash = sha256_hash(&result);
-    
+
     // Hash must match across Linux/Mac/Windows/WASM
     assert_eq!(hash, EXPECTED_HASH);
-    
+
     // Snapshot must match byte-for-byte
     insta::assert_json_snapshot!(result);
 }
@@ -180,7 +180,7 @@ fn test_float_determinism_across_platforms() {
         (f64::NAN, 0.0),  // NaN normalized to 0
         (f64::INFINITY, f64::MAX),
     ];
-    
+
     for (input, expected) in test_values {
         let normalized = normalize_float(input);
         assert_eq!(normalized, expected);
@@ -192,10 +192,10 @@ fn test_float_math_consistency() {
     // Same calculation must produce identical results
     let price_per_hour = 0.0416;  // t3.medium
     let hours_per_month = 730.0;
-    
+
     let cost1 = normalize_float(price_per_hour * hours_per_month);
     let cost2 = normalize_float(price_per_hour * hours_per_month);
-    
+
     assert_eq!(cost1, cost2);
     assert_eq!(format!("{:.2}", cost1), "30.37");
 }
@@ -206,21 +206,21 @@ fn test_float_math_consistency() {
 #[test]
 fn test_parallel_execution_determinism() {
     let plan = generate_large_terraform_plan(1000);
-    
+
     // Run with different worker counts
     let result_1_worker = scan_with_workers(&plan, 1);
     let result_2_workers = scan_with_workers(&plan, 2);
     let result_8_workers = scan_with_workers(&plan, 8);
-    
+
     // All must be identical
     assert_eq!(result_1_worker, result_2_workers);
     assert_eq!(result_2_workers, result_8_workers);
-    
+
     // Hash verification
     let hash1 = sha256_hash(&result_1_worker);
     let hash2 = sha256_hash(&result_2_workers);
     let hash8 = sha256_hash(&result_8_workers);
-    
+
     assert_eq!(hash1, hash2);
     assert_eq!(hash2, hash8);
 }
@@ -233,10 +233,10 @@ fn test_json_output_stable_ordering() {
     let result = scan_plan(&sample_plan());
     let json1 = serde_json::to_string(&result).unwrap();
     let json2 = serde_json::to_string(&result).unwrap();
-    
+
     // Must be byte-for-byte identical
     assert_eq!(json1, json2);
-    
+
     // Keys must be alphabetically ordered
     let parsed: serde_json::Value = serde_json::from_str(&json1).unwrap();
     if let Some(obj) = parsed.as_object() {
@@ -255,17 +255,17 @@ fn test_markdown_output_determinism() {
     let explanation = explain_prediction(&prediction);
     let markdown1 = format_markdown(&explanation);
     let markdown2 = format_markdown(&explanation);
-    
+
     // Byte-for-byte identical
     assert_eq!(markdown1, markdown2);
-    
+
     // All lines ≤ 80 chars (except code blocks)
     for line in markdown1.lines() {
         if !line.trim_start().starts_with("```") {
             assert!(line.len() <= 80, "Line exceeds 80 chars: {}", line);
         }
     }
-    
+
     // Only LF newlines
     assert!(!markdown1.contains("\r\n"), "Found CRLF in output");
     assert!(!markdown1.contains("\r"), "Found CR in output");
@@ -330,7 +330,7 @@ pub fn validate_float_determinism(value: f64) -> Result<f64, String> {
 pub fn validate_json_key_ordering(json: &str) -> Result<(), String> {
     let value: serde_json::Value = serde_json::from_str(json)
         .map_err(|e| format!("Invalid JSON: {}", e))?;
-    
+
     validate_object_keys(&value)?;
     Ok(())
 }
@@ -341,14 +341,14 @@ fn validate_object_keys(value: &serde_json::Value) -> Result<(), String> {
             let keys: Vec<&String> = map.keys().collect();
             let mut sorted_keys = keys.clone();
             sorted_keys.sort();
-            
+
             if keys != sorted_keys {
                 return Err(format!(
                     "Keys not sorted: {:?} should be {:?}",
                     keys, sorted_keys
                 ));
             }
-            
+
             // Recursively validate nested objects
             for v in map.values() {
                 validate_object_keys(v)?;
@@ -378,24 +378,24 @@ determinism-check:
       os: [ubuntu-latest, macos-latest, windows-latest]
   steps:
     - uses: actions/checkout@v4
-    
+
     - name: Run determinism tests
       run: |
         cargo test test_cross_platform_determinism
         cargo test test_float_determinism
         cargo test test_parallel_execution_determinism
-    
+
     - name: Generate output hash
       run: |
         cargo run --release -- scan fixtures/test.json > output.json
         sha256sum output.json > hash-${{ matrix.os }}.txt
-    
+
     - name: Upload hash artifact
       uses: actions/upload-artifact@v3
       with:
         name: hashes
         path: hash-${{ matrix.os }}.txt
-  
+
   compare-hashes:
     needs: determinism-check
     runs-on: ubuntu-latest
@@ -403,13 +403,13 @@ determinism-check:
       - uses: actions/download-artifact@v3
         with:
           name: hashes
-      
+
       - name: Compare platform hashes
         run: |
           HASH_LINUX=$(cat hash-ubuntu-latest.txt | cut -d' ' -f1)
           HASH_MACOS=$(cat hash-macos-latest.txt | cut -d' ' -f1)
           HASH_WINDOWS=$(cat hash-windows-latest.txt | cut -d' ' -f1)
-          
+
           if [ "$HASH_LINUX" = "$HASH_MACOS" ] && [ "$HASH_MACOS" = "$HASH_WINDOWS" ]; then
             echo "✅ All platforms produce identical output"
           else
@@ -444,12 +444,12 @@ determinism-check:
 
 ## Success Criteria
 
-✅ **Pass:** All tests produce identical SHA-256 hashes across platforms  
-✅ **Pass:** JSON output keys alphabetically sorted  
-✅ **Pass:** Float math consistent across x86_64/ARM/WASM  
-✅ **Pass:** Parallel execution with 1/2/8 workers produces identical results  
-✅ **Pass:** Multiple runs produce byte-for-byte identical files  
-✅ **Pass:** No entropy sources in dependency tree  
+✅ **Pass:** All tests produce identical SHA-256 hashes across platforms
+✅ **Pass:** JSON output keys alphabetically sorted
+✅ **Pass:** Float math consistent across x86_64/ARM/WASM
+✅ **Pass:** Parallel execution with 1/2/8 workers produces identical results
+✅ **Pass:** Multiple runs produce byte-for-byte identical files
+✅ **Pass:** No entropy sources in dependency tree
 
 ---
 

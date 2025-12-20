@@ -12,7 +12,7 @@ def test_unsupported_resource_blocked():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         # Unsupported resource types (not in costpilot's support matrix)
         unsupported_resources = [
             "AWS::Custom::Resource",
@@ -21,7 +21,7 @@ def test_unsupported_resource_blocked():
             "AWS::IoT::Thing",
             "AWS::Greengrass::Group"
         ]
-        
+
         for resource_type in unsupported_resources:
             template_content = {
                 "Resources": {
@@ -31,7 +31,7 @@ def test_unsupported_resource_blocked():
                     }
                 }
             }
-            
+
             policy_content = {
                 "version": "1.0.0",
                 "rules": [
@@ -43,19 +43,19 @@ def test_unsupported_resource_blocked():
                     }
                 ]
             }
-            
+
             with open(template_path, 'w') as f:
                 json.dump(template_content, f)
-            
+
             with open(policy_path, 'w') as f:
                 json.dump(policy_content, f)
-            
+
             result = subprocess.run(
                 ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path)],
                 capture_output=True,
                 text=True
             )
-            
+
             # Should fail or warn about unsupported type
             if result.returncode == 0:
                 # Check for warning
@@ -69,7 +69,7 @@ def test_supported_resources_allowed():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         # Supported resource types
         supported_resources = [
             "AWS::Lambda::Function",
@@ -78,7 +78,7 @@ def test_supported_resources_allowed():
             "AWS::EC2::Instance",
             "AWS::S3::Bucket"
         ]
-        
+
         for resource_type in supported_resources:
             template_content = {
                 "Resources": {
@@ -88,24 +88,24 @@ def test_supported_resources_allowed():
                     }
                 }
             }
-            
+
             policy_content = {
                 "version": "1.0.0",
                 "rules": []
             }
-            
+
             with open(template_path, 'w') as f:
                 json.dump(template_content, f)
-            
+
             with open(policy_path, 'w') as f:
                 json.dump(policy_content, f)
-            
+
             result = subprocess.run(
                 ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--dry-run"],
                 capture_output=True,
                 text=True
             )
-            
+
             # Should not block on supported type
             if result.returncode != 0:
                 output = result.stdout + result.stderr
@@ -118,7 +118,7 @@ def test_mixed_support_selective_blocking():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "SupportedLambda": {
@@ -133,7 +133,7 @@ def test_mixed_support_selective_blocking():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -145,19 +145,19 @@ def test_mixed_support_selective_blocking():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--dry-run"],
             capture_output=True,
             text=True
         )
-        
+
         # Should process Lambda but skip Custom
         output = result.stdout + result.stderr
         if "Lambda" in output or "Custom" in output:
@@ -172,7 +172,7 @@ def test_unsupported_list_documented():
         capture_output=True,
         text=True
     )
-    
+
     if result.returncode == 0:
         help_text = result.stdout
         # Check for documentation of supported types
@@ -185,7 +185,7 @@ def test_unsupported_produces_error_code():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Unsupported": {
@@ -194,7 +194,7 @@ def test_unsupported_produces_error_code():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -206,19 +206,19 @@ def test_unsupported_produces_error_code():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path)],
             capture_output=True,
             text=True
         )
-        
+
         # Should have non-zero exit code
         if result.returncode != 0:
             assert result.returncode in [1, 2, 3, 4, 5], "Should use standard error code"
@@ -229,7 +229,7 @@ def test_partial_support_warning():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         # Resource with potentially partial support
         template_content = {
             "Resources": {
@@ -241,24 +241,24 @@ def test_partial_support_warning():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": []
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--dry-run"],
             capture_output=True,
             text=True
         )
-        
+
         # Check output for any warnings
         output = result.stdout + result.stderr
         # Validation check

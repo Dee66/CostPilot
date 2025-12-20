@@ -29,14 +29,14 @@ pub use exemption_validator::*;
 
 // Lifecycle exports - PolicyLifecycle from lifecycle module (state machine)
 pub use lifecycle::{
-    PolicyState, StateTransition, ApprovalConfig, ApprovalRequest, 
+    PolicyState, StateTransition, ApprovalConfig, ApprovalRequest,
     ApprovalStatus, LifecycleSummary, LifecycleError,
     PolicyLifecycle as LifecycleStateMachine
 };
 
 // Metadata engine exports - PolicyRule from metadata_engine
 pub use metadata_engine::{
-    MetadataPolicyEngine, PolicyRule as MetadataPolicyRule, 
+    MetadataPolicyEngine, PolicyRule as MetadataPolicyRule,
     MetadataPolicyResult, MetadataPolicyViolation
 };
 
@@ -52,8 +52,8 @@ pub use policy_engine::*;
 
 // Policy history exports - PolicyVersion from policy_history
 pub use policy_history::{
-    PolicyVersion as HistoryPolicyVersion, PolicyContent, 
-    VersionMetadata as HistoryVersionMetadata, PolicyHistory, 
+    PolicyVersion as HistoryPolicyVersion, PolicyContent,
+    VersionMetadata as HistoryVersionMetadata, PolicyHistory,
     VersionDiff, HistoryError
 };
 

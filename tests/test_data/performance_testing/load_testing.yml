@@ -1,0 +1,199 @@
+# CostPilot Performance Testing: Load Testing
+# Test data for load testing scenarios
+
+# Concurrent requests simulation
+concurrent_requests_small:
+  metadata:
+    test_case: "concurrent_requests_small"
+    description: "Small concurrent request load (10 concurrent)"
+    expected_concurrent_users: 10
+    expected_response_time: "< 500ms"
+    expected_memory_usage: "< 100MB"
+  test_plan:
+    duration: "30s"
+    ramp_up: "5s"
+    concurrent_users: 10
+    requests_per_second: 50
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+
+concurrent_requests_medium:
+  metadata:
+    test_case: "concurrent_requests_medium"
+    description: "Medium concurrent request load (50 concurrent)"
+    expected_concurrent_users: 50
+    expected_response_time: "< 1000ms"
+    expected_memory_usage: "< 250MB"
+  test_plan:
+    duration: "60s"
+    ramp_up: "10s"
+    concurrent_users: 50
+    requests_per_second: 200
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.medium"
+            region: "us-east-1"
+
+concurrent_requests_large:
+  metadata:
+    test_case: "concurrent_requests_large"
+    description: "Large concurrent request load (200 concurrent)"
+    expected_concurrent_users: 200
+    expected_response_time: "< 2000ms"
+    expected_memory_usage: "< 500MB"
+  test_plan:
+    duration: "120s"
+    ramp_up: "20s"
+    concurrent_users: 200
+    requests_per_second: 500
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.large"
+            region: "us-east-1"
+
+# Large plans testing
+large_plan_100_resources:
+  metadata:
+    test_case: "large_plan_100_resources"
+    description: "Plan with 100 resources"
+    expected_processing_time: "< 2000ms"
+    expected_memory_usage: "< 150MB"
+  plan:
+    metadata:
+      name: "large-plan-100"
+      version: "1.0"
+    resources:
+      - type: "aws_instance"
+        name: "ec2-001"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+      # ... 99 more similar resources would be generated
+      - type: "aws_instance"
+        name: "ec2-100"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+
+large_plan_1000_resources:
+  metadata:
+    test_case: "large_plan_1000_resources"
+    description: "Plan with 1000 resources"
+    expected_processing_time: "< 10000ms"
+    expected_memory_usage: "< 500MB"
+  plan:
+    metadata:
+      name: "large-plan-1000"
+      version: "1.0"
+    resources: []  # Would contain 1000 resources
+
+large_plan_complex:
+  metadata:
+    test_case: "large_plan_complex"
+    description: "Complex plan with nested resources and dependencies"
+    expected_processing_time: "< 5000ms"
+    expected_memory_usage: "< 300MB"
+  plan:
+    metadata:
+      name: "complex-plan"
+      version: "1.0"
+    resources:
+      - type: "aws_instance"
+        name: "web-server"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.medium"
+          region: "us-east-1"
+        depends_on: ["aws_security_group.web-sg"]
+      - type: "aws_security_group"
+        name: "web-sg"
+        provider: "aws"
+        attributes:
+          description: "Web server security group"
+          region: "us-east-1"
+      # ... many more complex interdependent resources
+
+# Memory usage benchmarks
+memory_usage_baseline:
+  metadata:
+    test_case: "memory_usage_baseline"
+    description: "Baseline memory usage measurement"
+    expected_memory_usage: "< 50MB"
+  test_plan:
+    iterations: 100
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "baseline-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+
+memory_usage_peak:
+  metadata:
+    test_case: "memory_usage_peak"
+    description: "Peak memory usage under load"
+    expected_memory_usage: "< 200MB"
+  test_plan:
+    concurrent_users: 50
+    duration: "60s"
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "peak-memory-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.large"
+            region: "us-east-1"
+
+# Response time benchmarks
+response_time_p95:
+  metadata:
+    test_case: "response_time_p95"
+    description: "95th percentile response time benchmark"
+    expected_p95_response_time: "< 1000ms"
+  test_plan:
+    iterations: 1000
+    concurrent_users: 10
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "response-time-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+
+response_time_p99:
+  metadata:
+    test_case: "response_time_p99"
+    description: "99th percentile response time benchmark"
+    expected_p99_response_time: "< 2000ms"
+  test_plan:
+    iterations: 1000
+    concurrent_users: 20
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "response-time-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.medium"
+            region: "us-east-1"

@@ -311,7 +311,7 @@ mod tests {
         assert!(result.is_err());
         let err_msg = result.unwrap_err();
         println!("Actual error: {}", err_msg);
-        assert!(err_msg.contains("Not in a git repository") || 
+        assert!(err_msg.contains("Not in a git repository") ||
                 err_msg.contains("Failed to run git") ||
                 err_msg.contains("Package verification failed"));
     }
@@ -431,13 +431,13 @@ mod tests {
         // Temporarily move any existing config file
         let config_path = get_config_path().unwrap();
         let backup_path = config_path.with_extension("json.backup");
-        
+
         let _moved = if config_path.exists() {
             std::fs::rename(&config_path, &backup_path).ok()
         } else {
             None
         };
-        
+
         let result = load_escrow_config();
         assert!(result.is_ok());
         let config = result.unwrap();
@@ -445,7 +445,7 @@ mod tests {
         assert_eq!(config.vendor.contact_email, "support@costpilot.io");
         assert_eq!(config.vendor.support_url, "https://costpilot.io/support");
         assert!(config.escrow_agent.is_none());
-        
+
         // Restore the config file if it was moved
         if backup_path.exists() {
             let _ = std::fs::rename(&backup_path, &config_path);

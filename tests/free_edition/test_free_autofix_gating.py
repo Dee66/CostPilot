@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: autofix command not present."""
 
 import subprocess
@@ -10,15 +12,15 @@ import json
 def test_autofix_command_not_present():
     """Test autofix command not available in Free Edition."""
     result = subprocess.run(
-        ["costpilot", "autofix", "--help"],
+        [COSTPILOT_PATH, "autofix-patch", "--help"],
         capture_output=True,
         text=True,
         timeout=10
     )
-    
+
     # Should fail - autofix not available in Free
     assert result.returncode != 0, "autofix command should not exist in Free Edition"
-    
+
     # Check error message
     error = result.stderr.lower()
     assert "not found" in error or "unknown" in error or "free" in error or "premium" in error, \
@@ -29,7 +31,7 @@ def test_autofix_with_template_rejected():
     """Test autofix with template is rejected."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -40,17 +42,17 @@ def test_autofix_with_template_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "autofix", "--plan", str(template_path)],
+            [COSTPILOT_PATH, "autofix", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         assert result.returncode != 0, "autofix should be rejected"
 
@@ -58,12 +60,12 @@ def test_autofix_with_template_rejected():
 def test_autofix_not_in_help():
     """Test autofix not listed in help."""
     result = subprocess.run(
-        ["costpilot", "--help"],
+        [COSTPILOT_PATH, "--help"],
         capture_output=True,
         text=True,
         timeout=10
     )
-    
+
     # autofix should not appear in help
     assert "autofix" not in result.stdout.lower(), "autofix should not be in help"
 
@@ -71,11 +73,11 @@ def test_autofix_not_in_help():
 def test_autofix_subcommand_rejected():
     """Test autofix subcommand variations rejected."""
     commands = [
-        ["costpilot", "autofix"],
-        ["costpilot", "auto-fix"],
-        ["costpilot", "fix", "--auto"],
+        [COSTPILOT_PATH, "autofix"],
+        [COSTPILOT_PATH, "auto-fix"],
+        [COSTPILOT_PATH, "fix", "--auto"],
     ]
-    
+
     for cmd in commands:
         result = subprocess.run(
             cmd,
@@ -83,7 +85,7 @@ def test_autofix_subcommand_rejected():
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         assert result.returncode != 0, f"Command {cmd} should be rejected"
 
@@ -92,7 +94,7 @@ def test_autofix_with_apply_rejected():
     """Test autofix with --apply flag rejected."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -103,17 +105,17 @@ def test_autofix_with_apply_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "autofix", "--plan", str(template_path), "--apply"],
+            [COSTPILOT_PATH, "autofix", "--plan", str(template_path), "--apply"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         assert result.returncode != 0, "autofix --apply should be rejected"
 

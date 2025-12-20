@@ -30,7 +30,7 @@ pub fn hkdf_derive(key_material: &str, salt: &[u8], info: &[u8]) -> [u8; 32] {
 pub fn aes_gcm_decrypt(key: &[u8; 32], nonce: &[u8; 12], ciphertext: &[u8]) -> Result<Vec<u8>, String> {
     let cipher = Aes256Gcm::new(key.into());
     let nonce = AesNonce::from_slice(nonce);
-    
+
     cipher
         .decrypt(nonce, ciphertext)
         .map_err(|_| "AES-GCM decryption failed".to_string())

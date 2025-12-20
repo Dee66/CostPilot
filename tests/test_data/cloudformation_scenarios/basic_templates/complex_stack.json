@@ -1,0 +1,499 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Complex CloudFormation template with multi-resource stack for CostPilot testing",
+
+  "Parameters": {
+    "VpcCidr": {
+      "Type": "String",
+      "Default": "10.0.0.0/16",
+      "Description": "CIDR block for the VPC"
+    },
+    "PublicSubnetCidr": {
+      "Type": "String",
+      "Default": "10.0.1.0/24",
+      "Description": "CIDR block for the public subnet"
+    },
+    "PrivateSubnetCidr": {
+      "Type": "String",
+      "Default": "10.0.2.0/24",
+      "Description": "CIDR block for the private subnet"
+    },
+    "DBInstanceClass": {
+      "Type": "String",
+      "Default": "db.t3.micro",
+      "AllowedValues": ["db.t3.micro", "db.t3.small", "db.t3.medium"],
+      "Description": "RDS instance class"
+    },
+    "DBPassword": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "Password for the database"
+    }
+  },
+
+  "Resources": {
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": { "Ref": "VpcCidr" },
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-VPC"
+          },
+          {
+            "Key": "Environment",
+            "Value": "Test"
+          }
+        ]
+      }
+    },
+
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-IGW"
+          }
+        ]
+      }
+    },
+
+    "VPCGatewayAttachment": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": { "Ref": "VPC" },
+        "InternetGatewayId": { "Ref": "InternetGateway" }
+      }
+    },
+
+    "PublicSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "VPC" },
+        "CidrBlock": { "Ref": "PublicSubnetCidr" },
+        "AvailabilityZone": { "Fn::Select": [0, { "Fn::GetAZs": "" }] },
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-Public-Subnet"
+          }
+        ]
+      }
+    },
+
+    "PrivateSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "VPC" },
+        "CidrBlock": { "Ref": "PrivateSubnetCidr" },
+        "AvailabilityZone": { "Fn::Select": [0, { "Fn::GetAZs": "" }] },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-Private-Subnet"
+          }
+        ]
+      }
+    },
+
+    "PublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "VPC" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-Public-RouteTable"
+          }
+        ]
+      }
+    },
+
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": { "Ref": "PublicRouteTable" },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": { "Ref": "InternetGateway" }
+      },
+      "DependsOn": "VPCGatewayAttachment"
+    },
+
+    "PublicSubnetRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": { "Ref": "PublicSubnet" },
+        "RouteTableId": { "Ref": "PublicRouteTable" }
+      }
+    },
+
+    "NatGateway": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": { "Fn::GetAtt": ["NatEIP", "AllocationId"] },
+        "SubnetId": { "Ref": "PublicSubnet" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-NAT-Gateway"
+          }
+        ]
+      }
+    },
+
+    "NatEIP": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-NAT-EIP"
+          }
+        ]
+      }
+    },
+
+    "PrivateRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "VPC" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-Private-RouteTable"
+          }
+        ]
+      }
+    },
+
+    "PrivateRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": { "Ref": "PrivateRouteTable" },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": { "Ref": "NatGateway" }
+      }
+    },
+
+    "PrivateSubnetRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": { "Ref": "PrivateSubnet" },
+        "RouteTableId": { "Ref": "PrivateRouteTable" }
+      }
+    },
+
+    "ApplicationLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": "complex-alb",
+        "Type": "application",
+        "Scheme": "internet-facing",
+        "IpAddressType": "ipv4",
+        "Subnets": [{ "Ref": "PublicSubnet" }],
+        "SecurityGroups": [{ "Ref": "ALBSecurityGroup" }],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-ALB"
+          }
+        ]
+      }
+    },
+
+    "ALBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for ALB",
+        "VpcId": { "Ref": "VPC" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-ALB-SG"
+          }
+        ]
+      }
+    },
+
+    "ALBListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "LoadBalancerArn": { "Ref": "ApplicationLoadBalancer" },
+        "Protocol": "HTTP",
+        "Port": 80,
+        "DefaultActions": [
+          {
+            "Type": "fixed-response",
+            "FixedResponseConfig": {
+              "StatusCode": "200",
+              "ContentType": "text/plain",
+              "MessageBody": "Hello from Complex Stack"
+            }
+          }
+        ]
+      }
+    },
+
+    "AutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AutoScalingGroupName": "complex-asg",
+        "LaunchTemplate": {
+          "LaunchTemplateId": { "Ref": "LaunchTemplate" },
+          "Version": "$Latest"
+        },
+        "MinSize": "2",
+        "MaxSize": "10",
+        "DesiredCapacity": "3",
+        "VPCZoneIdentifier": [{ "Ref": "PrivateSubnet" }],
+        "TargetGroupARNs": [{ "Ref": "TargetGroup" }],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-ASG-Instance",
+            "PropagateAtLaunch": true
+          }
+        ]
+      }
+    },
+
+    "LaunchTemplate": {
+      "Type": "AWS::EC2::LaunchTemplate",
+      "Properties": {
+        "LaunchTemplateName": "complex-lt",
+        "LaunchTemplateData": {
+          "ImageId": "ami-0c55b159cbfafe1d0",
+          "InstanceType": "t3.micro",
+          "SecurityGroupIds": [{ "Ref": "InstanceSecurityGroup" }],
+          "UserData": { "Fn::Base64": { "Fn::Sub": "#!/bin/bash\necho 'Complex stack instance' > /tmp/complex.txt" } },
+          "TagSpecifications": [
+            {
+              "ResourceType": "instance",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "Complex-LT-Instance"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+
+    "InstanceSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for EC2 instances",
+        "VpcId": { "Ref": "VPC" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "SourceSecurityGroupId": { "Ref": "ALBSecurityGroup" }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-Instance-SG"
+          }
+        ]
+      }
+    },
+
+    "TargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "Name": "complex-tg",
+        "Protocol": "HTTP",
+        "Port": 80,
+        "VpcId": { "Ref": "VPC" },
+        "TargetType": "instance",
+        "HealthCheckPath": "/",
+        "HealthCheckIntervalSeconds": 30,
+        "HealthyThresholdCount": 2,
+        "UnhealthyThresholdCount": 2
+      }
+    },
+
+    "RDSInstance": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBInstanceIdentifier": "complex-db",
+        "DBInstanceClass": { "Ref": "DBInstanceClass" },
+        "Engine": "mysql",
+        "EngineVersion": "8.0",
+        "MasterUsername": "admin",
+        "MasterUserPassword": { "Ref": "DBPassword" },
+        "AllocatedStorage": "20",
+        "StorageType": "gp2",
+        "DBSubnetGroupName": { "Ref": "DBSubnetGroup" },
+        "VPCSecurityGroups": [{ "Ref": "DBSecurityGroup" }],
+        "BackupRetentionPeriod": 7,
+        "MultiAZ": false,
+        "StorageEncrypted": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-RDS-Instance"
+          }
+        ]
+      }
+    },
+
+    "DBSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnet group for RDS instance",
+        "SubnetIds": [{ "Ref": "PrivateSubnet" }],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-DB-Subnet-Group"
+          }
+        ]
+      }
+    },
+
+    "DBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for RDS instance",
+        "VpcId": { "Ref": "VPC" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3306",
+            "ToPort": "3306",
+            "SourceSecurityGroupId": { "Ref": "InstanceSecurityGroup" }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-DB-SG"
+          }
+        ]
+      }
+    },
+
+    "ElastiCacheCluster": {
+      "Type": "AWS::ElastiCache::CacheCluster",
+      "Properties": {
+        "CacheNodeType": "cache.t3.micro",
+        "Engine": "redis",
+        "NumCacheNodes": 1,
+        "CacheSubnetGroupName": { "Ref": "CacheSubnetGroup" },
+        "VpcSecurityGroupIds": [{ "Ref": "CacheSecurityGroup" }],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-ElastiCache-Cluster"
+          }
+        ]
+      }
+    },
+
+    "CacheSubnetGroup": {
+      "Type": "AWS::ElastiCache::SubnetGroup",
+      "Properties": {
+        "Description": "Subnet group for ElastiCache cluster",
+        "SubnetIds": [{ "Ref": "PrivateSubnet" }],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-Cache-Subnet-Group"
+          }
+        ]
+      }
+    },
+
+    "CacheSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for ElastiCache cluster",
+        "VpcId": { "Ref": "VPC" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "6379",
+            "ToPort": "6379",
+            "SourceSecurityGroupId": { "Ref": "InstanceSecurityGroup" }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Complex-Cache-SG"
+          }
+        ]
+      }
+    },
+
+    "CloudWatchAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "complex-cpu-alarm",
+        "AlarmDescription": "Alarm for high CPU utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": 300,
+        "Threshold": 80,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": 2,
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": { "Ref": "AutoScalingGroup" }
+          }
+        ]
+      }
+    }
+  },
+
+  "Outputs": {
+    "VpcId": {
+      "Description": "VPC ID",
+      "Value": { "Ref": "VPC" },
+      "Export": {
+        "Name": "ComplexVpcId"
+      }
+    },
+    "LoadBalancerDNS": {
+      "Description": "DNS name of the load balancer",
+      "Value": { "Fn::GetAtt": ["ApplicationLoadBalancer", "DNSName"] }
+    },
+    "RDSInstanceEndpoint": {
+      "Description": "RDS instance endpoint",
+      "Value": { "Fn::GetAtt": ["RDSInstance", "Endpoint.Address"] }
+    },
+    "ElastiCacheEndpoint": {
+      "Description": "ElastiCache cluster endpoint",
+      "Value": { "Fn::GetAtt": ["ElastiCacheCluster", "RedisEndpoint.Address"] }
+    }
+  }
+}

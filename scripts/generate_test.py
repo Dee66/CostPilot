@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 
 UNIT_TEMPLATE = '''/// Unit tests for {module_name}
-/// 
+///
 /// {description}
 
 #[cfg(test)]
@@ -41,7 +41,7 @@ mod {test_name}_tests {{
 '''
 
 INTEGRATION_TEMPLATE = '''/// Integration tests for {module_name}
-/// 
+///
 /// {description}
 
 #[cfg(test)]
@@ -67,7 +67,7 @@ mod {test_name}_tests {{
 '''
 
 E2E_TEMPLATE = '''/// End-to-end tests for {module_name}
-/// 
+///
 /// {description}
 
 #[cfg(test)]
@@ -99,7 +99,7 @@ mod {test_name}_tests {{
 '''
 
 PROPERTY_TEMPLATE = '''/// Property-based tests for {module_name}
-/// 
+///
 /// {description}
 
 #[cfg(test)]
@@ -117,7 +117,7 @@ mod {test_name}_properties {{
 '''
 
 SNAPSHOT_TEMPLATE = '''/// Snapshot tests for {module_name}
-/// 
+///
 /// {description}
 
 #[cfg(test)]
@@ -135,7 +135,7 @@ mod {test_name}_snapshots {{
 
 def generate_test(test_type: str, module_name: str, test_name: str):
     """Generate a test file from template"""
-    
+
     templates = {
         'unit': (UNIT_TEMPLATE, 'tests/unit'),
         'integration': (INTEGRATION_TEMPLATE, 'tests/integration'),
@@ -143,37 +143,37 @@ def generate_test(test_type: str, module_name: str, test_name: str):
         'property': (PROPERTY_TEMPLATE, 'tests/property'),
         'snapshot': (SNAPSHOT_TEMPLATE, 'tests/snapshot'),
     }
-    
+
     if test_type not in templates:
         print(f"❌ Unknown test type: {test_type}")
         print(f"   Available: {', '.join(templates.keys())}")
         sys.exit(1)
-    
+
     template, base_dir = templates[test_type]
-    
+
     # Generate description
     description = f"Tests for {module_name} module"
-    
+
     # Fill template
     content = template.format(
         module_name=module_name,
         test_name=test_name,
         description=description
     )
-    
+
     # Determine output path
     output_dir = Path(base_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     output_file = output_dir / f"{test_name}.rs"
-    
+
     if output_file.exists():
         print(f"⚠️  File already exists: {output_file}")
         response = input("   Overwrite? (y/N): ")
         if response.lower() != 'y':
             print("   Cancelled")
             sys.exit(0)
-    
+
     # Write file
     output_file.write_text(content)
     print(f"✅ Created: {output_file}")
@@ -208,11 +208,11 @@ def main():
     if len(sys.argv) != 4:
         show_usage()
         sys.exit(1)
-    
+
     test_type = sys.argv[1]
     module_name = sys.argv[2]
     test_name = sys.argv[3]
-    
+
     generate_test(test_type, module_name, test_name)
 
 if __name__ == '__main__':

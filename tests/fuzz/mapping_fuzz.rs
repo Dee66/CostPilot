@@ -97,11 +97,11 @@ mod mapping_fuzz_tests {
                 monthly_cost: cost,
                 dependencies: vec![id.clone()],
             };
-            
+
             let graph = DependencyGraph {
                 nodes: vec![node],
             };
-            
+
             // Self-references should be detected as cycles
             let _ = graph.has_cycle();
         }
@@ -117,11 +117,11 @@ mod mapping_fuzz_tests {
                 monthly_cost: 100.0,
                 dependencies: deps,
             };
-            
+
             let graph = DependencyGraph {
                 nodes: vec![node],
             };
-            
+
             let _ = graph.validate();
         }
 
@@ -135,11 +135,11 @@ mod mapping_fuzz_tests {
                 monthly_cost: cost.abs(),
                 dependencies: vec![],
             };
-            
+
             let graph = DependencyGraph {
                 nodes: vec![node],
             };
-            
+
             let _ = graph.validate();
         }
     }

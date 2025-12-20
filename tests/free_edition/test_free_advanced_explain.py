@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: advanced explain modes rejected."""
 
 import subprocess
@@ -13,7 +15,7 @@ def test_verbose_flag_rejected():
     """Test --verbose flag rejected in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -24,17 +26,17 @@ def test_verbose_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "explain", "all", "--plan", str(template_path), "--verbose"],
+            [COSTPILOT_PATH, "explain", "all", "--plan", str(template_path), "--verbose"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail or ignore
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -46,7 +48,7 @@ def test_deep_flag_rejected():
     """Test --deep flag rejected in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -57,17 +59,17 @@ def test_deep_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "explain", "all", "--plan", str(template_path), "--deep"],
+            [COSTPILOT_PATH, "explain", "all", "--plan", str(template_path), "--deep"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -79,7 +81,7 @@ def test_detailed_flag_rejected():
     """Test --detailed flag rejected in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -90,17 +92,17 @@ def test_detailed_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "explain", "all", "--plan", str(template_path), "--detailed"],
+            [COSTPILOT_PATH, "explain", "all", "--plan", str(template_path), "--detailed"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -112,7 +114,7 @@ def test_advanced_flag_rejected():
     """Test --advanced flag rejected in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -123,17 +125,17 @@ def test_advanced_flag_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "explain", "all", "--plan", str(template_path), "--advanced"],
+            [COSTPILOT_PATH, "explain", "all", "--plan", str(template_path), "--advanced"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -145,7 +147,7 @@ def test_explain_mode_pro_rejected():
     """Test explain with --mode pro rejected."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -156,17 +158,17 @@ def test_explain_mode_pro_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "explain", "all", "--plan", str(template_path), "--mode", "pro"],
+            [COSTPILOT_PATH, "explain", "all", "--plan", str(template_path), "--mode", "pro"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -178,7 +180,7 @@ def test_basic_explain_allowed():
     """Test basic explain without flags is allowed."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -189,17 +191,17 @@ def test_basic_explain_allowed():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "explain", "all", "--plan", str(template_path)],
+            [COSTPILOT_PATH, "explain", "all", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Basic explain should work (or explain command might not exist)
         # This test documents expected behavior
         assert result.returncode in [0, 1, 2, 101], "Basic explain behavior"

@@ -1,0 +1,122 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Parent CloudFormation template with nested stacks for CostPilot testing",
+
+  "Parameters": {
+    "Environment": {
+      "Type": "String",
+      "Default": "test",
+      "AllowedValues": ["dev", "test", "prod"],
+      "Description": "Environment name"
+    }
+  },
+
+  "Resources": {
+    "VpcStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./vpc-stack.json",
+        "Parameters": {
+          "Environment": { "Ref": "Environment" },
+          "VpcCidr": "10.1.0.0/16"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Nested-VPC-Stack"
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "SecurityStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./security-stack.json",
+        "Parameters": {
+          "Environment": { "Ref": "Environment" },
+          "VpcId": { "Fn::GetAtt": ["VpcStack", "Outputs.VpcId"] }
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Nested-Security-Stack"
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "ComputeStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./compute-stack.json",
+        "Parameters": {
+          "Environment": { "Ref": "Environment" },
+          "VpcId": { "Fn::GetAtt": ["VpcStack", "Outputs.VpcId"] },
+          "PublicSubnetId": { "Fn::GetAtt": ["VpcStack", "Outputs.PublicSubnetId"] },
+          "PrivateSubnetId": { "Fn::GetAtt": ["VpcStack", "Outputs.PrivateSubnetId"] },
+          "SecurityGroupId": { "Fn::GetAtt": ["SecurityStack", "Outputs.SecurityGroupId"] }
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Nested-Compute-Stack"
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "DatabaseStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./database-stack.json",
+        "Parameters": {
+          "Environment": { "Ref": "Environment" },
+          "VpcId": { "Fn::GetAtt": ["VpcStack", "Outputs.VpcId"] },
+          "PrivateSubnetId": { "Fn::GetAtt": ["VpcStack", "Outputs.PrivateSubnetId"] },
+          "DBSecurityGroupId": { "Fn::GetAtt": ["SecurityStack", "Outputs.DBSecurityGroupId"] }
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Nested-Database-Stack"
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    }
+  },
+
+  "Outputs": {
+    "VpcId": {
+      "Description": "VPC ID from VPC stack",
+      "Value": { "Fn::GetAtt": ["VpcStack", "Outputs.VpcId"] },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-VpcId" }
+      }
+    },
+    "LoadBalancerDNS": {
+      "Description": "Load Balancer DNS from compute stack",
+      "Value": { "Fn::GetAtt": ["ComputeStack", "Outputs.LoadBalancerDNS"] }
+    },
+    "DatabaseEndpoint": {
+      "Description": "Database endpoint from database stack",
+      "Value": { "Fn::GetAtt": ["DatabaseStack", "Outputs.DatabaseEndpoint"] }
+    }
+  }
+}

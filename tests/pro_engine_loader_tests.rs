@@ -186,7 +186,7 @@ fn test_signature_tamper_detected() {
 
     // Create bundle and tamper with ciphertext
     let mut bundle_bytes = create_test_bundle(&wasm_bytes, &license, &signing_key);
-    
+
     // Tamper: flip a bit in ciphertext region (after metadata+nonce, before signature)
     let tamper_offset = 100; // somewhere in the middle
     if bundle_bytes.len() > tamper_offset + 64 {

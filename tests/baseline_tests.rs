@@ -16,12 +16,12 @@ fn test_baseline_within_variance() {
         reference: None,
         tags: HashMap::new(),
     };
-    
+
     // Actual cost within 10% variance
     let actual_cost = 105.0;
     let variance = ((actual_cost - baseline.expected_monthly_cost) / baseline.expected_monthly_cost).abs() * 100.0;
-    
-    assert!(variance <= baseline.acceptable_variance_percent, 
+
+    assert!(variance <= baseline.acceptable_variance_percent,
         "Cost {} should be within {}% of {}", actual_cost, baseline.acceptable_variance_percent, baseline.expected_monthly_cost);
 }
 
@@ -37,19 +37,19 @@ fn test_baseline_exceeds_variance() {
         reference: None,
         tags: HashMap::new(),
     };
-    
+
     // Actual cost exceeds 10% variance
     let actual_cost = 120.0;
     let variance = ((actual_cost - baseline.expected_monthly_cost) / baseline.expected_monthly_cost).abs() * 100.0;
-    
-    assert!(variance > baseline.acceptable_variance_percent, 
+
+    assert!(variance > baseline.acceptable_variance_percent,
         "Cost {} should exceed {}% variance from {}", actual_cost, baseline.acceptable_variance_percent, baseline.expected_monthly_cost);
 }
 
 #[test]
 fn test_baselines_manager_loads_config() {
     use std::collections::HashMap;
-    
+
     let config = costpilot::engines::baselines::BaselinesConfig {
         version: "1.0".to_string(),
         global: None,
@@ -57,9 +57,9 @@ fn test_baselines_manager_loads_config() {
         services: HashMap::new(),
         metadata: None,
     };
-    
+
     let manager = BaselinesManager::from_config(config);
-    
+
     // Manager should initialize without error
     // TODO: Add meaningful validation checks for baseline manager
     assert!(true, "Manager initialized successfully");

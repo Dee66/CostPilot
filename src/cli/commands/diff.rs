@@ -249,9 +249,9 @@ mod tests {
         let temp = TempDir::new().unwrap();
         let before_path = temp.path().join("missing_before.json");
         let after_path = create_mock_plan(&temp, "after.json", "{}");
-        
+
         let edition = edition::premium();
-        
+
         let result = execute(before_path, after_path, "text", false, &edition);
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
@@ -264,9 +264,9 @@ mod tests {
         let temp = TempDir::new().unwrap();
         let before_path = create_mock_plan(&temp, "before.json", "{}");
         let after_path = temp.path().join("missing_after.json");
-        
+
         let edition = edition::premium();
-        
+
         let result = execute(before_path, after_path, "text", false, &edition);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("After plan not found"));
@@ -277,9 +277,9 @@ mod tests {
         let temp = TempDir::new().unwrap();
         let before_path = create_mock_plan(&temp, "before.json", "{}");
         let after_path = create_mock_plan(&temp, "after.json", "{}");
-        
+
         let edition = EditionContext::free();
-        
+
         let result = execute(before_path, after_path, "text", false, &edition);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Premium"));

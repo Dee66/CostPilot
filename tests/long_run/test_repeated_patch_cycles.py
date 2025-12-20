@@ -13,7 +13,7 @@ def test_repeated_patch_cycles():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         # Initial template with violations
         template_content = {
             "Resources": {
@@ -33,7 +33,7 @@ def test_repeated_patch_cycles():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -57,13 +57,13 @@ def test_repeated_patch_cycles():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Apply patches 100 times
         for cycle in range(100):
             result = subprocess.run(
@@ -72,16 +72,16 @@ def test_repeated_patch_cycles():
                 text=True,
                 timeout=30
             )
-            
+
             # Should complete
             assert result.returncode in [0, 1, 2, 101], f"Patch cycle {cycle} failed"
-            
+
             # After first fix, subsequent runs should be no-ops
             if cycle > 0:
                 # Check that template is stable
                 with open(template_path, 'r') as f:
                     current = json.load(f)
-                
+
                 # Memory should be fixed at 3008
                 assert current["Resources"]["Lambda1"]["Properties"]["MemorySize"] <= 3008, \
                     "Patch should stabilize"
@@ -92,7 +92,7 @@ def test_patch_convergence():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -103,7 +103,7 @@ def test_patch_convergence():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -118,13 +118,13 @@ def test_patch_convergence():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Apply patch
         result1 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--apply"],
@@ -132,7 +132,7 @@ def test_patch_convergence():
             text=True,
             timeout=30
         )
-        
+
         # Apply again (should be no-op)
         result2 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--apply"],
@@ -140,7 +140,7 @@ def test_patch_convergence():
             text=True,
             timeout=30
         )
-        
+
         # Apply third time (should still be no-op)
         result3 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--apply"],
@@ -148,7 +148,7 @@ def test_patch_convergence():
             text=True,
             timeout=30
         )
-        
+
         # All should complete successfully
         assert result1.returncode in [0, 1, 2, 101], "First patch should complete"
         assert result2.returncode in [0, 1, 2, 101], "Second patch should complete"
@@ -160,7 +160,7 @@ def test_patch_no_oscillation():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -171,7 +171,7 @@ def test_patch_no_oscillation():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -186,16 +186,16 @@ def test_patch_no_oscillation():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Apply patch and record states
         states = []
-        
+
         for _ in range(10):
             result = subprocess.run(
                 ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--apply"],
@@ -203,14 +203,14 @@ def test_patch_no_oscillation():
                 text=True,
                 timeout=30
             )
-            
+
             if template_path.exists():
                 with open(template_path, 'r') as f:
                     current = json.load(f)
-                
+
                 memory = current["Resources"]["Lambda"]["Properties"]["MemorySize"]
                 states.append(memory)
-        
+
         # After first fix, should stabilize
         if len(states) > 1:
             # All subsequent states should be same
@@ -224,7 +224,7 @@ def test_multiple_resources_patch_stability():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 f"Lambda{i}": {
@@ -236,7 +236,7 @@ def test_multiple_resources_patch_stability():
                 for i in range(50)
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -251,13 +251,13 @@ def test_multiple_resources_patch_stability():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Apply patches repeatedly
         for cycle in range(20):
             result = subprocess.run(
@@ -266,7 +266,7 @@ def test_multiple_resources_patch_stability():
                 text=True,
                 timeout=60
             )
-            
+
             assert result.returncode in [0, 1, 2, 101], f"Patch cycle {cycle} should complete"
 
 
@@ -275,7 +275,7 @@ def test_patch_preserves_other_properties():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -289,7 +289,7 @@ def test_patch_preserves_other_properties():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -304,13 +304,13 @@ def test_patch_preserves_other_properties():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Apply patch
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--apply"],
@@ -318,13 +318,13 @@ def test_patch_preserves_other_properties():
             text=True,
             timeout=30
         )
-        
+
         if template_path.exists():
             with open(template_path, 'r') as f:
                 fixed = json.load(f)
-            
+
             props = fixed["Resources"]["Lambda"]["Properties"]
-            
+
             # Other properties should be preserved
             assert props.get("Timeout") == 300, "Timeout should be preserved"
             assert props.get("Runtime") == "python3.9", "Runtime should be preserved"

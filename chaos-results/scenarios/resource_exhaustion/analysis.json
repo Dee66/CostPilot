@@ -1,0 +1,8 @@
+{
+  "scenario_name": "resource_exhaustion",
+  "metrics_collected": 31,
+  "average_cpu_usage": 40,
+  "average_memory_usage": 44,
+  "max_errors_detected": 9,
+  "chaos_resilience_score": 75
+}

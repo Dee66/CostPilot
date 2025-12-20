@@ -241,10 +241,10 @@ impl PredictionEngine {
     pub fn predict_with_uncertainty(&self, change: &ResourceChange) -> Result<ProbabilisticEstimate> {
         // 1. Get base deterministic estimate
         let base_estimate = self.predict_resource(change)?;
-        
+
         // 2. Calculate confidence
         let confidence = calculate_confidence(change, false, &change.resource_type);
-        
+
         // 3. Generate probabilistic estimate
         let predictor = ProbabilisticPredictor::new(
             base_estimate.monthly_cost,
@@ -252,7 +252,7 @@ impl PredictionEngine {
             change.resource_type.clone(),
             false,
         );
-        
+
         predictor.generate_estimate(&change.resource_id)
     }
 }
@@ -314,7 +314,7 @@ let estimate = predictor.generate_estimate("aws_eks_cluster.prod")?;
 if estimate.is_high_risk() {
     println!("⚠️  HIGH RISK DEPLOYMENT");
     println!("Cost at Risk: ${:.2}", estimate.p90_monthly_cost - estimate.median_monthly_cost);
-    
+
     for factor in &estimate.uncertainty_factors {
         println!("  - {}: {:.0}% impact", factor.name, factor.impact * 100.0);
     }
@@ -369,7 +369,7 @@ let estimate = predictor.generate_estimate("aws_instance.app")?;
 let scenarios = estimate.to_scenario_analysis();
 
 for scenario_result in &scenarios.scenarios {
-    println!("{:?}: ${:.2}/mo ({})", 
+    println!("{:?}: ${:.2}/mo ({})",
         scenario_result.scenario,
         scenario_result.monthly_cost,
         scenario_result.description
@@ -397,21 +397,21 @@ Recommended: Expected
 # costpilot.yaml
 advanced_prediction:
   enabled: true
-  
+
   probabilistic:
     default_confidence: 0.8
     simulation_runs: 10000
-  
+
   seasonality:
     enabled: true
     min_data_points: 30
     significance_threshold: 0.15
-  
+
   monte_carlo:
     enabled: false  # Expensive, on-demand only
     default_runs: 10000
     histogram_bins: 20
-    
+
   risk_thresholds:
     low: 0.15      # CoV < 0.15
     moderate: 0.30  # 0.15 <= CoV < 0.30
@@ -469,20 +469,20 @@ fn test_full_advanced_prediction_workflow() {
     // 1. Base prediction
     let engine = PredictionEngine::new();
     let base = engine.predict(&changes)?;
-    
+
     // 2. Probabilistic enhancement
     let prob = ProbabilisticPredictor::new(base.monthly_cost, 0.85, "aws_instance".to_string(), false);
     let estimate = prob.generate_estimate("test")?;
-    
+
     // 3. Seasonality adjustment
     let detector = SeasonalityDetector::new().with_data(historical);
     let seasonality = detector.detect_seasonality()?;
     let adjusted = SeasonalAdjustedPrediction::new(estimate.median_monthly_cost, seasonality);
-    
+
     // 4. Monte Carlo validation
     let simulator = MonteCarloSimulator::new(1000);
     let mc_result = simulator.simulate(&uncertainty_inputs)?;
-    
+
     // Verify consistency
     assert!((mc_result.median_cost - adjusted.adjusted_cost).abs() < 10.0);
 }

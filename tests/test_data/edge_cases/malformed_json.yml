@@ -1,0 +1,92 @@
+# CostPilot Edge Case: Malformed JSON
+# Test data for handling malformed JSON inputs
+
+# Missing closing brace
+missing_closing_brace:
+  metadata:
+    test_case: "missing_closing_brace"
+    description: "JSON missing closing brace"
+    expected_behavior: "parse_error"
+  json: '{"plan": {"resources": [{"type": "aws_instance", "name": "test"'
+  error_type: "SyntaxError"
+
+# Extra comma at end
+trailing_comma:
+  metadata:
+    test_case: "trailing_comma"
+    description: "JSON with trailing comma"
+    expected_behavior: "parse_error"
+  json: '{"plan": {"resources": [{"type": "aws_instance", "name": "test",}]}}'
+  error_type: "SyntaxError"
+
+# Unclosed string
+unclosed_string:
+  metadata:
+    test_case: "unclosed_string"
+    description: "JSON with unclosed string"
+    expected_behavior: "parse_error"
+  json: '{"plan": {"resources": [{"type": "aws_instance", "name": "test"}]}'
+  error_type: "SyntaxError"
+
+# Invalid escape sequence
+invalid_escape:
+  metadata:
+    test_case: "invalid_escape"
+    description: "JSON with invalid escape sequence"
+    expected_behavior: "parse_error"
+  json: '{"plan": {"resources": [{"type": "aws_instance", "name": "test\x"}]}}'
+  error_type: "SyntaxError"
+
+# Missing colon
+missing_colon:
+  metadata:
+    test_case: "missing_colon"
+    description: "JSON missing colon separator"
+    expected_behavior: "parse_error"
+  json: '{"plan" {"resources": []}}'
+  error_type: "SyntaxError"
+
+# Nested object not closed
+nested_unclosed:
+  metadata:
+    test_case: "nested_unclosed"
+    description: "JSON with unclosed nested object"
+    expected_behavior: "parse_error"
+  json: '{"plan": {"metadata": {"name": "test", "version": "1.0"}, "resources": [{"type": "aws_instance"'
+  error_type: "SyntaxError"
+
+# Array not closed
+array_unclosed:
+  metadata:
+    test_case: "array_unclosed"
+    description: "JSON with unclosed array"
+    expected_behavior: "parse_error"
+  json: '{"plan": {"resources": [{"type": "aws_instance", "name": "test"'
+  error_type: "SyntaxError"
+
+# Invalid number format
+invalid_number:
+  metadata:
+    test_case: "invalid_number"
+    description: "JSON with invalid number format"
+    expected_behavior: "parse_error"
+  json: '{"plan": {"resources": [], "cost": 123.45.67}}'
+  error_type: "SyntaxError"
+
+# Duplicate keys
+duplicate_keys:
+  metadata:
+    test_case: "duplicate_keys"
+    description: "JSON with duplicate keys"
+    expected_behavior: "parse_success_with_warning"
+  json: '{"plan": {"resources": []}, "plan": {"metadata": {}}}'
+  error_type: "DuplicateKeyWarning"
+
+# Empty JSON
+empty_json:
+  metadata:
+    test_case: "empty_json"
+    description: "Completely empty JSON"
+    expected_behavior: "parse_error"
+  json: ""
+  error_type: "SyntaxError"

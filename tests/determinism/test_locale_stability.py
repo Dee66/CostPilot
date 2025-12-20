@@ -14,9 +14,9 @@ import os
 
 def test_locale_stability():
     """Test that output is stable across locales."""
-    
+
     print("Testing locale stability...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -28,32 +28,32 @@ def test_locale_stability():
         }
         json.dump(template, f)
         f.flush()
-        
+
         locales = ["C", "en_US.UTF-8", "de_DE.UTF-8", "ja_JP.UTF-8"]
         outputs = []
-        
+
         for locale in locales:
             env = os.environ.copy()
             env["LC_ALL"] = locale
             env["LANG"] = locale
-            
+
             result = subprocess.run(
                 ["cargo", "run", "--release", "--", "scan", f.name, "--output", "json"],
                 capture_output=True,
                 text=True,
                 env=env
             )
-            
+
             if result.returncode != 0:
                 print(f"⚠️  Scan failed with locale={locale}")
                 continue
-            
+
             outputs.append(result.stdout)
-        
+
         if not outputs:
             print("⚠️  No successful runs")
             return True
-        
+
         # Compare outputs
         if len(set(outputs)) == 1:
             print(f"✓ Output stable across {len(locales)} locales")
@@ -65,9 +65,9 @@ def test_locale_stability():
 
 def test_decimal_separator():
     """Test that decimal separator is locale-independent."""
-    
+
     print("Testing decimal separator stability...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -79,22 +79,22 @@ def test_decimal_separator():
         }
         json.dump(template, f)
         f.flush()
-        
+
         # Test with comma-decimal locale (de_DE)
         env = os.environ.copy()
         env["LC_NUMERIC"] = "de_DE.UTF-8"
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "predict", f.name, "--output", "json"],
             capture_output=True,
             text=True,
             env=env
         )
-        
+
         if result.returncode != 0:
             print("⚠️  Predict failed")
             return True
-        
+
         # JSON should always use '.' not ','
         if ',' in result.stdout and '"' not in result.stdout.split(',')[0]:
             # Has comma outside of strings
@@ -107,9 +107,9 @@ def test_decimal_separator():
 
 def test_date_format():
     """Test that date format is locale-independent."""
-    
+
     print("Testing date format stability...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -121,30 +121,30 @@ def test_date_format():
         }
         json.dump(template, f)
         f.flush()
-        
+
         locales = ["C", "en_US.UTF-8", "de_DE.UTF-8"]
         dates = []
-        
+
         for locale in locales:
             env = os.environ.copy()
             env["LC_TIME"] = locale
-            
+
             result = subprocess.run(
                 ["cargo", "run", "--release", "--", "scan", f.name],
                 capture_output=True,
                 text=True,
                 env=env
             )
-            
+
             if result.returncode != 0:
                 continue
-            
+
             # Extract any date-like patterns
             import re
             date_patterns = re.findall(r'\d{4}-\d{2}-\d{2}', result.stdout)
             if date_patterns:
                 dates.append(date_patterns[0])
-        
+
         if dates and len(set(dates)) > 1:
             print("⚠️  Date format varies with locale")
             return True
@@ -155,9 +155,9 @@ def test_date_format():
 
 def test_number_formatting():
     """Test that number formatting is locale-independent."""
-    
+
     print("Testing number formatting...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -169,26 +169,26 @@ def test_number_formatting():
         }
         json.dump(template, f)
         f.flush()
-        
+
         locales = ["C", "en_US.UTF-8", "fr_FR.UTF-8"]
         outputs = []
-        
+
         for locale in locales:
             env = os.environ.copy()
             env["LC_NUMERIC"] = locale
-            
+
             result = subprocess.run(
                 ["cargo", "run", "--release", "--", "predict", f.name],
                 capture_output=True,
                 text=True,
                 env=env
             )
-            
+
             if result.returncode != 0:
                 continue
-            
+
             outputs.append(result.stdout)
-        
+
         if outputs and len(set(outputs)) == 1:
             print("✓ Number formatting is locale-independent")
             return True
@@ -199,9 +199,9 @@ def test_number_formatting():
 
 def test_collation_order():
     """Test that sort order is locale-independent."""
-    
+
     print("Testing collation order...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -211,26 +211,26 @@ def test_collation_order():
         }
         json.dump(template, f)
         f.flush()
-        
+
         locales = ["C", "en_US.UTF-8"]
         outputs = []
-        
+
         for locale in locales:
             env = os.environ.copy()
             env["LC_COLLATE"] = locale
-            
+
             result = subprocess.run(
                 ["cargo", "run", "--release", "--", "scan", f.name, "--output", "json"],
                 capture_output=True,
                 text=True,
                 env=env
             )
-            
+
             if result.returncode != 0:
                 continue
-            
+
             outputs.append(result.stdout)
-        
+
         if outputs and len(set(outputs)) == 1:
             print("✓ Collation order is locale-independent")
             return True
@@ -241,7 +241,7 @@ def test_collation_order():
 
 if __name__ == "__main__":
     print("Testing locale variance stability...\n")
-    
+
     tests = [
         test_locale_stability,
         test_decimal_separator,
@@ -249,10 +249,10 @@ if __name__ == "__main__":
         test_number_formatting,
         test_collation_order,
     ]
-    
+
     passed = 0
     failed = 0
-    
+
     for test in tests:
         try:
             if test():
@@ -263,9 +263,9 @@ if __name__ == "__main__":
             print(f"❌ Test {test.__name__} failed: {e}")
             failed += 1
         print()
-    
+
     print(f"Results: {passed} passed, {failed} failed")
-    
+
     if failed == 0:
         print("✅ All tests passed")
         sys.exit(0)

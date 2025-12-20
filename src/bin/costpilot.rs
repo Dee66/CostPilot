@@ -7,13 +7,29 @@ use std::process;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const BANNER: &str = r#"
-   ____          _   ____  _ _       _   
-  / ___|___  ___| |_|  _ \(_) | ___ | |_ 
+   ____          _   ____  _ _       _
+  / ___|___  ___| |_|  _ \(_) | ___ | |_
  | |   / _ \/ __| __| |_) | | |/ _ \| __|
- | |__| (_) \__ \ |_|  __/| | | (_) | |_ 
+ | |__| (_) \__ \ |_|  __/| | | (_) | |_
   \____\___/|___/\__|_|   |_|_|\___/ \__|
-                                          
+
 "#;
+
+/// Exit codes for CostPilot CLI
+#[derive(Debug, Clone, Copy)]
+enum ExitCode {
+    Success = 0,
+    PolicyBlock = 2,
+    SloBurn = 3,
+    InvalidInput = 4,
+    InternalError = 5,
+}
+
+impl ExitCode {
+    fn exit(self) -> ! {
+        process::exit(self as i32)
+    }
+}
 
 #[derive(Parser)]
 #[command(name = "costpilot")]
@@ -171,6 +187,31 @@ enum Commands {
         config: Option<PathBuf>,
     },
 
+    /// Manage SLO monitoring and compliance
+    Slo {
+        #[command(subcommand)]
+        command: Option<SloCommands>,
+    },
+
+    /// Detect cost anomalies
+    Anomaly {
+        /// Path to Terraform plan JSON file
+        #[arg(short, long)]
+        plan: PathBuf,
+
+        /// Path to baseline plan for comparison
+        #[arg(long)]
+        baseline: Option<PathBuf>,
+
+        /// Anomaly detection threshold (standard deviations)
+        #[arg(long, default_value = "2.0")]
+        threshold: f64,
+
+        /// Output format (text, json)
+        #[arg(short, long, default_value = "text")]
+        format: String,
+    },
+
     /// Generate autofix patches
     AutofixPatch,
 
@@ -192,6 +233,9 @@ enum Commands {
         #[arg(long)]
         days_in_month: Option<String>,
     },
+
+    /// Manage feature flags for test-in-production
+    Feature(costpilot::cli::commands::feature::FeatureArgs),
 }
 
 #[derive(Subcommand)]
@@ -430,24 +474,20 @@ fn main() {
         }
     }
 
-    // Check for premium commands in Free mode and fail early
-    if edition.is_free() {
-        if args.len() >= 2 {
-            let premium_commands = ["autofix", "patch", "slo"];
-            let command = args[1].to_lowercase();
-            
-            if premium_commands.contains(&command.as_str()) {
-                eprintln!("{} {}", "Error:".bright_red().bold(), 
-                    format!("Unknown command '{}'", command));
-                eprintln!();
-                eprintln!("This command requires CostPilot Premium.");
-                eprintln!("Upgrade at: https://shieldcraft-ai.com/costpilot/upgrade");
-                process::exit(1);
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            // Check if this is a help request - let Clap handle it
+            if e.kind() == clap::error::ErrorKind::DisplayHelp
+                || e.kind() == clap::error::ErrorKind::DisplayVersion {
+                e.print().ok();
+                std::process::exit(0);
             }
+            eprintln!("error_class=invalid_input");
+            eprintln!("{}", e);
+            ExitCode::InvalidInput.exit();
         }
-    }
-
-    let cli = Cli::parse();
+    };
 
     // Enable debug logging if requested
     if cli.debug {
@@ -467,12 +507,12 @@ fn main() {
 
     // Print banner for interactive mode
     if atty::is(atty::Stream::Stdout) {
-        println!("{}", BANNER.bright_cyan());
-        println!(
+        eprintln!("{}", BANNER.bright_cyan());
+        eprintln!(
             "{}",
             format!("v{} | Zero-IAM FinOps Engine", VERSION).bright_black()
         );
-        println!();
+        eprintln!();
     }
 
     let start_time = if cli.debug {
@@ -552,13 +592,16 @@ fn main() {
             cmd_version(detailed, &edition);
             return;
         }
-        Commands::SloBurn { config, snapshots_dir, min_snapshots, min_r_squared } => cmd_slo_burn(config, snapshots_dir, min_snapshots, min_r_squared, &cli.format, cli.verbose),
-        Commands::SloCheck { config } => cmd_slo_check(config, &cli.format, cli.verbose),
+        Commands::SloBurn { config, snapshots_dir, min_snapshots, min_r_squared } => cmd_slo_burn(config, snapshots_dir, min_snapshots, min_r_squared, &cli.format, cli.verbose, &edition),
+        Commands::SloCheck { config } => cmd_slo_check(config, &cli.format, cli.verbose, &edition),
+        Commands::Slo { command } => cmd_slo(command, &cli.format, cli.verbose, &edition),
+        Commands::Anomaly { plan, baseline, threshold, format } => cmd_anomaly(plan, baseline, threshold, &format, cli.verbose, &edition),
         Commands::AutofixPatch => cmd_autofix_patch(&cli.format, cli.verbose),
         Commands::AutofixSnippet => cmd_autofix_snippet(&cli.format, cli.verbose),
         Commands::Escrow => cmd_escrow(&cli.format, cli.verbose),
         Commands::Performance { command } => cmd_performance(command, &cli.format, cli.verbose),
         Commands::Usage { days_in_month } => cmd_usage(days_in_month, &cli.format, cli.verbose),
+        Commands::Feature(feature_args) => costpilot::cli::commands::feature::execute(&feature_args),
     };
 
     if let Err(e) = result {
@@ -566,7 +609,7 @@ fn main() {
             eprintln!("{} Error details: {:?}", "🔍".bright_black(), e);
         }
         eprintln!("{} {}", "Error:".bright_red().bold(), e);
-        process::exit(1);
+        ExitCode::InternalError.exit();
     }
 
     if let Some(start) = start_time {
@@ -869,10 +912,11 @@ fn cmd_slo_burn(
     min_r_squared: Option<f64>,
     format: &str,
     verbose: bool,
+    edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    use costpilot::edition::EditionContext;
-
-    let edition = EditionContext::free();
+    // Gate SLO functionality behind premium license
+    costpilot::edition::require_premium(edition, "SLO burn rate analysis")
+        .map_err(|e| format!("SLO features require premium license: {}", e))?;
 
     costpilot::cli::commands::slo_burn::execute(
         config,
@@ -881,7 +925,7 @@ fn cmd_slo_burn(
         min_snapshots,
         min_r_squared,
         verbose,
-        &edition,
+        edition,
     )
 }
 
@@ -889,7 +933,12 @@ fn cmd_slo_check(
     config: Option<PathBuf>,
     format: &str,
     verbose: bool,
+    edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Gate SLO functionality behind premium license
+    costpilot::edition::require_premium(edition, "SLO compliance checking")
+        .map_err(|e| format!("SLO features require premium license: {}", e))?;
+
     if verbose {
         eprintln!("🔍 Checking SLO compliance");
         if let Some(ref config_path) = config {
@@ -906,10 +955,49 @@ fn cmd_slo_check(
     Ok(())
 }
 
+fn cmd_anomaly(
+    plan: PathBuf,
+    baseline: Option<PathBuf>,
+    threshold: f64,
+    format: &str,
+    verbose: bool,
+    edition: &costpilot::edition::EditionContext,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Gate anomaly detection behind premium license
+    costpilot::edition::require_premium(edition, "Cost anomaly detection")
+        .map_err(|e| format!("Anomaly detection requires premium license: {}", e))?;
+
+    if verbose {
+        eprintln!("🔍 Detecting cost anomalies");
+        eprintln!("  Plan: {:?}", plan);
+        if let Some(ref baseline_path) = baseline {
+            eprintln!("  Baseline: {:?}", baseline_path);
+        }
+        eprintln!("  Threshold: {}σ", threshold);
+    }
+
+    // Placeholder implementation - would integrate with anomaly detection engine
+    match format {
+        "json" => println!("{{\"anomalies\": [], \"threshold\": {}}}", threshold),
+        _ => println!("Cost anomaly detection not yet implemented (Premium feature)"),
+    }
+
+    Ok(())
+}
+
 fn cmd_autofix_patch(
     format: &str,
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Load edition context
+    let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
+        costpilot::edition::EditionContext::free()
+    });
+
+    // Require Premium for autofix
+    costpilot::edition::require_premium(&edition, "Autofix")
+        .map_err(|e| format!("Autofix requires premium license: {}", e))?;
+
     if verbose {
         eprintln!("🔍 Generating autofix patches");
     }
@@ -927,6 +1015,15 @@ fn cmd_autofix_snippet(
     format: &str,
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Load edition context
+    let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
+        costpilot::edition::EditionContext::free()
+    });
+
+    // Require Premium for autofix
+    costpilot::edition::require_premium(&edition, "Autofix")
+        .map_err(|e| format!("Autofix requires premium license: {}", e))?;
+
     if verbose {
         eprintln!("🔍 Generating autofix snippets");
     }
@@ -1017,14 +1114,14 @@ fn calculate_days_in_month(month_str: &str) -> Option<u32> {
     if parts.len() != 2 {
         return None;
     }
-    
+
     let year: i32 = parts[0].parse().ok()?;
     let month: u32 = parts[1].parse().ok()?;
-    
+
     if month < 1 || month > 12 {
         return None;
     }
-    
+
     // Days in each month
     let days = match month {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
@@ -1039,7 +1136,7 @@ fn calculate_days_in_month(month_str: &str) -> Option<u32> {
         }
         _ => return None,
     };
-    
+
     Some(days)
 }
 

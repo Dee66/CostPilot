@@ -1,7 +1,7 @@
 # Canonical Layout Contract
 
-**Version:** 1.0.0  
-**Status:** Enforced  
+**Version:** 1.0.0
+**Status:** Enforced
 **Last Updated:** 2025-12-06
 
 ---
@@ -57,10 +57,10 @@ use std::collections::BTreeMap;
 pub fn to_canonical_json<T: Serialize>(value: &T) -> Result<String> {
     // Use BTreeMap for stable key ordering
     let json_str = to_string_pretty(value)?;
-    
+
     // Normalize line endings
     let normalized = json_str.replace("\r\n", "\n");
-    
+
     // Ensure trailing newline
     Ok(if normalized.ends_with('\n') {
         normalized
@@ -75,16 +75,16 @@ fn test_json_canonical_layout() {
     data.insert("resource", "aws_instance.web");
     data.insert("cost", "30.37");
     data.insert("currency", "USD");
-    
+
     let json1 = to_canonical_json(&data).unwrap();
     let json2 = to_canonical_json(&data).unwrap();
-    
+
     // Must be identical
     assert_eq!(json1, json2);
-    
+
     // Must have 2-space indent
     assert!(json1.contains("  \"cost\": \"30.37\""));
-    
+
     // Must have alphabetical keys
     let lines: Vec<&str> = json1.lines().collect();
     assert!(lines[1].contains("\"cost\""));
@@ -142,17 +142,17 @@ impl MarkdownBuilder {
             line_width: 80,
         }
     }
-    
+
     pub fn h1(&mut self, text: &str) -> &mut Self {
         self.content.push_str(&format!("# {}\n\n", text));
         self
     }
-    
+
     pub fn h2(&mut self, text: &str) -> &mut Self {
         self.content.push_str(&format!("## {}\n\n", text));
         self
     }
-    
+
     pub fn paragraph(&mut self, text: &str) -> &mut Self {
         let wrapped = wrap(text, self.line_width);
         for line in wrapped {
@@ -162,38 +162,38 @@ impl MarkdownBuilder {
         self.content.push('\n');
         self
     }
-    
+
     pub fn list_item(&mut self, text: &str) -> &mut Self {
         self.content.push_str(&format!("- {}\n", text));
         self
     }
-    
+
     pub fn table(&mut self, headers: &[&str], rows: &[Vec<String>]) -> &mut Self {
         // Calculate column widths
         let mut widths: Vec<usize> = headers.iter()
             .map(|h| h.len())
             .collect();
-        
+
         for row in rows {
             for (i, cell) in row.iter().enumerate() {
                 widths[i] = widths[i].max(cell.len());
             }
         }
-        
+
         // Header row
         self.content.push('|');
         for (i, header) in headers.iter().enumerate() {
             self.content.push_str(&format!(" {:<width$} |", header, width = widths[i]));
         }
         self.content.push('\n');
-        
+
         // Separator row
         self.content.push('|');
         for width in &widths {
             self.content.push_str(&format!("{:-<width$}|", "", width = width + 2));
         }
         self.content.push('\n');
-        
+
         // Data rows
         for row in rows {
             self.content.push('|');
@@ -205,11 +205,11 @@ impl MarkdownBuilder {
         self.content.push('\n');
         self
     }
-    
+
     pub fn build(&self) -> String {
         // Normalize line endings
         let normalized = self.content.replace("\r\n", "\n");
-        
+
         // Ensure single trailing newline
         if normalized.ends_with('\n') {
             normalized
@@ -223,9 +223,9 @@ impl MarkdownBuilder {
 fn test_markdown_line_width() {
     let mut md = MarkdownBuilder::new();
     md.paragraph("This is a very long paragraph that should be wrapped at 80 characters to ensure readability and consistent formatting across all markdown output files.");
-    
+
     let output = md.build();
-    
+
     for line in output.lines() {
         assert!(
             line.len() <= 80,
@@ -273,11 +273,11 @@ impl MermaidBuilder {
             edges: Vec::new(),
         }
     }
-    
+
     pub fn add_node(&mut self, id: &str, label: &str) {
         self.nodes.insert(id.to_string(), label.to_string());
     }
-    
+
     pub fn add_edge(&mut self, from: &str, to: &str, label: Option<&str>) {
         self.edges.push((
             from.to_string(),
@@ -285,16 +285,16 @@ impl MermaidBuilder {
             label.map(|s| s.to_string()),
         ));
     }
-    
+
     pub fn build(&self) -> String {
         let mut output = String::from("graph LR\n");
-        
+
         // Sort edges for determinism
         let mut sorted_edges = self.edges.clone();
         sorted_edges.sort_by(|a, b| {
             a.0.cmp(&b.0).then(a.1.cmp(&b.1))
         });
-        
+
         for (from, to, label) in sorted_edges {
             let edge = if let Some(lbl) = label {
                 format!("    {} -->|{}| {}\n", from, lbl, to)
@@ -303,7 +303,7 @@ impl MermaidBuilder {
             };
             output.push_str(&edge);
         }
-        
+
         output
     }
 }
@@ -314,12 +314,12 @@ fn test_mermaid_deterministic() {
     m1.add_edge("B", "C", None);
     m1.add_edge("A", "B", None);
     m1.add_edge("A", "C", None);
-    
+
     let mut m2 = MermaidBuilder::new();
     m2.add_edge("A", "C", None);
     m2.add_edge("A", "B", None);
     m2.add_edge("B", "C", None);
-    
+
     // Must produce identical output despite different insertion order
     assert_eq!(m1.build(), m2.build());
 }
@@ -362,7 +362,7 @@ impl SvgBuilder {
             elements: Vec::new(),
         }
     }
-    
+
     pub fn rect(
         &mut self,
         x: f64,
@@ -377,7 +377,7 @@ impl SvgBuilder {
         ));
         self
     }
-    
+
     pub fn text(
         &mut self,
         x: f64,
@@ -391,7 +391,7 @@ impl SvgBuilder {
         ));
         self
     }
-    
+
     pub fn build(&self) -> String {
         let mut svg = format!(
             r#"<svg height="{}" width="{}" xmlns="http://www.w3.org/2000/svg">{}"#,
@@ -399,12 +399,12 @@ impl SvgBuilder {
             self.width,
             "\n"
         );
-        
+
         for element in &self.elements {
             svg.push_str(element);
             svg.push('\n');
         }
-        
+
         svg.push_str("</svg>\n");
         svg
     }
@@ -415,12 +415,12 @@ fn test_svg_canonical() {
     let mut svg = SvgBuilder::new(800, 600);
     svg.rect(10.0, 10.0, 100.0, 50.0, "#336699");
     svg.text(60.0, 35.0, "Module A", "#ffffff");
-    
+
     let output = svg.build();
-    
+
     // Must have alphabetical attributes
     assert!(output.contains(r#"fill="#336699" height="50.00" width="100.00" x="10.00" y="10.00""#));
-    
+
     // Must have fixed dimensions
     assert!(output.contains(r#"height="600" width="800""#));
 }
@@ -474,7 +474,7 @@ impl CliOutput {
             tty: atty::is(atty::Stream::Stdout),
         }
     }
-    
+
     pub fn success(&self, msg: &str) {
         let prefix = if self.tty {
             "✅".green()
@@ -483,7 +483,7 @@ impl CliOutput {
         };
         println!("{} {}", prefix, msg);
     }
-    
+
     pub fn error(&self, msg: &str) {
         let prefix = if self.tty {
             "❌".red()
@@ -492,7 +492,7 @@ impl CliOutput {
         };
         eprintln!("{} {}", prefix, msg);
     }
-    
+
     pub fn warning(&self, msg: &str) {
         let prefix = if self.tty {
             "⚠️".yellow()
@@ -501,15 +501,15 @@ impl CliOutput {
         };
         println!("{} {}", prefix, msg);
     }
-    
+
     pub fn section(&self, title: &str) {
         println!("\n{}:", title);
     }
-    
+
     pub fn field(&self, key: &str, value: &str) {
         println!("  {}: {}", key, value);
     }
-    
+
     pub fn list_item(&self, severity: &str, msg: &str) {
         let emoji = match severity {
             "CRITICAL" => "🔴",
@@ -525,12 +525,12 @@ impl CliOutput {
 #[test]
 fn test_cli_output_width() {
     let cli = CliOutput::new();
-    
+
     let long_message = "This is a very long message that should be wrapped or truncated to fit within 80 characters";
-    
+
     // Simulate output capture
     let output = format!("{} {}", "✅", long_message);
-    
+
     for line in output.lines() {
         assert!(
             line.len() <= 80,
@@ -576,7 +576,7 @@ use chrono::Utc;
 
 pub fn generate_filename(file_type: &str, identifier: Option<&str>) -> String {
     let timestamp = Utc::now().format("%Y-%m-%d").to_string();
-    
+
     match identifier {
         Some(id) => format!("costpilot-{}-{}.json", file_type, id),
         None => format!("costpilot-{}-{}.json", file_type, timestamp),
@@ -587,7 +587,7 @@ pub fn generate_filename(file_type: &str, identifier: Option<&str>) -> String {
 fn test_filename_canonical() {
     let filename = generate_filename("report", Some("module-a"));
     assert_eq!(filename, "costpilot-report-module-a.json");
-    
+
     let filename = generate_filename("analysis", None);
     assert!(filename.starts_with("costpilot-analysis-"));
     assert!(filename.ends_with(".json"));
@@ -603,12 +603,12 @@ fn test_filename_canonical() {
 #[test]
 fn test_json_deterministic_layout() {
     let data = sample_cost_data();
-    
+
     let json1 = to_canonical_json(&data).unwrap();
     let json2 = to_canonical_json(&data).unwrap();
-    
+
     assert_eq!(json1, json2, "JSON layout must be deterministic");
-    
+
     // Check formatting rules
     assert!(json1.contains("  "));  // 2-space indent
     assert!(!json1.contains("\t"));  // no tabs
@@ -622,9 +622,9 @@ fn test_json_key_ordering() {
     map.insert("zebra", "last");
     map.insert("apple", "first");
     map.insert("banana", "second");
-    
+
     let json = to_canonical_json(&map).unwrap();
-    
+
     let lines: Vec<&str> = json.lines().collect();
     assert!(lines[1].contains("apple"));
     assert!(lines[2].contains("banana"));
@@ -638,9 +638,9 @@ fn test_json_key_ordering() {
 fn test_markdown_line_width() {
     let mut md = MarkdownBuilder::new();
     md.paragraph("A".repeat(200));
-    
+
     let output = md.build();
-    
+
     for line in output.lines() {
         assert!(line.len() <= 80, "Line too long: {}", line.len());
     }
@@ -653,12 +653,12 @@ fn test_markdown_deterministic_tables() {
         vec!["B".to_string(), "$20".to_string()],
         vec!["A".to_string(), "$10".to_string()],
     ];
-    
+
     let mut md = MarkdownBuilder::new();
     md.table(&headers, &rows);
-    
+
     let output = md.build();
-    
+
     // Must be properly aligned
     assert!(output.contains("| Resource | Cost |"));
     assert!(output.contains("|----------|------|"));
@@ -673,10 +673,10 @@ fn test_mermaid_edge_ordering() {
     m.add_edge("C", "A", None);
     m.add_edge("B", "A", None);
     m.add_edge("A", "D", None);
-    
+
     let output = m.build();
     let lines: Vec<&str> = output.lines().collect();
-    
+
     // Edges must be sorted: A->D, B->A, C->A
     assert!(lines[1].contains("A --> D"));
     assert!(lines[2].contains("B --> A"));

@@ -105,19 +105,25 @@ pub enum GroupSubcommand {
 
 pub fn execute_group_command(
     cmd: GroupCommand,
-    _edition: &crate::edition::EditionContext,
+    edition: &crate::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Extract plan path and subcommand
     let (plan, subcommand) = match cmd.command {
-        GroupSubcommand::Module { plan, tree, min_cost, max_groups } => 
+        GroupSubcommand::Module { plan, tree, min_cost, max_groups } =>
             (plan, GroupExecution::Module { tree, min_cost, max_groups }),
-        GroupSubcommand::Service { plan, by_category, min_cost, max_groups } => 
+        GroupSubcommand::Service { plan, by_category, min_cost, max_groups } =>
             (plan, GroupExecution::Service { by_category, min_cost, max_groups }),
-        GroupSubcommand::Environment { plan, detailed, detect_anomalies, min_cost } => 
-            (plan, GroupExecution::Environment { detailed, detect_anomalies, min_cost }),
-        GroupSubcommand::Attribution { plan, format, output, top_n } => 
+        GroupSubcommand::Environment { plan, detailed, detect_anomalies, min_cost } => {
+            // Gate anomaly detection behind premium license
+            if detect_anomalies {
+                crate::edition::require_premium(edition, "Cost anomaly detection")
+                    .map_err(|e| format!("Anomaly detection requires premium license: {}", e))?;
+            }
+            (plan, GroupExecution::Environment { detailed, detect_anomalies, min_cost })
+        }
+        GroupSubcommand::Attribution { plan, format, output, top_n } =>
             (plan, GroupExecution::Attribution { format, output, top_n }),
-        GroupSubcommand::All { plan, format, output } => 
+        GroupSubcommand::All { plan, format, output } =>
             (plan, GroupExecution::All { format, output }),
     };
 

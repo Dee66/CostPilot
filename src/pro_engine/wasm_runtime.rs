@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 // WASM runtime with strict sandboxing and resource limits
 
 use wasmtime::*;
@@ -86,10 +88,10 @@ impl WasmRuntime {
         config.wasm_multi_memory(false);
         config.wasm_bulk_memory(true);
         config.static_memory_maximum_size(256 * 1024 * 1024); // 256MB absolute max
-        
+
         let engine = Engine::new(&config)
             .map_err(|e| WasmError::CompileError(e.to_string()))?;
-        
+
         Ok(Self { engine })
     }
 
@@ -115,7 +117,7 @@ impl WasmRuntime {
         };
         let mut store = Store::new(&self.engine, state);
         store.limiter(|s| s);
-        
+
         // Setup epoch for timeout
         store.set_epoch_deadline(1);
 
@@ -147,7 +149,7 @@ impl SandboxInstance {
         let engine = self.store.engine().clone();
         let start = Instant::now();
         let timeout_duration = Duration::from_millis(timeout_ms);
-        
+
         // Spawn timeout thread
         let timeout_handle = std::thread::spawn(move || {
             std::thread::sleep(timeout_duration);
@@ -172,8 +174,8 @@ impl SandboxInstance {
             }
             Err(trap) => {
                 let trap_str = trap.to_string();
-                if trap_str.contains("interrupt") 
-                    || trap_str.contains("epoch") 
+                if trap_str.contains("interrupt")
+                    || trap_str.contains("epoch")
                     || elapsed >= timeout_duration {
                     Err(WasmError::Timeout)
                 } else {

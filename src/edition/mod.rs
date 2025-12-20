@@ -1,13 +1,13 @@
 pub mod capabilities;
 pub mod errors;
-pub mod gating;
 pub mod license;
 pub mod messages;
 pub mod pro_handle;
 
 pub use capabilities::Capabilities;
 pub use errors::{require_premium, UpgradeRequired};
-pub use gating::require_premium as legacy_require_premium;
+// Remove the legacy gating import to avoid confusion
+// pub use gating::require_premium as legacy_require_premium;
 pub use license::{License, LicenseError};
 pub use messages::{feature_comparison, upgrade_message};
 pub use pro_handle::{ProEngineError, ProEngineHandle};

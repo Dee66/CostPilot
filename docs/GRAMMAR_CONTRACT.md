@@ -1,7 +1,7 @@
 # Grammar and Style Contract
 
-**Version:** 1.0.0  
-**Status:** Enforced  
+**Version:** 1.0.0
+**Status:** Enforced
 **Last Updated:** 2025-12-06
 
 ---
@@ -132,7 +132,7 @@ impl Severity {
             Severity::Info => "INFO",
         }
     }
-    
+
     pub fn description(&self) -> &'static str {
         match self {
             Severity::Critical => "Immediate action required",
@@ -142,7 +142,7 @@ impl Severity {
             Severity::Info => "No action required",
         }
     }
-    
+
     pub fn emoji(&self) -> &'static str {
         match self {
             Severity::Critical => "🔴",
@@ -247,49 +247,49 @@ pub struct CostMessage {
 }
 
 impl CostMessage {
-    pub const INCREASE_DETECTED: &'static str = 
+    pub const INCREASE_DETECTED: &'static str =
         "Cost increase detected: {delta} ({percentage}% over baseline)";
-    
-    pub const DECREASE_DETECTED: &'static str = 
+
+    pub const DECREASE_DETECTED: &'static str =
         "Cost decrease: {delta} ({percentage}% under baseline)";
-    
-    pub const THRESHOLD_EXCEEDED: &'static str = 
+
+    pub const THRESHOLD_EXCEEDED: &'static str =
         "Cost ${cost}/month exceeds threshold ${threshold}/month";
-    
-    pub const BASELINE_MATCH: &'static str = 
+
+    pub const BASELINE_MATCH: &'static str =
         "Cost ${cost}/month within {percentage}% of baseline";
-    
-    pub const NO_BASELINE: &'static str = 
+
+    pub const NO_BASELINE: &'static str =
         "No baseline found for module {module}. Consider running 'costpilot baseline set'";
 }
 ```
 
 ### Policy Violations
 ```rust
-pub const POLICY_VIOLATION_TEMPLATE: &str = 
+pub const POLICY_VIOLATION_TEMPLATE: &str =
     "{severity}: Policy '{policy_name}' violated\n\
      Resource: {resource}\n\
      Rule: {rule}\n\
      Action: {action}";
 
-pub const POLICY_PASSED_TEMPLATE: &str = 
+pub const POLICY_PASSED_TEMPLATE: &str =
     "✅ All {count} policies passed";
 
-pub const POLICY_WARNING_TEMPLATE: &str = 
+pub const POLICY_WARNING_TEMPLATE: &str =
     "⚠️  {count} warning{plural}: Review recommended";
 ```
 
 ### Recommendations
 ```rust
-pub const RECOMMENDATION_TEMPLATE: &str = 
+pub const RECOMMENDATION_TEMPLATE: &str =
     "Recommendation: {action}\n\
      Impact: {impact}\n\
      Confidence: {confidence}%";
 
-pub const AUTOFIX_AVAILABLE: &str = 
+pub const AUTOFIX_AVAILABLE: &str =
     "💡 Autofix available: Run 'costpilot autofix patch {resource}'";
 
-pub const AUTOFIX_APPLIED: &str = 
+pub const AUTOFIX_APPLIED: &str =
     "✅ Autofix applied: {action}\n\
      Estimated savings: {savings}/month";
 ```
@@ -496,12 +496,12 @@ let cost = 30.37;
 #[test]
 fn test_no_hedging_language() {
     let output = generate_explanation(&sample_resource());
-    
+
     let forbidden_words = [
         "might", "maybe", "possibly", "could be",
         "seems like", "appears to", "probably",
     ];
-    
+
     for word in &forbidden_words {
         assert!(
             !output.to_lowercase().contains(word),
@@ -514,14 +514,14 @@ fn test_no_hedging_language() {
 #[test]
 fn test_all_costs_have_currency_symbol() {
     let output = generate_cost_report(&sample_plan());
-    
+
     // Find all numbers that look like costs
     let cost_pattern = regex::Regex::new(r"\b\d+\.\d{2}\b").unwrap();
-    
+
     for m in cost_pattern.find_iter(&output) {
         let cost_str = m.as_str();
         let start = m.start();
-        
+
         // Check if preceded by $
         if start > 0 {
             let prev_char = output.chars().nth(start - 1).unwrap();
@@ -543,13 +543,13 @@ fn test_severity_consistency() {
         Severity::Low,
         Severity::Info,
     ];
-    
+
     for severity in severities {
         let str = severity.as_str();
-        
+
         // Must be uppercase
         assert_eq!(str, str.to_uppercase());
-        
+
         // Must match enum name
         assert!(matches!(
             severity,

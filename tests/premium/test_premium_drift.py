@@ -15,7 +15,7 @@ def test_drift_detection_command():
         text=True,
         timeout=10
     )
-    
+
     # In Premium, should succeed or have drift command
     # May be subcommand of check or analyze
     if result.returncode != 0:
@@ -33,7 +33,7 @@ def test_drift_detection_with_baseline():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -44,7 +44,7 @@ def test_drift_detection_with_baseline():
                 }
             }
         }
-        
+
         baseline_content = {
             "resources": [
                 {
@@ -56,20 +56,20 @@ def test_drift_detection_with_baseline():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "drift", "--plan", str(template_path), "--baseline", str(baseline_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should detect drift
         if result.returncode == 0:
             output = result.stdout.lower()
@@ -83,7 +83,7 @@ def test_drift_detection_no_drift():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -94,7 +94,7 @@ def test_drift_detection_no_drift():
                 }
             }
         }
-        
+
         # Same as template
         baseline_content = {
             "resources": [
@@ -107,20 +107,20 @@ def test_drift_detection_no_drift():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "drift", "--plan", str(template_path), "--baseline", str(baseline_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should complete - no drift
         if result.returncode == 0:
             output = result.stdout.lower()
@@ -133,7 +133,7 @@ def test_drift_detection_multiple_changes():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda1": {
@@ -151,7 +151,7 @@ def test_drift_detection_multiple_changes():
                 }
             }
         }
-        
+
         baseline_content = {
             "resources": [
                 {
@@ -171,20 +171,20 @@ def test_drift_detection_multiple_changes():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "drift", "--plan", str(template_path), "--baseline", str(baseline_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should detect multiple drifts
         if result.returncode == 0:
             assert len(result.stdout) > 0, "Should report drift details"
@@ -196,7 +196,7 @@ def test_drift_detection_output_format():
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
         output_path = Path(tmpdir) / "drift.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -207,7 +207,7 @@ def test_drift_detection_output_format():
                 }
             }
         }
-        
+
         baseline_content = {
             "resources": [
                 {
@@ -219,21 +219,21 @@ def test_drift_detection_output_format():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "drift", "--plan", str(template_path), 
+            ["costpilot", "drift", "--plan", str(template_path),
              "--baseline", str(baseline_path), "--output", str(output_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should create output file
         if result.returncode == 0 and output_path.exists():
             with open(output_path) as f:

@@ -1,0 +1,271 @@
+# CostPilot Packaging Testing: Format Validation
+# Test data for packaging format validation
+
+# ZIP format validation
+zip_format_validation:
+  metadata:
+    test_case: "zip_format_validation"
+    description: "Validate ZIP package format and contents"
+    package_format: "zip"
+    expected_behavior: "valid_zip_structure"
+  validation_rules:
+    - rule: "file_structure"
+      description: "Package contains expected directory structure"
+      expected_paths:
+        - "costpilot/"
+        - "costpilot/bin/"
+        - "costpilot/lib/"
+        - "costpilot/docs/"
+        - "costpilot/config/"
+      required_files:
+        - "costpilot/bin/costpilot"
+        - "costpilot/README.md"
+        - "costpilot/LICENSE"
+    - rule: "compression_method"
+      description: "Files use appropriate compression"
+      expected_compression: "DEFLATE"
+      min_compression_ratio: 0.3
+    - rule: "archive_integrity"
+      description: "Archive is not corrupted"
+      expected_result: "no_corruption_errors"
+    - rule: "file_permissions"
+      description: "Files have correct permissions"
+      expected_permissions:
+        executable: "755"
+        regular_file: "644"
+        config_file: "600"
+
+# TAR.GZ format validation
+tar_gz_format_validation:
+  metadata:
+    test_case: "tar_gz_format_validation"
+    description: "Validate TAR.GZ package format and contents"
+    package_format: "tar.gz"
+    expected_behavior: "valid_tar_gz_structure"
+  validation_rules:
+    - rule: "tar_format"
+      description: "Valid TAR archive structure"
+      expected_format: "ustar"
+      expected_version: "00"
+    - rule: "gzip_compression"
+      description: "Proper GZIP compression"
+      expected_compression_level: "6-9"
+      expected_integrity: "valid_gzip_header"
+    - rule: "file_metadata"
+      description: "Correct file metadata preservation"
+      preserve_timestamps: true
+      preserve_permissions: true
+      preserve_ownership: false  # Should be normalized
+    - rule: "archive_size"
+      description: "Reasonable archive size"
+      max_size_mb: 100
+      expected_compression_ratio: "0.4-0.8"
+
+# Cross-platform compatibility
+cross_platform_compatibility:
+  metadata:
+    test_case: "cross_platform_compatibility"
+    description: "Ensure packages work across platforms"
+    expected_behavior: "platform_agnostic_installation"
+  platform_tests:
+    - platform: "linux_amd64"
+      expected_executable: "costpilot-linux-amd64"
+      expected_libraries: "glibc_2.17+"
+      expected_dependencies: ["openssl", "zlib"]
+    - platform: "linux_arm64"
+      expected_executable: "costpilot-linux-arm64"
+      expected_libraries: "glibc_2.17+"
+      expected_dependencies: ["openssl", "zlib"]
+    - platform: "macos_amd64"
+      expected_executable: "costpilot-macos-amd64"
+      expected_libraries: "macOS_10.12+"
+      expected_dependencies: ["openssl", "zlib"]
+    - platform: "macos_arm64"
+      expected_executable: "costpilot-macos-arm64"
+      expected_libraries: "macOS_11.0+"
+      expected_dependencies: ["openssl", "zlib"]
+    - platform: "windows_amd64"
+      expected_executable: "costpilot-windows-amd64.exe"
+      expected_libraries: "Windows_10+"
+      expected_dependencies: ["vcruntime140.dll", "zlib.dll"]
+
+# Package contents validation
+package_contents_validation:
+  metadata:
+    test_case: "package_contents_validation"
+    description: "Validate package contents completeness"
+    expected_behavior: "complete_package_contents"
+  required_components:
+    - component: "binary_executable"
+      description: "Main CostPilot executable"
+      platforms: ["linux_amd64", "linux_arm64", "macos_amd64", "macos_arm64", "windows_amd64"]
+      expected_location: "bin/costpilot"
+      expected_permissions: "755"
+    - component: "configuration_templates"
+      description: "Default configuration files"
+      files:
+        - "config/costpilot.yml"
+        - "config/baselines.json"
+      expected_permissions: "644"
+    - component: "documentation"
+      description: "User documentation"
+      files:
+        - "docs/README.md"
+        - "docs/INSTALL.md"
+        - "docs/CHANGELOG.md"
+        - "docs/LICENSE"
+      expected_permissions: "644"
+    - component: "examples"
+      description: "Usage examples"
+      files:
+        - "examples/basic_plan.json"
+        - "examples/advanced_plan.yml"
+      expected_permissions: "644"
+
+# Package metadata validation
+package_metadata_validation:
+  metadata:
+    test_case: "package_metadata_validation"
+    description: "Validate package metadata and signatures"
+    expected_behavior: "proper_package_metadata"
+  metadata_requirements:
+    - requirement: "package_name"
+      expected_format: "costpilot-{version}-{platform}"
+      validation_pattern: "^costpilot-[0-9]+\\.[0-9]+\\.[0-9]+-.+$"
+    - requirement: "version_info"
+      expected_fields: ["major", "minor", "patch", "build"]
+      validation_pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9]+)?$"
+    - requirement: "checksums"
+      required_algorithms: ["SHA256", "SHA512"]
+      expected_format: "hexadecimal"
+    - requirement: "signatures"
+      required_keys: ["gpg_signature", "checksum_signature"]
+      expected_format: "ASCII-armored"
+
+# Installation validation
+installation_validation:
+  metadata:
+    test_case: "installation_validation"
+    description: "Validate package installation process"
+    expected_behavior: "successful_installation"
+  installation_scenarios:
+    - scenario: "fresh_install"
+      environment: "clean_system"
+      expected_steps:
+        - "extract_archive"
+        - "set_permissions"
+        - "create_symlinks"
+        - "update_path"
+      expected_result: "working_executable"
+    - scenario: "upgrade_install"
+      environment: "existing_installation"
+      expected_steps:
+        - "backup_config"
+        - "extract_archive"
+        - "preserve_custom_config"
+        - "update_symlinks"
+      expected_result: "upgraded_executable"
+    - scenario: "permission_denied"
+      environment: "restricted_user"
+      expected_result: "clear_error_message"
+    - scenario: "disk_full"
+      environment: "low_disk_space"
+      expected_result: "graceful_failure"
+
+# Uninstallation validation
+uninstallation_validation:
+  metadata:
+    test_case: "uninstallation_validation"
+    description: "Validate package uninstallation process"
+    expected_behavior: "clean_uninstallation"
+  uninstallation_scenarios:
+    - scenario: "complete_removal"
+      expected_steps:
+        - "remove_binaries"
+        - "remove_config"
+        - "remove_data"
+        - "clean_symlinks"
+      expected_result: "no_residual_files"
+    - scenario: "preserve_user_data"
+      expected_steps:
+        - "backup_user_configs"
+        - "remove_system_files"
+        - "restore_user_data"
+      expected_result: "user_data_preserved"
+    - scenario: "partial_uninstall"
+      environment: "interrupted_process"
+      expected_result: "recoverable_state"
+
+# Package size validation
+package_size_validation:
+  metadata:
+    test_case: "package_size_validation"
+    description: "Validate package sizes are reasonable"
+    expected_behavior: "optimal_package_sizes"
+  size_limits:
+    - platform: "linux_amd64"
+      max_size_mb: 50
+      expected_size_mb: "20-35"
+    - platform: "linux_arm64"
+      max_size_mb: 50
+      expected_size_mb: "20-35"
+    - platform: "macos_amd64"
+      max_size_mb: 60
+      expected_size_mb: "25-40"
+    - platform: "macos_arm64"
+      max_size_mb: 60
+      expected_size_mb: "25-40"
+    - platform: "windows_amd64"
+      max_size_mb: 55
+      expected_size_mb: "22-38"
+  compression_efficiency:
+    min_compression_ratio: 0.4
+    target_compression_ratio: 0.6
+    max_compression_ratio: 0.8
+
+# Dependency validation
+dependency_validation:
+  metadata:
+    test_case: "dependency_validation"
+    description: "Validate package dependencies"
+    expected_behavior: "minimal_dependencies"
+  dependency_analysis:
+    - category: "system_libraries"
+      allowed_dependencies: ["libc", "libm", "libpthread", "librt", "libdl"]
+      restricted_dependencies: ["libpython", "libperl", "libruby"]
+    - category: "external_tools"
+      allowed_dependencies: ["openssl", "zlib", "libssl"]
+      restricted_dependencies: ["python", "perl", "ruby", "node"]
+    - category: "package_managers"
+      allowed_dependencies: []
+      restricted_dependencies: ["apt", "yum", "brew", "choco"]
+  static_linking:
+    preferred_libraries: ["openssl", "zlib", "libressl"]
+    acceptable_dynamic_libs: ["libc", "libm", "libpthread"]
+    restricted_dynamic_libs: ["libpython", "libcrypto.so.1.0.0"]
+
+# Archive integrity validation
+archive_integrity_validation:
+  metadata:
+    test_case: "archive_integrity_validation"
+    description: "Validate archive integrity and corruption detection"
+    expected_behavior: "corruption_detection"
+  integrity_checks:
+    - check: "header_validation"
+      description: "Valid archive headers"
+      expected_result: "valid_headers"
+    - check: "checksum_validation"
+      description: "File checksums match"
+      expected_result: "all_checksums_valid"
+    - check: "size_validation"
+      description: "File sizes match expected"
+      expected_result: "all_sizes_correct"
+    - check: "corruption_detection"
+      description: "Corrupted archives detected"
+      test_cases:
+        - corruption_type: "truncated_archive"
+          expected_result: "corruption_detected"
+        - corruption_type: "modified_content"
+          expected_result: "checksum_mismatch"
+        - corruption_type: "invalid_header"
+          expected_result: "format_error"

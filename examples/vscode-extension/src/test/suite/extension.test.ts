@@ -17,7 +17,7 @@ suite('Extension Test Suite', () => {
 
     test('Commands should be registered', async () => {
         const commands = await vscode.commands.getCommands(true);
-        
+
         assert.ok(commands.includes('costpilot.scanWorkspace'));
         assert.ok(commands.includes('costpilot.analyzeTerraformPlan'));
         assert.ok(commands.includes('costpilot.showCostReport'));

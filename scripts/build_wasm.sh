@@ -89,23 +89,23 @@ if [ "$OPTIMIZE" = true ]; then
         echo "Install with: cargo install wasm-opt"
     else
         echo -e "${BLUE}⚡ Optimizing WASM module...${NC}"
-        
+
         OPT_FILE="target/wasm32-unknown-unknown/release/costpilot_opt.wasm"
         wasm-opt -Oz -o "$OPT_FILE" "$WASM_FILE"
-        
+
         if [[ "$OSTYPE" == "darwin"* ]]; then
             OPT_SIZE_BYTES=$(stat -f%z "$OPT_FILE")
         else
             OPT_SIZE_BYTES=$(stat -c%s "$OPT_FILE")
         fi
-        
+
         OPT_SIZE_MB=$(echo "scale=2; $OPT_SIZE_BYTES / 1024 / 1024" | bc)
         REDUCTION=$(echo "scale=1; 100 * ($SIZE_BYTES - $OPT_SIZE_BYTES) / $SIZE_BYTES" | bc)
-        
+
         echo -e "${GREEN}✅ Optimization complete!${NC}"
         echo -e "${BLUE}📊 Optimized size: ${OPT_SIZE_MB} MB ($OPT_SIZE_BYTES bytes)${NC}"
         echo -e "${GREEN}📉 Size reduction: ${REDUCTION}%${NC}"
-        
+
         # Replace original with optimized
         mv "$OPT_FILE" "$WASM_FILE"
     fi
@@ -114,13 +114,13 @@ fi
 # Generate JS bindings if wasm-bindgen is available
 if command -v wasm-bindgen &> /dev/null; then
     echo -e "${BLUE}🔗 Generating JavaScript bindings...${NC}"
-    
+
     mkdir -p pkg
     wasm-bindgen "$WASM_FILE" \
         --out-dir pkg \
         --target web \
         --no-typescript
-    
+
     echo -e "${GREEN}✅ JavaScript bindings generated in pkg/${NC}"
 fi
 

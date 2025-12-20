@@ -30,8 +30,13 @@ impl HeuristicsLoader {
         }
     }
 
+    /// Get the search paths (for testing)
+    pub fn search_paths(&self) -> &[PathBuf] {
+        &self.search_paths
+    }
+
     /// Get default search paths for heuristics file
-    fn default_search_paths() -> Vec<PathBuf> {
+    pub fn default_search_paths() -> Vec<PathBuf> {
         let mut paths = Vec::new();
 
         // 1. Current directory
@@ -120,7 +125,7 @@ impl HeuristicsLoader {
     }
 
     /// Validate heuristics for completeness
-    fn validate(&self, heuristics: &CostHeuristics) -> Result<()> {
+    pub fn validate(&self, heuristics: &CostHeuristics) -> Result<()> {
         // Check version format
         if !heuristics.version.contains('.') {
             return Err(CostPilotError::new(
@@ -178,10 +183,10 @@ impl HeuristicsLoader {
     }
 
     /// Check version compatibility using semantic versioning
-    fn check_version_compatibility(&self, version: &str) -> Result<()> {
+    pub fn check_version_compatibility(&self, version: &str) -> Result<()> {
         // Parse version string (major.minor.patch)
         let parts: Vec<&str> = version.split('.').collect();
-        if parts.len() < 2 {
+        if parts.len() != 3 {
             return Err(CostPilotError::new(
                 "HEURISTICS_COMPAT_001",
                 ErrorCategory::ValidationError,
@@ -205,6 +210,14 @@ impl HeuristicsLoader {
                 "HEURISTICS_COMPAT_003",
                 ErrorCategory::ValidationError,
                 format!("Invalid minor version number: {}", parts[1]),
+            )
+        })?;
+
+        let _patch: u32 = parts[2].parse().map_err(|_| {
+            CostPilotError::new(
+                "HEURISTICS_COMPAT_006",
+                ErrorCategory::ValidationError,
+                format!("Invalid patch version number: {}", parts[2]),
             )
         })?;
 

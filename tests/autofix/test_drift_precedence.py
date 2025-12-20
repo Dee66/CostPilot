@@ -12,7 +12,7 @@ def test_drift_check_before_autofix():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -23,7 +23,7 @@ def test_drift_check_before_autofix():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -35,20 +35,20 @@ def test_drift_check_before_autofix():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Attempt autofix without drift check
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path)],
             capture_output=True,
             text=True
         )
-        
+
         # Should require drift check first or mention it
         output = result.stdout + result.stderr
         if "drift" in output.lower():
@@ -61,7 +61,7 @@ def test_drift_detected_blocks_autofix():
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         # Original baseline
         baseline_content = {
             "Resources": {
@@ -73,7 +73,7 @@ def test_drift_detected_blocks_autofix():
                 }
             }
         }
-        
+
         # Modified template (drift)
         template_content = {
             "Resources": {
@@ -85,28 +85,28 @@ def test_drift_detected_blocks_autofix():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": []
         }
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Check drift
         drift_result = subprocess.run(
             ["costpilot", "drift", "--baseline", str(baseline_path), "--plan", str(template_path)],
             capture_output=True,
             text=True
         )
-        
+
         # If drift detected, autofix should be blocked
         if drift_result.returncode != 0 or "drift" in drift_result.stdout.lower():
             # Attempt autofix
@@ -115,7 +115,7 @@ def test_drift_detected_blocks_autofix():
                 capture_output=True,
                 text=True
             )
-            
+
             # Should block or require --force
             output = autofix_result.stdout + autofix_result.stderr
             if autofix_result.returncode != 0:
@@ -129,7 +129,7 @@ def test_no_drift_allows_autofix():
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         # Identical baseline and template (no drift)
         content = {
             "Resources": {
@@ -141,35 +141,35 @@ def test_no_drift_allows_autofix():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": []
         }
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(content, f)
-        
+
         with open(template_path, 'w') as f:
             json.dump(content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Check drift (should pass)
         drift_result = subprocess.run(
             ["costpilot", "drift", "--baseline", str(baseline_path), "--plan", str(template_path)],
             capture_output=True,
             text=True
         )
-        
+
         # Autofix should proceed
         autofix_result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--dry-run"],
             capture_output=True,
             text=True
         )
-        
+
         # Should not block on drift
         output = autofix_result.stdout + autofix_result.stderr
         if "blocked" in output.lower():
@@ -182,7 +182,7 @@ def test_force_flag_overrides_drift():
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         # Drift scenario
         baseline_content = {
             "Resources": {
@@ -194,7 +194,7 @@ def test_force_flag_overrides_drift():
                 }
             }
         }
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -205,28 +205,28 @@ def test_force_flag_overrides_drift():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": []
         }
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Attempt with --force
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--baseline", str(baseline_path), "--force", "--dry-run"],
             capture_output=True,
             text=True
         )
-        
+
         # Should proceed despite drift
         output = result.stdout + result.stderr
         if result.returncode == 0:
@@ -241,7 +241,7 @@ def test_drift_check_precedence_documented():
         capture_output=True,
         text=True
     )
-    
+
     if result.returncode == 0:
         help_text = result.stdout
         # Check for drift-related flags or documentation
@@ -255,7 +255,7 @@ def test_autofix_updates_baseline():
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         original_content = {
             "Resources": {
                 "Lambda": {
@@ -266,7 +266,7 @@ def test_autofix_updates_baseline():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -278,28 +278,28 @@ def test_autofix_updates_baseline():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(original_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(original_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Apply autofix
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--baseline", str(baseline_path), "--update-baseline"],
             capture_output=True,
             text=True
         )
-        
+
         # Baseline should be updated
         if baseline_path.exists():
             with open(baseline_path) as f:
                 updated_baseline = json.load(f)
-            
+
             # Verify baseline reflects changes
             assert isinstance(updated_baseline, dict), "Baseline should be valid JSON"
 

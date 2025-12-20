@@ -2,7 +2,7 @@
 
 Deterministic, audit-grade cost governance at the pull-request boundary.
 
-CostPilot analyzes infrastructure-as-code changes **before they merge** and blocks only **irreversible cloud cost regressions**.  
+CostPilot analyzes infrastructure-as-code changes **before they merge** and blocks only **irreversible cloud cost regressions**.
 When no meaningful risk exists, it stays silent.
 
 ---
@@ -78,10 +78,10 @@ The authoritative reference for CostPilot behavior is the **CostPilot Demo** rep
 - Zero-IAM, offline-safe execution
 - CI-enforced invariants
 
-Demo repository:  
+Demo repository:
 https://github.com/Dee66/costpilotdemo
 
-Live demo UI:  
+Live demo UI:
 https://dee66.github.io/costpilotdemo/
 
 All screenshots, videos, and launch materials originate from this demo.
@@ -100,11 +100,51 @@ Additional IaC formats are intentionally deferred.
 
 ---
 
+## Quick Start
+
+1. **Install CostPilot**:
+   ```bash
+   # Download from GitHub Releases
+   curl -L https://github.com/Dee66/CostPilot/releases/download/v1.0.2/costpilot-linux-x64.tar.gz | tar xz
+   ./costpilot --version
+   ```
+
+2. **Analyze a Terraform Plan**:
+   ```bash
+   costpilot analyze --plan plan.json --output markdown
+   ```
+
+3. **Validate Policies**:
+   ```bash
+   costpilot validate --policy my-policy.yml
+   ```
+
+---
+
+## Key Features
+
+- **Deterministic Analysis**: Reproducible cost predictions from diffs and plans.
+- **Policy Enforcement**: Custom DSL for budget limits, quotas, and restrictions.
+- **AI-Powered Insights**: Premium features for trend forecasting and anomaly detection.
+- **Zero-IAM Security**: No cloud credentials required.
+- **CI Integration**: GitHub Actions for automated PR checks.
+
+---
+
+## Pricing
+
+- **Free Tier**: Unlimited basic cost estimates and policies.
+- **Premium ($29/month)**: Advanced AI, sustainability analytics, and enterprise features.
+
+See `docs/PRICING.md` for details.
+
+---
+
 ## Installation
 
 CostPilot is distributed as a single CLI binary.
 
-Installation methods and package managers are documented per-release.  
+Installation methods and package managers are documented per-release.
 Correctness and determinism take precedence over distribution convenience.
 
 ---
@@ -115,6 +155,10 @@ Correctness and determinism take precedence over distribution convenience.
 - Architecture: `docs/architecture.md`
 - Policy model: `docs/policies.md`
 - Determinism & drift guarantees: `docs/determinism.md`
+- Pricing model: `docs/PRICING.md`
+- Implementation status: `docs/IMPLEMENTATION_STATUS.md`
+- Testing strategy: `docs/TESTING_STRATEGY.md`
+- Pricing enforcement checklist: `docs/pricing_enforcement_checklist.yml`
 
 ---
 

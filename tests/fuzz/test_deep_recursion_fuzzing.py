@@ -11,9 +11,9 @@ def test_deep_nesting_fuzzing():
     """Fuzz with deeply nested structures."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         depths = [100, 500, 1000, 1500]
-        
+
         for depth in depths:
             # Create deeply nested object
             nested = {}
@@ -22,23 +22,23 @@ def test_deep_nesting_fuzzing():
                 current["level"] = {}
                 current = current["level"]
             current["value"] = "deep"
-            
+
             template_content = {
                 "Resources": {
                     "Nested": nested
                 }
             }
-            
+
             with open(template_path, 'w') as f:
                 json.dump(template_content, f)
-            
+
             result = subprocess.run(
                 ["costpilot", "analyze", "--template", str(template_path)],
                 capture_output=True,
                 text=True,
                 timeout=5
             )
-            
+
             # Should handle or reject gracefully
             assert result.returncode in [0, 1, 2], f"Should handle depth {depth}"
 
@@ -47,7 +47,7 @@ def test_deep_array_nesting_fuzzing():
     """Fuzz with deeply nested arrays."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Create deeply nested array
         nested = []
         current = nested
@@ -56,23 +56,23 @@ def test_deep_array_nesting_fuzzing():
             current.append(inner)
             current = inner
         current.append("deep")
-        
+
         template_content = {
             "Resources": {
                 "NestedArray": nested
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "analyze", "--template", str(template_path)],
             capture_output=True,
             text=True,
             timeout=5
         )
-        
+
         assert result.returncode in [0, 1, 2], "Should handle deeply nested arrays"
 
 
@@ -80,7 +80,7 @@ def test_mixed_nesting_fuzzing():
     """Fuzz with mixed object/array nesting."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Alternate between objects and arrays
         nested = {}
         current_obj = nested
@@ -94,23 +94,23 @@ def test_mixed_nesting_fuzzing():
             else:
                 current_obj["level"] = {}
                 current_obj = current_obj["level"]
-        
+
         template_content = {
             "Resources": {
                 "Mixed": nested
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "analyze", "--template", str(template_path)],
             capture_output=True,
             text=True,
             timeout=5
         )
-        
+
         assert result.returncode in [0, 1, 2], "Should handle mixed nesting"
 
 
@@ -118,7 +118,7 @@ def test_recursive_reference_fuzzing():
     """Fuzz with recursive-like references."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Simulate recursive references (CloudFormation)
         resources = {}
         for i in range(100):
@@ -128,19 +128,19 @@ def test_recursive_reference_fuzzing():
                 "DependsOn": depends_on,
                 "Properties": {"MemorySize": 1024}
             }
-        
+
         template_content = {"Resources": resources}
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "analyze", "--template", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         assert result.returncode in [0, 1, 2], "Should handle recursive-like references"
 
 
@@ -148,7 +148,7 @@ def test_circular_dependency_fuzzing():
     """Fuzz with circular dependencies."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Create circular dependency chain
         template_content = {
             "Resources": {
@@ -158,23 +158,23 @@ def test_circular_dependency_fuzzing():
                 }
             }
         }
-        
+
         for i in range(2, 11):
             template_content["Resources"][f"Lambda{i}"] = {
                 "Type": "AWS::Lambda::Function",
                 "DependsOn": f"Lambda{i-1}"
             }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "analyze", "--template", str(template_path)],
             capture_output=True,
             text=True,
             timeout=5
         )
-        
+
         # Should detect circular dependency
         output = result.stdout + result.stderr
         if "circular" in output.lower() or "cycle" in output.lower():
@@ -185,7 +185,7 @@ def test_wide_shallow_fuzzing():
     """Fuzz with wide but shallow structures."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Many siblings, not deep
         wide_obj = {
             f"field_{i}": {
@@ -195,21 +195,21 @@ def test_wide_shallow_fuzzing():
             }
             for i in range(1000)
         }
-        
+
         template_content = {
             "Resources": wide_obj
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "analyze", "--template", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         assert result.returncode in [0, 1, 2], "Should handle wide shallow structures"
 
 
@@ -217,7 +217,7 @@ def test_recursion_limit_fuzzing():
     """Test recursion limit handling."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Create structure that might hit recursion limits
         def create_nested(depth, max_depth):
             if depth >= max_depth:
@@ -226,26 +226,26 @@ def test_recursion_limit_fuzzing():
                 "left": create_nested(depth + 1, max_depth),
                 "right": create_nested(depth + 1, max_depth)
             }
-        
+
         # Binary tree structure
         nested = create_nested(0, 10)  # 2^10 = 1024 nodes
-        
+
         template_content = {
             "Resources": {
                 "Tree": nested
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "analyze", "--template", str(template_path)],
             capture_output=True,
             text=True,
             timeout=5
         )
-        
+
         assert result.returncode in [0, 1, 2], "Should handle recursion limits"
 
 

@@ -107,12 +107,25 @@ impl ArtifactResource {
     /// Get normalized resource type (convert CFN to Terraform-style)
     pub fn normalized_type(&self) -> String {
         if self.resource_type.starts_with("AWS::") {
-            // Convert AWS::EC2::Instance to aws_instance
+            // Convert AWS::Service::Resource to aws_resource format
             let parts: Vec<&str> = self.resource_type.split("::").collect();
             if parts.len() == 3 {
-                let service = parts[1].to_lowercase();
-                let resource = parts[2].to_lowercase();
-                return format!("aws_{}_{}", service, resource);
+                let service = parts[1];
+                let resource = parts[2];
+                match (service, resource) {
+                    ("EC2", "Instance") => return "aws_instance".to_string(),
+                    ("EC2", "VPC") => return "aws_vpc".to_string(),
+                    ("EC2", "Subnet") => return "aws_subnet".to_string(),
+                    ("RDS", "DBInstance") => return "aws_db_instance".to_string(),
+                    ("S3", "Bucket") => return "aws_s3_bucket".to_string(),
+                    ("AutoScaling", "AutoScalingGroup") => return "aws_autoscaling_group".to_string(),
+                    _ => {
+                        // Default: aws_service_resource
+                        let service_lower = service.to_lowercase();
+                        let resource_lower = resource.to_lowercase();
+                        return format!("aws_{}_{}", service_lower, resource_lower);
+                    }
+                }
             }
         }
         self.resource_type.clone()
@@ -396,7 +409,7 @@ mod tests {
             metadata: HashMap::new(),
         };
 
-        assert_eq!(resource.normalized_type(), "aws_ec2_instance");
+        assert_eq!(resource.normalized_type(), "aws_instance");
     }
 
     #[test]
@@ -491,7 +504,7 @@ mod tests {
             metadata: HashMap::new(),
         });
 
-        let instances = artifact.get_resources_by_type("aws_ec2_instance");
+        let instances = artifact.get_resources_by_type("aws_instance");
         assert_eq!(instances.len(), 2);
 
         let buckets = artifact.get_resources_by_type("aws_s3_bucket");
@@ -535,7 +548,7 @@ mod tests {
         });
 
         let counts = artifact.count_by_type();
-        assert_eq!(counts.get("aws_ec2_instance"), Some(&2));
+        assert_eq!(counts.get("aws_instance"), Some(&2));
         assert_eq!(counts.get("aws_s3_bucket"), Some(&1));
     }
 

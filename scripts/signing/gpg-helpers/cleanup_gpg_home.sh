@@ -14,10 +14,10 @@ GNUPGHOME="$1"
 if [[ -d "$GNUPGHOME" ]]; then
   # Kill any gpg-agent
   gpgconf --homedir "$GNUPGHOME" --kill gpg-agent 2>/dev/null || true
-  
+
   # Secure removal
   rm -rf "$GNUPGHOME"
-  
+
   echo "CLEANED: ${GNUPGHOME}"
 else
   echo "SKIPPED: ${GNUPGHOME} not found"

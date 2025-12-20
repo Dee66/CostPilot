@@ -32,7 +32,7 @@ export class CostReportWebview {
 
     async showAnalysis(analysis: any): Promise<void> {
         await this.show();
-        
+
         if (!this.panel) {
             return;
         }
@@ -42,7 +42,7 @@ export class CostReportWebview {
 
     async showDependencyMap(mermaidCode: string): Promise<void> {
         await this.show();
-        
+
         if (!this.panel) {
             return;
         }
@@ -52,7 +52,7 @@ export class CostReportWebview {
 
     async showSLOReport(sloResult: any): Promise<void> {
         await this.show();
-        
+
         if (!this.panel) {
             return;
         }
@@ -168,7 +168,7 @@ export class CostReportWebview {
 </head>
 <body>
     <h1>💰 CostPilot Analysis Report</h1>
-    
+
     <div class="summary">
         <div class="summary-card">
             <h3>Estimated Monthly Cost</h3>

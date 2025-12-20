@@ -1,7 +1,7 @@
 # Behavior Freeze Contract
 
-**Version:** 1.0.0  
-**Status:** Enforced  
+**Version:** 1.0.0
+**Status:** Enforced
 **Last Updated:** 2025-12-06
 
 ---
@@ -335,9 +335,9 @@ v3.0.0: v1.x.x support dropped
 #[test]
 fn test_regression_classifier_frozen() {
     let plan = load_fixture("ec2_cost_increase.json");
-    
+
     let result = classify_regression(&plan).unwrap();
-    
+
     // Snapshot test - output must not change
     insta::assert_json_snapshot!(result);
 }
@@ -345,14 +345,14 @@ fn test_regression_classifier_frozen() {
 #[test]
 fn test_prediction_interval_frozen() {
     let resource = sample_ec2_resource("t3.medium");
-    
+
     let prediction = predict_cost(&resource).unwrap();
-    
+
     // Frozen semantics
     assert!(prediction.p10 <= prediction.p50);
     assert!(prediction.p50 <= prediction.p90);
     assert!(prediction.p90 <= prediction.p99);
-    
+
     // Snapshot test
     insta::assert_json_snapshot!(prediction);
 }
@@ -363,10 +363,10 @@ fn test_prediction_interval_frozen() {
 #[test]
 fn test_explain_output_frozen() {
     let explanation = explain_cost_increase(&sample_plan());
-    
+
     let expected = include_str!("golden/explain_output_v1.0.0.json");
     let actual = serde_json::to_string_pretty(&explanation).unwrap();
-    
+
     assert_eq!(actual, expected, "Explain output must match golden file");
 }
 ```
@@ -396,7 +396,7 @@ fn test_explain_output_frozen() {
    ## Breaking Changes
    - `old_function()` removed → use `new_function()`
    - JSON field `cost` renamed to `price`
-   
+
    ## Migration Steps
    1. Update all calls to `old_function()`
    2. Update JSON parsers to use `price` field
@@ -495,12 +495,12 @@ See [MIGRATION.md](MIGRATION.md) for detailed instructions.
 fn test_regression_classifier_stability() {
     // Load golden file from v1.0.0
     let expected = include_str!("golden/regression_v1.0.0.json");
-    
+
     // Current output
     let plan = load_fixture("ec2_cost_increase.json");
     let result = classify_regression(&plan).unwrap();
     let actual = serde_json::to_string_pretty(&result).unwrap();
-    
+
     assert_eq!(
         actual,
         expected,
@@ -512,7 +512,7 @@ fn test_regression_classifier_stability() {
 fn test_json_schema_version() {
     let output = generate_cost_report(&sample_plan());
     let json: Value = serde_json::from_str(&output).unwrap();
-    
+
     assert!(
         json.get("schema_version").is_some(),
         "All JSON output must include schema_version"
@@ -524,11 +524,11 @@ fn test_cli_exit_codes() {
     // Success
     let status = run_command(&["scan", "plan.json"]);
     assert_eq!(status.code(), Some(0));
-    
+
     // Error
     let status = run_command(&["scan", "nonexistent.json"]);
     assert_eq!(status.code(), Some(1));
-    
+
     // Policy violation
     let status = run_command(&["policy", "check", "--config", "strict.yaml"]);
     assert_eq!(status.code(), Some(2));

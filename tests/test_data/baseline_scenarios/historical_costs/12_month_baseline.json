@@ -1,0 +1,349 @@
+# CostPilot Baseline Scenario: Historical Costs
+# This baseline represents 12 months of historical cost data for trend analysis
+
+metadata:
+  baseline_id: "historical-costs-12-months"
+  baseline_version: "1.0.0"
+  baseline_type: "historical_costs"
+  description: "12 months of historical AWS cost data for trend analysis and forecasting"
+  created_at: "2025-01-15T00:00:00Z"
+  data_source: "aws_cost_explorer"
+  account_id: "123456789012"
+  region: "us-east-1"
+  currency: "USD"
+  time_range:
+    start: "2024-01-01T00:00:00Z"
+    end: "2024-12-31T23:59:59Z"
+
+# Monthly cost breakdown
+monthly_costs:
+  "2024-01":
+    total_cost: 45231.67
+    by_service:
+      EC2-Instances: 18543.21
+      RDS: 8921.45
+      S3: 2345.67
+      CloudFront: 3456.78
+      Lambda: 1234.56
+      API-Gateway: 789.12
+      ELB: 1456.23
+      EBS: 2345.67
+      VPC: 456.78
+      CloudWatch: 678.90
+      Other: 1003.30
+    by_region:
+      us-east-1: 38765.43
+      us-west-2: 4567.89
+      eu-west-1: 1898.35
+    by_tag:
+      Environment-Production: 34567.89
+      Environment-Staging: 6789.12
+      Environment-Development: 3874.66
+
+  "2024-02":
+    total_cost: 42876.54
+    by_service:
+      EC2-Instances: 17234.56
+      RDS: 8765.43
+      S3: 2234.56
+      CloudFront: 3345.67
+      Lambda: 1123.45
+      API-Gateway: 756.78
+      ELB: 1345.12
+      EBS: 2234.56
+      VPC: 434.56
+      CloudWatch: 645.67
+      Other: 956.23
+    by_region:
+      us-east-1: 36543.21
+      us-west-2: 4234.56
+      eu-west-1: 2098.77
+    by_tag:
+      Environment-Production: 32123.45
+      Environment-Staging: 6543.21
+      Environment-Development: 4209.88
+
+  "2024-03":
+    total_cost: 48976.23
+    by_service:
+      EC2-Instances: 19876.54
+      RDS: 9345.67
+      S3: 2456.78
+      CloudFront: 3678.90
+      Lambda: 1345.67
+      API-Gateway: 823.45
+      ELB: 1567.89
+      EBS: 2456.78
+      VPC: 478.90
+      CloudWatch: 712.34
+      Other: 1133.91
+    by_region:
+      us-east-1: 41234.56
+      us-west-2: 4987.65
+      eu-west-1: 2754.02
+    by_tag:
+      Environment-Production: 37865.43
+      Environment-Staging: 7234.56
+      Environment-Development: 3876.24
+
+  "2024-04":
+    total_cost: 46543.89
+    by_service:
+      EC2-Instances: 18987.65
+      RDS: 9123.45
+      S3: 2345.67
+      CloudFront: 3456.78
+      Lambda: 1234.56
+      API-Gateway: 789.12
+      ELB: 1456.23
+      EBS: 2345.67
+      VPC: 456.78
+      CloudWatch: 678.90
+      Other: 1069.08
+    by_region:
+      us-east-1: 39123.45
+      us-west-2: 4678.90
+      eu-west-1: 2741.54
+    by_tag:
+      Environment-Production: 35678.90
+      Environment-Staging: 6987.65
+      Environment-Development: 3877.34
+
+  "2024-05":
+    total_cost: 51234.56
+    by_service:
+      EC2-Instances: 20765.43
+      RDS: 9876.54
+      S3: 2567.89
+      CloudFront: 3789.01
+      Lambda: 1456.78
+      API-Gateway: 856.23
+      ELB: 1678.90
+      EBS: 2567.89
+      VPC: 498.76
+      CloudWatch: 734.56
+      Other: 1242.57
+    by_region:
+      us-east-1: 43123.45
+      us-west-2: 5234.56
+      eu-west-1: 2876.55
+    by_tag:
+      Environment-Production: 39234.56
+      Environment-Staging: 7567.89
+      Environment-Development: 4432.11
+
+  "2024-06":
+    total_cost: 48765.43
+    by_service:
+      EC2-Instances: 19876.54
+      RDS: 9345.67
+      S3: 2456.78
+      CloudFront: 3678.90
+      Lambda: 1345.67
+      API-Gateway: 823.45
+      ELB: 1567.89
+      EBS: 2456.78
+      VPC: 478.90
+      CloudWatch: 712.34
+      Other: 1178.61
+    by_region:
+      us-east-1: 40987.65
+      us-west-2: 4987.65
+      eu-west-1: 2790.13
+    by_tag:
+      Environment-Production: 37456.78
+      Environment-Staging: 7234.56
+      Environment-Development: 4074.09
+
+  "2024-07":
+    total_cost: 53456.78
+    by_service:
+      EC2-Instances: 21876.54
+      RDS: 10234.56
+      S3: 2678.90
+      CloudFront: 3890.12
+      Lambda: 1567.89
+      API-Gateway: 934.56
+      ELB: 1789.01
+      EBS: 2678.90
+      VPC: 523.45
+      CloudWatch: 789.23
+      Other: 1353.62
+    by_region:
+      us-east-1: 44987.65
+      us-west-2: 5456.78
+      eu-west-1: 3012.35
+    by_tag:
+      Environment-Production: 40987.65
+      Environment-Staging: 7890.12
+      Environment-Development: 4579.01
+
+  "2024-08":
+    total_cost: 49876.54
+    by_service:
+      EC2-Instances: 20345.67
+      RDS: 9567.89
+      S3: 2489.01
+      CloudFront: 3723.45
+      Lambda: 1389.23
+      API-Gateway: 845.67
+      ELB: 1598.76
+      EBS: 2489.01
+      VPC: 487.65
+      CloudWatch: 723.89
+      Other: 1226.31
+    by_region:
+      us-east-1: 41876.54
+      us-west-2: 5098.76
+      eu-west-1: 2901.24
+    by_tag:
+      Environment-Production: 38123.45
+      Environment-Staging: 7345.67
+      Environment-Development: 4407.42
+
+  "2024-09":
+    total_cost: 52345.67
+    by_service:
+      EC2-Instances: 21345.67
+      RDS: 9987.65
+      S3: 2589.01
+      CloudFront: 3812.34
+      Lambda: 1498.76
+      API-Gateway: 887.65
+      ELB: 1698.76
+      EBS: 2589.01
+      VPC: 512.34
+      CloudWatch: 756.78
+      Other: 1307.70
+    by_region:
+      us-east-1: 44098.76
+      us-west-2: 5298.76
+      eu-west-1: 2948.15
+    by_tag:
+      Environment-Production: 40123.45
+      Environment-Staging: 7689.01
+      Environment-Development: 4533.21
+
+  "2024-10":
+    total_cost: 55678.90
+    by_service:
+      EC2-Instances: 22765.43
+      RDS: 10543.21
+      S3: 2723.45
+      CloudFront: 3987.65
+      Lambda: 1623.45
+      API-Gateway: 956.78
+      ELB: 1798.76
+      EBS: 2723.45
+      VPC: 534.56
+      CloudWatch: 798.76
+      Other: 1423.40
+    by_region:
+      us-east-1: 46876.54
+      us-west-2: 5623.45
+      eu-west-1: 3178.91
+    by_tag:
+      Environment-Production: 42765.43
+      Environment-Staging: 8123.45
+      Environment-Development: 4790.02
+
+  "2024-11":
+    total_cost: 57890.12
+    by_service:
+      EC2-Instances: 23654.32
+      RDS: 10987.65
+      S3: 2812.34
+      CloudFront: 4123.45
+      Lambda: 1698.76
+      API-Gateway: 1023.45
+      ELB: 1876.54
+      EBS: 2812.34
+      VPC: 556.78
+      CloudWatch: 823.45
+      Other: 1521.04
+    by_region:
+      us-east-1: 48765.43
+      us-west-2: 5876.54
+      eu-west-1: 3248.15
+    by_tag:
+      Environment-Production: 44543.21
+      Environment-Staging: 8456.78
+      Environment-Development: 4890.13
+
+  "2024-12":
+    total_cost: 61234.56
+    by_service:
+      EC2-Instances: 24987.65
+      RDS: 11456.78
+      S3: 2934.56
+      CloudFront: 4287.65
+      Lambda: 1789.01
+      API-Gateway: 1098.76
+      ELB: 1967.89
+      EBS: 2934.56
+      VPC: 578.90
+      CloudWatch: 867.89
+      Other: 1631.91
+    by_region:
+      us-east-1: 51456.78
+      us-west-2: 6187.65
+      eu-west-1: 3590.13
+    by_tag:
+      Environment-Production: 47123.45
+      Environment-Staging: 8923.45
+      Environment-Development: 5187.66
+
+# Cost trends and patterns
+trends:
+  overall_growth_rate: 0.086  # 8.6% month-over-month growth
+  seasonal_pattern: "end_of_year_spike"  # Higher costs in Q4 due to holiday traffic
+  cost_drivers:
+    - service: "EC2-Instances"
+      growth_rate: 0.092
+      percentage_of_total: 0.41
+    - service: "RDS"
+      growth_rate: 0.078
+      percentage_of_total: 0.19
+    - service: "S3"
+      growth_rate: 0.065
+      percentage_of_total: 0.05
+
+# Anomalies and outliers
+anomalies:
+  "2024-03":
+    description: "Unusual spike due to emergency scaling"
+    impact: 6144.56
+    cause: "Traffic surge from marketing campaign"
+  "2024-07":
+    description: "Infrastructure migration costs"
+    impact: 4689.23
+    cause: "Migration to new instance types"
+
+# Forecasting data
+forecasting:
+  next_month_prediction: 64567.89
+  confidence_interval:
+    lower: 61234.56
+    upper: 67891.12
+  seasonal_adjustment: 1.08  # 8% seasonal increase expected
+
+# Resource inventory snapshot (end of period)
+resource_inventory:
+  ec2_instances:
+    total: 156
+    by_type:
+      t3.micro: 45
+      t3.small: 34
+      t3.medium: 28
+      m5.large: 23
+      m5.xlarge: 18
+      c5.large: 8
+  rds_instances:
+    total: 23
+    by_engine:
+      mysql: 15
+      postgresql: 8
+  s3_buckets:
+    total: 67
+    with_versioning: 45
+    with_encryption: 62

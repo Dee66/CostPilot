@@ -165,7 +165,7 @@ mod tests {
         } else {
             "2025-06-01T00:00:00Z"
         };
-        
+
         PolicyExemption {
             id: id.to_string(),
             policy_name: "TEST_POLICY".to_string(),

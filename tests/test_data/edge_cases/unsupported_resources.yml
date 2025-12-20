@@ -1,0 +1,131 @@
+# CostPilot Edge Case: Unsupported Resources
+# Test data for handling unsupported resource types
+
+# Unknown cloud provider
+unknown_provider:
+  metadata:
+    test_case: "unknown_provider"
+    description: "Resource from unknown cloud provider"
+    expected_behavior: "unsupported_resource_warning"
+  plan:
+    resources:
+      - type: "azure_vm"
+        name: "test-vm"
+        provider: "azure"
+        attributes:
+          instance_type: "Standard_B2s"
+          region: "eastus"
+
+# Unknown resource type for AWS
+unknown_aws_resource:
+  metadata:
+    test_case: "unknown_aws_resource"
+    description: "Unknown AWS resource type"
+    expected_behavior: "unsupported_resource_warning"
+  plan:
+    resources:
+      - type: "aws_unknown_service"
+        name: "test-unknown"
+        provider: "aws"
+        attributes:
+          custom_attr: "value"
+
+# Deprecated resource type
+deprecated_resource:
+  metadata:
+    test_case: "deprecated_resource"
+    description: "Deprecated AWS resource type"
+    expected_behavior: "deprecated_resource_warning"
+  plan:
+    resources:
+      - type: "aws_db_instance"
+        name: "deprecated-db"
+        provider: "aws"
+        attributes:
+          engine: "mysql5.5"  # Deprecated MySQL version
+          instance_class: "db.t2.micro"
+
+# Custom/unknown Terraform resource
+custom_terraform_resource:
+  metadata:
+    test_case: "custom_terraform_resource"
+    description: "Custom Terraform resource type"
+    expected_behavior: "unsupported_resource_warning"
+  plan:
+    resources:
+      - type: "custom_provider_custom_resource"
+        name: "custom-resource"
+        provider: "custom"
+        attributes:
+          custom_field: "value"
+
+# Mixed supported and unsupported
+mixed_resources:
+  metadata:
+    test_case: "mixed_resources"
+    description: "Plan with mix of supported and unsupported resources"
+    expected_behavior: "partial_processing_with_warnings"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "supported-ec2"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+      - type: "gcp_compute_instance"
+        name: "unsupported-gcp"
+        provider: "gcp"
+        attributes:
+          machine_type: "n1-standard-1"
+      - type: "aws_s3_bucket"
+        name: "supported-s3"
+        provider: "aws"
+        attributes:
+          region: "us-east-1"
+
+# Resource with unknown attributes
+unknown_attributes:
+  metadata:
+    test_case: "unknown_attributes"
+    description: "Resource with unknown/unsupported attributes"
+    expected_behavior: "unknown_attribute_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "ec2-with-unknown-attrs"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+          unknown_attr: "value"
+          another_unknown: 123
+
+# Future resource type (hypothetical)
+future_resource:
+  metadata:
+    test_case: "future_resource"
+    description: "Hypothetical future AWS resource type"
+    expected_behavior: "unsupported_resource_warning"
+  plan:
+    resources:
+      - type: "aws_quantum_computer"
+        name: "quantum-instance"
+        provider: "aws"
+        attributes:
+          qubit_count: 1000
+          region: "us-east-1"
+
+# Resource with invalid provider
+invalid_provider:
+  metadata:
+    test_case: "invalid_provider"
+    description: "Resource with invalid provider specification"
+    expected_behavior: "invalid_provider_error"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "ec2-invalid-provider"
+        provider: "invalid_cloud"
+        attributes:
+          instance_type: "t3.micro"

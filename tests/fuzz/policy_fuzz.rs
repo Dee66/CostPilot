@@ -95,7 +95,7 @@ mod policy_fuzz_tests {
             let engine = PolicyEngine::new(policy.clone());
             let result1 = engine.evaluate(&detections);
             let result2 = engine.evaluate(&detections);
-            
+
             prop_assert_eq!(result1.len(), result2.len());
         }
 
@@ -125,12 +125,12 @@ mod policy_fuzz_tests {
                 severity: "high".to_string(),
                 message: "Test".to_string(),
             };
-            
+
             let policy = Policy {
                 version: "1.0".to_string(),
                 rules: vec![rule],
             };
-            
+
             let engine = PolicyEngine::new(policy);
             let _ = engine.check_resource("aws_instance", actual_cost.abs());
         }
@@ -147,12 +147,12 @@ mod policy_fuzz_tests {
                 severity: "high".to_string(),
                 message: "Test".to_string(),
             };
-            
+
             let policy = Policy {
                 version: "1.0".to_string(),
                 rules: vec![rule],
             };
-            
+
             let engine = PolicyEngine::new(policy);
             let _ = engine.check_resource(&resource_type, 50.0);
         }

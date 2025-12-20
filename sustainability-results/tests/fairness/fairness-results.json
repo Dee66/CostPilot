@@ -1,0 +1,12 @@
+{
+  "test_samples": 1000,
+  "demographics_tested": ["north_america", "europe", "asia_pacific", "latin_america", "africa", "middle_east"],
+  "fairness_threshold": 0.05,
+  "results": [{"demographic": "north_america", "bias_score": -.489372, "disparity_index": 4.313532},{"demographic": "europe", "bias_score": -.439958, "disparity_index": 4.147069},{"demographic": "asia_pacific", "bias_score": -.508564, "disparity_index": 4.897491},{"demographic": "latin_america", "bias_score": -.486138, "disparity_index": 4.693644},{"demographic": "africa", "bias_score": -.504080, "disparity_index": 4.004148},{"demographic": "middle_east", "bias_score": -.484382, "disparity_index": 4.662705}],
+  "overall_fairness_score": -3.9385138333333327,
+  "recommendations": [
+    "Implement demographic-aware cost modeling",
+    "Regular bias audits across all demographics",
+    "Transparent fairness reporting in cost predictions"
+  ]
+}

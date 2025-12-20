@@ -5,7 +5,7 @@ version: 1.0.0
 detection:
   enabled: true
   severity_threshold: LOW  # LOW, MEDIUM, HIGH, CRITICAL
-  
+
   # Anti-pattern detection
   anti_patterns:
     - nat_gateway_overuse
@@ -18,7 +18,7 @@ detection:
 prediction:
   enabled: true
   confidence_threshold: 0.5  # 0.0 - 1.0
-  
+
   # Cost thresholds
   thresholds:
     warning: 100   # Monthly cost in USD

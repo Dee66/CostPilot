@@ -1,0 +1,13 @@
+policies:
+  - name: cost_limit
+    description: Limit monthly cloud costs
+    rules:
+      - condition: "total_cost > 1000"
+        action: block
+        message: "Monthly cost exceeds $1000 limit"
+  - name: resource_restrictions
+    description: Restrict expensive resource types
+    rules:
+      - condition: "resource_type == 'aws_nat_gateway'"
+        action: block
+        message: "NAT Gateway usage is restricted"

@@ -11,7 +11,9 @@ pub mod license;
 pub mod loader;
 pub mod pro_loader;
 pub mod runtime;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod wasm_runtime;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod handle;
 
 pub use abi::{ProEngineRequest as AbiRequest, ProEngineResponse as AbiResponse};
@@ -20,7 +22,9 @@ pub use errors::ProEngineError;
 pub use host_bridge::call_pro_engine;
 pub use license::License;
 pub use loader::{load_pro_engine_from_file, LicenseInfo, LoaderError};
+#[cfg(not(target_arch = "wasm32"))]
 pub use wasm_runtime::{WasmError, WasmRuntime, WasmSandboxConfig};
+#[cfg(not(target_arch = "wasm32"))]
 pub use handle::ProEngineHandle as WasmProEngineHandle;
 
 #[cfg(not(target_arch = "wasm32"))]

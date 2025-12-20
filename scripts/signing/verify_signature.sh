@@ -30,23 +30,23 @@ if [[ -n "$PUBLIC_KEY" ]]; then
     GNUPGHOME=$(mktemp -d)
     export GNUPGHOME
     trap "rm -rf '$GNUPGHOME'" EXIT
-    
+
     gpg --batch --import "$PUBLIC_KEY" 2>/dev/null
-    
+
     if gpg --batch --verify "$SIG_FILE" "$CHECKSUM_FILE" 2>/dev/null; then
       echo "VERIFIED: true"
     else
       echo "ERROR: GPG signature verification failed" >&2
       exit 1
     fi
-    
+
   else
     # Ed25519 signature (base64)
     SIG_BINARY=$(mktemp)
     trap "rm -f '$SIG_BINARY'" EXIT
-    
+
     base64 -d "$SIG_FILE" > "$SIG_BINARY"
-    
+
     # Try raw verification first
     if openssl pkeyutl -verify -pubin -inkey "$PUBLIC_KEY" -rawin -in "$CHECKSUM_FILE" -sigfile "$SIG_BINARY" 2>/dev/null; then
       echo "VERIFIED: true"
@@ -67,11 +67,11 @@ else
     echo "ERROR: SIGNING_SECRET required for HMAC verification" >&2
     exit 1
   fi
-  
+
   KEY=$(echo -n "$SIGNING_SECRET" | sha256sum | cut -d' ' -f1)
   EXPECTED_SIG=$(openssl dgst -sha256 -hmac "$KEY" -binary "$CHECKSUM_FILE" | base64 -w0)
   ACTUAL_SIG=$(cat "$SIG_FILE")
-  
+
   if [[ "$EXPECTED_SIG" == "$ACTUAL_SIG" ]]; then
     echo "VERIFIED: true"
   else

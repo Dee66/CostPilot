@@ -7,7 +7,7 @@ export class CostAnnotationProvider {
 
     constructor(private context: vscode.ExtensionContext) {
         const config = vscode.workspace.getConfiguration('costpilot');
-        
+
         if (!config.get('costAnnotations.enabled', true)) {
             return;
         }
@@ -53,7 +53,7 @@ export class CostAnnotationProvider {
         while ((match = resourceRegex.exec(text)) !== null) {
             const position = editor.document.positionAt(match.index);
             const line = editor.document.lineAt(position.line);
-            
+
             const decoration: vscode.DecorationOptions = {
                 range: new vscode.Range(position.line, line.text.length, position.line, line.text.length),
                 renderOptions: {

@@ -15,6 +15,7 @@
 pub mod baselines;
 pub mod config;
 pub mod error;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod output;
 pub mod policy;
 pub mod slo;
@@ -22,6 +23,7 @@ pub mod slo;
 pub use baselines::BaselinesValidator;
 pub use config::ConfigValidator;
 pub use error::{ValidationError, ValidationResult, ValidationWarning};
+#[cfg(not(target_arch = "wasm32"))]
 pub use output::OutputValidator;
 pub use policy::PolicyValidator;
 pub use slo::SloValidator;

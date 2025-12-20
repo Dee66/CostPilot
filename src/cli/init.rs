@@ -80,7 +80,7 @@ version: 1.0.0
 detection:
   enabled: true
   severity_threshold: LOW  # LOW, MEDIUM, HIGH, CRITICAL
-  
+
   # Anti-pattern detection
   anti_patterns:
     - nat_gateway_overuse
@@ -93,7 +93,7 @@ detection:
 prediction:
   enabled: true
   confidence_threshold: 0.5  # 0.0 - 1.0
-  
+
   # Cost thresholds
   thresholds:
     warning: 100   # Monthly cost in USD
@@ -162,7 +162,7 @@ permissions:
 jobs:
   cost-analysis:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -289,14 +289,14 @@ policies:
     severity: CRITICAL
     tags:
       - environment: production
-    
+
   - name: "Development Budget Warning"
     rule: "monthly_cost > 1000"
     action: warn
     severity: MEDIUM
     tags:
       - environment: development
-  
+
   - name: "Instance Type Restrictions"
     rule: "instance_type in ['t3.micro', 't3.small', 't3.medium', 't3.large']"
     action: require_approval
@@ -304,28 +304,28 @@ policies:
     resources:
       - aws_instance
       - aws_autoscaling_group
-  
+
   - name: "NAT Gateway Limit"
     rule: "resource_count <= 2"
     action: block
     severity: HIGH
     resources:
       - aws_nat_gateway
-  
+
   - name: "Lambda Concurrency Limit"
     rule: "reserved_concurrent_executions != null"
     action: warn
     severity: MEDIUM
     resources:
       - aws_lambda_function
-  
+
   - name: "S3 Lifecycle Rules Required"
     rule: "lifecycle_rule != null"
     action: warn
     severity: LOW
     resources:
       - aws_s3_bucket
-  
+
   - name: "Cost Regression Threshold"
     rule: "cost_increase_percent <= 20"
     action: require_approval
@@ -350,7 +350,7 @@ approval_workflows:
         - "*.2xlarge"
         - "*.4xlarge"
         - "*.8xlarge"
-  
+
   approvers:
     - email: "tech-lead@company.com"
       slack: "@tech-lead"

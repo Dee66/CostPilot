@@ -316,7 +316,7 @@ impl MermaidGenerator {
 <body>
     <div class="container">
         <h1>{}</h1>
-        
+
         <div class="metadata">
             <strong>Nodes:</strong> {} |
             <strong>Edges:</strong> {} |
@@ -324,11 +324,11 @@ impl MermaidGenerator {
             <strong>Cycles:</strong> {} |
             <strong>Total Cost:</strong> ${}
         </div>
-        
+
         <div class="mermaid">
 {}
         </div>
-        
+
         <div class="legend">
             <h3>Legend</h3>
             <ul>
@@ -340,9 +340,9 @@ impl MermaidGenerator {
             </ul>
         </div>
     </div>
-    
+
     <script>
-        mermaid.initialize({{ 
+        mermaid.initialize({{
             startOnLoad: true,
             theme: 'default',
             flowchart: {{

@@ -1,0 +1,1001 @@
+{
+  "demographic": "middle_east",
+  "test_cases": [
+    {
+      "case_id": "middle_east-1",
+      "infrastructure_cost": 2389,
+      "region": "middle_east",
+      "expected_cost_prediction": 1202
+    },
+    {
+      "case_id": "middle_east-2",
+      "infrastructure_cost": 5690,
+      "region": "middle_east",
+      "expected_cost_prediction": 1044
+    },
+    {
+      "case_id": "middle_east-3",
+      "infrastructure_cost": 1278,
+      "region": "middle_east",
+      "expected_cost_prediction": 762
+    },
+    {
+      "case_id": "middle_east-4",
+      "infrastructure_cost": 3277,
+      "region": "middle_east",
+      "expected_cost_prediction": 746
+    },
+    {
+      "case_id": "middle_east-5",
+      "infrastructure_cost": 5581,
+      "region": "middle_east",
+      "expected_cost_prediction": 681
+    },
+    {
+      "case_id": "middle_east-6",
+      "infrastructure_cost": 5200,
+      "region": "middle_east",
+      "expected_cost_prediction": 1007
+    },
+    {
+      "case_id": "middle_east-7",
+      "infrastructure_cost": 1968,
+      "region": "middle_east",
+      "expected_cost_prediction": 812
+    },
+    {
+      "case_id": "middle_east-8",
+      "infrastructure_cost": 2413,
+      "region": "middle_east",
+      "expected_cost_prediction": 1094
+    },
+    {
+      "case_id": "middle_east-9",
+      "infrastructure_cost": 2673,
+      "region": "middle_east",
+      "expected_cost_prediction": 1196
+    },
+    {
+      "case_id": "middle_east-10",
+      "infrastructure_cost": 1013,
+      "region": "middle_east",
+      "expected_cost_prediction": 1212
+    },
+    {
+      "case_id": "middle_east-11",
+      "infrastructure_cost": 1935,
+      "region": "middle_east",
+      "expected_cost_prediction": 921
+    },
+    {
+      "case_id": "middle_east-12",
+      "infrastructure_cost": 1069,
+      "region": "middle_east",
+      "expected_cost_prediction": 1374
+    },
+    {
+      "case_id": "middle_east-13",
+      "infrastructure_cost": 3878,
+      "region": "middle_east",
+      "expected_cost_prediction": 1199
+    },
+    {
+      "case_id": "middle_east-14",
+      "infrastructure_cost": 5847,
+      "region": "middle_east",
+      "expected_cost_prediction": 656
+    },
+    {
+      "case_id": "middle_east-15",
+      "infrastructure_cost": 3342,
+      "region": "middle_east",
+      "expected_cost_prediction": 925
+    },
+    {
+      "case_id": "middle_east-16",
+      "infrastructure_cost": 3926,
+      "region": "middle_east",
+      "expected_cost_prediction": 808
+    },
+    {
+      "case_id": "middle_east-17",
+      "infrastructure_cost": 4124,
+      "region": "middle_east",
+      "expected_cost_prediction": 1283
+    },
+    {
+      "case_id": "middle_east-18",
+      "infrastructure_cost": 3022,
+      "region": "middle_east",
+      "expected_cost_prediction": 631
+    },
+    {
+      "case_id": "middle_east-19",
+      "infrastructure_cost": 4993,
+      "region": "middle_east",
+      "expected_cost_prediction": 986
+    },
+    {
+      "case_id": "middle_east-20",
+      "infrastructure_cost": 5753,
+      "region": "middle_east",
+      "expected_cost_prediction": 1253
+    },
+    {
+      "case_id": "middle_east-21",
+      "infrastructure_cost": 4922,
+      "region": "middle_east",
+      "expected_cost_prediction": 1492
+    },
+    {
+      "case_id": "middle_east-22",
+      "infrastructure_cost": 2941,
+      "region": "middle_east",
+      "expected_cost_prediction": 1171
+    },
+    {
+      "case_id": "middle_east-23",
+      "infrastructure_cost": 4756,
+      "region": "middle_east",
+      "expected_cost_prediction": 892
+    },
+    {
+      "case_id": "middle_east-24",
+      "infrastructure_cost": 2390,
+      "region": "middle_east",
+      "expected_cost_prediction": 1423
+    },
+    {
+      "case_id": "middle_east-25",
+      "infrastructure_cost": 1111,
+      "region": "middle_east",
+      "expected_cost_prediction": 993
+    },
+    {
+      "case_id": "middle_east-26",
+      "infrastructure_cost": 5201,
+      "region": "middle_east",
+      "expected_cost_prediction": 1173
+    },
+    {
+      "case_id": "middle_east-27",
+      "infrastructure_cost": 2266,
+      "region": "middle_east",
+      "expected_cost_prediction": 1022
+    },
+    {
+      "case_id": "middle_east-28",
+      "infrastructure_cost": 4716,
+      "region": "middle_east",
+      "expected_cost_prediction": 633
+    },
+    {
+      "case_id": "middle_east-29",
+      "infrastructure_cost": 2782,
+      "region": "middle_east",
+      "expected_cost_prediction": 559
+    },
+    {
+      "case_id": "middle_east-30",
+      "infrastructure_cost": 3167,
+      "region": "middle_east",
+      "expected_cost_prediction": 501
+    },
+    {
+      "case_id": "middle_east-31",
+      "infrastructure_cost": 2816,
+      "region": "middle_east",
+      "expected_cost_prediction": 1144
+    },
+    {
+      "case_id": "middle_east-32",
+      "infrastructure_cost": 2698,
+      "region": "middle_east",
+      "expected_cost_prediction": 527
+    },
+    {
+      "case_id": "middle_east-33",
+      "infrastructure_cost": 1965,
+      "region": "middle_east",
+      "expected_cost_prediction": 549
+    },
+    {
+      "case_id": "middle_east-34",
+      "infrastructure_cost": 5064,
+      "region": "middle_east",
+      "expected_cost_prediction": 1108
+    },
+    {
+      "case_id": "middle_east-35",
+      "infrastructure_cost": 1163,
+      "region": "middle_east",
+      "expected_cost_prediction": 1029
+    },
+    {
+      "case_id": "middle_east-36",
+      "infrastructure_cost": 3622,
+      "region": "middle_east",
+      "expected_cost_prediction": 955
+    },
+    {
+      "case_id": "middle_east-37",
+      "infrastructure_cost": 1543,
+      "region": "middle_east",
+      "expected_cost_prediction": 645
+    },
+    {
+      "case_id": "middle_east-38",
+      "infrastructure_cost": 5154,
+      "region": "middle_east",
+      "expected_cost_prediction": 1124
+    },
+    {
+      "case_id": "middle_east-39",
+      "infrastructure_cost": 3054,
+      "region": "middle_east",
+      "expected_cost_prediction": 501
+    },
+    {
+      "case_id": "middle_east-40",
+      "infrastructure_cost": 1850,
+      "region": "middle_east",
+      "expected_cost_prediction": 1076
+    },
+    {
+      "case_id": "middle_east-41",
+      "infrastructure_cost": 3826,
+      "region": "middle_east",
+      "expected_cost_prediction": 1102
+    },
+    {
+      "case_id": "middle_east-42",
+      "infrastructure_cost": 1969,
+      "region": "middle_east",
+      "expected_cost_prediction": 681
+    },
+    {
+      "case_id": "middle_east-43",
+      "infrastructure_cost": 4488,
+      "region": "middle_east",
+      "expected_cost_prediction": 1005
+    },
+    {
+      "case_id": "middle_east-44",
+      "infrastructure_cost": 3671,
+      "region": "middle_east",
+      "expected_cost_prediction": 913
+    },
+    {
+      "case_id": "middle_east-45",
+      "infrastructure_cost": 5358,
+      "region": "middle_east",
+      "expected_cost_prediction": 1213
+    },
+    {
+      "case_id": "middle_east-46",
+      "infrastructure_cost": 3471,
+      "region": "middle_east",
+      "expected_cost_prediction": 1389
+    },
+    {
+      "case_id": "middle_east-47",
+      "infrastructure_cost": 1670,
+      "region": "middle_east",
+      "expected_cost_prediction": 1456
+    },
+    {
+      "case_id": "middle_east-48",
+      "infrastructure_cost": 3242,
+      "region": "middle_east",
+      "expected_cost_prediction": 1121
+    },
+    {
+      "case_id": "middle_east-49",
+      "infrastructure_cost": 2706,
+      "region": "middle_east",
+      "expected_cost_prediction": 1338
+    },
+    {
+      "case_id": "middle_east-50",
+      "infrastructure_cost": 4370,
+      "region": "middle_east",
+      "expected_cost_prediction": 1044
+    },
+    {
+      "case_id": "middle_east-51",
+      "infrastructure_cost": 4989,
+      "region": "middle_east",
+      "expected_cost_prediction": 1428
+    },
+    {
+      "case_id": "middle_east-52",
+      "infrastructure_cost": 3450,
+      "region": "middle_east",
+      "expected_cost_prediction": 698
+    },
+    {
+      "case_id": "middle_east-53",
+      "infrastructure_cost": 4988,
+      "region": "middle_east",
+      "expected_cost_prediction": 1429
+    },
+    {
+      "case_id": "middle_east-54",
+      "infrastructure_cost": 4208,
+      "region": "middle_east",
+      "expected_cost_prediction": 755
+    },
+    {
+      "case_id": "middle_east-55",
+      "infrastructure_cost": 2463,
+      "region": "middle_east",
+      "expected_cost_prediction": 838
+    },
+    {
+      "case_id": "middle_east-56",
+      "infrastructure_cost": 1132,
+      "region": "middle_east",
+      "expected_cost_prediction": 956
+    },
+    {
+      "case_id": "middle_east-57",
+      "infrastructure_cost": 1135,
+      "region": "middle_east",
+      "expected_cost_prediction": 1283
+    },
+    {
+      "case_id": "middle_east-58",
+      "infrastructure_cost": 5101,
+      "region": "middle_east",
+      "expected_cost_prediction": 662
+    },
+    {
+      "case_id": "middle_east-59",
+      "infrastructure_cost": 5139,
+      "region": "middle_east",
+      "expected_cost_prediction": 613
+    },
+    {
+      "case_id": "middle_east-60",
+      "infrastructure_cost": 2019,
+      "region": "middle_east",
+      "expected_cost_prediction": 568
+    },
+    {
+      "case_id": "middle_east-61",
+      "infrastructure_cost": 2834,
+      "region": "middle_east",
+      "expected_cost_prediction": 864
+    },
+    {
+      "case_id": "middle_east-62",
+      "infrastructure_cost": 5120,
+      "region": "middle_east",
+      "expected_cost_prediction": 1354
+    },
+    {
+      "case_id": "middle_east-63",
+      "infrastructure_cost": 1932,
+      "region": "middle_east",
+      "expected_cost_prediction": 728
+    },
+    {
+      "case_id": "middle_east-64",
+      "infrastructure_cost": 4025,
+      "region": "middle_east",
+      "expected_cost_prediction": 553
+    },
+    {
+      "case_id": "middle_east-65",
+      "infrastructure_cost": 5702,
+      "region": "middle_east",
+      "expected_cost_prediction": 768
+    },
+    {
+      "case_id": "middle_east-66",
+      "infrastructure_cost": 1456,
+      "region": "middle_east",
+      "expected_cost_prediction": 834
+    },
+    {
+      "case_id": "middle_east-67",
+      "infrastructure_cost": 1052,
+      "region": "middle_east",
+      "expected_cost_prediction": 1388
+    },
+    {
+      "case_id": "middle_east-68",
+      "infrastructure_cost": 5197,
+      "region": "middle_east",
+      "expected_cost_prediction": 921
+    },
+    {
+      "case_id": "middle_east-69",
+      "infrastructure_cost": 1211,
+      "region": "middle_east",
+      "expected_cost_prediction": 591
+    },
+    {
+      "case_id": "middle_east-70",
+      "infrastructure_cost": 3700,
+      "region": "middle_east",
+      "expected_cost_prediction": 1402
+    },
+    {
+      "case_id": "middle_east-71",
+      "infrastructure_cost": 2919,
+      "region": "middle_east",
+      "expected_cost_prediction": 1005
+    },
+    {
+      "case_id": "middle_east-72",
+      "infrastructure_cost": 4227,
+      "region": "middle_east",
+      "expected_cost_prediction": 1158
+    },
+    {
+      "case_id": "middle_east-73",
+      "infrastructure_cost": 1393,
+      "region": "middle_east",
+      "expected_cost_prediction": 522
+    },
+    {
+      "case_id": "middle_east-74",
+      "infrastructure_cost": 1416,
+      "region": "middle_east",
+      "expected_cost_prediction": 968
+    },
+    {
+      "case_id": "middle_east-75",
+      "infrastructure_cost": 4705,
+      "region": "middle_east",
+      "expected_cost_prediction": 1431
+    },
+    {
+      "case_id": "middle_east-76",
+      "infrastructure_cost": 1081,
+      "region": "middle_east",
+      "expected_cost_prediction": 524
+    },
+    {
+      "case_id": "middle_east-77",
+      "infrastructure_cost": 4645,
+      "region": "middle_east",
+      "expected_cost_prediction": 668
+    },
+    {
+      "case_id": "middle_east-78",
+      "infrastructure_cost": 3745,
+      "region": "middle_east",
+      "expected_cost_prediction": 994
+    },
+    {
+      "case_id": "middle_east-79",
+      "infrastructure_cost": 1298,
+      "region": "middle_east",
+      "expected_cost_prediction": 1097
+    },
+    {
+      "case_id": "middle_east-80",
+      "infrastructure_cost": 5422,
+      "region": "middle_east",
+      "expected_cost_prediction": 913
+    },
+    {
+      "case_id": "middle_east-81",
+      "infrastructure_cost": 4742,
+      "region": "middle_east",
+      "expected_cost_prediction": 1025
+    },
+    {
+      "case_id": "middle_east-82",
+      "infrastructure_cost": 1626,
+      "region": "middle_east",
+      "expected_cost_prediction": 1080
+    },
+    {
+      "case_id": "middle_east-83",
+      "infrastructure_cost": 1807,
+      "region": "middle_east",
+      "expected_cost_prediction": 687
+    },
+    {
+      "case_id": "middle_east-84",
+      "infrastructure_cost": 2838,
+      "region": "middle_east",
+      "expected_cost_prediction": 1040
+    },
+    {
+      "case_id": "middle_east-85",
+      "infrastructure_cost": 2046,
+      "region": "middle_east",
+      "expected_cost_prediction": 1095
+    },
+    {
+      "case_id": "middle_east-86",
+      "infrastructure_cost": 5393,
+      "region": "middle_east",
+      "expected_cost_prediction": 613
+    },
+    {
+      "case_id": "middle_east-87",
+      "infrastructure_cost": 1153,
+      "region": "middle_east",
+      "expected_cost_prediction": 830
+    },
+    {
+      "case_id": "middle_east-88",
+      "infrastructure_cost": 3886,
+      "region": "middle_east",
+      "expected_cost_prediction": 1045
+    },
+    {
+      "case_id": "middle_east-89",
+      "infrastructure_cost": 3385,
+      "region": "middle_east",
+      "expected_cost_prediction": 1475
+    },
+    {
+      "case_id": "middle_east-90",
+      "infrastructure_cost": 5744,
+      "region": "middle_east",
+      "expected_cost_prediction": 695
+    },
+    {
+      "case_id": "middle_east-91",
+      "infrastructure_cost": 2929,
+      "region": "middle_east",
+      "expected_cost_prediction": 515
+    },
+    {
+      "case_id": "middle_east-92",
+      "infrastructure_cost": 1995,
+      "region": "middle_east",
+      "expected_cost_prediction": 956
+    },
+    {
+      "case_id": "middle_east-93",
+      "infrastructure_cost": 4403,
+      "region": "middle_east",
+      "expected_cost_prediction": 1246
+    },
+    {
+      "case_id": "middle_east-94",
+      "infrastructure_cost": 5828,
+      "region": "middle_east",
+      "expected_cost_prediction": 907
+    },
+    {
+      "case_id": "middle_east-95",
+      "infrastructure_cost": 3448,
+      "region": "middle_east",
+      "expected_cost_prediction": 716
+    },
+    {
+      "case_id": "middle_east-96",
+      "infrastructure_cost": 5676,
+      "region": "middle_east",
+      "expected_cost_prediction": 1281
+    },
+    {
+      "case_id": "middle_east-97",
+      "infrastructure_cost": 2110,
+      "region": "middle_east",
+      "expected_cost_prediction": 560
+    },
+    {
+      "case_id": "middle_east-98",
+      "infrastructure_cost": 4057,
+      "region": "middle_east",
+      "expected_cost_prediction": 1240
+    },
+    {
+      "case_id": "middle_east-99",
+      "infrastructure_cost": 2541,
+      "region": "middle_east",
+      "expected_cost_prediction": 885
+    },
+    {
+      "case_id": "middle_east-100",
+      "infrastructure_cost": 1084,
+      "region": "middle_east",
+      "expected_cost_prediction": 587
+    },
+    {
+      "case_id": "middle_east-101",
+      "infrastructure_cost": 3452,
+      "region": "middle_east",
+      "expected_cost_prediction": 924
+    },
+    {
+      "case_id": "middle_east-102",
+      "infrastructure_cost": 1089,
+      "region": "middle_east",
+      "expected_cost_prediction": 502
+    },
+    {
+      "case_id": "middle_east-103",
+      "infrastructure_cost": 4260,
+      "region": "middle_east",
+      "expected_cost_prediction": 1286
+    },
+    {
+      "case_id": "middle_east-104",
+      "infrastructure_cost": 3839,
+      "region": "middle_east",
+      "expected_cost_prediction": 1491
+    },
+    {
+      "case_id": "middle_east-105",
+      "infrastructure_cost": 5410,
+      "region": "middle_east",
+      "expected_cost_prediction": 961
+    },
+    {
+      "case_id": "middle_east-106",
+      "infrastructure_cost": 2821,
+      "region": "middle_east",
+      "expected_cost_prediction": 1499
+    },
+    {
+      "case_id": "middle_east-107",
+      "infrastructure_cost": 2156,
+      "region": "middle_east",
+      "expected_cost_prediction": 1100
+    },
+    {
+      "case_id": "middle_east-108",
+      "infrastructure_cost": 4073,
+      "region": "middle_east",
+      "expected_cost_prediction": 1106
+    },
+    {
+      "case_id": "middle_east-109",
+      "infrastructure_cost": 3391,
+      "region": "middle_east",
+      "expected_cost_prediction": 1087
+    },
+    {
+      "case_id": "middle_east-110",
+      "infrastructure_cost": 1452,
+      "region": "middle_east",
+      "expected_cost_prediction": 944
+    },
+    {
+      "case_id": "middle_east-111",
+      "infrastructure_cost": 3000,
+      "region": "middle_east",
+      "expected_cost_prediction": 1163
+    },
+    {
+      "case_id": "middle_east-112",
+      "infrastructure_cost": 3110,
+      "region": "middle_east",
+      "expected_cost_prediction": 903
+    },
+    {
+      "case_id": "middle_east-113",
+      "infrastructure_cost": 3250,
+      "region": "middle_east",
+      "expected_cost_prediction": 1250
+    },
+    {
+      "case_id": "middle_east-114",
+      "infrastructure_cost": 5199,
+      "region": "middle_east",
+      "expected_cost_prediction": 855
+    },
+    {
+      "case_id": "middle_east-115",
+      "infrastructure_cost": 4794,
+      "region": "middle_east",
+      "expected_cost_prediction": 1311
+    },
+    {
+      "case_id": "middle_east-116",
+      "infrastructure_cost": 4497,
+      "region": "middle_east",
+      "expected_cost_prediction": 657
+    },
+    {
+      "case_id": "middle_east-117",
+      "infrastructure_cost": 2105,
+      "region": "middle_east",
+      "expected_cost_prediction": 1058
+    },
+    {
+      "case_id": "middle_east-118",
+      "infrastructure_cost": 4825,
+      "region": "middle_east",
+      "expected_cost_prediction": 1096
+    },
+    {
+      "case_id": "middle_east-119",
+      "infrastructure_cost": 2329,
+      "region": "middle_east",
+      "expected_cost_prediction": 610
+    },
+    {
+      "case_id": "middle_east-120",
+      "infrastructure_cost": 3182,
+      "region": "middle_east",
+      "expected_cost_prediction": 689
+    },
+    {
+      "case_id": "middle_east-121",
+      "infrastructure_cost": 4345,
+      "region": "middle_east",
+      "expected_cost_prediction": 754
+    },
+    {
+      "case_id": "middle_east-122",
+      "infrastructure_cost": 1692,
+      "region": "middle_east",
+      "expected_cost_prediction": 991
+    },
+    {
+      "case_id": "middle_east-123",
+      "infrastructure_cost": 5326,
+      "region": "middle_east",
+      "expected_cost_prediction": 629
+    },
+    {
+      "case_id": "middle_east-124",
+      "infrastructure_cost": 4974,
+      "region": "middle_east",
+      "expected_cost_prediction": 711
+    },
+    {
+      "case_id": "middle_east-125",
+      "infrastructure_cost": 4893,
+      "region": "middle_east",
+      "expected_cost_prediction": 1020
+    },
+    {
+      "case_id": "middle_east-126",
+      "infrastructure_cost": 3822,
+      "region": "middle_east",
+      "expected_cost_prediction": 1142
+    },
+    {
+      "case_id": "middle_east-127",
+      "infrastructure_cost": 3466,
+      "region": "middle_east",
+      "expected_cost_prediction": 918
+    },
+    {
+      "case_id": "middle_east-128",
+      "infrastructure_cost": 2726,
+      "region": "middle_east",
+      "expected_cost_prediction": 1142
+    },
+    {
+      "case_id": "middle_east-129",
+      "infrastructure_cost": 4416,
+      "region": "middle_east",
+      "expected_cost_prediction": 994
+    },
+    {
+      "case_id": "middle_east-130",
+      "infrastructure_cost": 4747,
+      "region": "middle_east",
+      "expected_cost_prediction": 957
+    },
+    {
+      "case_id": "middle_east-131",
+      "infrastructure_cost": 2540,
+      "region": "middle_east",
+      "expected_cost_prediction": 1101
+    },
+    {
+      "case_id": "middle_east-132",
+      "infrastructure_cost": 1913,
+      "region": "middle_east",
+      "expected_cost_prediction": 1208
+    },
+    {
+      "case_id": "middle_east-133",
+      "infrastructure_cost": 3176,
+      "region": "middle_east",
+      "expected_cost_prediction": 1246
+    },
+    {
+      "case_id": "middle_east-134",
+      "infrastructure_cost": 4638,
+      "region": "middle_east",
+      "expected_cost_prediction": 902
+    },
+    {
+      "case_id": "middle_east-135",
+      "infrastructure_cost": 2875,
+      "region": "middle_east",
+      "expected_cost_prediction": 1262
+    },
+    {
+      "case_id": "middle_east-136",
+      "infrastructure_cost": 2208,
+      "region": "middle_east",
+      "expected_cost_prediction": 1330
+    },
+    {
+      "case_id": "middle_east-137",
+      "infrastructure_cost": 3286,
+      "region": "middle_east",
+      "expected_cost_prediction": 1073
+    },
+    {
+      "case_id": "middle_east-138",
+      "infrastructure_cost": 3153,
+      "region": "middle_east",
+      "expected_cost_prediction": 965
+    },
+    {
+      "case_id": "middle_east-139",
+      "infrastructure_cost": 4973,
+      "region": "middle_east",
+      "expected_cost_prediction": 1344
+    },
+    {
+      "case_id": "middle_east-140",
+      "infrastructure_cost": 1830,
+      "region": "middle_east",
+      "expected_cost_prediction": 1021
+    },
+    {
+      "case_id": "middle_east-141",
+      "infrastructure_cost": 2926,
+      "region": "middle_east",
+      "expected_cost_prediction": 1385
+    },
+    {
+      "case_id": "middle_east-142",
+      "infrastructure_cost": 5075,
+      "region": "middle_east",
+      "expected_cost_prediction": 525
+    },
+    {
+      "case_id": "middle_east-143",
+      "infrastructure_cost": 2103,
+      "region": "middle_east",
+      "expected_cost_prediction": 1489
+    },
+    {
+      "case_id": "middle_east-144",
+      "infrastructure_cost": 4112,
+      "region": "middle_east",
+      "expected_cost_prediction": 1223
+    },
+    {
+      "case_id": "middle_east-145",
+      "infrastructure_cost": 2406,
+      "region": "middle_east",
+      "expected_cost_prediction": 1103
+    },
+    {
+      "case_id": "middle_east-146",
+      "infrastructure_cost": 2113,
+      "region": "middle_east",
+      "expected_cost_prediction": 894
+    },
+    {
+      "case_id": "middle_east-147",
+      "infrastructure_cost": 5015,
+      "region": "middle_east",
+      "expected_cost_prediction": 1196
+    },
+    {
+      "case_id": "middle_east-148",
+      "infrastructure_cost": 4615,
+      "region": "middle_east",
+      "expected_cost_prediction": 503
+    },
+    {
+      "case_id": "middle_east-149",
+      "infrastructure_cost": 5939,
+      "region": "middle_east",
+      "expected_cost_prediction": 1397
+    },
+    {
+      "case_id": "middle_east-150",
+      "infrastructure_cost": 1870,
+      "region": "middle_east",
+      "expected_cost_prediction": 1407
+    },
+    {
+      "case_id": "middle_east-151",
+      "infrastructure_cost": 1623,
+      "region": "middle_east",
+      "expected_cost_prediction": 1088
+    },
+    {
+      "case_id": "middle_east-152",
+      "infrastructure_cost": 1482,
+      "region": "middle_east",
+      "expected_cost_prediction": 635
+    },
+    {
+      "case_id": "middle_east-153",
+      "infrastructure_cost": 2746,
+      "region": "middle_east",
+      "expected_cost_prediction": 595
+    },
+    {
+      "case_id": "middle_east-154",
+      "infrastructure_cost": 5140,
+      "region": "middle_east",
+      "expected_cost_prediction": 600
+    },
+    {
+      "case_id": "middle_east-155",
+      "infrastructure_cost": 2135,
+      "region": "middle_east",
+      "expected_cost_prediction": 645
+    },
+    {
+      "case_id": "middle_east-156",
+      "infrastructure_cost": 5243,
+      "region": "middle_east",
+      "expected_cost_prediction": 556
+    },
+    {
+      "case_id": "middle_east-157",
+      "infrastructure_cost": 2168,
+      "region": "middle_east",
+      "expected_cost_prediction": 505
+    },
+    {
+      "case_id": "middle_east-158",
+      "infrastructure_cost": 5676,
+      "region": "middle_east",
+      "expected_cost_prediction": 750
+    },
+    {
+      "case_id": "middle_east-159",
+      "infrastructure_cost": 2223,
+      "region": "middle_east",
+      "expected_cost_prediction": 796
+    },
+    {
+      "case_id": "middle_east-160",
+      "infrastructure_cost": 2946,
+      "region": "middle_east",
+      "expected_cost_prediction": 1066
+    },
+    {
+      "case_id": "middle_east-161",
+      "infrastructure_cost": 1582,
+      "region": "middle_east",
+      "expected_cost_prediction": 680
+    },
+    {
+      "case_id": "middle_east-162",
+      "infrastructure_cost": 5715,
+      "region": "middle_east",
+      "expected_cost_prediction": 1227
+    },
+    {
+      "case_id": "middle_east-163",
+      "infrastructure_cost": 1729,
+      "region": "middle_east",
+      "expected_cost_prediction": 1340
+    },
+    {
+      "case_id": "middle_east-164",
+      "infrastructure_cost": 5704,
+      "region": "middle_east",
+      "expected_cost_prediction": 1489
+    },
+    {
+      "case_id": "middle_east-165",
+      "infrastructure_cost": 2247,
+      "region": "middle_east",
+      "expected_cost_prediction": 1248
+    },
+    {
+      "case_id": "middle_east-166",
+      "infrastructure_cost": 4330,
+      "region": "middle_east",
+      "expected_cost_prediction": 1378
+    }
+  ]
+}

@@ -51,9 +51,6 @@ impl ScanCommand {
         &self,
         edition: &crate::edition::EditionContext,
     ) -> Result<(), CostPilotError> {
-        println!("{}", "🔍 CostPilot Scan".bold().cyan());
-        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-
         // Validate plan file exists
         if !self.plan.exists() {
             return Err(CostPilotError::new(
@@ -66,6 +63,9 @@ impl ScanCommand {
                     .to_string(),
             ));
         }
+
+        println!("{}", "🔍 CostPilot Scan".bold().cyan());
+        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
         // Step 1: Detection
         println!("{}", "📊 Step 1: Detection".bold());

@@ -219,23 +219,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Install CostPilot
         run: cargo install costpilot
-      
+
       - name: Check Burn Rate
         id: burn
         run: |
           costpilot slo burn --format json > burn-report.json
           cat burn-report.json
         continue-on-error: true
-      
+
       - name: Upload Report
         uses: actions/upload-artifact@v3
         with:
           name: burn-rate-report
           path: burn-report.json
-      
+
       - name: Alert on Critical
         if: steps.burn.outcome == 'failure'
         uses: actions/github-script@v6
@@ -243,7 +243,7 @@ jobs:
           script: |
             const fs = require('fs');
             const report = JSON.parse(fs.readFileSync('burn-report.json', 'utf8'));
-            
+
             if (report.overall_risk === 'Critical' || report.overall_risk === 'High') {
               github.rest.issues.create({
                 owner: context.repo.owner,
@@ -270,21 +270,21 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Need history for snapshots
-      
+
       - name: Install CostPilot
         run: cargo install costpilot
-      
+
       - name: Generate Burn Report
         run: |
           costpilot slo burn --format markdown > burn-report.md
-      
+
       - name: Comment on PR
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('burn-report.md', 'utf8');
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

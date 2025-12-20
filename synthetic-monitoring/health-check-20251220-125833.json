@@ -1,0 +1,22 @@
+[
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"binary_integrity","status":"INFO","message":"Checking binary integrity...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"binary_integrity","status":"PASS","message":"Binary exists and has reasonable size: 7621264 bytes","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"basic_functionality","status":"INFO","message":"Testing basic CLI functionality...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"basic_functionality","status":"PASS","message":"Feature list command executed successfully in 9ms","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"help_system","status":"INFO","message":"Testing help system...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"help_system","status":"PASS","message":"Error handling provides feedback","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"feature_flags","status":"INFO","message":"Testing feature flag system...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"feature_flags","status":"PASS","message":"Feature flag system operational","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"config_validation","status":"INFO","message":"Testing configuration validation...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"config_validation","status":"INFO","message":"No configuration file to validate","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"memory_usage","status":"INFO","message":"Checking memory usage patterns...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"memory_usage","status":"PASS","message":"Memory usage within acceptable limits","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"error_handling","status":"INFO","message":"Testing error handling...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"error_handling","status":"PASS","message":"Error handling working correctly","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"performance_regression","status":"INFO","message":"Checking for performance regressions...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"performance_regression","status":"PASS","message":"Performance within acceptable limits","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:33+02:00","check":"code_quality","status":"INFO","message":"Checking code quality metrics...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:38+02:00","check":"code_quality","status":"PASS","message":"Code quality metrics acceptable","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:38+02:00","check":"security_scan","status":"INFO","message":"Running security checks...","duration_ms":0}
+{"timestamp":"2025-12-20T12:58:38+02:00","check":"security_scan","status":"PASS","message":"Security checks passed","duration_ms":0}
+]

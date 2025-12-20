@@ -174,13 +174,13 @@ Completed Steps:
 5. Build from source (600 seconds)
    === Step 1: Install Rust toolchain ===
    ✅ Step completed successfully
-   
+
    === Step 2: Build release binary ===
    ✅ Step completed successfully
-   
+
    === Step 3: Run tests ===
    ✅ Step completed successfully
-   
+
    === Step 4: Build WASM target ===
    ✅ Step completed successfully
 
@@ -190,7 +190,7 @@ Completed Steps:
 7. Generate deployment package (17 seconds)
    ✅ Packaged: costpilot
    ✅ Packaged: costpilot.wasm
-   
+
    📦 Deployment package ready at: /tmp/recovery/deployment
 ```
 
@@ -367,10 +367,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Install CostPilot
         run: cargo install costpilot
-      
+
       - name: Create Escrow Package
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
@@ -378,7 +378,7 @@ jobs:
             --version $VERSION \
             --include-artifacts \
             --output ./escrow-packages
-      
+
       - name: Upload to Escrow Agent
         env:
           ESCROW_API_KEY: ${{ secrets.ESCROW_API_KEY }}

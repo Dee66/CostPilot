@@ -64,7 +64,7 @@ mod prediction_fuzz_tests {
             let engine = PredictionEngine::new();
             let result1 = engine.predict(&resource);
             let result2 = engine.predict(&resource);
-            
+
             match (result1, result2) {
                 (Ok(p1), Ok(p2)) => {
                     prop_assert_eq!(p1.predicted_cost, p2.predicted_cost);
@@ -94,7 +94,7 @@ mod prediction_fuzz_tests {
                 .new_config(json!({"instance_type": "t3.medium"}))
                 .monthly_cost(cost.abs())
                 .build();
-            
+
             let engine = PredictionEngine::new();
             let _ = engine.predict(&resource);
         }
@@ -111,7 +111,7 @@ mod prediction_fuzz_tests {
                 .new_config(json!({}))
                 .monthly_cost(10.0)
                 .build();
-            
+
             let engine = PredictionEngine::new();
             let _ = engine.predict(&resource);
         }

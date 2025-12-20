@@ -33,17 +33,17 @@ The Policy Metadata System provides comprehensive policy management and governan
 
 ## Key Features
 
-✅ **Rich Metadata** - ID, name, description, category, severity, status, version  
-✅ **Ownership Tracking** - Author, owner, team, contact, reviewers  
-✅ **Lifecycle Management** - Creation, updates, effective dates, deprecation  
-✅ **Status Management** - Draft, Active, Disabled, Deprecated, Archived  
-✅ **Severity Levels** - Info, Warning, Error, Critical with blocking logic  
-✅ **Categories** - Budget, Resource, Security, Governance, Performance, SLO  
-✅ **Tagging System** - Flexible tags for search and organization  
-✅ **Documentation Links** - Runbooks, tickets, related resources  
-✅ **Metrics Tracking** - Evaluations, violations, exemptions, rates  
-✅ **Version History** - Complete revision tracking  
-✅ **Deprecation Support** - Planned obsolescence with replacements  
+✅ **Rich Metadata** - ID, name, description, category, severity, status, version
+✅ **Ownership Tracking** - Author, owner, team, contact, reviewers
+✅ **Lifecycle Management** - Creation, updates, effective dates, deprecation
+✅ **Status Management** - Draft, Active, Disabled, Deprecated, Archived
+✅ **Severity Levels** - Info, Warning, Error, Critical with blocking logic
+✅ **Categories** - Budget, Resource, Security, Governance, Performance, SLO
+✅ **Tagging System** - Flexible tags for search and organization
+✅ **Documentation Links** - Runbooks, tickets, related resources
+✅ **Metrics Tracking** - Evaluations, violations, exemptions, rates
+✅ **Version History** - Complete revision tracking
+✅ **Deprecation Support** - Planned obsolescence with replacements
 ✅ **Repository Management** - Filtering, search, bulk operations, statistics
 
 ## Metadata Structure
@@ -111,10 +111,10 @@ Draft → Active → Disabled
     Deprecated → Archived
 ```
 
-**Draft**: Policy created but not enforced  
-**Active**: Policy is enforced  
-**Disabled**: Temporarily disabled  
-**Deprecated**: Marked for removal, has replacement  
+**Draft**: Policy created but not enforced
+**Active**: Policy is enforced
+**Disabled**: Temporarily disabled
+**Deprecated**: Marked for removal, has replacement
 **Archived**: Historical record only
 
 ### Ownership
@@ -533,7 +533,7 @@ if policy_result.has_blocking_violations() {
 
 1. **Use Descriptive IDs**: `global-budget` not `policy-001`
 2. **Write Clear Descriptions**: Explain why policy exists
-3. **Choose Appropriate Severity**: 
+3. **Choose Appropriate Severity**:
    - Info: FYI only
    - Warning: Should fix
    - Error: Must fix before deploy

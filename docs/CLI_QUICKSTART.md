@@ -178,7 +178,7 @@ File: modules/database/main.tf
 
 resource "aws_db_instance" "primary" {
    instance_class = "db.r5.16xlarge"
-+  
++
 +  # Consider purchasing reserved capacity
 +  # Run: aws rds purchase-reserved-db-instances-offering
 }
@@ -243,28 +243,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-      
+
       - name: Install CostPilot
         run: |
           curl -L https://github.com/yourusername/costpilot/releases/latest/download/costpilot-linux-x64.tar.gz | tar xz
           sudo mv costpilot /usr/local/bin/
-      
+
       - name: Generate Plan
         run: |
           terraform init
           terraform plan -out=plan.tfplan
           terraform show -json plan.tfplan > plan.json
-      
+
       - name: Cost Scan (Fail on Critical)
         run: |
           costpilot scan --plan plan.json \
             --policy .costpilot/policies/production.yaml \
             --fail-on-critical \
             --format markdown > cost-report.md
-      
+
       - name: Comment PR
         uses: actions/github-script@v6
         with:

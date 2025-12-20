@@ -1,0 +1,57 @@
+environment:
+  name: staging
+  type: integration
+  isolation: vpc
+  cleanup: scheduled
+
+database:
+  type: postgresql
+  host: staging-db.costpilot.internal
+  port: 5432
+  database: costpilot_staging
+  ssl: required
+
+external_services:
+  mock_all: false
+  aws:
+    region: us-west-2
+    account: "123456789012"
+  azure:
+    subscription: staging-subscription
+    region: westus2
+  gcp:
+    project: costpilot-staging
+    region: us-central1
+
+logging:
+  level: info
+  format: json
+  output: cloudwatch
+  retention: 30_days
+
+monitoring:
+  enabled: true
+  metrics: cloudwatch
+  alerts: enabled
+  dashboard: staging-dashboard
+
+security:
+  authentication: enabled
+  authorization: enabled
+  encryption: enabled
+  secrets: aws_secretsmanager
+
+networking:
+  vpc: staging-vpc
+  subnets: ["staging-public", "staging-private"]
+  security_groups: ["staging-web", "staging-db"]
+
+scaling:
+  min_instances: 1
+  max_instances: 3
+  target_cpu: 70
+
+resources:
+  memory: 4GB
+  cpu: 2
+  disk: 50GB

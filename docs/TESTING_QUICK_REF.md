@@ -190,10 +190,10 @@ cargo bench --no-run
 fn test_component_scenario_expected() {
     // Arrange
     let input = setup_test_data();
-    
+
     // Act
     let result = function_under_test(&input);
-    
+
     // Assert
     assert_eq!(result.value, expected_value);
 }
@@ -352,5 +352,5 @@ cargo bench
 
 ---
 
-**Last Updated:** 2025-12-06  
+**Last Updated:** 2025-12-06
 **Version:** 1.0.0

@@ -1,0 +1,81 @@
+metadata:
+  product_id: costpilot
+  product_version: 1.0.2
+  checklist_version: '1.0'
+  created_at: '2025-12-20'
+  last_reviewed: '2025-12-20'
+  reviewer: System (AI Architect)
+  auto_generated: false
+  maintained_by: Deon Prinsloo
+  target_environment: prod
+  launch_tier: A
+execution_context:
+  automation_ready: true
+  agent_directives:
+    retry_on_fail: true
+    parallelizable: true
+    halt_on_critical_failure: true
+linked_issues: []
+tasks:
+- id: pricing-001
+  title: Implement license token validation in sustainability scripts
+  description: Add checks in `scripts/run_sustainability_testing.sh` to require a valid premium license token for access to sustainability analytics (carbon footprint, energy efficiency, fairness testing, etc.).
+  automation_level: partial
+  severity: high
+  status: pending
+  steps:
+  - id: step-001-1
+    action: add_license_check
+    description: Insert license validation logic at the start of the script.
+    acceptance_criteria:
+    - type: command
+      command: ./scripts/run_sustainability_testing.sh --help | grep -i "license"
+      expected_exit_code: 0
+  - id: step-001-2
+    action: test_gating
+    description: Verify script exits with error without a valid token.
+    acceptance_criteria:
+    - type: command
+      command: ./scripts/run_sustainability_testing.sh carbon 2>&1 | grep -i "license\|premium"
+      expected_exit_code: 1
+- id: pricing-002
+  title: Update sustainability dashboard for premium messaging
+  description: Modify `docs/sustainability-dashboard.md` to display premium-only access notices and link to pricing.
+  automation_level: full
+  severity: medium
+  status: pending
+  steps:
+  - id: step-002-1
+    action: add_premium_banner
+    description: Add a banner at the top indicating premium requirement.
+    acceptance_criteria:
+    - type: file_contains
+      target: docs/sustainability-dashboard.md
+      pattern: premium.*license
+- id: pricing-003
+  title: Gate advanced heuristics behind license
+  description: Ensure advanced AI predictions and autofix features require premium licensing.
+  automation_level: partial
+  severity: high
+  status: pending
+  steps:
+  - id: step-003-1
+    action: add_checks_in_engine
+    description: Integrate license checks in the core engine code.
+    acceptance_criteria:
+    - type: code_review
+      reviewer: Deon Prinsloo
+- id: pricing-004
+  title: Validate pricing enforcement in CI
+  description: Add tests to ensure free-tier users cannot access premium features.
+  automation_level: full
+  severity: critical
+  status: pending
+  steps:
+  - id: step-004-1
+    action: add_integration_tests
+    description: Create test cases for license gating.
+    acceptance_criteria:
+    - type: command
+      command: cargo test pricing_enforcement
+      expected_exit_code: 0

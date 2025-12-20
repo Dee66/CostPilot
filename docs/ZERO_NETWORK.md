@@ -247,29 +247,29 @@ use costpilot::engines::policy::*;
 fn evaluate_in_ci() -> Result<(), Box<dyn std::error::Error>> {
     // Create zero-network runtime for CI
     let runtime = ZeroNetworkRuntime::new();
-    
+
     // Verify we're in a safe environment
     runtime.verify_environment()?;
-    
+
     // Load configuration from repo
     let config = PolicyConfig::load(".costpilot/policies.yml")?;
     let engine = PolicyEngine::new(config);
-    
+
     // Parse Terraform plan
     let changes = parse_terraform_plan("plan.json")?;
     let cost = estimate_cost(&changes)?;
-    
+
     // Evaluate with zero-network guarantee
     let result = runtime.execute(|token| {
         engine.evaluate_zero_network(&changes, &cost, token)
     })?;
-    
+
     // Exit with appropriate code
     if !result.passed() {
         eprintln!("Policy violations found!");
         std::process::exit(2);  // POLICY_BLOCK exit code
     }
-    
+
     Ok(())
 }
 ```
@@ -289,16 +289,16 @@ pub fn evaluate_policies_wasm(
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
     let config = parse_policies(policies_yaml)
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
-    
+
     // Create engine (no network possible in WASM)
     let engine = PolicyEngine::new(config);
     let token = ZeroNetworkToken::new();
-    
+
     // Evaluate
     let cost = estimate_cost(&changes);
     let result = engine.evaluate_zero_network(&changes, &cost, token)
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
-    
+
     // Return as JSON
     Ok(serde_wasm_bindgen::to_value(&result)?)
 }
@@ -314,12 +314,12 @@ fn test_deterministic_evaluation() {
     let config = create_test_config();
     let engine = PolicyEngine::new(config);
     let token = ZeroNetworkToken::new();
-    
+
     // Run 100 times - should always be identical
     let results: Vec<_> = (0..100)
         .map(|_| engine.evaluate_zero_network(&changes, &cost, token))
         .collect();
-    
+
     // All results must be identical
     for result in &results[1..] {
         assert_eq!(results[0], *result);
@@ -334,10 +334,10 @@ fn test_deterministic_evaluation() {
 fn test_no_network_calls() {
     // This test runs in an environment with no network access
     // If policy evaluation tries to make network calls, it will fail
-    
+
     let engine = PolicyEngine::new(config);
     let token = ZeroNetworkToken::new();
-    
+
     // Should succeed even with no network
     let result = engine.evaluate_zero_network(&changes, &cost, token);
     assert!(result.is_ok());
@@ -425,11 +425,11 @@ unshare --net costpilot scan plan.json
 fn test_regression_determinism() {
     // Load golden file
     let expected = load_golden_result("tests/golden/policy_result.json")?;
-    
+
     // Evaluate
     let token = ZeroNetworkToken::new();
     let actual = engine.evaluate_zero_network(&changes, &cost, token)?;
-    
+
     // Must match exactly
     assert_eq!(expected, actual);
 }

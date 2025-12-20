@@ -1,0 +1,218 @@
+# CostPilot Edge Case: Unicode Characters
+# Test data for handling unicode characters in various contexts
+
+# Unicode in resource names
+unicode_resource_names:
+  metadata:
+    test_case: "unicode_resource_names"
+    description: "Resources with unicode characters in names"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "测试服务器"  # Chinese
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+      - type: "aws_instance"
+        name: "serveur_test_🚀"  # French with emoji
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "eu-west-1"
+      - type: "aws_instance"
+        name: "データベース"  # Japanese
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "ap-northeast-1"
+
+# Unicode in attribute values
+unicode_attribute_values:
+  metadata:
+    test_case: "unicode_attribute_values"
+    description: "Unicode characters in attribute values"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_s3_bucket"
+        name: "unicode-bucket"
+        provider: "aws"
+        attributes:
+          region: "us-east-1"
+          tags:
+            Environment: "测试环境"  # Chinese
+            Owner: "José María"  # Spanish with accents
+            Description: "🚀 Production Database 🌟"
+
+# Unicode in metadata
+unicode_metadata:
+  metadata:
+    test_case: "unicode_metadata"
+    description: "Unicode characters in plan metadata"
+    expected_behavior: "successful_processing"
+    author: "José María González"
+    description: "Plan with unicode characters: ñ, é, ü, 🚀, 🌟"
+    tags: ["测试", "développement", "🚀"]
+  plan:
+    metadata:
+      name: "unicode_plan_🚀"
+      version: "1.0"
+      description: "A plan with unicode: ñoños, naïve, résumé"
+    resources:
+      - type: "aws_instance"
+        name: "test"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+
+# Mixed encoding edge cases
+mixed_encoding:
+  metadata:
+    test_case: "mixed_encoding"
+    description: "Mixed character encodings"
+    expected_behavior: "encoding_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "mixed-encoding-ñ"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          tags:
+            utf8: "café"  # UTF-8
+            latin1: "naïve"  # Extended Latin
+
+# Emoji in various places
+emoji_everywhere:
+  metadata:
+    test_case: "emoji_everywhere"
+    description: "Emoji characters throughout the plan"
+    expected_behavior: "successful_processing"
+  plan:
+    metadata:
+      name: "emoji_plan_🚀"
+      description: "Plan with lots of emoji 🌟⭐💫"
+    resources:
+      - type: "aws_instance"
+        name: "web_server_🌐"
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+          tags:
+            Environment: "production_✨"
+            Team: "devops_🛠️"
+      - type: "aws_s3_bucket"
+        name: "data_bucket_📦"
+        provider: "aws"
+        attributes:
+          region: "us-east-1"
+          tags:
+            Purpose: "backup_💾"
+
+# Unicode normalization issues
+unicode_normalization:
+  metadata:
+    test_case: "unicode_normalization"
+    description: "Unicode characters with normalization issues"
+    expected_behavior: "normalization_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "café"  # NFC normalized
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+      - type: "aws_instance"
+        name: "café"  # NFD normalized (different byte sequence)
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+
+# Right-to-left text
+rtl_text:
+  metadata:
+    test_case: "rtl_text"
+    description: "Right-to-left text (Arabic, Hebrew)"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "שרת_בדיקה"  # Hebrew
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          region: "us-east-1"
+          tags:
+            Owner: "محمد_أحمد"  # Arabic
+      - type: "aws_instance"
+        name: "server_test_عربي"  # Mixed LTR/RTL
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+
+# Unicode control characters
+unicode_control_chars:
+  metadata:
+    test_case: "unicode_control_chars"
+    description: "Unicode control characters"
+    expected_behavior: "control_character_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "test\u0001\u0002\u0003"  # Control characters
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          tags:
+            Note: "Line with \u2028 line separator"
+
+# Zero-width characters
+zero_width_chars:
+  metadata:
+    test_case: "zero_width_chars"
+    description: "Zero-width unicode characters"
+    expected_behavior: "zero_width_warning"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "test\u200B\u200C\u200D"  # Zero-width space, non-joiner, joiner
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          tags:
+            Hidden: "text\u200Bwith\u200Czero\u200Dwidth"
+
+# Unicode in JSON strings (escaped)
+unicode_escaped:
+  metadata:
+    test_case: "unicode_escaped"
+    description: "Unicode characters in escaped form"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "test_\u00f1_\u00e9_\u00fc"  # ñ, é, ü in escaped form
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          tags:
+            Emoji: "\ud83d\ude80"  # Rocket emoji escaped
+
+# Combining characters
+combining_characters:
+  metadata:
+    test_case: "combining_characters"
+    description: "Unicode combining characters"
+    expected_behavior: "successful_processing"
+  plan:
+    resources:
+      - type: "aws_instance"
+        name: "naïve"  # i with diaeresis
+        provider: "aws"
+        attributes:
+          instance_type: "t3.micro"
+          tags:
+            Text: "Ĥêl̂l̂ô Ŵôr̂l̂d̂"  # Circumflex over each letter

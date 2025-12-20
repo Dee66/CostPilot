@@ -65,12 +65,12 @@ for artifact in *; do
     if [[ "${artifact}" == *.sig ]] || [[ "${artifact}" == "provenance.json" ]] || [ -d "${artifact}" ]; then
         continue
     fi
-    
+
     if [ -f "${artifact}" ]; then
         # Compute SHA256
         HASH=$(${HASH_CMD} "${artifact}" | cut -d' ' -f1)
         SIZE=$(stat -c%s "${artifact}" 2>/dev/null || stat -f%z "${artifact}" 2>/dev/null)
-        
+
         # Add to artifacts array
         if [ "${FIRST_ARTIFACT}" = true ]; then
             ARTIFACTS_JSON="${ARTIFACTS_JSON}{\"file\":\"${artifact}\",\"sha256\":\"${HASH}\",\"size\":${SIZE}}"
@@ -78,7 +78,7 @@ for artifact in *; do
         else
             ARTIFACTS_JSON="${ARTIFACTS_JSON},{\"file\":\"${artifact}\",\"sha256\":\"${HASH}\",\"size\":${SIZE}}"
         fi
-        
+
         # Add signature if exists
         if [ -f "${artifact}.sig" ]; then
             if [ "${FIRST_SIG}" = true ]; then
@@ -108,7 +108,7 @@ fi
 # Update provenance with jq
 if command -v jq &> /dev/null; then
     TEMP_PROV=$(mktemp)
-    
+
     jq \
         --arg version "${VERSION}" \
         --arg commit "${GIT_COMMIT}" \
@@ -125,7 +125,7 @@ if command -v jq &> /dev/null; then
          .artifacts = ($artifacts | sort_by(.file)) |
          .signatures = ($signatures | sort_by(.file))' \
         "${PROVENANCE}" > "${TEMP_PROV}"
-    
+
     # Sort keys for determinism
     jq --sort-keys '.' "${TEMP_PROV}" > "${PROVENANCE}"
     rm -f "${TEMP_PROV}"

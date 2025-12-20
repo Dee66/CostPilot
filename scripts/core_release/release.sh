@@ -114,7 +114,7 @@ if [ -n "${HASH_CMD}" ]; then
     ZIP_HASH=$(${HASH_CMD} "${ZIP_NAME}" | cut -d' ' -f1)
     echo "sha256 ${ZIP_HASH}  ${ZIP_NAME}" >> build_fingerprint.txt
     cd "${PROJECT_ROOT}"
-    
+
     # Hash TAR.GZ artifact
     TAR_NAME=$(basename "${TAR_ARTIFACT}")
     cd "${DIST_DIR}"
@@ -213,7 +213,7 @@ SIGNATURES=()
 for artifact in "${ARTIFACTS_TO_SIGN[@]}"; do
     if [ -f "${artifact}" ]; then
         bash "${ED25519_SIGN}" "${artifact}" "${PRIVATE_KEY}" > /dev/null 2>&1
-        
+
         SIG_FILE="${artifact}.sig"
         if [ -f "${SIG_FILE}" ]; then
             SIGNATURES+=("${SIG_FILE}")
@@ -244,7 +244,7 @@ done
 # Update provenance.json with signature information
 if command -v jq &> /dev/null; then
     TEMP_PROV=$(mktemp)
-    
+
     # Build signatures array
     SIG_JSON="["
     FIRST=true
@@ -252,7 +252,7 @@ if command -v jq &> /dev/null; then
         if [ -f "${artifact}" ]; then
             ARTIFACT_NAME=$(basename "${artifact}")
             SIG_NAME="${ARTIFACT_NAME}.sig"
-            
+
             if [ "${FIRST}" = true ]; then
                 SIG_JSON="${SIG_JSON}{\"file\": \"${ARTIFACT_NAME}\", \"sig\": \"${SIG_NAME}\"}"
                 FIRST=false
@@ -262,12 +262,12 @@ if command -v jq &> /dev/null; then
         fi
     done
     SIG_JSON="${SIG_JSON}]"
-    
+
     jq ".signatures = (${SIG_JSON} | sort_by(.file))" "${DIST_DIR}/provenance.json" > "${TEMP_PROV}" 2>/dev/null || true
     if [ -f "${TEMP_PROV}" ] && [ -s "${TEMP_PROV}" ]; then
         jq --sort-keys '.' "${TEMP_PROV}" > "${DIST_DIR}/provenance.json"
         rm -f "${TEMP_PROV}"
-        
+
         # Re-sign provenance.json after updating it
         bash "${ED25519_SIGN}" "${DIST_DIR}/provenance.json" "${PRIVATE_KEY}" > /dev/null 2>&1
     else

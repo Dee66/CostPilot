@@ -133,7 +133,7 @@ if [ -n "${ARTIFACTS}" ]; then
         fi
     done
     ARTIFACT_JSON="${ARTIFACT_JSON}]"
-    
+
     # Update build.json with artifact list
     TEMP_JSON=$(mktemp)
     jq ".artifact_files = ${ARTIFACT_JSON}" "${DIST_DIR}/build.json" > "${TEMP_JSON}" 2>/dev/null || true

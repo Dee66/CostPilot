@@ -13,11 +13,11 @@ jobs:
   wasm-build:
     name: Build and Validate WASM
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -25,80 +25,80 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
           components: rustfmt, clippy
-      
+
       - name: Cache cargo registry
         uses: actions/cache@v3
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Cache cargo index
         uses: actions/cache@v3
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Cache cargo build
         uses: actions/cache@v3
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-wasm-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Install wasm-pack
         run: cargo install wasm-pack
-      
+
       - name: Install wabt (for wasm-validate)
         run: |
           wget https://github.com/WebAssembly/wabt/releases/download/1.0.33/wabt-1.0.33-ubuntu.tar.gz
           tar -xzf wabt-1.0.33-ubuntu.tar.gz
           sudo mv wabt-1.0.33/bin/* /usr/local/bin/
-      
+
       - name: Build WASM module
         run: |
           cargo build --target wasm32-unknown-unknown --release --lib
-      
+
       - name: Check WASM file size
         run: |
           WASM_FILE="target/wasm32-unknown-unknown/release/costpilot.wasm"
           SIZE=$(stat -c%s "$WASM_FILE")
           SIZE_MB=$(echo "scale=2; $SIZE / 1024 / 1024" | bc)
           MAX=$((10 * 1024 * 1024))
-          
+
           echo "WASM module size: ${SIZE_MB} MB ($SIZE bytes)"
-          
+
           if [ $SIZE -gt $MAX ]; then
             echo "❌ ERROR: WASM size ($SIZE bytes) exceeds limit ($MAX bytes)"
             exit 1
           fi
-          
+
           echo "✅ WASM size is within 10 MB limit"
-      
+
       - name: Validate WASM structure
         run: |
           WASM_FILE="target/wasm32-unknown-unknown/release/costpilot.wasm"
           wasm-validate "$WASM_FILE"
           echo "✅ WASM structure is valid"
-      
+
       - name: Run WASM tests
         run: |
           cargo test --target wasm32-unknown-unknown --lib
-      
+
       - name: Check for network imports (security)
         run: |
           WASM_FILE="target/wasm32-unknown-unknown/release/costpilot.wasm"
-          
+
           # Check for suspicious imports
           if wasm-objdump -x "$WASM_FILE" | grep -i "network\|http\|tcp\|socket"; then
             echo "❌ ERROR: Network-related imports detected!"
             exit 1
           fi
-          
+
           echo "✅ No network imports detected"
-      
+
       - name: Generate WASM bindings
         run: |
           wasm-pack build --target web --out-dir pkg
-      
+
       - name: Upload WASM artifact
         uses: actions/upload-artifact@v3
         with:
@@ -107,13 +107,13 @@ jobs:
             target/wasm32-unknown-unknown/release/costpilot.wasm
             pkg/
           retention-days: 30
-      
+
       - name: Generate size report
         run: |
           WASM_FILE="target/wasm32-unknown-unknown/release/costpilot.wasm"
           SIZE=$(stat -c%s "$WASM_FILE")
           SIZE_MB=$(echo "scale=2; $SIZE / 1024 / 1024" | bc)
-          
+
           echo "## WASM Build Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
@@ -128,49 +128,49 @@ jobs:
     name: WASM Determinism Tests
     runs-on: ubuntu-latest
     needs: wasm-build
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: wasm32-unknown-unknown
           override: true
-      
+
       - name: Download WASM artifact
         uses: actions/download-artifact@v3
         with:
           name: costpilot-wasm
-      
+
       - name: Test determinism
         run: |
           # Build twice and compare outputs
           cargo build --target wasm32-unknown-unknown --release --lib
           cp target/wasm32-unknown-unknown/release/costpilot.wasm costpilot_v1.wasm
-          
+
           cargo clean
-          
+
           cargo build --target wasm32-unknown-unknown --release --lib
           cp target/wasm32-unknown-unknown/release/costpilot.wasm costpilot_v2.wasm
-          
+
           # Compare file hashes
           HASH1=$(sha256sum costpilot_v1.wasm | cut -d' ' -f1)
           HASH2=$(sha256sum costpilot_v2.wasm | cut -d' ' -f1)
-          
+
           echo "Build 1 hash: $HASH1"
           echo "Build 2 hash: $HASH2"
-          
+
           if [ "$HASH1" != "$HASH2" ]; then
             echo "❌ ERROR: Non-deterministic build detected!"
             echo "Identical inputs must produce identical outputs"
             exit 1
           fi
-          
+
           echo "✅ Builds are deterministic"
-      
+
       - name: Test output determinism
         run: |
           cargo test --target wasm32-unknown-unknown --lib test_deterministic -- --nocapture
@@ -179,41 +179,41 @@ jobs:
     name: WASM Performance Tests
     runs-on: ubuntu-latest
     needs: wasm-build
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: wasm32-unknown-unknown
           override: true
-      
+
       - name: Download WASM artifact
         uses: actions/download-artifact@v3
         with:
           name: costpilot-wasm
-      
+
       - name: Run performance benchmarks
         run: |
           # Run performance tests with time limits
           cargo test --target wasm32-unknown-unknown --lib --release \
             test_performance -- --nocapture
-      
+
       - name: Validate engine budgets
         run: |
           echo "Validating engine performance budgets..."
-          
+
           # Run each engine test with budget validation
           cargo test --target wasm32-unknown-unknown --lib --release \
             --features prediction -- test_prediction_budget --nocapture
-          
+
           cargo test --target wasm32-unknown-unknown --lib --release \
             --features detection -- test_detection_budget --nocapture
-          
+
           cargo test --target wasm32-unknown-unknown --lib --release \
             --features policy -- test_policy_budget --nocapture
-          
+
           echo "✅ All engines within performance budgets"

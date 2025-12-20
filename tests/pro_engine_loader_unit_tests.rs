@@ -71,7 +71,7 @@ mod tests {
     #[test]
     fn test_verify_sig_success_and_failure() {
         use aes_gcm::aead::rand_core::RngCore;
-        
+
         let dir = tempdir().unwrap();
         let pubkey_path = dir.path().join("test_key.pub");
 

@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 // Terraform HCL configuration parser
 
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};

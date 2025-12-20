@@ -116,7 +116,7 @@ if [ -f "${PROJECT_ROOT}/Cargo.lock" ]; then
     # Extract dependencies and add to components array
     # For determinism: sort components by name
     TEMP_COMPONENTS=$(mktemp)
-    
+
     # Simple extraction: get package names and versions
     awk '/\[\[package\]\]/,/^$/ {
         if ($1 == "name") name=$3;
@@ -130,10 +130,10 @@ if [ -f "${PROJECT_ROOT}/Cargo.lock" ]; then
             }
         }
     }' "${PROJECT_ROOT}/Cargo.lock" | sort -u > "${TEMP_COMPONENTS}"
-    
+
     # Remove trailing comma from last line
     sed -i '$ s/,$//' "${TEMP_COMPONENTS}" 2>/dev/null || sed -i '' '$ s/,$//' "${TEMP_COMPONENTS}" 2>/dev/null || true
-    
+
     # Insert components into SBOM using jq
     if command -v jq &> /dev/null && [ -s "${TEMP_COMPONENTS}" ]; then
         COMPONENTS_JSON="[$(cat "${TEMP_COMPONENTS}")]"
@@ -141,7 +141,7 @@ if [ -f "${PROJECT_ROOT}/Cargo.lock" ]; then
         jq ".components = ${COMPONENTS_JSON} | .components |= sort_by(.name)" "${OUTPUT_PATH}" > "${TEMP_SBOM}"
         mv "${TEMP_SBOM}" "${OUTPUT_PATH}"
     fi
-    
+
     rm -f "${TEMP_COMPONENTS}"
 fi
 

@@ -25,24 +25,24 @@ if [[ -n "${GPG_PRIVATE_KEY:-}" && -n "${GPG_PASSPHRASE:-}" ]]; then
   GNUPGHOME=$(mktemp -d)
   export GNUPGHOME
   trap "rm -rf '$GNUPGHOME'" EXIT
-  
+
   # Import key
   echo "$GPG_PRIVATE_KEY" | gpg --batch --import 2>/dev/null
-  
+
   # Sign with passphrase
   echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback \
     --passphrase-fd 0 --output "$OUT_SIG" --detach-sign --armor "$CHECKSUM_FILE" 2>/dev/null
-  
+
   echo "SIGNED: ${OUT_SIG}"
 
 elif [[ -n "${ED25519_PRIV:-}" ]]; then
   # Ed25519 signing via openssl
   ED25519_KEY_FILE=$(mktemp)
   trap "rm -f '$ED25519_KEY_FILE'" EXIT
-  
+
   echo "$ED25519_PRIV" > "$ED25519_KEY_FILE"
   chmod 600 "$ED25519_KEY_FILE"
-  
+
   # Sign with Ed25519
   if openssl pkeyutl -sign -inkey "$ED25519_KEY_FILE" -rawin -in "$CHECKSUM_FILE" 2>/dev/null | base64 -w0 > "$OUT_SIG"; then
     echo "SIGNED: ${OUT_SIG}"

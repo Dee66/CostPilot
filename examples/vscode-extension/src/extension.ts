@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('CostPilot extension activated');
 
     const config = vscode.workspace.getConfiguration('costpilot');
-    
+
     if (!config.get('enabled', true)) {
         console.log('CostPilot is disabled');
         return;
@@ -137,7 +137,7 @@ async function scanWorkspace(
         try {
             // Find Terraform files
             const tfFiles = await vscode.workspace.findFiles('**/*.tf', '**/node_modules/**');
-            
+
             if (tfFiles.length === 0) {
                 vscode.window.showInformationMessage('No Terraform files found in workspace');
                 return;
@@ -147,19 +147,19 @@ async function scanWorkspace(
 
             // Execute CostPilot scan
             const result = await executeCostPilotCLI(['scan', '--format', 'json'], workspaceFolder.uri.fsPath);
-            
+
             if (result.success && result.output) {
                 const scanResult = JSON.parse(result.output);
-                
+
                 // Update diagnostics
                 await diagnostics.updateFromScanResult(scanResult);
-                
+
                 // Update tree view
                 treeDataProvider.updateIssues(scanResult.issues || []);
-                
+
                 // Update status bar
                 statusBar.updateFromScanResult(scanResult);
-                
+
                 const issueCount = scanResult.issues?.length || 0;
                 if (issueCount > 0) {
                     vscode.window.showInformationMessage(

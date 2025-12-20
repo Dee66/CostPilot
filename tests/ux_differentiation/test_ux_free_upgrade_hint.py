@@ -12,10 +12,10 @@ def test_free_help_includes_upgrade_hint():
         text=True,
         timeout=10
     )
-    
+
     assert result.returncode == 0, "Help should succeed"
     output = result.stdout.lower()
-    
+
     # Should mention upgrade, premium, or pro
     upgrade_indicators = [
         "upgrade",
@@ -25,7 +25,7 @@ def test_free_help_includes_upgrade_hint():
         "commercial",
         "license"
     ]
-    
+
     # At least one indicator should be present
     found = any(indicator in output for indicator in upgrade_indicators)
     assert found, "Free help should include upgrade hint"
@@ -39,14 +39,14 @@ def test_free_version_includes_edition():
         text=True,
         timeout=10
     )
-    
+
     if result.returncode == 0:
         output = result.stdout.lower()
-        
+
         # Should identify edition
         edition_indicators = ["community", "free", "oss", "open source"]
         found = any(indicator in output for indicator in edition_indicators)
-        
+
         # If edition mentioned, should be Free
         if any(word in output for word in ["edition", "version"]):
             assert found, "Should identify as Community/Free/OSS"
@@ -60,14 +60,14 @@ def test_free_help_footer():
         text=True,
         timeout=10
     )
-    
+
     if result.returncode == 0:
         output = result.stdout
-        
+
         # Check last few lines for upgrade info
         lines = output.strip().split('\n')
         last_lines = '\n'.join(lines[-5:]).lower()
-        
+
         # Footer might mention more features, upgrade, or website
         upgrade_phrases = [
             "for more features",
@@ -76,7 +76,7 @@ def test_free_help_footer():
             "visit",
             "learn more"
         ]
-        
+
         # At least one phrase might be present
 
 
@@ -88,10 +88,10 @@ def test_free_command_help_mentions_limitations():
         text=True,
         timeout=10
     )
-    
+
     if result.returncode == 0:
         output = result.stdout.lower()
-        
+
         # Might mention depth limit or other restrictions
         # This is documentation, not enforcement
 
@@ -108,7 +108,7 @@ def test_upgrade_hint_deterministic():
         )
         assert result.returncode == 0
         outputs.append(result.stdout)
-    
+
     # All outputs should be identical
     assert outputs[0] == outputs[1] == outputs[2], "Help should be deterministic"
 
@@ -121,10 +121,10 @@ def test_free_help_professional():
         text=True,
         timeout=10
     )
-    
+
     if result.returncode == 0:
         output = result.stdout.lower()
-        
+
         # Should not use aggressive marketing
         forbidden = [
             "buy now",
@@ -133,7 +133,7 @@ def test_free_help_professional():
             "discount",
             "sale"
         ]
-        
+
         for phrase in forbidden:
             assert phrase not in output, f"Help should not include: {phrase}"
 

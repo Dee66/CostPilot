@@ -45,7 +45,7 @@ Action: Skipped full pytest run to avoid blocking
 === FILES CREATED/UPDATED ===
 Created:
 - tests/helpers/autofix.rs
-- tests/helpers/baselines.rs  
+- tests/helpers/baselines.rs
 - tests/helpers/metering.rs
 - tests/helpers/trend.rs
 - build_artifacts/phase20_summary.txt
@@ -70,5 +70,5 @@ Current 99.6% pass rate (472/473 executable tests) exceeds the ≥98% acceptance
 ? Pytest: Unable to complete (collection hanging)
 
 === RECOMMENDATION ===
-Phase 20 SUCCESS for Rust test suite. 
+Phase 20 SUCCESS for Rust test suite.
 Investigate pytest collection hang separately (potential circular import or fixture issue).

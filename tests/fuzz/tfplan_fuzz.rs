@@ -52,10 +52,10 @@ mod tfplan_fuzz_tests {
         ) {
             let parser = TerraformParser::new();
             let plan_str = plan.to_string();
-            
+
             let result1 = parser.parse(&plan_str);
             let result2 = parser.parse(&plan_str);
-            
+
             match (result1, result2) {
                 (Ok(r1), Ok(r2)) => {
                     prop_assert_eq!(r1.len(), r2.len());
@@ -81,12 +81,12 @@ mod tfplan_fuzz_tests {
             for _ in 0..depth {
                 nested = json!({ "nested": nested });
             }
-            
+
             let plan = json!({
                 "format_version": "1.0",
                 "resource_changes": [nested]
             });
-            
+
             let parser = TerraformParser::new();
             let _ = parser.parse(&plan.to_string());
         }
@@ -99,7 +99,7 @@ mod tfplan_fuzz_tests {
                 "format_version": "1.0",
                 "resource_changes": []
             });
-            
+
             let parser = TerraformParser::new();
             let result = parser.parse(&plan.to_string());
             prop_assert!(result.is_ok());
@@ -111,15 +111,15 @@ mod tfplan_fuzz_tests {
             has_resources in any::<bool>()
         ) {
             let mut plan = serde_json::Map::new();
-            
+
             if has_version {
                 plan.insert("format_version".to_string(), json!("1.0"));
             }
-            
+
             if has_resources {
                 plan.insert("resource_changes".to_string(), json!([]));
             }
-            
+
             let parser = TerraformParser::new();
             let _ = parser.parse(&json!(plan).to_string());
         }
@@ -139,7 +139,7 @@ mod tfplan_fuzz_tests {
                     }
                 }]
             });
-            
+
             let parser = TerraformParser::new();
             let _ = parser.parse(&plan.to_string());
         }
@@ -155,12 +155,12 @@ mod tfplan_fuzz_tests {
                     "change": { "actions": ["create"] }
                 })
             }).collect();
-            
+
             let plan = json!({
                 "format_version": "1.0",
                 "resource_changes": resources
             });
-            
+
             let parser = TerraformParser::new();
             let _ = parser.parse(&plan.to_string());
         }
@@ -180,7 +180,7 @@ mod tfplan_fuzz_tests {
                 "format_version": "1.0",
                 "resource_changes": [value]
             });
-            
+
             let parser = TerraformParser::new();
             let _ = parser.parse(&plan.to_string());
         }

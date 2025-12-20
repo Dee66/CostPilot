@@ -4,7 +4,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { execSync } = require('child_process');
+const {execSync} = require('child_process');
 
 // Determine platform and architecture
 const platform = os.platform();
@@ -14,35 +14,37 @@ let osName;
 let archName;
 
 switch (platform) {
-  case 'linux':
-    osName = 'linux';
-    break;
-  case 'darwin':
-    osName = 'darwin';
-    break;
-  case 'win32':
-    osName = 'windows';
-    break;
-  default:
-    console.error(`Unsupported platform: ${platform}`);
-    process.exit(1);
+case 'linux':
+  osName = 'linux';
+  break;
+case 'darwin':
+  osName = 'darwin';
+  break;
+case 'win32':
+  osName = 'windows';
+  break;
+default:
+  console.error(`Unsupported platform: ${platform}`);
+  process.exit(1);
 }
 
 switch (arch) {
-  case 'x64':
-    archName = 'x86_64';
-    break;
-  case 'arm64':
-    archName = 'aarch64';
-    break;
-  default:
-    console.error(`Unsupported architecture: ${arch}`);
-    process.exit(1);
+case 'x64':
+  archName = 'x86_64';
+  break;
+case 'arm64':
+  archName = 'aarch64';
+  break;
+default:
+  console.error(`Unsupported architecture: ${arch}`);
+  process.exit(1);
 }
 
 const version = require('../package.json').version;
 const binaryName = platform === 'win32' ? 'costpilot.exe' : 'costpilot';
-const downloadUrl = `https://github.com/Dee66/CostPilot/releases/download/v${version}/costpilot-${osName}-${archName}${platform === 'win32' ? '.exe' : ''}`;
+const downloadUrl = `https://github.com/Dee66/CostPilot/releases/download/v${
+    version}/costpilot-${osName}-${archName}${
+    platform === 'win32' ? '.exe' : ''}`;
 const binPath = path.join(__dirname, '..', 'bin', binaryName);
 
 console.log(`Downloading CostPilot ${version} for ${osName}-${archName}...`);
@@ -51,7 +53,8 @@ console.log(`Downloading CostPilot ${version} for ${osName}-${archName}...`);
 const file = fs.createWriteStream(binPath);
 const request = https.get(downloadUrl, (response) => {
   if (response.statusCode !== 200) {
-    console.error(`Failed to download: ${response.statusCode} ${response.statusMessage}`);
+    console.error(
+        `Failed to download: ${response.statusCode} ${response.statusMessage}`);
     console.error(`URL: ${downloadUrl}`);
     process.exit(1);
   }
@@ -76,7 +79,7 @@ const request = https.get(downloadUrl, (response) => {
 
     // Test the installation
     try {
-      const output = execSync(`"${binPath}" --version`, { encoding: 'utf8' });
+      const output = execSync(`"${binPath}" --version`, {encoding : 'utf8'});
       console.log(`Version: ${output.trim()}`);
     } catch (error) {
       console.error('Installation verification failed');

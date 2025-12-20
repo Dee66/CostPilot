@@ -195,14 +195,14 @@ flowchart TB
         vpc_main["Main VPC<br/>$50.00/mo"]
         subnet_public["Public Subnet<br/>$0.00/mo"]
     end
-    
+
     lambda_api(["API Handler<br/>$23.00/mo"])
     s3_data(["Data Bucket<br/>$5.00/mo"])
-    
+
     lambda_api --> vpc_main
     lambda_api -.->|"S3 requests and data transfer"| s3_data
     subnet_public --> vpc_main
-    
+
     classDef resource fill:#d1ecf1,stroke:#0c5460
     classDef service fill:#d4edda,stroke:#155724
 ```
@@ -300,9 +300,9 @@ Typical performance:
 
 ## Zero-IAM Compliance
 
-✅ **No network access**: Pure static analysis from Terraform plan  
-✅ **No AWS SDK**: No API calls or credentials required  
-✅ **Deterministic**: Same input always produces same output  
+✅ **No network access**: Pure static analysis from Terraform plan
+✅ **No AWS SDK**: No API calls or credentials required
+✅ **Deterministic**: Same input always produces same output
 ✅ **WASM-safe**: All dependencies support WebAssembly
 
 ## Examples

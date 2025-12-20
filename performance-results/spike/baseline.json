@@ -1,0 +1,538 @@
+{
+  "format_version": "1.1",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.test_1",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_1",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-1",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_2",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_2",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-2",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_3",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_3",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-3",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_4",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_4",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-4",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_5",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_5",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-5",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_6",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_6",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-6",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_7",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_7",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-7",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_8",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_8",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-8",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_9",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_9",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-9",
+              "Environment": "performance-test"
+            }
+          }
+        },
+        {
+          "address": "aws_instance.test_10",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_10",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "test-instance-10",
+              "Environment": "performance-test"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_instance.test_1",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-1",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_2",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-2",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_3",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-3",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_4",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-4",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_5",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-5",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_6",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-6",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_7",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-7",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_8",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-8",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_9",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-9",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.test_10",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "tags": {
+            "Name": "test-instance-10",
+            "Environment": "performance-test"
+          }
+        }
+      }
+    }
+  ],
+  "configuration": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.test_1",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_1",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-1",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_2",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_2",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-2",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_3",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_3",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-3",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_4",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_4",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-4",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_5",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_5",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-5",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_6",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_6",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-6",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_7",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_7",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-7",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_8",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_8",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-8",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_9",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_9",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-9",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_instance.test_10",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "test_10",
+          "expressions": {
+            "ami": {
+              "constant_value": "ami-12345678"
+            },
+            "instance_type": {
+              "constant_value": "t3.micro"
+            },
+            "tags": {
+              "constant_value": {
+                "Name": "test-instance-10",
+                "Environment": "performance-test"
+              }
+            }
+          },
+          "schema_version": 1
+        }
+      ]
+    }
+  }
+}

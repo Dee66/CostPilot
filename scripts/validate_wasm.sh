@@ -65,10 +65,10 @@ fi
 # Check for imported functions (should be minimal)
 if command -v wasm-objdump &> /dev/null; then
     echo -e "${BLUE}🔍 Checking imports...${NC}"
-    
+
     IMPORT_COUNT=$(wasm-objdump -x "$WASM_FILE" | grep -c "import func" || true)
     echo "Imported functions: $IMPORT_COUNT"
-    
+
     if [ "$IMPORT_COUNT" -gt 50 ]; then
         echo -e "${YELLOW}⚠️  WARNING: High number of imports (${IMPORT_COUNT})${NC}"
     else

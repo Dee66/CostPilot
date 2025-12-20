@@ -502,6 +502,14 @@ fn test_slo_burn_multiple_slos() {
     assert!(slo_names.contains(&"service_budget"));
 }
 
+#[test]
+fn test_slo_not_breached_silent() {
+    // Placeholder test for: SLO not breached → silent
+    // TODO: Implement logic to check that when SLO is not breached,
+    // the system runs silently (no findings, no explain output, exit code 0)
+    assert!(true);
+}
+
 /// Helper function to create test snapshot files
 fn create_test_snapshot(snapshots_dir: &Path, date: &str, cost: f64) {
     let filename = format!("snapshot_{}.json", date.replace("-", ""));

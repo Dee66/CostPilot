@@ -12,54 +12,54 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y binutils bc
-      
+
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Cache cargo index
         uses: actions/cache@v4
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Set SOURCE_DATE_EPOCH
         run: |
           echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> $GITHUB_ENV
-      
+
       - name: Setup signing key
         run: |
           echo "${{ secrets.SIGNING_PRIVATE_KEY }}" > packaging/signing/private.key
           chmod 600 packaging/signing/private.key
         env:
           SIGNING_PRIVATE_KEY: ${{ secrets.SIGNING_PRIVATE_KEY }}
-      
+
       - name: Run release pipeline
         run: |
           chmod +x packaging/core_release/release.sh
           bash packaging/core_release/release.sh
-      
+
       - name: Create release bundles
         run: |
           VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
@@ -67,7 +67,7 @@ jobs:
           chmod +x packaging/packaging_tools/verify_release_bundle.sh
           bash packaging/packaging_tools/make_release_bundle.sh dist "${VERSION}" linux-x64
           bash packaging/packaging_tools/verify_release_bundle.sh dist dist/sha256sum.txt
-      
+
       - name: Verify all signatures
         run: |
           chmod +x packaging/signing/verify.sh
@@ -76,109 +76,109 @@ jobs:
               bash packaging/signing/verify.sh "$artifact" packaging/signing/public.key "$artifact.sig"
             fi
           done
-      
+
       - name: Remove private key
         if: always()
         run: |
           rm -f packaging/signing/private.key
-      
+
       - name: Extract version
         id: version
         run: |
           VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-      
+
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-${{ steps.version.outputs.version }}-linux-x64.zip
           path: dist/costpilot-${{ steps.version.outputs.version }}-linux-x64.zip
           retention-days: 90
-      
+
       - name: Upload TAR.GZ artifact
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-${{ steps.version.outputs.version }}-linux-x64.tar.gz
           path: dist/costpilot-${{ steps.version.outputs.version }}-linux-x64.tar.gz
           retention-days: 90
-      
+
       - name: Upload ZIP signature
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-${{ steps.version.outputs.version }}-linux-x64.zip.sha256
           path: dist/costpilot-${{ steps.version.outputs.version }}-linux-x64.zip.sha256
           retention-days: 90
-      
+
       - name: Upload TAR.GZ signature
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-${{ steps.version.outputs.version }}-linux-x64.tar.gz.sha256
           path: dist/costpilot-${{ steps.version.outputs.version }}-linux-x64.tar.gz.sha256
           retention-days: 90
-      
+
       - name: Upload build manifest
         uses: actions/upload-artifact@v4
         with:
           name: build.json
           path: dist/build.json
           retention-days: 90
-      
+
       - name: Upload build fingerprint
         uses: actions/upload-artifact@v4
         with:
           name: build_fingerprint.txt
           path: dist/build_fingerprint.txt
           retention-days: 90
-      
+
       - name: Upload provenance
         uses: actions/upload-artifact@v4
         with:
           name: provenance.json
           path: dist/provenance.json
           retention-days: 90
-      
+
       - name: Upload provenance signature
         uses: actions/upload-artifact@v4
         with:
           name: provenance.json.sig
           path: dist/provenance.json.sig
           retention-days: 90
-      
+
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
           name: sbom.cyclonedx.json
           path: dist/sbom.cyclonedx.json
           retention-days: 90
-      
+
       - name: Upload SBOM signature
         uses: actions/upload-artifact@v4
         with:
           name: sbom.cyclonedx.json.sig
           path: dist/sbom.cyclonedx.json.sig
           retention-days: 90
-      
+
       - name: Upload release bundle TAR.GZ
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-${{ steps.version.outputs.version }}-linux-x64-bundle.tar.gz
           path: dist/costpilot-${{ steps.version.outputs.version }}-linux-x64.tar.gz
           retention-days: 90
-      
+
       - name: Upload release bundle ZIP
         uses: actions/upload-artifact@v4
         with:
           name: costpilot-${{ steps.version.outputs.version }}-linux-x64-bundle.zip
           path: dist/costpilot-${{ steps.version.outputs.version }}-linux-x64.zip
           retention-days: 90
-      
+
       - name: Upload checksums
         uses: actions/upload-artifact@v4
         with:
           name: sha256sum.txt
           path: dist/sha256sum.txt
           retention-days: 90
-      
+
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1

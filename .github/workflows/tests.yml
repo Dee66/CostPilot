@@ -20,19 +20,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
           components: rustfmt, clippy
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Run unit tests
         run: cargo test --lib --all-features
-      
+
       - name: Run doc tests
         run: cargo test --doc
 
@@ -43,13 +43,13 @@ jobs:
     needs: unit-tests
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Run integration tests
         run: cargo test --test 'test_*' --all-features
 
@@ -60,16 +60,16 @@ jobs:
     needs: unit-tests
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Build binary
         run: cargo build --release
-      
+
       - name: Run E2E tests
         run: cargo test --test 'e2e_*' --all-features
 
@@ -80,31 +80,31 @@ jobs:
     needs: [unit-tests, integration-tests]
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      
+
       - name: Install cargo-tarpaulin
         run: cargo install cargo-tarpaulin
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Generate coverage
         run: cargo tarpaulin --config tarpaulin.toml --verbose
-      
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage/lcov.info
           fail_ci_if_error: false
-      
+
       - name: Archive coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: coverage/
-      
+
       - name: Check coverage threshold
         run: |
           COVERAGE=$(grep -oP 'Coverage: \K[\d.]+' coverage/index.html | head -1)
@@ -121,13 +121,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Run property tests
         run: cargo test --test 'prop_*' --release
 
@@ -137,16 +137,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Run snapshot tests
         run: cargo test --test 'snap_*'
-      
+
       - name: Check for snapshot changes
         run: |
           if git diff --exit-code tests/snapshots/; then
@@ -164,28 +164,28 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust nightly
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: nightly
-      
+
       - name: Install cargo-fuzz
         run: cargo install cargo-fuzz
-      
+
       - name: Run fuzz tests (extended)
         run: |
           cargo fuzz list | while read target; do
             timeout 1800 cargo fuzz run "$target" -- -max_total_time=1800 || true
           done
-      
+
       - name: Collect crash artifacts
         run: |
           if [ -d fuzz/artifacts ]; then
             mkdir -p fuzz/fixtures
             cp -r fuzz/artifacts/* fuzz/fixtures/ 2>/dev/null || true
           fi
-      
+
       - name: Upload fuzz artifacts
         uses: actions/upload-artifact@v3
         if: always()
@@ -200,21 +200,21 @@ jobs:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch')
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust nightly
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: nightly
-      
+
       - name: Install cargo-fuzz
         run: cargo install cargo-fuzz
-      
+
       - name: Run extended fuzz tests
         run: |
           cargo fuzz list | while read target; do
             timeout 3600 cargo fuzz run "$target" -- -max_total_time=3600 || true
           done
-      
+
       - name: Collect and store crash seeds
         run: |
           if [ -d fuzz/artifacts ]; then
@@ -237,16 +237,16 @@ jobs:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch')
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      
+
       - name: Install cargo-mutants
         run: cargo install cargo-mutants
-      
+
       - name: Run mutation tests
         run: cargo mutants --timeout 300 --jobs 4
-      
+
       - name: Upload mutation report
         uses: actions/upload-artifact@v3
         with:
@@ -259,16 +259,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Run benchmarks
         run: cargo bench --no-fail-fast
-      
+
       - name: Upload benchmark results
         uses: actions/upload-artifact@v3
         with:
@@ -281,14 +281,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: rustfmt, clippy
-      
+
       - name: Check formatting
         run: cargo fmt --all -- --check
-      
+
       - name: Run Clippy
         run: cargo clippy --all-features --all-targets -- -D warnings

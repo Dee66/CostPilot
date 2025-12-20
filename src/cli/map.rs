@@ -6,6 +6,7 @@ use crate::engines::mapping::{
 use clap::Args;
 use colored::Colorize;
 use std::path::PathBuf;
+#[cfg(not(target_arch = "wasm32"))]
 use crate::validation::OutputValidator;
 
 #[derive(Debug, Args)]
@@ -143,9 +144,11 @@ pub fn execute_map_command(
 
             // Validate JSON output against schema only for standard format
             if json_format == JsonFormat::Standard {
-                use crate::validation::output::OutputType;
-                let validator = OutputValidator::new()?;
-                validator.validate(OutputType::Mapping, &json_output)?;
+                #[cfg(not(target_arch = "wasm32"))] {
+                    use crate::validation::output::OutputType;
+                    let validator = OutputValidator::new()?;
+                    validator.validate(OutputType::Mapping, &json_output)?;
+                }
             }
 
             json_output

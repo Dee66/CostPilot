@@ -1,5 +1,5 @@
 /// Deep coverage tests for Mapping Engine
-/// 
+///
 /// Tests for dependency mapping with complex graphs, graph algorithms,
 /// topological sorting, cycle detection, and edge cases.
 

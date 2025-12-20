@@ -1,5 +1,5 @@
 /// Autofix test helpers for deterministic snippet generation
-/// 
+///
 /// Provides consistent checksum generation and snippet formatting for tests.
 
 use sha2::{Sha256, Digest};

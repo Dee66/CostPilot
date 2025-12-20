@@ -1,5 +1,5 @@
 /// Integration tests for multi-engine pipelines
-/// 
+///
 /// Tests complete workflows combining detection, prediction, explain, autofix,
 /// policy, and SLO engines.
 

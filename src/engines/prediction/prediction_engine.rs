@@ -33,19 +33,19 @@ pub struct CostHeuristics {
     pub prediction_intervals: PredictionIntervals,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct ComputeHeuristics {
     pub ec2: HashMap<String, InstanceCost>,
     pub lambda: LambdaCost,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct InstanceCost {
     pub hourly: f64,
     pub monthly: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct LambdaCost {
     pub price_per_gb_second: f64,
     pub price_per_request: f64,
@@ -55,43 +55,43 @@ pub struct LambdaCost {
     pub default_duration_ms: u32,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct StorageHeuristics {
     pub s3: S3Cost,
     pub ebs: HashMap<String, EbsCost>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct S3Cost {
     pub standard: S3Tier,
     pub glacier: S3Tier,
     pub requests: S3Requests,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct S3Tier {
     pub per_gb: Option<f64>,
     pub first_50tb_per_gb: Option<f64>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct S3Requests {
     pub put_copy_post_list_per_1000: f64,
     pub get_select_per_1000: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct EbsCost {
     pub per_gb: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct DatabaseHeuristics {
     pub rds: RdsCost,
     pub dynamodb: DynamoDbCost,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct RdsCost {
     pub mysql: HashMap<String, InstanceCost>,
     pub postgres: HashMap<String, InstanceCost>,
@@ -100,52 +100,52 @@ pub struct RdsCost {
     pub backup_per_gb: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct DynamoDbCost {
     pub on_demand: DynamoDbOnDemand,
     pub provisioned: DynamoDbProvisioned,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct DynamoDbOnDemand {
     pub write_request_unit: f64,
     pub read_request_unit: f64,
     pub storage_per_gb: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct DynamoDbProvisioned {
     pub write_capacity_unit_hourly: f64,
     pub read_capacity_unit_hourly: f64,
     pub storage_per_gb: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct NetworkingHeuristics {
     pub nat_gateway: NatGatewayCost,
     pub load_balancer: LoadBalancerCost,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct NatGatewayCost {
     pub hourly: f64,
     pub monthly: f64,
     pub data_processing_per_gb: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct LoadBalancerCost {
     pub alb: LoadBalancerType,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct LoadBalancerType {
     pub hourly: f64,
     pub monthly: f64,
     pub lcu_hourly: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct ColdStartDefaults {
     pub dynamodb_unknown_rcu: u32,
     pub dynamodb_unknown_wcu: u32,
@@ -155,7 +155,7 @@ pub struct ColdStartDefaults {
     pub ec2_default_utilization: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PredictionIntervals {
     pub range_factor: f64,
 }
@@ -254,8 +254,14 @@ impl PredictionEngine {
             ));
         }
 
-        // Free mode: use static prediction (no heuristics)
-        Self::predict_static(changes)
+        // Free mode: use resource prediction with basic heuristics
+        let mut estimates = Vec::new();
+        for change in changes {
+            if let Some(estimate) = self.predict_resource(change)? {
+                estimates.push(estimate);
+            }
+        }
+        Ok(estimates)
     }
 
     /// Handle budget violation based on timeout action (legacy - for performance tracking)
@@ -391,12 +397,14 @@ impl PredictionEngine {
             }
         };
 
-        let (old_cost, cold_start_used) = match change.action {
-            ChangeAction::Delete => (monthly_cost, false),
-            _ => (0.0, false),
+        let cost_delta = match change.action {
+            ChangeAction::Delete => 0.0, // Delete operations result in zero ongoing cost
+            _ => monthly_cost,
         };
-
-        let cost_delta = monthly_cost - old_cost;
+        let cold_start_used = !matches!(change.resource_type.as_str(),
+            "aws_instance" | "aws_db_instance" | "aws_dynamodb_table" | "aws_nat_gateway" |
+            "aws_lb" | "aws_alb" | "aws_s3_bucket" | "aws_lambda_function" |
+            "aws_eks_cluster" | "aws_elasticache_cluster" | "aws_cloudfront_distribution" | "aws_ecs_service");
         let confidence = calculate_confidence(change, cold_start_used, &change.resource_type);
 
         let range_factor = self.heuristics.prediction_intervals.range_factor;
@@ -405,8 +413,12 @@ impl PredictionEngine {
         Ok(Some(CostEstimate {
             resource_id: change.resource_id.clone(),
             monthly_cost: cost_delta,
-            prediction_interval_low: (monthly_cost - interval).max(0.0),
-            prediction_interval_high: monthly_cost + interval,
+            prediction_interval_low: if cost_delta >= 0.0 {
+                (cost_delta - interval).max(0.0)
+            } else {
+                cost_delta - interval
+            },
+            prediction_interval_high: cost_delta + interval,
             confidence_score: confidence,
             heuristic_reference: Some(format!("v{}", self.heuristics.version)),
             cold_start_inference: cold_start_used,

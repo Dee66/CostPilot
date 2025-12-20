@@ -74,6 +74,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Efficient caching mechanisms
 - Minimal memory footprint
 
+## [1.0.2] - 2025-12-20
+
+### Added
+- Pricing enforcement checklist (`docs/pricing_enforcement_checklist.yml`)
+- License gating for sustainability analytics (premium feature)
+- Updated checklist.md with task-270
+
+### Fixed
+- Synchronization gaps in documentation and checklists
+
+## [1.0.1] - 2025-12-01
+
+### Added
+- Enhanced README.md with installation and quick-start sections
+- Minor documentation updates for pricing model
+
+### Fixed
+- Version timeline inconsistencies in changelog
+
 ## [0.9.0] - 2025-10-01
 
 ### Added

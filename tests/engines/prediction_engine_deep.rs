@@ -1,5 +1,5 @@
 /// Deep coverage tests for Prediction Engine
-/// 
+///
 /// Tests for cost prediction with various resource types, pricing models,
 /// confidence intervals, Monte Carlo simulations, seasonality analysis,
 /// and edge cases.
@@ -493,7 +493,7 @@ mod prediction_engine_deep_tests {
             uncertainty_type: UncertaintyType::Percentage(0.1),
             distribution: None,
         }];
-        
+
         let result = simulator.simulate(&inputs, 1000);
         assert!(result.mean > 90.0 && result.mean < 110.0);
     }
@@ -506,7 +506,7 @@ mod prediction_engine_deep_tests {
             uncertainty_type: UncertaintyType::Percentage(0.0),
             distribution: None,
         }];
-        
+
         let result = simulator.simulate(&inputs, 1000);
         assert_eq!(result.mean, 100.0);
         assert_eq!(result.std_dev, 0.0);
@@ -520,7 +520,7 @@ mod prediction_engine_deep_tests {
             uncertainty_type: UncertaintyType::Percentage(0.5),
             distribution: None,
         }];
-        
+
         let result = simulator.simulate(&inputs, 1000);
         assert!(result.std_dev > 10.0);
     }
@@ -540,7 +540,7 @@ mod prediction_engine_deep_tests {
                 distribution: None,
             },
         ];
-        
+
         let result = simulator.simulate(&inputs, 1000);
         assert!(result.mean > 80.0 && result.mean < 120.0);
     }
@@ -553,7 +553,7 @@ mod prediction_engine_deep_tests {
             uncertainty_type: UncertaintyType::Percentage(0.1),
             distribution: None,
         }];
-        
+
         let result = simulator.simulate(&inputs, 10000);
         assert!(result.mean > 95.0 && result.mean < 105.0);
     }
@@ -566,7 +566,7 @@ mod prediction_engine_deep_tests {
             uncertainty_type: UncertaintyType::Percentage(0.1),
             distribution: None,
         }];
-        
+
         let result = simulator.simulate(&inputs, 10);
         // With small sample, results may vary more
         assert!(result.mean > 0.0);
@@ -921,10 +921,10 @@ mod prediction_engine_deep_tests {
     fn test_prediction_engine_concurrent_access() {
         use std::thread;
         use std::sync::Arc;
-        
+
         let resource = Arc::new(create_test_resource("t3.micro", 1));
         let mut handles = vec![];
-        
+
         for _ in 0..10 {
             let res = Arc::clone(&resource);
             let handle = thread::spawn(move || {
@@ -933,7 +933,7 @@ mod prediction_engine_deep_tests {
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -1016,7 +1016,7 @@ mod prediction_engine_deep_tests {
             uncertainty_type: UncertaintyType::Percentage(0.1),
             distribution: None,
         }).collect::<Vec<_>>();
-        
+
         let result = simulator.simulate(&inputs, 10000);
         assert!(result.mean > 0.0);
     }
@@ -1053,10 +1053,10 @@ mod prediction_engine_deep_tests {
     fn test_prediction_engine_concurrent_load() {
         use std::thread;
         use std::sync::Arc;
-        
+
         let resource = Arc::new(create_test_resource("t3.micro", 1));
         let mut handles = vec![];
-        
+
         for _ in 0..50 {
             let res = Arc::clone(&resource);
             let handle = thread::spawn(move || {
@@ -1067,7 +1067,7 @@ mod prediction_engine_deep_tests {
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -1104,11 +1104,11 @@ mod prediction_engine_deep_tests {
             uncertainty_type: UncertaintyType::Percentage(0.1),
             distribution: None,
         }];
-        
+
         let start = std::time::Instant::now();
         let result = simulator.simulate(&inputs, 100000);
         let elapsed = start.elapsed();
-        
+
         assert!(result.mean > 0.0);
         assert!(elapsed < std::time::Duration::from_secs(5));
     }
@@ -1117,11 +1117,11 @@ mod prediction_engine_deep_tests {
     fn test_seasonality_detection_performance() {
         let detector = SeasonalityDetector::new();
         let data = generate_seasonal_data(PatternType::Weekly, 10000);
-        
+
         let start = std::time::Instant::now();
         let pattern = detector.detect(&data);
         let elapsed = start.elapsed();
-        
+
         assert!(elapsed < std::time::Duration::from_secs(2));
         assert!(pattern.confidence >= 0.0);
     }
@@ -1173,7 +1173,7 @@ mod prediction_engine_deep_tests {
             let start = std::time::Instant::now();
             let estimate = ec2_calculation_step(&resource, 30);
             let elapsed = start.elapsed();
-            
+
             assert!(estimate.monthly_cost > 0.0);
             assert!(elapsed < std::time::Duration::from_millis(100));
         }
@@ -1182,18 +1182,18 @@ mod prediction_engine_deep_tests {
     #[test]
     fn test_monte_carlo_scalability() {
         let simulator = MonteCarloSimulator::new();
-        
+
         for iterations in [100, 1000, 10000] {
             let inputs = vec![UncertaintyInput {
                 base_value: 100.0,
                 uncertainty_type: UncertaintyType::Percentage(0.1),
                 distribution: None,
             }];
-            
+
             let start = std::time::Instant::now();
             let result = simulator.simulate(&inputs, iterations);
             let elapsed = start.elapsed();
-            
+
             assert!(result.mean > 0.0);
             assert!(elapsed < std::time::Duration::from_secs(10));
         }
@@ -1202,13 +1202,13 @@ mod prediction_engine_deep_tests {
     #[test]
     fn test_seasonality_scalability() {
         let detector = SeasonalityDetector::new();
-        
+
         for size in [100, 1000, 10000] {
             let data = generate_seasonal_data(PatternType::Weekly, size);
             let start = std::time::Instant::now();
             let pattern = detector.detect(&data);
             let elapsed = start.elapsed();
-            
+
             assert!(elapsed < std::time::Duration::from_secs(5));
             assert!(pattern.confidence >= 0.0);
         }
@@ -1219,11 +1219,11 @@ mod prediction_engine_deep_tests {
         // Test load distribution across cores
         use std::thread;
         use std::sync::Arc;
-        
+
         let resource = Arc::new(create_test_resource("t3.micro", 1));
         let num_threads = num_cpus::get();
         let mut handles = vec![];
-        
+
         for _ in 0..num_threads {
             let res = Arc::clone(&resource);
             let handle = thread::spawn(move || {
@@ -1234,7 +1234,7 @@ mod prediction_engine_deep_tests {
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }
@@ -1322,10 +1322,10 @@ mod prediction_engine_deep_tests {
         // Test bulkhead pattern
         use std::thread;
         use std::sync::Arc;
-        
+
         let resource = Arc::new(create_test_resource("t3.micro", 1));
         let mut handles = vec![];
-        
+
         for _ in 0..10 {
             let res = Arc::clone(&resource);
             let handle = thread::spawn(move || {
@@ -1336,7 +1336,7 @@ mod prediction_engine_deep_tests {
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }

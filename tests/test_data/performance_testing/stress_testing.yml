@@ -1,0 +1,277 @@
+# CostPilot Performance Testing: Stress Testing
+# Test data for stress testing scenarios
+
+# Resource limits testing
+memory_limit_test:
+  metadata:
+    test_case: "memory_limit_test"
+    description: "Test behavior near memory limits"
+    expected_behavior: "graceful_degradation"
+    memory_limit: "512MB"
+  test_plan:
+    concurrent_users: 100
+    duration: "300s"
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "memory-intensive-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.2xlarge"
+            region: "us-east-1"
+
+cpu_limit_test:
+  metadata:
+    test_case: "cpu_limit_test"
+    description: "Test behavior under CPU pressure"
+    expected_behavior: "graceful_degradation"
+    cpu_limit: "80%"
+  test_plan:
+    concurrent_users: 200
+    duration: "180s"
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "cpu-intensive-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "c5.4xlarge"
+            region: "us-east-1"
+
+disk_space_limit:
+  metadata:
+    test_case: "disk_space_limit"
+    description: "Test behavior with limited disk space"
+    expected_behavior: "disk_cleanup_warning"
+    disk_limit: "100MB"
+  test_plan:
+    iterations: 1000
+    log_level: "debug"
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "disk-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+
+file_descriptor_limit:
+  metadata:
+    test_case: "file_descriptor_limit"
+    description: "Test behavior with limited file descriptors"
+    expected_behavior: "connection_pool_warning"
+    fd_limit: 256
+  test_plan:
+    concurrent_users: 50
+    duration: "120s"
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "fd-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+
+# Error recovery testing
+network_failure_recovery:
+  metadata:
+    test_case: "network_failure_recovery"
+    description: "Test recovery from network failures"
+    expected_behavior: "automatic_retry"
+    failure_injection: "network_timeout"
+  test_plan:
+    concurrent_users: 20
+    duration: "60s"
+    failure_points:
+      - time: "10s"
+        type: "network_disconnect"
+        duration: "5s"
+      - time: "30s"
+        type: "dns_failure"
+        duration: "3s"
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "network-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+
+database_connection_failure:
+  metadata:
+    test_case: "database_connection_failure"
+    description: "Test recovery from database connection failures"
+    expected_behavior: "connection_pool_recovery"
+    failure_injection: "db_connection_lost"
+  test_plan:
+    concurrent_users: 30
+    duration: "90s"
+    failure_points:
+      - time: "15s"
+        type: "db_disconnect"
+        duration: "10s"
+      - time: "45s"
+        type: "db_timeout"
+        duration: "5s"
+    sample_plan:
+      resources:
+        - type: "aws_rds_instance"
+          name: "db-test-rds"
+          provider: "aws"
+          attributes:
+            instance_class: "db.t3.micro"
+            engine: "mysql"
+            region: "us-east-1"
+
+service_dependency_failure:
+  metadata:
+    test_case: "service_dependency_failure"
+    description: "Test recovery when external services fail"
+    expected_behavior: "circuit_breaker_activation"
+    failure_injection: "external_service_down"
+  test_plan:
+    concurrent_users: 25
+    duration: "120s"
+    failure_points:
+      - time: "20s"
+        type: "pricing_api_down"
+        duration: "15s"
+      - time: "60s"
+        type: "cost_explorer_down"
+        duration: "10s"
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "service-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.medium"
+            region: "us-east-1"
+
+# Sustained load testing
+sustained_load_1_hour:
+  metadata:
+    test_case: "sustained_load_1_hour"
+    description: "Sustained load testing for 1 hour"
+    expected_behavior: "stable_performance"
+    duration: "3600s"
+  test_plan:
+    concurrent_users: 20
+    duration: "3600s"
+    ramp_up: "60s"
+    steady_state: "3300s"
+    ramp_down: "60s"
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "sustained-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+
+sustained_load_memory_leak:
+  metadata:
+    test_case: "sustained_load_memory_leak"
+    description: "Test for memory leaks under sustained load"
+    expected_behavior: "stable_memory_usage"
+    duration: "1800s"
+  test_plan:
+    concurrent_users: 15
+    duration: "1800s"
+    memory_monitoring: true
+    leak_detection: true
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "memory-leak-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.small"
+            region: "us-east-1"
+
+sustained_load_peak_hours:
+  metadata:
+    test_case: "sustained_load_peak_hours"
+    description: "Simulate peak business hours load"
+    expected_behavior: "peak_performance_maintained"
+    duration: "28800s"  # 8 hours
+  test_plan:
+    concurrent_users:
+      - time: "0s"
+        users: 5
+      - time: "7200s"   # 2 hours - ramp up to peak
+        users: 50
+      - time: "21600s"  # 6 hours - peak load
+        users: 50
+      - time: "25200s"  # 7 hours - ramp down
+        users: 10
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "peak-hours-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.medium"
+            region: "us-east-1"
+
+# Resource exhaustion scenarios
+thread_pool_exhaustion:
+  metadata:
+    test_case: "thread_pool_exhaustion"
+    description: "Test behavior when thread pool is exhausted"
+    expected_behavior: "queue_requests"
+    thread_pool_size: 10
+  test_plan:
+    concurrent_users: 50
+    duration: "120s"
+    queue_monitoring: true
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "thread-pool-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"
+
+connection_pool_exhaustion:
+  metadata:
+    test_case: "connection_pool_exhaustion"
+    description: "Test behavior when database connection pool is exhausted"
+    expected_behavior: "connection_timeout"
+    connection_pool_size: 5
+  test_plan:
+    concurrent_users: 30
+    duration: "90s"
+    connection_monitoring: true
+    sample_plan:
+      resources:
+        - type: "aws_rds_instance"
+          name: "connection-pool-test-rds"
+          provider: "aws"
+          attributes:
+            instance_class: "db.t3.micro"
+            engine: "postgres"
+            region: "us-east-1"
+
+cache_memory_exhaustion:
+  metadata:
+    test_case: "cache_memory_exhaustion"
+    description: "Test behavior when cache memory is exhausted"
+    expected_behavior: "cache_eviction"
+    cache_memory_limit: "50MB"
+  test_plan:
+    iterations: 5000
+    cache_monitoring: true
+    sample_plan:
+      resources:
+        - type: "aws_instance"
+          name: "cache-test-ec2"
+          provider: "aws"
+          attributes:
+            instance_type: "t3.micro"
+            region: "us-east-1"

@@ -276,7 +276,7 @@ mod tests {
 
         let resource = artifact.get_resource("MyInstance").unwrap();
         assert_eq!(resource.resource_type, "AWS::EC2::Instance");
-        assert_eq!(resource.normalized_type(), "aws_ec2_instance");
+        assert_eq!(resource.normalized_type(), "aws_instance");
     }
 
     #[test]
@@ -431,7 +431,7 @@ mod tests {
 
         assert_eq!(artifact.resource_count(), 3);
 
-        let instances = artifact.get_resources_by_type("aws_ec2_instance");
+        let instances = artifact.get_resources_by_type("aws_instance");
         assert_eq!(instances.len(), 2);
 
         let buckets = artifact.get_resources_by_type("aws_s3_bucket");

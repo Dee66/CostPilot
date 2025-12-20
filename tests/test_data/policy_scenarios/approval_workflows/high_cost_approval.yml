@@ -1,0 +1,201 @@
+# CostPilot Policy: Approval Workflows
+# This policy defines approval processes for high-cost or high-risk resources
+
+metadata:
+  policy_id: "approval-workflow-high-cost-resources"
+  policy_version: "1.0.0"
+  policy_type: "approval_workflow"
+  severity: "high"
+  category: "governance"
+  description: "Require approval for resources exceeding cost or risk thresholds"
+  created_at: "2025-01-15T00:00:00Z"
+  last_updated: "2025-01-15T00:00:00Z"
+  author: "CostPilot Policy Engine"
+  tags:
+    - approval-workflow
+    - governance
+    - cost-control
+
+# Policy scope
+scope:
+  accounts:
+    - "*"  # All accounts
+  regions:
+    - "*"  # All regions
+  resource_types:
+    - "*"  # All resource types
+  environments:
+    - production
+    - staging
+
+# Approval triggers
+approval_triggers:
+  cost_thresholds:
+    monthly_cost_over: 1000.00  # Require approval for resources costing > $1000/month
+    one_time_cost_over: 500.00   # Require approval for one-time costs > $500
+    cumulative_cost_over: 5000.00 # Require approval when cumulative cost exceeds $5000
+
+  resource_criteria:
+    high_cost_instances:
+      - "m5.4xlarge"
+      - "m5.8xlarge"
+      - "c5.4xlarge"
+      - "c5.9xlarge"
+      - "r5.4xlarge"
+      - "r5.8xlarge"
+      - "*.metal"
+      - "p3.*"
+      - "g4dn.*"
+
+    storage_resources:
+      max_size_gb: 1000  # Require approval for storage > 1TB
+
+    database_resources:
+      multi_az_required: true  # Require approval to disable Multi-AZ
+      backup_retention_days: 30  # Require approval for backup retention < 30 days
+
+  risk_criteria:
+    public_resources:
+      - "AWS::EC2::Instance"  # with public IP
+      - "AWS::RDS::DBInstance"  # publicly accessible
+      - "AWS::S3::Bucket"  # with public access
+
+    unencrypted_resources:
+      - "AWS::RDS::DBInstance"
+      - "AWS::EFS::FileSystem"
+      - "AWS::S3::Bucket"
+
+# Approval workflows
+workflows:
+  standard_approval:
+    name: "Standard Resource Approval"
+    description: "Standard approval process for medium-risk resources"
+    triggers:
+      - cost_thresholds.monthly_cost_over: 1000.00
+      - cost_thresholds.one_time_cost_over: 500.00
+
+    approvers:
+      required_count: 1
+      roles:
+        - "engineering_manager"
+        - "platform_engineer"
+      users: []  # Can be specified by role or individual users
+
+    timeout_hours: 72  # Auto-approve after 3 days
+    escalation:
+      after_hours: 24
+      escalate_to: "engineering_director"
+
+  high_risk_approval:
+    name: "High-Risk Resource Approval"
+    description: "Enhanced approval process for high-risk or high-cost resources"
+    triggers:
+      - cost_thresholds.monthly_cost_over: 5000.00
+      - cost_thresholds.cumulative_cost_over: 10000.00
+      - resource_criteria.high_cost_instances
+      - risk_criteria.public_resources
+
+    approvers:
+      required_count: 2
+      roles:
+        - "engineering_director"
+        - "finance_director"
+        - "security_officer"
+      users: []
+
+    timeout_hours: 168  # Auto-reject after 7 days (requires manual intervention)
+    escalation:
+      after_hours: 48
+      escalate_to: "cto"
+
+  emergency_approval:
+    name: "Emergency Resource Approval"
+    description: "Expedited approval for emergency situations"
+    triggers:
+      - manual_request  # Must be explicitly requested
+
+    approvers:
+      required_count: 1
+      roles:
+        - "engineering_director"
+        - "platform_engineer"
+      users: []
+
+    timeout_hours: 4  # Quick approval for emergencies
+    justification_required: true
+
+# Approval process configuration
+approval_process:
+  self_approval_allowed: false
+  sequential_approval: false  # Parallel approvals allowed
+  reapproval_required_on_change: true  # Re-approve if resource changes
+
+  notification_settings:
+    request_notifications:
+      channels: ["email", "slack"]
+      templates:
+        email_subject: "CostPilot Approval Required: {{resource_type}} in {{environment}}"
+        slack_message: |
+          🔄 *Approval Required*
+          Resource: {{resource_type}}
+          Environment: {{environment}}
+          Estimated Cost: ${{monthly_cost}}/month
+          Requested by: {{requester}}
+          <{{approval_url}}|Review Request>
+
+    approval_notifications:
+      channels: ["email", "slack"]
+      templates:
+        approved: "✅ Resource approved: {{resource_type}} in {{environment}}"
+        rejected: "❌ Resource rejected: {{resource_type}} in {{environment}} - {{reason}}"
+
+# Exception handling
+exceptions:
+  service_accounts:
+    - "infrastructure-automation"
+    - "monitoring-system"
+    - "ci-cd-pipeline"
+
+  emergency_bypass:
+    enabled: true
+    max_bypass_cost: 2000.00
+    justification_required: true
+    audit_required: true
+
+# Integration settings
+integrations:
+  jira:
+    enabled: true
+    project_key: "COST"
+    issue_type: "Approval Request"
+    custom_fields:
+      cost_estimate: "customfield_10001"
+      approval_status: "customfield_10002"
+
+  slack:
+    enabled: true
+    approval_channel: "#resource-approvals"
+    emergency_channel: "#emergency-approvals"
+
+# Audit and compliance
+audit:
+  enabled: true
+  log_all_decisions: true
+  retention_days: 365
+  compliance_reports:
+    frequency: "monthly"
+    recipients:
+      - "compliance@company.com"
+      - "audit@company.com"
+
+# Advanced features
+advanced:
+  predictive_approval:
+    enabled: true
+    learning_period_days: 90
+    auto_approve_similar: false  # Don't auto-approve based on patterns
+
+  cost_forecasting:
+    enabled: true
+    forecast_period_months: 12
+    include_in_approval_request: true

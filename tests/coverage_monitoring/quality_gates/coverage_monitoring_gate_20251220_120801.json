@@ -1,0 +1,16 @@
+{
+    "gate_name": "coverage_regression_monitoring",
+    "status": "FAILED",
+    "timestamp": "2025-12-20 12:08:01",
+    "monitoring_results": {
+        "coverage_violations": 9,
+        "coverage_regressions": 0,
+        "monitored_scripts": 5
+    },
+    "recommendations": [
+        "Review individual coverage reports for detailed analysis",
+        "Address coverage violations before merging",
+        "Investigate and fix coverage regressions",
+        "Consider adding more tests to improve coverage"
+    ]
+}

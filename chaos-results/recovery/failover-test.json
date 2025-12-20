@@ -1,0 +1,5 @@
+{
+  "failover_detected": true,
+  "failover_time_seconds": 0,
+  "rto_compliance": true
+}

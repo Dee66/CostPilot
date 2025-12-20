@@ -1,0 +1,232 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Compute child stack for nested CloudFormation testing",
+
+  "Parameters": {
+    "Environment": {
+      "Type": "String",
+      "Description": "Environment name"
+    },
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "VPC ID from VPC stack"
+    },
+    "PublicSubnetId": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "Public subnet ID from VPC stack"
+    },
+    "PrivateSubnetId": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "Private subnet ID from VPC stack"
+    },
+    "SecurityGroupId": {
+      "Type": "AWS::EC2::SecurityGroup::Id",
+      "Description": "Security group ID from security stack"
+    }
+  },
+
+  "Resources": {
+    "ApplicationLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": { "Fn::Sub": "${Environment}-alb" },
+        "Type": "application",
+        "Scheme": "internet-facing",
+        "IpAddressType": "ipv4",
+        "Subnets": [
+          { "Ref": "PublicSubnetId" }
+        ],
+        "SecurityGroups": [
+          { "Ref": "LoadBalancerSecurityGroup" }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-ALB" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "LoadBalancerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for ALB",
+        "VpcId": { "Ref": "VpcId" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-ALB-SG" }
+          }
+        ]
+      }
+    },
+
+    "ALBListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "LoadBalancerArn": { "Ref": "ApplicationLoadBalancer" },
+        "Protocol": "HTTP",
+        "Port": 80,
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": { "Ref": "TargetGroup" }
+          }
+        ]
+      }
+    },
+
+    "TargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "Name": { "Fn::Sub": "${Environment}-tg" },
+        "Protocol": "HTTP",
+        "Port": 80,
+        "VpcId": { "Ref": "VpcId" },
+        "TargetType": "instance",
+        "HealthCheckPath": "/",
+        "HealthCheckIntervalSeconds": 30,
+        "HealthyThresholdCount": 2,
+        "UnhealthyThresholdCount": 2
+      }
+    },
+
+    "AutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AutoScalingGroupName": { "Fn::Sub": "${Environment}-asg" },
+        "LaunchTemplate": {
+          "LaunchTemplateId": { "Ref": "LaunchTemplate" },
+          "Version": "$Latest"
+        },
+        "MinSize": "1",
+        "MaxSize": "5",
+        "DesiredCapacity": "2",
+        "VPCZoneIdentifier": [
+          { "Ref": "PrivateSubnetId" }
+        ],
+        "TargetGroupARNs": [
+          { "Ref": "TargetGroup" }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-ASG-Instance" },
+            "PropagateAtLaunch": true
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" },
+            "PropagateAtLaunch": true
+          }
+        ]
+      }
+    },
+
+    "LaunchTemplate": {
+      "Type": "AWS::EC2::LaunchTemplate",
+      "Properties": {
+        "LaunchTemplateName": { "Fn::Sub": "${Environment}-lt" },
+        "LaunchTemplateData": {
+          "ImageId": "ami-0c55b159cbfafe1d0",
+          "InstanceType": "t3.micro",
+          "SecurityGroupIds": [
+            { "Ref": "SecurityGroupId" }
+          ],
+          "UserData": {
+            "Fn::Base64": {
+              "Fn::Sub": "#!/bin/bash\necho 'Compute stack instance in ${Environment}' > /tmp/compute.txt"
+            }
+          },
+          "TagSpecifications": [
+            {
+              "ResourceType": "instance",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": { "Fn::Sub": "${Environment}-Compute-Instance" }
+                },
+                {
+                  "Key": "Environment",
+                  "Value": { "Ref": "Environment" }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+
+    "ScaleUpPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AutoScalingGroupName": { "Ref": "AutoScalingGroup" },
+        "PolicyType": "TargetTrackingScaling",
+        "TargetTrackingConfiguration": {
+          "PredefinedMetricSpecification": {
+            "PredefinedMetricType": "ASGAverageCPUUtilization"
+          },
+          "TargetValue": 70.0
+        }
+      }
+    },
+
+    "CPUAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": { "Fn::Sub": "${Environment}-cpu-alarm" },
+        "AlarmDescription": "Alarm for high CPU utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": 300,
+        "Threshold": 80,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": 2,
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": { "Ref": "AutoScalingGroup" }
+          }
+        ]
+      }
+    }
+  },
+
+  "Outputs": {
+    "LoadBalancerDNS": {
+      "Description": "DNS name of the load balancer",
+      "Value": { "Fn::GetAtt": ["ApplicationLoadBalancer", "DNSName"] },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-ALBDNS" }
+      }
+    },
+    "AutoScalingGroupName": {
+      "Description": "Auto scaling group name",
+      "Value": { "Ref": "AutoScalingGroup" },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-ASGName" }
+      }
+    },
+    "TargetGroupArn": {
+      "Description": "Target group ARN",
+      "Value": { "Ref": "TargetGroup" },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-TGArn" }
+      }
+    }
+  }
+}

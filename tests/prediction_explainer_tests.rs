@@ -433,7 +433,7 @@ fn test_prediction_explainer_explain_with_high_confidence() {
 
     let reasoning = explainer.explain(&change, &estimate);
     assert!(reasoning.overall_confidence >= 0.9);
-    assert!(reasoning.steps.iter().any(|step| 
+    assert!(reasoning.steps.iter().any(|step|
         step.output_value.as_ref().map_or(false, |ov| ov.name == "confidence_score" && ov.value == "95%")
     ));
 }
@@ -476,11 +476,11 @@ fn test_prediction_explainer_explain_with_low_confidence() {
 
     let reasoning = explainer.explain(&change, &estimate);
     assert!(reasoning.overall_confidence < 0.5);
-    assert!(reasoning.steps.iter().any(|step| 
+    assert!(reasoning.steps.iter().any(|step|
         step.output_value.as_ref().map_or(false, |ov| ov.name == "confidence_score" && ov.value == "30%")
     ));
     // Check for wide interval
-    assert!(reasoning.steps.iter().any(|step| 
+    assert!(reasoning.steps.iter().any(|step|
         step.output_value.as_ref().map_or(false, |ov| ov.name == "interval" && ov.value == "$5.00 - $20.00")
     ));
 }

@@ -100,20 +100,30 @@ impl ArtifactNormalizer {
 
     /// Normalize property key from CloudFormation to Terraform style
     fn normalize_property_key(key: &str, resource_type: &str) -> String {
-        // Convert PascalCase to snake_case
+        // Convert PascalCase to snake_case, handling existing underscores
         let mut result = String::new();
-        let mut prev_lower = false;
+        let chars: Vec<char> = key.chars().collect();
 
-        for (i, ch) in key.chars().enumerate() {
-            if ch.is_uppercase() {
-                if i > 0 && prev_lower {
+        for (i, &ch) in chars.iter().enumerate() {
+            if ch == '_' {
+                if !result.ends_with('_') {
+                    result.push('_');
+                }
+            } else if ch.is_uppercase() {
+                // Insert underscore if previous character exists and is lowercase
+                // Or if previous is uppercase and next is lowercase (acronym handling)
+                let should_insert = if i > 0 {
+                    chars[i-1].is_lowercase() ||
+                    (chars[i-1].is_uppercase() && i < chars.len() - 1 && chars[i+1].is_lowercase())
+                } else {
+                    false
+                };
+                if should_insert && !result.ends_with('_') {
                     result.push('_');
                 }
                 result.push(ch.to_lowercase().next().unwrap());
-                prev_lower = false;
             } else {
                 result.push(ch);
-                prev_lower = true;
             }
         }
 
@@ -124,24 +134,24 @@ impl ArtifactNormalizer {
     /// Apply resource-specific property name mappings
     fn apply_property_mappings(key: &str, resource_type: &str) -> String {
         // EC2 Instance mappings
-        if resource_type == "aws_instance" || resource_type.contains("ec2_instance") {
+        if resource_type.contains("instance") {
             match key {
                 "image_id" => return "ami".to_string(),
-                "key_name" => return "key_name".to_string(),
+                "iam_role" => return "iam_instance_profile".to_string(),
                 _ => {}
             }
         }
 
         // S3 Bucket mappings
-        if resource_type == "aws_s3_bucket" || resource_type.contains("s3_bucket") {
+        if resource_type.contains("bucket") {
             if key == "bucket_name" { return "bucket".to_string() }
         }
 
         // RDS mappings
-        if resource_type.contains("rds") || resource_type.contains("db_instance") {
+        if resource_type.contains("db_instance") {
             match key {
-                "d_b_instance_class" => return "instance_class".to_string(),
-                "d_b_instance_identifier" => return "identifier".to_string(),
+                "db_instance_class" => return "instance_class".to_string(),
+                "db_instance_identifier" => return "identifier".to_string(),
                 _ => {}
             }
         }
@@ -206,6 +216,16 @@ impl ArtifactNormalizer {
                     .map(Self::normalize_property_value)
                     .collect(),
             ),
+            Value::String(s) => {
+                // Try to convert string numbers to actual numbers
+                if let Ok(num) = s.parse::<i64>() {
+                    json!(num)
+                } else if let Ok(num) = s.parse::<f64>() {
+                    json!(num)
+                } else {
+                    value.clone()
+                }
+            }
             _ => value.clone(),
         }
     }
@@ -389,8 +409,8 @@ mod tests {
         assert_eq!(normalized.resource_changes.len(), 1);
 
         let change = &normalized.resource_changes[0];
-        assert_eq!(change.resource_type, "aws_ec2_instance");
-        assert!(change.address.contains("aws_ec2_instance"));
+        assert_eq!(change.resource_type, "aws_instance");
+        assert!(change.address.contains("aws_instance"));
     }
 
     #[test]
@@ -426,7 +446,7 @@ mod tests {
         assert_eq!(normalized.resource_changes.len(), 2);
 
         let counts = normalized.count_by_type();
-        assert_eq!(counts.get("aws_ec2_instance"), Some(&1));
+        assert_eq!(counts.get("aws_instance"), Some(&1));
         assert_eq!(counts.get("aws_s3_bucket"), Some(&1));
     }
 

@@ -1,5 +1,5 @@
 /// Deep coverage tests for Autofix Engine
-/// 
+///
 /// Tests for automatic remediation with various patch generation strategies,
 /// safety checks, dependency analysis, and edge cases.
 
@@ -1216,10 +1216,10 @@ mod autofix_engine_deep_tests {
     fn test_deployment_manager_concurrent_deployments() {
         use std::thread;
         use std::sync::Arc;
-        
+
         let manager = Arc::new(DeploymentManager::new());
         let mut handles = vec![];
-        
+
         for i in 0..10 {
             let mgr = Arc::clone(&manager);
             let handle = thread::spawn(move || {
@@ -1228,7 +1228,7 @@ mod autofix_engine_deep_tests {
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.join().unwrap();
         }

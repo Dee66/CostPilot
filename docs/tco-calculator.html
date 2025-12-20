@@ -10,14 +10,14 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -26,32 +26,32 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
         }
-        
+
         .header {
             background: linear-gradient(135deg, #00D26A 0%, #00A855 100%);
             color: white;
             padding: 40px;
             text-align: center;
         }
-        
+
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
         }
-        
+
         .header p {
             font-size: 1.2em;
             opacity: 0.9;
         }
-        
+
         .calculator {
             padding: 40px;
         }
-        
+
         .section {
             margin-bottom: 30px;
         }
-        
+
         .section h2 {
             font-size: 1.5em;
             color: #333;
@@ -59,18 +59,18 @@
             border-bottom: 2px solid #00D26A;
             padding-bottom: 10px;
         }
-        
+
         .input-group {
             margin-bottom: 20px;
         }
-        
+
         .input-group label {
             display: block;
             font-weight: 600;
             color: #555;
             margin-bottom: 8px;
         }
-        
+
         .input-group input, .input-group select {
             width: 100%;
             padding: 12px;
@@ -79,18 +79,18 @@
             font-size: 1em;
             transition: border-color 0.3s;
         }
-        
+
         .input-group input:focus, .input-group select:focus {
             outline: none;
             border-color: #00D26A;
         }
-        
+
         .input-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
-        
+
         .calculate-btn {
             width: 100%;
             padding: 16px;
@@ -103,12 +103,12 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        
+
         .calculate-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0,210,106,0.3);
         }
-        
+
         .results {
             margin-top: 40px;
             padding: 30px;
@@ -116,12 +116,12 @@
             border-radius: 10px;
             display: none;
         }
-        
+
         .results.show {
             display: block;
             animation: slideIn 0.5s ease;
         }
-        
+
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -132,12 +132,12 @@
                 transform: translateY(0);
             }
         }
-        
+
         .results h2 {
             color: #00A855;
             margin-bottom: 20px;
         }
-        
+
         .result-card {
             background: white;
             padding: 20px;
@@ -145,58 +145,58 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        
+
         .result-card h3 {
             color: #333;
             margin-bottom: 10px;
             font-size: 1.2em;
         }
-        
+
         .result-value {
             font-size: 2.5em;
             font-weight: 700;
             color: #00D26A;
             margin: 10px 0;
         }
-        
+
         .result-savings {
             font-size: 3em;
             font-weight: 800;
             color: #00A855;
         }
-        
+
         .result-detail {
             color: #666;
             font-size: 0.95em;
             margin-top: 5px;
         }
-        
+
         .breakdown {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
-        
+
         .breakdown-item {
             padding: 15px;
             background: #e8f5e9;
             border-radius: 8px;
             text-align: center;
         }
-        
+
         .breakdown-item .label {
             font-size: 0.9em;
             color: #666;
             margin-bottom: 5px;
         }
-        
+
         .breakdown-item .value {
             font-size: 1.5em;
             font-weight: 700;
             color: #00A855;
         }
-        
+
         .cta {
             margin-top: 30px;
             padding: 20px;
@@ -205,7 +205,7 @@
             text-align: center;
             color: white;
         }
-        
+
         .cta a {
             display: inline-block;
             margin-top: 15px;
@@ -217,7 +217,7 @@
             font-weight: 700;
             transition: transform 0.2s;
         }
-        
+
         .cta a:hover {
             transform: scale(1.05);
         }
@@ -229,68 +229,68 @@
             <h1>💰 CostPilot TCO Calculator</h1>
             <p>Calculate your total cost of ownership with and without CostPilot</p>
         </div>
-        
+
         <div class="calculator">
             <div class="section">
                 <h2>📊 Current State</h2>
-                
+
                 <div class="input-row">
                     <div class="input-group">
                         <label for="cloudSpend">Monthly Cloud Spend ($)</label>
                         <input type="number" id="cloudSpend" value="50000" min="1000" step="1000">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="engineerCount">Engineers Working on IaC</label>
                         <input type="number" id="engineerCount" value="5" min="1" max="100">
                     </div>
                 </div>
-                
+
                 <div class="input-row">
                     <div class="input-group">
                         <label for="hourlyRate">Engineer Hourly Rate ($)</label>
                         <input type="number" id="hourlyRate" value="100" min="50" max="300">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="reviewHours">Hours/Week on Cost Reviews</label>
                         <input type="number" id="reviewHours" value="8" min="0" max="40" step="0.5">
                     </div>
                 </div>
-                
+
                 <div class="input-row">
                     <div class="input-group">
                         <label for="incidents">Cost Incidents per Month</label>
                         <input type="number" id="incidents" value="5" min="0" max="50">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="incidentHours">Hours per Incident</label>
                         <input type="number" id="incidentHours" value="4" min="1" max="40">
                     </div>
                 </div>
-                
+
                 <div class="input-group">
                     <label for="wastePercent">Estimated Cloud Waste (%)</label>
                     <input type="number" id="wastePercent" value="15" min="0" max="50" step="1">
                 </div>
             </div>
-            
+
             <div class="section">
                 <h2>🎯 CostPilot Impact</h2>
-                
+
                 <div class="input-row">
                     <div class="input-group">
                         <label for="wasteReduction">Waste Reduction (%)</label>
                         <input type="number" id="wasteReduction" value="60" min="0" max="100" step="5">
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="timeReduction">Time Saved on Reviews (%)</label>
                         <input type="number" id="timeReduction" value="80" min="0" max="100" step="5">
                     </div>
                 </div>
-                
+
                 <div class="input-row">
                     <div class="input-group">
                         <label for="incidentReduction">Incident Reduction (%)</label>
@@ -298,38 +298,38 @@
                     </div>
                 </div>
             </div>
-            
+
             <button class="calculate-btn" onclick="calculate()">Calculate Savings</button>
-            
+
             <div class="results" id="results">
                 <h2>💡 Your Potential Savings</h2>
-                
+
                 <div class="result-card">
                     <h3>Annual Savings with CostPilot</h3>
                     <div class="result-savings" id="totalSavings">$0</div>
                     <div class="result-detail">Return on investment in your first month</div>
                 </div>
-                
+
                 <div class="breakdown">
                     <div class="breakdown-item">
                         <div class="label">Cloud Cost Savings</div>
                         <div class="value" id="cloudSavings">$0</div>
                         <div class="result-detail">per year</div>
                     </div>
-                    
+
                     <div class="breakdown-item">
                         <div class="label">Engineer Time Saved</div>
                         <div class="value" id="timeSavings">$0</div>
                         <div class="result-detail">per year</div>
                     </div>
-                    
+
                     <div class="breakdown-item">
                         <div class="label">Incident Cost Reduction</div>
                         <div class="value" id="incidentSavings">$0</div>
                         <div class="result-detail">per year</div>
                     </div>
                 </div>
-                
+
                 <div class="result-card">
                     <h3>Monthly Breakdown</h3>
                     <div class="breakdown">
@@ -347,7 +347,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="cta">
                     <h3>🚀 Ready to start saving?</h3>
                     <p>CostPilot is free and open source</p>
@@ -356,7 +356,7 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         function calculate() {
             // Get input values
@@ -367,47 +367,47 @@
             const incidents = parseInt(document.getElementById('incidents').value) || 0;
             const incidentHours = parseFloat(document.getElementById('incidentHours').value) || 0;
             const wastePercent = parseFloat(document.getElementById('wastePercent').value) || 0;
-            
+
             const wasteReduction = parseFloat(document.getElementById('wasteReduction').value) || 0;
             const timeReduction = parseFloat(document.getElementById('timeReduction').value) || 0;
             const incidentReduction = parseFloat(document.getElementById('incidentReduction').value) || 0;
-            
+
             // Calculate current costs
             const monthlyWaste = cloudSpend * (wastePercent / 100);
             const monthlyReviewCost = reviewHours * 4.33 * hourlyRate; // 4.33 weeks/month
             const monthlyIncidentCost = incidents * incidentHours * hourlyRate;
             const totalMonthlyCost = cloudSpend + monthlyReviewCost + monthlyIncidentCost;
-            
+
             // Calculate savings
             const cloudSavingsMonthly = monthlyWaste * (wasteReduction / 100);
             const timeSavingsMonthly = monthlyReviewCost * (timeReduction / 100);
             const incidentSavingsMonthly = monthlyIncidentCost * (incidentReduction / 100);
             const totalMonthlySavings = cloudSavingsMonthly + timeSavingsMonthly + incidentSavingsMonthly;
-            
+
             const costAfter = totalMonthlyCost - totalMonthlySavings;
-            
+
             // Annual calculations
             const cloudSavingsAnnual = cloudSavingsMonthly * 12;
             const timeSavingsAnnual = timeSavingsMonthly * 12;
             const incidentSavingsAnnual = incidentSavingsMonthly * 12;
             const totalAnnualSavings = totalMonthlySavings * 12;
-            
+
             // Update results
             document.getElementById('totalSavings').textContent = `$${totalAnnualSavings.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
             document.getElementById('cloudSavings').textContent = `$${cloudSavingsAnnual.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
             document.getElementById('timeSavings').textContent = `$${timeSavingsAnnual.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
             document.getElementById('incidentSavings').textContent = `$${incidentSavingsAnnual.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
-            
+
             document.getElementById('costBefore').textContent = `$${totalMonthlyCost.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
             document.getElementById('costAfter').textContent = `$${costAfter.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
             document.getElementById('monthlySavings').textContent = `$${totalMonthlySavings.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
-            
+
             // Show results
             const resultsDiv = document.getElementById('results');
             resultsDiv.classList.add('show');
             resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-        
+
         // Calculate on page load with default values
         window.addEventListener('load', () => {
             setTimeout(calculate, 500);
