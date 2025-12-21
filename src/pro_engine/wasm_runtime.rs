@@ -103,7 +103,7 @@ impl WasmRuntime {
             .map_err(|e| WasmError::CompileError(e.to_string()))?;
 
         // Check imports - deny all by default
-        for _import in module.imports() {
+        if let Some(_import) = module.imports().next() {
             return Err(WasmError::HostImportDenied);
         }
 

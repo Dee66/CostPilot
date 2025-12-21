@@ -82,7 +82,6 @@
 - Detection: 350 tests
   - `test_terraform_parser.rs` (80 tests)
   - `test_cdk_parser.rs` (60 tests)
-  - `test_cloudformation_parser.rs` (60 tests)
   - `test_normalizer.rs` (70 tests)
   - `test_resource_detector.rs` (80 tests)
 
@@ -157,7 +156,6 @@ proptest! {
 **Coverage:**
 - Terraform plan variants (50)
 - CDK diff outputs (40)
-- CloudFormation changesets (40)
 - Explain output formatting (30)
 - Mapping graph outputs (20)
 - Policy evaluation reports (20)
@@ -363,7 +361,6 @@ tests/
 │   ├── detection/                 # 350 tests
 │   │   ├── test_terraform_parser.rs
 │   │   ├── test_cdk_parser.rs
-│   │   ├── test_cloudformation_parser.rs
 │   │   ├── test_normalizer.rs
 │   │   └── test_resource_detector.rs
 │   ├── prediction/                # 400 tests
@@ -445,7 +442,6 @@ tests/
 ├── snapshot/                     # 200 tests
 │   ├── snap_terraform_plans.rs
 │   ├── snap_cdk_diffs.rs
-│   ├── snap_cloudformation.rs
 │   ├── snap_explain_output.rs
 │   └── snap_mapping_graphs.rs
 │
@@ -476,7 +472,6 @@ tests/
 │   │   ├── rds_modify.json
 │   │   └── ...
 │   ├── cdk/
-│   ├── cloudformation/
 │   ├── policies/
 │   └── baselines/
 │

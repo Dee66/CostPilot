@@ -154,18 +154,15 @@ fn test_approval_workflow_requires_reference() {
 
 #[test]
 fn test_multi_artifact_detection_consistency() {
-    // Test that detection works consistently across Terraform, CDK, CloudFormation
+    // Test that detection works consistently across Terraform and CDK
     let terraform_plan = mock_terraform_plan();
     let cdk_manifest = mock_cdk_manifest();
-    let cfn_template = mock_cloudformation_template();
 
     let tf_detection = detect_from_terraform(&terraform_plan).unwrap();
     let cdk_detection = detect_from_cdk(&cdk_manifest).unwrap();
-    let cfn_detection = detect_from_cloudformation(&cfn_template).unwrap();
 
-    // All should produce similar resource counts for equivalent infrastructure
+    // Both should produce similar resource counts for equivalent infrastructure
     assert_eq!(tf_detection.resources.len(), cdk_detection.resources.len());
-    assert_eq!(tf_detection.resources.len(), cfn_detection.resources.len());
 }
 
 #[test]
@@ -319,10 +316,6 @@ fn mock_cdk_manifest() -> String {
     r#"{"version": "1.0", "artifacts": {}}"#.to_string()
 }
 
-fn mock_cloudformation_template() -> String {
-    r#"{"AWSTemplateFormatVersion": "2010-09-09", "Resources": {}}"#.to_string()
-}
-
 fn mock_large_terraform_plan(resource_count: usize) -> String {
     format!(r#"{{"resource_changes": [{}]}}"#,
         (0..resource_count).map(|i| format!(r#"{{"address": "aws_instance.server{}", "type": "aws_instance"}}"#, i))
@@ -427,10 +420,6 @@ fn detect_from_terraform(_plan: &str) -> Result<DetectionResult, String> {
 }
 
 fn detect_from_cdk(_manifest: &str) -> Result<DetectionResult, String> {
-    Ok(mock_detection_result())
-}
-
-fn detect_from_cloudformation(_template: &str) -> Result<DetectionResult, String> {
     Ok(mock_detection_result())
 }
 

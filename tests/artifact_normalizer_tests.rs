@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 #[test]
 fn test_normalize_empty_artifact() {
     let artifact = Artifact::new(
-        ArtifactFormat::CloudFormation,
+        ArtifactFormat::Cdk,
         ArtifactMetadata {
             source: "test.json".to_string(),
             version: None,
@@ -21,7 +21,7 @@ fn test_normalize_empty_artifact() {
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
     assert_eq!(normalized.format_version, "1.0");
-    assert_eq!(normalized.source_format, ArtifactFormat::CloudFormation);
+    assert_eq!(normalized.source_format, ArtifactFormat::Cdk);
     assert_eq!(normalized.source_metadata.source, "test.json");
     assert_eq!(normalized.resource_changes.len(), 0);
 }
@@ -29,7 +29,7 @@ fn test_normalize_empty_artifact() {
 #[test]
 fn test_normalize_single_resource() {
     let mut artifact = Artifact::new(
-        ArtifactFormat::CloudFormation,
+        ArtifactFormat::Cdk,
         ArtifactMetadata {
             source: "test.json".to_string(),
             version: Some("2010-09-09".to_string()),
@@ -113,7 +113,7 @@ fn test_normalize_cdk_format() {
 #[test]
 fn test_normalize_with_properties() {
     let mut artifact = Artifact::new(
-        ArtifactFormat::CloudFormation,
+        ArtifactFormat::Cdk,
         ArtifactMetadata {
             source: "test.json".to_string(),
             version: None,
@@ -149,7 +149,7 @@ fn test_normalize_metadata_preservation() {
     tags.insert("Project".to_string(), "costpilot".to_string());
 
     let artifact = Artifact::new(
-        ArtifactFormat::CloudFormation,
+        ArtifactFormat::Cdk,
         ArtifactMetadata {
             source: "test.json".to_string(),
             version: Some("2010-09-09".to_string()),
@@ -171,7 +171,7 @@ fn test_normalize_metadata_preservation() {
 #[test]
 fn test_normalize_multiple_resources() {
     let mut artifact = Artifact::new(
-        ArtifactFormat::CloudFormation,
+        ArtifactFormat::Cdk,
         ArtifactMetadata {
             source: "test.json".to_string(),
             version: None,
@@ -210,7 +210,7 @@ fn test_normalize_multiple_resources() {
 #[test]
 fn test_normalize_depends_on() {
     let mut artifact = Artifact::new(
-        ArtifactFormat::CloudFormation,
+        ArtifactFormat::Cdk,
         ArtifactMetadata {
             source: "test.json".to_string(),
             version: None,
@@ -250,7 +250,7 @@ fn test_normalize_depends_on() {
 #[test]
 fn test_normalize_format_version() {
     let artifact = Artifact::new(
-        ArtifactFormat::CloudFormation,
+        ArtifactFormat::Cdk,
         ArtifactMetadata {
             source: "test.json".to_string(),
             version: None,
@@ -267,8 +267,8 @@ fn test_normalize_format_version() {
 // 11-20: Resource address building tests
 
 #[test]
-fn test_address_cloudformation_ec2() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+fn test_address_cdk_ec2() {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -289,8 +289,8 @@ fn test_address_cloudformation_ec2() {
 }
 
 #[test]
-fn test_address_cloudformation_s3() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+fn test_address_cdk_s3() {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -311,8 +311,8 @@ fn test_address_cloudformation_s3() {
 }
 
 #[test]
-fn test_address_cloudformation_rds() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+fn test_address_cdk_rds() {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -378,7 +378,7 @@ fn test_address_cdk_with_path() {
 
 #[test]
 fn test_address_special_characters() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -400,7 +400,7 @@ fn test_address_special_characters() {
 
 #[test]
 fn test_address_case_sensitivity() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -422,7 +422,7 @@ fn test_address_case_sensitivity() {
 
 #[test]
 fn test_address_empty_id() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -444,7 +444,7 @@ fn test_address_empty_id() {
 
 #[test]
 fn test_address_long_id() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -469,7 +469,7 @@ fn test_address_long_id() {
 
 #[test]
 fn test_property_key_pascal_to_snake() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -499,7 +499,7 @@ fn test_property_key_pascal_to_snake() {
 
 #[test]
 fn test_property_key_s3_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -527,7 +527,7 @@ fn test_property_key_s3_mappings() {
 
 #[test]
 fn test_property_key_rds_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -557,7 +557,7 @@ fn test_property_key_rds_mappings() {
 
 #[test]
 fn test_property_key_asg_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -587,7 +587,7 @@ fn test_property_key_asg_mappings() {
 
 #[test]
 fn test_property_key_elb_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -643,7 +643,7 @@ fn test_property_key_already_snake_case() {
 
 #[test]
 fn test_property_key_mixed_case() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -669,7 +669,7 @@ fn test_property_key_mixed_case() {
 
 #[test]
 fn test_property_key_empty_and_single() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -697,7 +697,7 @@ fn test_property_key_empty_and_single() {
 
 #[test]
 fn test_property_key_uppercase() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -723,7 +723,7 @@ fn test_property_key_uppercase() {
 
 #[test]
 fn test_property_key_special_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -755,7 +755,7 @@ fn test_property_key_special_mappings() {
 
 #[test]
 fn test_property_key_unknown_resource_type() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -781,7 +781,7 @@ fn test_property_key_unknown_resource_type() {
 
 #[test]
 fn test_property_key_case_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -809,7 +809,7 @@ fn test_property_key_case_preservation() {
 
 #[test]
 fn test_property_value_string_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -834,7 +834,7 @@ fn test_property_value_string_preservation() {
 
 #[test]
 fn test_property_value_number_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -859,7 +859,7 @@ fn test_property_value_number_preservation() {
 
 #[test]
 fn test_property_value_boolean_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -884,7 +884,7 @@ fn test_property_value_boolean_preservation() {
 
 #[test]
 fn test_property_value_array_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -909,7 +909,7 @@ fn test_property_value_array_preservation() {
 
 #[test]
 fn test_property_value_object_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -936,7 +936,7 @@ fn test_property_value_object_preservation() {
 
 #[test]
 fn test_property_value_null_handling() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -961,7 +961,7 @@ fn test_property_value_null_handling() {
 
 #[test]
 fn test_property_value_intrinsic_functions() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -994,7 +994,7 @@ fn test_property_value_intrinsic_functions() {
 
 #[test]
 fn test_property_value_complex_nested() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1032,7 +1032,7 @@ fn test_property_value_complex_nested() {
 
 #[test]
 fn test_property_value_empty_object() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1057,7 +1057,7 @@ fn test_property_value_empty_object() {
 
 #[test]
 fn test_property_value_empty_array() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1082,7 +1082,7 @@ fn test_property_value_empty_array() {
 
 #[test]
 fn test_property_value_large_numbers() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1107,7 +1107,7 @@ fn test_property_value_large_numbers() {
 
 #[test]
 fn test_property_value_unicode_strings() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1134,7 +1134,7 @@ fn test_property_value_unicode_strings() {
 
 #[test]
 fn test_plan_operations_create() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1159,7 +1159,7 @@ fn test_plan_operations_create() {
 
 #[test]
 fn test_plan_operations_no_changes() {
-    let artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1173,7 +1173,7 @@ fn test_plan_operations_no_changes() {
 
 #[test]
 fn test_plan_operations_mixed_resources() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1219,7 +1219,7 @@ fn test_plan_operations_mixed_resources() {
 
 #[test]
 fn test_plan_operations_depends_on_resolution() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1265,7 +1265,7 @@ fn test_plan_operations_depends_on_resolution() {
 
 #[test]
 fn test_plan_operations_metadata_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1291,7 +1291,7 @@ fn test_plan_operations_metadata_preservation() {
 
 #[test]
 fn test_plan_operations_large_artifact() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1316,7 +1316,7 @@ fn test_plan_operations_large_artifact() {
 
 #[test]
 fn test_plan_operations_empty_properties() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1339,7 +1339,7 @@ fn test_plan_operations_empty_properties() {
 
 #[test]
 fn test_plan_operations_special_characters_in_properties() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1367,7 +1367,7 @@ fn test_plan_operations_special_characters_in_properties() {
 
 #[test]
 fn test_plan_operations_unicode_in_properties() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1397,7 +1397,7 @@ fn test_plan_operations_unicode_in_properties() {
 
 #[test]
 fn test_plan_operations_null_values() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1425,7 +1425,7 @@ fn test_plan_operations_null_values() {
 
 #[test]
 fn test_plan_operations_deeply_nested_structures() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,
@@ -1466,7 +1466,7 @@ fn test_plan_operations_deeply_nested_structures() {
 
 #[test]
 fn test_plan_operations_mixed_data_types() {
-    let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, ArtifactMetadata {
+    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
         source: "test.json".to_string(),
         version: None,
         stack_name: None,

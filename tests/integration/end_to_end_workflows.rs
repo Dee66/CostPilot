@@ -1628,30 +1628,6 @@ regions:
     }
 
     #[test]
-    fn test_pipeline_with_cloudformation() {
-        let temp_dir = TempDir::new().unwrap();
-        let cf_file = temp_dir.path().join("template.yml");
-
-        let cf_content = r#"
-AWSTemplateFormatVersion: '2010-09-09'
-Resources:
-  MyInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: t3.large
-"#;
-
-        fs::write(&cf_file, cf_content).unwrap();
-
-        let output = Command::new("cargo")
-            .args(&["run", "--quiet", "--", "scan", cf_file.to_str().unwrap()])
-            .output()
-            .expect("Failed to run CloudFormation scan");
-
-        let _ = output.status.success();
-    }
-
-    #[test]
     fn test_pipeline_with_kubernetes() {
         let temp_dir = TempDir::new().unwrap();
         let k8s_file = temp_dir.path().join("deployment.yml");

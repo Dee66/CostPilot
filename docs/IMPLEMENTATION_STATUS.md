@@ -211,7 +211,6 @@
 
 7. **Artifact Support**
    - CDK diff JSON parsing
-   - CloudFormation changeset parsing
 
 8. **Zero-Network Policy Enforcement**
    - Runtime network monitoring

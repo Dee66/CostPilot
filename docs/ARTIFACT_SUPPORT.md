@@ -1,8 +1,8 @@
-# Artifact Support (CDK & CloudFormation)
+# Artifact Support (Terraform & CDK)
 
 ## Overview
 
-The Artifact Support system extends CostPilot beyond Terraform to support AWS CDK and CloudFormation templates. It provides unified parsing, normalization, and cost analysis across multiple Infrastructure as Code (IaC) formats.
+The Artifact Support system provides unified parsing, normalization, and cost analysis for Infrastructure as Code formats, starting with Terraform and AWS CDK support.
 
 ## Architecture
 
@@ -10,28 +10,20 @@ The Artifact Support system extends CostPilot beyond Terraform to support AWS CD
 
 1. **artifact_types.rs** (632 lines)
    - Core artifact data structures
-   - Format definitions (Terraform, CloudFormation, CDK, Pulumi)
+   - Format definitions (Terraform, CDK, Pulumi)
    - Resource and metadata types
    - Intrinsic function handling
    - 15 comprehensive unit tests
 
-2. **cloudformation_parser.rs** (440 lines)
-   - CloudFormation template parsing (JSON/YAML)
-   - Resource extraction with properties
-   - Parameter and output handling
-   - Dependency resolution
-   - 10 unit tests
-
-3. **cdk_parser.rs** (356 lines)
+2. **cdk_parser.rs** (356 lines)
    - CDK synthesized output parsing
    - CDK manifest handling (cdk.out/)
    - Stack extraction from CDK assembly
    - CDK-specific metadata enhancement
    - 6 unit tests
 
-4. **artifact_normalizer.rs** (441 lines)
+3. **artifact_normalizer.rs** (441 lines)
    - Multi-format normalization to common representation
-   - CloudFormation → Terraform-style conversion
    - Property name mapping (PascalCase → snake_case)
    - Intrinsic function resolution
    - 10 unit tests
@@ -40,7 +32,6 @@ The Artifact Support system extends CostPilot beyond Terraform to support AWS CD
 
 ## Key Features
 
-✅ **CloudFormation Support** - Parse JSON/YAML CFN templates
 ✅ **CDK Support** - Parse CDK synthesized output
 ✅ **Format Detection** - Auto-detect IaC format
 ✅ **Normalization** - Convert to unified representation
@@ -55,50 +46,19 @@ The Artifact Support system extends CostPilot beyond Terraform to support AWS CD
 
 ## Supported Formats
 
-### CloudFormation
-- **JSON templates** - Full support
-- **YAML templates** - Full support (with `yaml` feature)
-- **Parameters** - Type, default, allowed values, description
-- **Outputs** - Value, description, export names
-- **Intrinsic Functions** - Ref, Fn::GetAtt, Fn::Sub, Fn::Join, etc.
-- **Dependencies** - DependsOn (single or array)
-- **Conditions** - Condition attribute support
-- **Metadata** - Resource-level metadata
-
 ### AWS CDK
-- **Synthesized Templates** - CloudFormation templates from `cdk synth`
+- **Synthesized Templates** - Templates from `cdk synth`
 - **CDK Manifest** - manifest.json parsing
 - **Multiple Stacks** - All stacks in cdk.out/
 - **CDK Metadata** - aws:cdk:path, asset references
 - **Stack Tags** - CDK stack-level tags
 - **Environment** - Account/region extraction
-- **Nested Stacks** - AWS::CloudFormation::Stack resources
+- **Nested Stacks** - Nested stack resources
 
 ### Coming Soon
 - **Pulumi** - Planned for future release
 
 ## Usage
-
-### Parsing CloudFormation Templates
-
-```rust
-use costpilot::artifact::*;
-
-// Parse from file
-let artifact = parse_artifact_file("template.json")?;
-
-// Or use specific parser
-let parser = CloudFormationParser::new();
-let artifact = parser.parse_file("template.json")?;
-
-println!("Format: {}", artifact.format.name());
-println!("Resources: {}", artifact.resource_count());
-
-// Access resources
-for resource in &artifact.resources {
-    println!("{}: {}", resource.id, resource.resource_type);
-}
-```
 
 ### Parsing CDK Output
 
@@ -124,13 +84,11 @@ for artifact in artifacts {
 use costpilot::artifact::*;
 
 // Auto-detect format from filename/content
-let artifact = parse_artifact_file("template.yaml")?;  // CloudFormation
 let artifact = parse_artifact_file("MyStack.template.json")?;  // CDK
 let artifact = parse_artifact_file("plan.json")?;  // Terraform (future)
 
 // Check format
 match artifact.format {
-    ArtifactFormat::CloudFormation => println!("CloudFormation template"),
     ArtifactFormat::Cdk => println!("CDK stack"),
     ArtifactFormat::Terraform => println!("Terraform plan"),
     _ => println!("Other format"),
@@ -142,8 +100,8 @@ match artifact.format {
 ```rust
 use costpilot::artifact::*;
 
-// Parse CloudFormation template
-let artifact = parse_artifact_file("template.json")?;
+// Parse CDK template
+let artifact = parse_artifact_file("cdk.out/MyStack.template.json")?;
 
 // Normalize to Terraform-like format
 let normalized = ArtifactNormalizer::normalize(&artifact);
@@ -185,7 +143,7 @@ for (type_name, count) in counts {
 ```rust
 use costpilot::artifact::IntrinsicFunction;
 
-// CloudFormation intrinsic functions are automatically parsed
+// Intrinsic functions are automatically parsed
 let value = json!({"Ref": "MyParameter"});
 // Becomes: "${MyParameter}"
 
@@ -196,67 +154,6 @@ let value = json!({"Fn::Join": ["-", ["prefix", "suffix"]]});
 // Becomes: "prefix-suffix"
 ```
 
-### Accessing Parameters
-
-```rust
-// CloudFormation parameters
-for (name, param) in &artifact.parameters {
-    println!("Parameter: {}", name);
-    println!("  Type: {}", param.param_type);
-    if let Some(default) = &param.default {
-        println!("  Default: {}", default);
-    }
-    if let Some(desc) = &param.description {
-        println!("  Description: {}", desc);
-    }
-}
-```
-
-### Accessing Outputs
-
-```rust
-// Stack outputs
-for (name, output) in &artifact.outputs {
-    println!("Output: {}", name);
-    println!("  Value: {}", output.value);
-    if let Some(desc) = &output.description {
-        println!("  Description: {}", desc);
-    }
-    if output.export {
-        println!("  Exported for cross-stack reference");
-    }
-}
-```
-
-## Resource Type Mapping
-
-CloudFormation types are automatically mapped to Terraform-style:
-
-| CloudFormation | Terraform | Notes |
-|---------------|-----------|-------|
-| AWS::EC2::Instance | aws_ec2_instance | EC2 instance |
-| AWS::S3::Bucket | aws_s3_bucket | S3 bucket |
-| AWS::RDS::DBInstance | aws_rds_db_instance | RDS database |
-| AWS::Lambda::Function | aws_lambda_function | Lambda function |
-| AWS::DynamoDB::Table | aws_dynamodb_table | DynamoDB table |
-| AWS::IAM::Role | aws_iam_role | IAM role |
-| AWS::EC2::SecurityGroup | aws_ec2_security_group | Security group |
-| AWS::ElasticLoadBalancingV2::LoadBalancer | aws_elb_load_balancer | ALB/NLB |
-
-## Property Name Mapping
-
-CloudFormation property names (PascalCase) are converted to Terraform style (snake_case):
-
-| CloudFormation | Terraform | Resource |
-|---------------|-----------|----------|
-| InstanceType | instance_type | aws_instance |
-| ImageId | ami | aws_instance |
-| BucketName | bucket | aws_s3_bucket |
-| DBInstanceClass | instance_class | aws_db_instance |
-| DBInstanceIdentifier | identifier | aws_db_instance |
-| FunctionName | function_name | aws_lambda_function |
-| TableName | name | aws_dynamodb_table |
-
 ## Integration with CostPilot Engines
 
 ### Detection Engine
@@ -265,7 +162,7 @@ CloudFormation property names (PascalCase) are converted to Terraform style (sna
 use costpilot::engines::detection::*;
 use costpilot::artifact::*;
 
-// Parse CloudFormation/CDK
+// Parse CDK template
 let artifact = parse_artifact_file("template.json")?;
 
 // Normalize to common format
@@ -318,63 +215,6 @@ if result.has_violations() {
 }
 ```
 
-## CloudFormation Specifics
-
-### Template Structure
-
-```json
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Template description",
-  "Parameters": { ... },
-  "Resources": { ... },
-  "Outputs": { ... }
-}
-```
-
-### Supported Intrinsic Functions
-
-- **Ref** - Reference parameters, resources
-- **Fn::GetAtt** - Get resource attributes
-- **Fn::Sub** - String substitution
-- **Fn::Join** - Join strings with delimiter
-- **Fn::Select** - Select from array
-- **Fn::FindInMap** - Find value in mapping
-- **Fn::ImportValue** - Import cross-stack value
-- **Fn::Base64** - Base64 encoding
-
-### Resource Dependencies
-
-```json
-{
-  "MySubnet": {
-    "Type": "AWS::EC2::Subnet",
-    "DependsOn": "MyVPC",
-    "Properties": { ... }
-  }
-}
-```
-
-or array:
-
-```json
-{
-  "DependsOn": ["Resource1", "Resource2"]
-}
-```
-
-### Conditions
-
-```json
-{
-  "MyResource": {
-    "Type": "AWS::S3::Bucket",
-    "Condition": "CreateBucket",
-    "Properties": { ... }
-  }
-}
-```
-
 ## CDK Specifics
 
 ### CDK Output Structure
@@ -382,7 +222,7 @@ or array:
 ```
 cdk.out/
 ├── manifest.json          # CDK assembly manifest
-├── MyStack.template.json  # Synthesized CloudFormation
+├── MyStack.template.json  # Synthesized template
 ├── AnotherStack.template.json
 └── asset.*/               # Asset directories
 ```
@@ -495,20 +335,7 @@ match parse_artifact_file("template.json") {
 
 ## Examples
 
-### Example 1: CloudFormation Web App
-
-See `examples/cloudformation_web_app.json` for a complete example:
-- 2 EC2 web servers (t3.medium)
-- RDS MySQL database (db.t3.small, Multi-AZ)
-- S3 bucket with lifecycle rules
-- Application Load Balancer
-- Security groups
-- Parameters for environment and instance types
-- Outputs for IDs, endpoints, DNS
-
-**Estimated Monthly Cost**: ~$250-300
-
-### Example 2: CDK Lambda API
+### Example 1: CDK Lambda API
 
 See `examples/cdk_lambda_api.template.json` for CDK example:
 - Lambda function (Node.js 18, 512MB)
@@ -522,10 +349,7 @@ See `examples/cdk_lambda_api.template.json` for CDK example:
 ## Command-Line Usage
 
 ```bash
-# Analyze CloudFormation template
-costpilot analyze template.json
-
-# Analyze CDK output
+# Analyze CDK template
 costpilot analyze cdk.out/MyStack.template.json
 
 # Analyze entire CDK app
@@ -540,19 +364,10 @@ costpilot analyze template.json --output report.json
 
 ## Best Practices
 
-### CloudFormation
-
-1. **Use Parameters** - Make templates reusable
-2. **Tag Everything** - Add Environment, Owner, CostCenter tags
-3. **Add Descriptions** - Document parameters and outputs
-4. **Use Intrinsic Functions** - Ref, GetAtt for dynamic values
-5. **Specify Dependencies** - Use DependsOn when needed
-6. **Version Control** - Track template changes in git
-
 ### CDK
 
 1. **Synthesize First** - Always run `cdk synth` before analyze
-2. **Review Templates** - Check generated CloudFormation
+2. **Review Templates** - Check generated templates
 3. **Use Constructs** - Leverage CDK construct patterns
 4. **Tag Stacks** - Add stack-level tags
 5. **Multiple Stacks** - Separate concerns into stacks
@@ -575,16 +390,16 @@ costpilot analyze template.json --output report.json
 - **Complex Intrinsics** - Some nested functions not fully resolved
 - **Nested Stacks** - Single-level only (no recursive)
 - **Transform** - SAM transforms not processed
-- **Macros** - CloudFormation macros not expanded
+- **Macros** - Template macros not expanded
 
 ### Planned Improvements (V2)
 
-- **Terraform Support** - Unified with CloudFormation/CDK
+- **Terraform Support** - Unified with CDK
 - **Pulumi Support** - Parse Pulumi program output
 - **SAM Templates** - AWS SAM transform support
 - **Nested Stack Recursion** - Deep nested stack analysis
-- **Macro Expansion** - Process CloudFormation macros
-- **Change Sets** - CloudFormation change set analysis
+- **Macro Expansion** - Process template macros
+- **Change Sets** - Change set analysis
 - **Cost History** - Track costs over template versions
 
 ## Test Coverage
@@ -598,16 +413,6 @@ costpilot analyze template.json --output report.json
 - Duplicate ID validation
 - Missing dependency validation
 - Intrinsic function resolution
-
-**cloudformation_parser.rs**: 10 tests
-- Simple template parsing
-- Dependency extraction (DependsOn)
-- Parameter parsing with allowed values
-- Output parsing with exports
-- Invalid version detection
-- Missing Type field detection
-- Multiple resource parsing
-- Resource metadata extraction
 
 **cdk_parser.rs**: 6 tests
 - CDK synthesized template parsing
@@ -635,29 +440,25 @@ costpilot analyze template.json --output report.json
 - [POLICY_ENGINE.md](POLICY_ENGINE.md) - Policy validation
 - [DETECTION_ENGINE.md](DETECTION_ENGINE.md) - Change detection
 - [PREDICTION_ENGINE.md](PREDICTION_ENGINE.md) - Cost estimation
-- [examples/cloudformation_web_app.json](../examples/cloudformation_web_app.json)
 - [examples/cdk_lambda_api.template.json](../examples/cdk_lambda_api.template.json)
 
 ## Troubleshooting
 
 ### "Unsupported artifact format"
 
-Make sure the file has correct extension (.json, .yaml, .yml) or contains recognized structure (AWSTemplateFormatVersion).
+Make sure the file has correct extension (.json, .yaml, .yml) or contains recognized structure.
 
 ### "Failed to parse as JSON or YAML"
 
-Check template syntax. Use AWS CloudFormation linter:
-```bash
-cfn-lint template.yaml
-```
+Check template syntax.
 
 ### "Invalid template version"
 
-Only CloudFormation version "2010-09-09" is supported.
+Only template version "2010-09-09" is supported.
 
 ### "Missing required field"
 
-CloudFormation resources must have `Type` field. Check resource definitions.
+Resources must have `Type` field. Check resource definitions.
 
 ### CDK manifest not found
 
@@ -668,14 +469,13 @@ Run `cdk synth` first to generate cdk.out/ directory.
 ### Core Types
 
 - `Artifact` - Parsed IaC artifact
-- `ArtifactFormat` - Format enum (Terraform/CloudFormation/CDK/Pulumi)
+- `ArtifactFormat` - Format enum (Terraform/CDK/Pulumi)
 - `ArtifactResource` - Single resource definition
 - `ArtifactMetadata` - Source metadata
-- `IntrinsicFunction` - CloudFormation intrinsic functions
+- `IntrinsicFunction` - Intrinsic functions
 
 ### Parsers
 
-- `CloudFormationParser` - Parse CFN templates
 - `CdkParser` - Parse CDK output
 - `ArtifactParser` trait - Parser interface
 

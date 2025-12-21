@@ -20,13 +20,13 @@
 
 | Component | Target | Actual | Covered | Total | Status |
 |-----------|--------|--------|---------|-------|--------|
-| Input Validation | 100.0% | 36.5% | 57 | 156 | 
+| Input Validation | 100.0% | 36.5% | 57 | 156 |
 ❌ |
-| Authentication | 100.0% | 41.4% | 12 | 29 | 
+| Authentication | 100.0% | 41.4% | 12 | 29 |
 ❌ |
-| Authorization | 100.0% | 47.4% | 27 | 57 | 
+| Authorization | 100.0% | 47.4% | 27 | 57 |
 ❌ |
-| Data Protection | 100.0% | 100.0% | 84 | 84 | 
+| Data Protection | 100.0% | 100.0% | 84 | 84 |
 ✅ |
 
 **Summary:** 3 violations out of 4 checks

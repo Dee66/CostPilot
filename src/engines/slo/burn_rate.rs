@@ -343,7 +343,7 @@ impl BurnRateCalculator {
             0.0
         };
 
-        (slope, intercept, r_squared.max(0.0).min(1.0))
+        (slope, intercept, r_squared.clamp(0.0, 1.0))
     }
 
     /// Classify risk based on time to breach

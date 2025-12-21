@@ -1,6 +1,5 @@
 // CDK diff JSON parsing
 
-use crate::engines::detection::cloudformation::parser::map_cloudformation_resource_type;
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
 use crate::engines::shared::models::{ResourceChange, ChangeAction};
 use serde::{Deserialize, Serialize};
@@ -184,10 +183,20 @@ pub fn cdk_template_to_resource_changes(template: &CdkSynthesizedTemplate, stack
 }
 
 /// Map CDK resource type to Terraform-style resource type
-/// CDK uses the same resource types as CloudFormation, so we can reuse the mapping
+/// CDK uses CloudFormation resource types, so we convert AWS::Service::Resource to aws_service_resource
 fn map_cdk_resource_type(cdk_type: &str) -> String {
-    // CDK uses CloudFormation resource types, so delegate to CF mapping
-    map_cloudformation_resource_type(cdk_type)
+    // Convert CloudFormation resource type to Terraform-style resource type
+    // AWS::S3::Bucket -> aws_s3_bucket
+    if cdk_type.starts_with("AWS::") {
+        let parts: Vec<&str> = cdk_type.split("::").collect();
+        if parts.len() == 3 {
+            let service = parts[1].to_lowercase();
+            let resource = parts[2].to_lowercase();
+            return format!("aws_{}_{}", service, resource);
+        }
+    }
+    // Fallback: return as-is if not a standard AWS resource type
+    cdk_type.to_string()
 }
 
 /// Extract tags from CDK resource properties

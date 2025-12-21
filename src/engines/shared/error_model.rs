@@ -169,7 +169,7 @@ impl CostPilotError {
                 "Check input format and ensure it's valid JSON/YAML".to_string()
             }
             ErrorCategory::ParseError => {
-                "Verify the file is a valid Terraform/CDK/CloudFormation document".to_string()
+                "Verify the file is a valid Terraform/CDK document".to_string()
             }
             ErrorCategory::PredictionError => {
                 "Check resource configuration and ensure heuristics are up to date".to_string()

@@ -20,7 +20,7 @@
       }
     },
     {
-      "address": "test2", 
+      "address": "test2",
       "type": "aws_instance",
       "name": "test2",
       "change": {

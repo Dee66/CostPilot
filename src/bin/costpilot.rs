@@ -1117,7 +1117,7 @@ fn cmd_trend_show(
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let snapshots_dir = snapshots_dir.unwrap_or_else(|| PathBuf::from(".costpilot/snapshots"));
-    
+
     if verbose {
         eprintln!("📊 Generating cost trend report");
         eprintln!("  Format: {}", output_format);
@@ -1155,7 +1155,7 @@ fn cmd_trend_show(
             let history = trend_engine.load_history()?;
             println!("{}", "📊 Cost Trend History".bold().cyan());
             println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-            
+
             if history.snapshots.is_empty() {
                 println!("No snapshots found. Create some snapshots first:");
                 println!("  costpilot trend snapshot --plan tfplan.json");
@@ -1164,13 +1164,13 @@ fn cmd_trend_show(
 
             println!("Found {} snapshots:", history.snapshots.len());
             for snapshot in &history.snapshots {
-                println!("  {}: ${:.2} ({})", 
+                println!("  {}: ${:.2} ({})",
                     snapshot.id,
                     snapshot.total_monthly_cost,
                     snapshot.timestamp
                 );
             }
-            
+
             if history.snapshots.len() >= 2 {
                 let latest = &history.snapshots[history.snapshots.len() - 1];
                 let previous = &history.snapshots[history.snapshots.len() - 2];
@@ -1180,8 +1180,8 @@ fn cmd_trend_show(
                 } else {
                     0.0
                 };
-                
-                println!("\nLatest change: {} ${:.2} ({:.1}%)", 
+
+                println!("\nLatest change: {} ${:.2} ({:.1}%)",
                     if change >= 0.0 { "↗️ +".green() } else { "↘️ ".red() },
                     change.abs(),
                     percent
@@ -1201,7 +1201,7 @@ fn cmd_trend_snapshot(
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let snapshots_dir = snapshots_dir.unwrap_or_else(|| PathBuf::from(".costpilot/snapshots"));
-    
+
     if verbose {
         eprintln!("📸 Creating cost snapshot");
         eprintln!("  Plan: {:?}", plan);
@@ -1217,7 +1217,7 @@ fn cmd_trend_snapshot(
     // Load and parse the Terraform plan
     let detection_engine = costpilot::engines::detection::DetectionEngine::new();
     let changes = detection_engine.detect_from_terraform_plan(&plan)?;
-    
+
     if changes.is_empty() {
         println!("No resource changes detected in plan");
         return Ok(());
@@ -1230,19 +1230,19 @@ fn cmd_trend_snapshot(
     // Create trend engine and snapshot
     let trend_engine = costpilot::engines::trend::TrendEngine::new(&snapshots_dir, &edition)?;
     let snapshot = trend_engine.create_snapshot(estimates, commit, branch)?;
-    
+
     // Save snapshot
     let snapshot_path = trend_engine.save_snapshot(&snapshot)?;
-    
+
     // Calculate total resource count
     let resource_count: usize = snapshot.modules.values().map(|m| m.resource_count).sum();
-    
-    println!("✅ Snapshot created: {} (${:.2}/month, {} resources)", 
+
+    println!("✅ Snapshot created: {} (${:.2}/month, {} resources)",
         snapshot.id,
         snapshot.total_monthly_cost,
         resource_count
     );
-    
+
     if verbose {
         println!("  Saved to: {:?}", snapshot_path);
     }
@@ -1257,7 +1257,7 @@ fn cmd_trend_regressions(
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let snapshots_dir = snapshots_dir.unwrap_or_else(|| PathBuf::from(".costpilot/snapshots"));
-    
+
     if verbose {
         eprintln!("🔍 Detecting cost regressions");
         eprintln!("  Threshold: {:.1}%", threshold);
@@ -1267,10 +1267,10 @@ fn cmd_trend_regressions(
     // Create trend engine
     let edition = costpilot::edition::EditionContext::new();
     let trend_engine = costpilot::engines::trend::TrendEngine::new(&snapshots_dir, &edition)?;
-    
+
     // Load history
     let history = trend_engine.load_history()?;
-    
+
     if history.snapshots.len() < 2 {
         println!("Need at least 2 snapshots to detect regressions. Currently have {}.", history.snapshots.len());
         return Ok(());
@@ -1279,9 +1279,9 @@ fn cmd_trend_regressions(
     // Use the most recent snapshot as current, second most recent as baseline
     let current = &history.snapshots[history.snapshots.len() - 1];
     let baseline = &history.snapshots[history.snapshots.len() - 2];
-    
+
     let regressions = trend_engine.detect_regressions(current, baseline, threshold);
-    
+
     match output_format.as_str() {
         "json" => {
             let json = serde_json::to_string_pretty(&regressions)?;
@@ -1293,7 +1293,7 @@ fn cmd_trend_regressions(
             } else {
                 println!("⚠️  {} cost regression(s) detected:", regressions.len());
                 for regression in &regressions {
-                    println!("  {} {}: {:?} ${:.2} increase", 
+                    println!("  {} {}: {:?} ${:.2} increase",
                         "↗️".red(),
                         regression.affected,
                         regression.regression_type,

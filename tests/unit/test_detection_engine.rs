@@ -1,6 +1,6 @@
 /// Unit tests for Detection Engine
 ///
-/// Tests Terraform/CDK/CloudFormation parsing, resource normalization,
+/// Tests Terraform/CDK parsing, resource normalization,
 /// and cost change detection.
 
 #[cfg(test)]
@@ -149,20 +149,6 @@ mod detection_tests {
     #[test]
     fn test_parse_cdk_manifest() {
         // TODO: Parse CDK manifest.json
-    }
-
-    // ============================================================================
-    // CloudFormation Parser Tests (60 tests planned)
-    // ============================================================================
-
-    #[test]
-    fn test_parse_cloudformation_changeset() {
-        // TODO: Parse CloudFormation changeset
-    }
-
-    #[test]
-    fn test_parse_cloudformation_template() {
-        // TODO: Parse CloudFormation template
     }
 
     // ============================================================================

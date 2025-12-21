@@ -466,10 +466,10 @@ impl SloReport {
     /// Format report for display
     pub fn format(&self) -> String {
         let mut output = String::new();
-        output.push_str(&"📊 SLO Evaluation Report\n".to_string());
+        output.push_str("📊 SLO Evaluation Report\n");
         output.push_str(&format!("Generated: {}\n\n", self.generated_at));
 
-        output.push_str(&"Summary:\n".to_string());
+        output.push_str("Summary:\n");
         output.push_str(&format!("  Total SLOs: {}\n", self.summary.total_slos));
         output.push_str(&format!("  ✅ Pass: {}\n", self.summary.pass_count));
         output.push_str(&format!("  ⚠️  Warning: {}\n", self.summary.warning_count));

@@ -60,7 +60,6 @@
   - Resource normalization (70 tests)
   - Cost change detection (80 tests)
   - CDK parser (60 tests)
-  - CloudFormation parser (60 tests)
   - Edge cases (50 tests)
 - Complete test structure with TODOs
 

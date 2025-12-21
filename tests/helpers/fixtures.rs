@@ -1,6 +1,6 @@
 /// Test fixtures for CostPilot tests
 ///
-/// Provides pre-built test data for Terraform plans, CDK diffs, CloudFormation templates,
+/// Provides pre-built test data for Terraform plans, CDK diffs,
 /// policies, and other resources used in testing.
 
 use serde_json::json;

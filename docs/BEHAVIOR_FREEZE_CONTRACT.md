@@ -474,7 +474,6 @@ See [MIGRATION.md](MIGRATION.md) for detailed instructions.
 
 ### Added
 - New `costpilot baseline` command (#180)
-- Support for CloudFormation (#181)
 
 ## [1.0.0] - 2025-10-01
 

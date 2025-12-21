@@ -241,26 +241,26 @@ pub fn execute_map_command(
     if cmd.cost_impacts {
         println!();
         println!("{}", "Cost Impact Analysis:".bold());
-        
+
         let impacts = engine.detect_cost_impacts(&graph);
-        
+
         if impacts.is_empty() {
             println!("  No significant cost impacts detected");
         } else {
             for impact in &impacts {
                 let severity_icon = match impact.severity {
                     crate::engines::mapping::ImpactSeverity::High => "🔴",
-                    crate::engines::mapping::ImpactSeverity::Medium => "🟡", 
+                    crate::engines::mapping::ImpactSeverity::Medium => "🟡",
                     crate::engines::mapping::ImpactSeverity::Low => "🟢",
                 };
-                
+
                 println!("  {} {} (${:.2}/mo) - {} affected resources",
                     severity_icon,
                     impact.source_label,
                     impact.source_cost,
                     impact.affected_resources
                 );
-                
+
                 if cmd.verbose {
                     println!("    {}", impact.description);
                 }
@@ -271,9 +271,9 @@ pub fn execute_map_command(
         if cmd.verbose {
             println!();
             println!("{}", "Cost Propagation:".bold());
-            
+
             let propagations = engine.cost_propagation_report(&graph);
-            
+
             if propagations.is_empty() {
                 println!("  No cost propagation detected");
             } else {
@@ -286,7 +286,7 @@ pub fn execute_map_command(
                         prop.propagation_factor
                     );
                 }
-                
+
                 if propagations.len() > 5 {
                     println!("  ... and {} more", propagations.len() - 5);
                 }

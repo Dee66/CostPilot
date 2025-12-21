@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Represents an Infrastructure as Code artifact (Terraform, CDK, CloudFormation)
+/// Represents an Infrastructure as Code artifact (Terraform, CDK)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Artifact {
     /// Source format of the artifact
@@ -29,9 +29,6 @@ pub enum ArtifactFormat {
     /// Terraform JSON plan
     Terraform,
 
-    /// AWS CloudFormation template
-    CloudFormation,
-
     /// AWS CDK synthesized output
     Cdk,
 
@@ -44,7 +41,6 @@ impl ArtifactFormat {
     pub fn name(&self) -> &str {
         match self {
             ArtifactFormat::Terraform => "Terraform",
-            ArtifactFormat::CloudFormation => "CloudFormation",
             ArtifactFormat::Cdk => "AWS CDK",
             ArtifactFormat::Pulumi => "Pulumi",
         }
@@ -54,7 +50,7 @@ impl ArtifactFormat {
     pub fn is_supported(&self) -> bool {
         matches!(
             self,
-            ArtifactFormat::Terraform | ArtifactFormat::CloudFormation | ArtifactFormat::Cdk
+            ArtifactFormat::Terraform | ArtifactFormat::Cdk
         )
     }
 }
@@ -69,7 +65,7 @@ pub struct ArtifactMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
 
-    /// Stack name (for CloudFormation/CDK)
+    /// Stack name (for CDK)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stack_name: Option<String>,
 
@@ -180,76 +176,6 @@ pub struct ArtifactParameter {
     /// Allowed values
     #[serde(default)]
     pub allowed_values: Vec<serde_json::Value>,
-}
-
-/// CloudFormation intrinsic function
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum IntrinsicFunction {
-    /// Ref function: { "Ref": "LogicalName" }
-    Ref {
-        #[serde(rename = "Ref")]
-        reference: String,
-    },
-
-    /// GetAtt function: { "Fn::GetAtt": ["LogicalName", "Attribute"] }
-    GetAtt {
-        #[serde(rename = "Fn::GetAtt")]
-        get_att: Vec<String>,
-    },
-
-    /// Sub function: { "Fn::Sub": "String with ${placeholder}" }
-    Sub {
-        #[serde(rename = "Fn::Sub")]
-        sub: serde_json::Value,
-    },
-
-    /// Join function: { "Fn::Join": ["delimiter", ["value1", "value2"]] }
-    Join {
-        #[serde(rename = "Fn::Join")]
-        join: Vec<serde_json::Value>,
-    },
-
-    /// ImportValue function
-    ImportValue {
-        #[serde(rename = "Fn::ImportValue")]
-        import_value: serde_json::Value,
-    },
-
-    /// Select function
-    Select {
-        #[serde(rename = "Fn::Select")]
-        select: Vec<serde_json::Value>,
-    },
-
-    /// FindInMap function
-    FindInMap {
-        #[serde(rename = "Fn::FindInMap")]
-        find_in_map: Vec<serde_json::Value>,
-    },
-
-    /// Base64 function
-    Base64 {
-        #[serde(rename = "Fn::Base64")]
-        base64: serde_json::Value,
-    },
-}
-
-impl IntrinsicFunction {
-    /// Try to resolve to a simple value (if possible without context)
-    pub fn try_resolve(&self) -> Option<String> {
-        match self {
-            IntrinsicFunction::Ref { reference } => Some(format!("${{{}}}", reference)),
-            IntrinsicFunction::GetAtt { get_att } => {
-                if get_att.len() == 2 {
-                    Some(format!("${{{}.{}}}", get_att[0], get_att[1]))
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        }
-    }
 }
 
 /// Result of parsing an artifact
@@ -387,14 +313,12 @@ mod tests {
     #[test]
     fn test_artifact_format_name() {
         assert_eq!(ArtifactFormat::Terraform.name(), "Terraform");
-        assert_eq!(ArtifactFormat::CloudFormation.name(), "CloudFormation");
         assert_eq!(ArtifactFormat::Cdk.name(), "AWS CDK");
     }
 
     #[test]
     fn test_artifact_format_supported() {
         assert!(ArtifactFormat::Terraform.is_supported());
-        assert!(ArtifactFormat::CloudFormation.is_supported());
         assert!(ArtifactFormat::Cdk.is_supported());
         assert!(!ArtifactFormat::Pulumi.is_supported());
     }
@@ -428,15 +352,15 @@ mod tests {
     #[test]
     fn test_artifact_new() {
         let metadata = ArtifactMetadata {
-            source: "template.yaml".to_string(),
-            version: Some("2010-09-09".to_string()),
+            source: "cdk.out".to_string(),
+            version: Some("2.0.0".to_string()),
             stack_name: Some("MyStack".to_string()),
             region: Some("us-east-1".to_string()),
             tags: HashMap::new(),
         };
 
-        let artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
-        assert_eq!(artifact.format, ArtifactFormat::CloudFormation);
+        let artifact = Artifact::new(ArtifactFormat::Cdk, metadata);
+        assert_eq!(artifact.format, ArtifactFormat::Cdk);
         assert_eq!(artifact.resources.len(), 0);
     }
 
@@ -478,7 +402,7 @@ mod tests {
             tags: HashMap::new(),
         };
 
-        let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
+        let mut artifact = Artifact::new(ArtifactFormat::Cdk, metadata);
 
         artifact.add_resource(ArtifactResource {
             id: "Instance1".to_string(),
@@ -521,7 +445,7 @@ mod tests {
             tags: HashMap::new(),
         };
 
-        let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
+        let mut artifact = Artifact::new(ArtifactFormat::Cdk, metadata);
 
         artifact.add_resource(ArtifactResource {
             id: "1".to_string(),
@@ -562,7 +486,7 @@ mod tests {
             tags: HashMap::new(),
         };
 
-        let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
+        let mut artifact = Artifact::new(ArtifactFormat::Cdk, metadata);
 
         artifact.add_resource(ArtifactResource {
             id: "duplicate".to_string(),
@@ -594,7 +518,7 @@ mod tests {
             tags: HashMap::new(),
         };
 
-        let mut artifact = Artifact::new(ArtifactFormat::CloudFormation, metadata);
+        let mut artifact = Artifact::new(ArtifactFormat::Cdk, metadata);
 
         artifact.add_resource(ArtifactResource {
             id: "resource1".to_string(),
@@ -606,21 +530,5 @@ mod tests {
 
         let result = artifact.validate();
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_intrinsic_function_resolve() {
-        let ref_fn = IntrinsicFunction::Ref {
-            reference: "MyParam".to_string(),
-        };
-        assert_eq!(ref_fn.try_resolve(), Some("${MyParam}".to_string()));
-
-        let getatt_fn = IntrinsicFunction::GetAtt {
-            get_att: vec!["MyInstance".to_string(), "PublicIp".to_string()],
-        };
-        assert_eq!(
-            getatt_fn.try_resolve(),
-            Some("${MyInstance.PublicIp}".to_string())
-        );
     }
 }

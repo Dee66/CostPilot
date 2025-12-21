@@ -1,6 +1,6 @@
 # CostPilot CLI
 
-Zero-IAM command-line tool for cost analysis and governance across Terraform, CloudFormation, and AWS CDK.
+Zero-IAM command-line tool for cost analysis and governance across Terraform.
 
 ## Overview
 
@@ -21,12 +21,6 @@ Analyze IaC files for cost issues and policy violations.
 # Scan Terraform plan
 costpilot scan terraform.tfplan.json
 
-# Scan CloudFormation template
-costpilot scan template.yaml
-
-# Scan CDK synthesized output
-costpilot scan cdk.out/MyStack.template.json
-
 # With policy enforcement
 costpilot scan plan.json --policies .costpilot/policy.yml
 
@@ -35,7 +29,7 @@ costpilot scan plan.json --format json
 ```
 
 **Features:**
-- Auto-detects format (Terraform/CloudFormation/CDK)
+- Auto-detects format (Terraform)
 - Extracts resource changes
 - Predicts monthly and annual costs
 - Validates against cost policies
@@ -331,7 +325,6 @@ jobs:
 
 **Supported Formats:**
 - Terraform JSON plans (`terraform show -json`)
-- CloudFormation templates (JSON/YAML)
 - AWS CDK synthesized output (`cdk synth`)
 
 **Core Engines:**
@@ -377,19 +370,6 @@ costpilot scan cdk.out/
 
 # 3. Check specific stack
 costpilot scan cdk.out/MyStack.template.json
-```
-
-### CloudFormation Workflow
-
-```bash
-# Analyze template
-costpilot scan template.yaml
-
-# Validate policies
-costpilot scan template.json --policies policy.yml
-
-# Generate cost report
-costpilot scan template.yaml --format json > report.json
 ```
 
 ## Performance

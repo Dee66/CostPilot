@@ -123,7 +123,7 @@ mod authentication_security_tests {
         // Test that repeated attempts eventually trigger rate limiting
         let mut success_count = 0;
         let mut failure_count = 0;
-        
+
         // Make multiple attempts
         for i in 0..10 {
             let result = license.verify_signature();

@@ -60,8 +60,8 @@ impl ArtifactNormalizer {
                 // Already in correct format
                 format!("{}.{}", resource_type, id)
             }
-            ArtifactFormat::CloudFormation | ArtifactFormat::Cdk => {
-                // Convert CloudFormation logical ID to Terraform-style
+            ArtifactFormat::Cdk => {
+                // Convert CDK logical ID to Terraform-style
                 // AWS::EC2::Instance -> aws_instance.MyInstance
                 format!("{}.{}", resource_type, Self::sanitize_name(id))
             }
@@ -85,7 +85,7 @@ impl ArtifactNormalizer {
             .to_lowercase()
     }
 
-    /// Normalize CloudFormation/CDK properties to Terraform-style
+    /// Normalize CDK properties to Terraform-style
     fn normalize_properties(properties: &HashMap<String, Value>, resource_type: &str) -> Value {
         let mut normalized = serde_json::Map::new();
 
@@ -98,7 +98,7 @@ impl ArtifactNormalizer {
         Value::Object(normalized)
     }
 
-    /// Normalize property key from CloudFormation to Terraform style
+    /// Normalize property key from CDK to Terraform style
     fn normalize_property_key(key: &str, resource_type: &str) -> String {
         // Convert PascalCase to snake_case, handling existing underscores
         let mut result = String::new();
@@ -381,10 +381,10 @@ mod tests {
     #[test]
     fn test_normalize_artifact() {
         let mut artifact = Artifact::new(
-            ArtifactFormat::CloudFormation,
+            ArtifactFormat::Cdk,
             ArtifactMetadata {
-                source: "test.yaml".to_string(),
-                version: Some("2010-09-09".to_string()),
+                source: "cdk.out".to_string(),
+                version: Some("2.0.0".to_string()),
                 stack_name: Some("TestStack".to_string()),
                 region: Some("us-east-1".to_string()),
                 tags: HashMap::new(),
@@ -405,7 +405,7 @@ mod tests {
 
         let normalized = ArtifactNormalizer::normalize(&artifact);
 
-        assert_eq!(normalized.source_format, ArtifactFormat::CloudFormation);
+        assert_eq!(normalized.source_format, ArtifactFormat::Cdk);
         assert_eq!(normalized.resource_changes.len(), 1);
 
         let change = &normalized.resource_changes[0];
@@ -416,9 +416,9 @@ mod tests {
     #[test]
     fn test_normalize_multiple_resources() {
         let mut artifact = Artifact::new(
-            ArtifactFormat::CloudFormation,
+            ArtifactFormat::Cdk,
             ArtifactMetadata {
-                source: "test.yaml".to_string(),
+                source: "cdk.out".to_string(),
                 version: None,
                 stack_name: None,
                 region: None,
@@ -455,7 +455,7 @@ mod tests {
         let address = ArtifactNormalizer::build_resource_address(
             "MyInstance",
             "aws_instance",
-            &ArtifactFormat::CloudFormation,
+            &ArtifactFormat::Cdk,
         );
         assert_eq!(address, "aws_instance.myinstance");
 
@@ -471,7 +471,7 @@ mod tests {
     fn test_to_terraform_plan() {
         let normalized = NormalizedPlan {
             format_version: "1.0".to_string(),
-            source_format: ArtifactFormat::CloudFormation,
+            source_format: ArtifactFormat::Cdk,
             source_metadata: ArtifactMetadata {
                 source: "test".to_string(),
                 version: None,

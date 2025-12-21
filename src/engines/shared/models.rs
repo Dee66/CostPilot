@@ -83,8 +83,9 @@ pub struct TotalCost {
 }
 
 /// Regression classification
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum RegressionType {
+    #[default]
     Configuration,
     Scaling,
     Provisioning,
@@ -589,8 +590,4 @@ impl Default for Severity {
     }
 }
 
-impl Default for RegressionType {
-    fn default() -> Self {
-        RegressionType::Configuration
-    }
-}
+

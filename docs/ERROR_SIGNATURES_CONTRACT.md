@@ -34,8 +34,7 @@ pub enum ErrorCode {
     E001,  // Invalid JSON
     E002,  // Invalid Terraform plan
     E003,  // Invalid CDK structure
-    E004,  // Invalid CloudFormation template
-    E005,  // Invalid policy YAML
+    E004,  // Invalid policy YAML
 
     // Validation errors (E100-E199)
     E100,  // Missing required field

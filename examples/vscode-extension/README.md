@@ -1,6 +1,6 @@
 # CostPilot VS Code Extension
 
-Bring real-time AWS cost intelligence directly into your IDE. CostPilot analyzes Terraform, AWS CDK, and CloudFormation configurations to detect cost issues as you code, with inline diagnostics, quick fixes, and rich visualizations.
+Bring real-time AWS cost intelligence directly into your IDE. CostPilot analyzes Terraform and AWS CDK configurations to detect cost issues as you code, with inline diagnostics, quick fixes, and rich visualizations.
 
 ## 🚀 Features
 
@@ -117,7 +117,7 @@ Explore cost issues in the Explorer sidebar:
 
 - **VS Code**: 1.85.0 or higher
 - **CostPilot CLI**: Latest version installed and in PATH
-- **Workspace**: Must contain Terraform (`.tf`), CDK (`cdk.json`), or CloudFormation files
+- **Workspace**: Must contain Terraform (`.tf`) or CDK (`cdk.json`) files
 
 ## 🐛 Troubleshooting
 

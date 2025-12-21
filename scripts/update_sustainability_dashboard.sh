@@ -73,10 +73,10 @@ update_dashboard() {
     # Check license status
     if ! check_license_status; then
         log_info "No valid premium license found - updating dashboard with premium messaging"
-        
+
         # Replace premium banner
         sed -i 's|<!-- PREMIUM_BANNER -->|🚀 **Upgrade to CostPilot Premium**\n\nSustainability Analytics require a premium license. Unlock comprehensive ESG compliance testing including carbon footprint analysis, energy efficiency monitoring, fairness validation, and social impact assessment.\n\n**Premium Features ($29/month):**\n- ✅ Carbon footprint tracking \& emissions analysis\n- ✅ Energy efficiency optimization\n- ✅ AI fairness \& bias testing\n- ✅ Transparency \& audit trail validation\n- ✅ Social impact \& ethical compliance scoring\n\n[Upgrade to Premium](https://costpilot.dev/pricing) \| [Learn More](https://costpilot.dev/docs/premium)|g' "$DASHBOARD_FILE"
-        
+
         # Replace data placeholders with premium notices
         sed -i 's|<!-- TOTAL_CO2_EMISSIONS -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
         sed -i 's|<!-- AVG_CO2_PER_OPERATION -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
@@ -90,10 +90,10 @@ update_dashboard() {
         sed -i 's|<!-- LA_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
         sed -i 's|<!-- AFRICA_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
         sed -i 's|<!-- ME_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
-        
+
         # Add upgrade notice at bottom
         echo -e "\n---\n*Upgrade to CostPilot Premium to view detailed sustainability metrics and trends*" >> "$DASHBOARD_FILE"
-        
+
         return
     fi
 

@@ -10,10 +10,10 @@ use std::path::PathBuf;
 /// Scan infrastructure changes for cost issues
 #[derive(Debug, Args)]
 pub struct ScanCommand {
-    /// Path to infrastructure change file (Terraform plan, CloudFormation changeset, CDK diff)
+    /// Path to infrastructure change file (Terraform plan, CDK diff)
     plan: PathBuf,
 
-    /// Infrastructure format: terraform, cloudformation, cdk
+    /// Infrastructure format: terraform, cdk
     #[arg(short, long, default_value = "terraform")]
     format: String,
 
@@ -63,7 +63,6 @@ impl ScanCommand {
         if !self.plan.exists() {
             let hint = match self.format.as_str() {
                 "terraform" => "Run 'terraform plan -out=tfplan && terraform show -json tfplan > tfplan.json'",
-                "cloudformation" => "Create a CloudFormation changeset and export it as JSON",
                 "cdk" => "Run 'cdk diff --json' and save the output",
                 _ => "Ensure the input file exists and is readable",
             };
@@ -77,14 +76,14 @@ impl ScanCommand {
 
         // Validate format-specific requirements
         match self.format.as_str() {
-            "terraform" | "cloudformation" | "cdk" => {}
+            "terraform" | "cdk" => {}
             _ => {
                 return Err(CostPilotError::new(
                     "SCAN_003",
                     crate::errors::ErrorCategory::ValidationError,
                     format!("Unsupported format: {}", self.format),
                 )
-                .with_hint("Supported formats: terraform, cloudformation, cdk".to_string()));
+                .with_hint("Supported formats: terraform, cdk".to_string()));
             }
         }
 
@@ -108,10 +107,6 @@ impl ScanCommand {
             "terraform" => {
                 println!("   Format: Terraform plan");
                 detection_engine.detect_from_terraform_plan(&self.plan)?
-            }
-            "cloudformation" => {
-                println!("   Format: CloudFormation changeset");
-                detection_engine.detect_from_cloudformation_changeset(&self.plan)?
             }
             "cdk" => {
                 let stack_name = self.stack.as_ref().unwrap();

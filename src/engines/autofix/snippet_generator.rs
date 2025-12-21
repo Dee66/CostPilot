@@ -22,7 +22,6 @@ pub struct FixSnippet {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SnippetFormat {
     Terraform,
-    CloudFormation,
     CDK,
 }
 

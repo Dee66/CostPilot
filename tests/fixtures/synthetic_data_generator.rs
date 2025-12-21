@@ -23,24 +23,6 @@ impl SyntheticDataGenerator {
         }
     }
 
-    /// Generate synthetic CloudFormation template
-    pub fn generate_cloudformation_template(&self, resource_type: &str) -> serde_json::Value {
-        let mut template = serde_json::json!({
-            "AWSTemplateFormatVersion": "2010-09-09",
-            "Description": format!("Synthetic {} template for testing", resource_type),
-            "Resources": {}
-        });
-
-        let resource = match resource_type {
-            "AWS::EC2::Instance" => self.generate_cf_ec2_instance(),
-            "AWS::RDS::DBInstance" => self.generate_cf_rds_instance(),
-            _ => self.generate_cf_generic_resource(resource_type),
-        };
-
-        template["Resources"]["SyntheticResource"] = resource;
-        template
-    }
-
     /// Generate synthetic cost policy
     pub fn generate_cost_policy(&self) -> serde_yaml::Value {
         serde_yaml::from_str(&format!(r#"
@@ -122,43 +104,6 @@ metadata:
             }
         })
     }
-
-    fn generate_cf_ec2_instance(&self) -> serde_json::Value {
-        serde_json::json!({
-            "Type": "AWS::EC2::Instance",
-            "Properties": {
-                "InstanceType": self.faker.random_element(&["t3.micro", "t3.small", "t3.medium"]),
-                "ImageId": self.faker.uuid(),
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": self.faker.words(2)
-                    }
-                ]
-            }
-        })
-    }
-
-    fn generate_cf_rds_instance(&self) -> serde_json::Value {
-        serde_json::json!({
-            "Type": "AWS::RDS::DBInstance",
-            "Properties": {
-                "DBInstanceClass": self.faker.random_element(&["db.t3.micro", "db.t3.small"]),
-                "Engine": "mysql",
-                "AllocatedStorage": self.faker.number(20..100).to_string()
-            }
-        })
-    }
-
-    fn generate_cf_generic_resource(&self, resource_type: &str) -> serde_json::Value {
-        serde_json::json!({
-            "Type": resource_type,
-            "Properties": {
-                "Name": format!("synthetic-{}", self.faker.words(1)),
-                "Description": self.faker.sentence()
-            }
-        })
-    }
 }
 
 /// Simple faker implementation for synthetic data
@@ -206,9 +151,6 @@ mod tests {
 
         let tf_plan = generator.generate_terraform_plan("aws_instance");
         assert!(tf_plan.is_object());
-
-        let cf_template = generator.generate_cloudformation_template("AWS::EC2::Instance");
-        assert!(cf_template.is_object());
 
         let policy = generator.generate_cost_policy();
         assert!(policy.is_mapping());
