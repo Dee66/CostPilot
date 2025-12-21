@@ -90,8 +90,6 @@ pub fn convert_to_resource_changes(plan: &TerraformPlan) -> Result<Vec<ResourceC
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             });
         }
     }

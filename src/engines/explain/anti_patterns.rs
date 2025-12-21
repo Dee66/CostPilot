@@ -269,10 +269,10 @@ mod tests {
 
         let estimate = CostEstimate::builder()
             .resource_id("test")
-            .estimate(32.85)
-            .lower(24.64)
-            .upper(41.06)
-            .confidence(0.95)
+            .monthly_cost(32.85)
+            .prediction_interval_low(24.64)
+            .prediction_interval_high(41.06)
+            .confidence_score(0.95)
             .build();
 
         let patterns = detect_anti_patterns(&change, Some(&estimate));

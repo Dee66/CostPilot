@@ -74,64 +74,17 @@ def count_checkboxes(content: str) -> Tuple[int, int]:
     return completed, total
 
 
-def generate_progress_bar(completed: int, total: int, width: int = 98) -> str:
+def generate_progress_bar(completed: int, total: int) -> str:
     """
     Generate an amazing HTML/CSS progress bar with animations and gradients.
 
     Args:
         completed: Number of completed tasks
         total: Total number of tasks
-        width: Not used in HTML version, kept for API compatibility
 
     Returns:
         String representation of the HTML progress bar
     """
-    if total == 0:
-        percentage = 0.0
-    else:
-        percentage = (completed / total) * 100
-
-    remaining = total - completed
-
-    # Choose color scheme based on percentage
-    if percentage >= 80:
-        color_start = "#10b981"  # Emerald
-        color_mid = "#3b82f6"    # Blue
-        color_end = "#8b5cf6"    # Purple
-        glow_color = "#10b981"
-        emoji = "🚀"
-        status = "Excellent Progress"
-    elif percentage >= 60:
-        color_start = "#3b82f6"  # Blue
-        color_mid = "#06b6d4"    # Cyan
-        color_end = "#10b981"    # Emerald
-        glow_color = "#3b82f6"
-        emoji = "💪"
-        status = "Strong Progress"
-    elif percentage >= 40:
-        color_start = "#f59e0b"  # Amber
-        color_mid = "#3b82f6"    # Blue
-        color_end = "#06b6d4"    # Cyan
-        glow_color = "#f59e0b"
-        emoji = "⚡"
-        status = "Building Momentum"
-    elif percentage >= 20:
-        color_start = "#ef4444"  # Red
-        color_mid = "#f59e0b"    # Amber
-        color_end = "#3b82f6"    # Blue
-        glow_color = "#ef4444"
-        emoji = "🔥"
-        status = "Getting Started"
-    else:
-        color_start = "#ef4444"  # Red
-        color_mid = "#f97316"    # Orange
-        color_end = "#f59e0b"    # Amber
-        glow_color = "#ef4444"
-        emoji = "🌱"
-        status = "Just Beginning"
-
-
-    """Generate a clean, functional progress bar."""
     if total == 0:
         percentage = 0.0
     else:
@@ -156,7 +109,7 @@ def generate_progress_bar(completed: int, total: int, width: int = 98) -> str:
     return html
 
 
-def generate_stats_table(completed: int, total: int) -> str:
+def generate_stats_table() -> str:
     """Generate additional stats section (now integrated into main progress bar)."""
     # Return empty string since stats are now in the main HTML
     return ""
@@ -252,7 +205,7 @@ Examples:
     except KeyboardInterrupt:
         print("\n\n⚠️  Operation cancelled by user")
         sys.exit(130)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         print(f"\n❌ Error: {e}")
         sys.exit(1)
 

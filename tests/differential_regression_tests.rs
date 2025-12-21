@@ -29,8 +29,6 @@ mod differential_regression_tests {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None, // deprecated
-            after: None,  // deprecated
         }
     }
 
@@ -179,8 +177,6 @@ mod differential_regression_tests {
                 monthly_cost: Some(0.0), // Explicitly zero
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
             ResourceChange {
                 resource_id: "boundary-max-cost".to_string(),
@@ -193,8 +189,6 @@ mod differential_regression_tests {
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
         ];
 

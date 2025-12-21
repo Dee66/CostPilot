@@ -5,7 +5,6 @@ use super::zero_network::*;
 use crate::engines::detection::ResourceChange;
 use crate::engines::prediction::CostEstimate;
 use crate::engines::shared::models::ChangeAction;
-use std::collections::HashMap;
 
 /// Policy evaluation engine with exemption support
 ///
@@ -446,14 +445,8 @@ mod tests {
             confidence_score: 0.9,
             heuristic_reference: None,
             cold_start_inference: false,
-            monthly: None,
-            yearly: None,
             one_time: None,
             breakdown: None,
-            estimate: None,
-            lower: None,
-            upper: None,
-            confidence: None,
             hourly: None,
             daily: None,
         };
@@ -505,8 +498,8 @@ mod tests {
 
         let cost = CostEstimate::builder()
             .resource_id("test")
-            .monthly(720.0)
-            .confidence(0.9)
+            .monthly_cost(720.0)
+            .confidence_score(0.9)
             .build();
 
         let result = engine.evaluate(&changes, &cost);
@@ -551,14 +544,8 @@ mod tests {
             confidence_score: 0.9,
             heuristic_reference: None,
             cold_start_inference: false,
-            monthly: None,
-            yearly: None,
             one_time: None,
             breakdown: None,
-            estimate: None,
-            lower: None,
-            upper: None,
-            confidence: None,
             hourly: None,
             daily: None,
         };
@@ -608,8 +595,8 @@ mod tests {
 
         let cost = CostEstimate::builder()
             .resource_id("test")
-            .monthly(360.0)
-            .confidence(0.95)
+            .monthly_cost(360.0)
+            .confidence_score(0.95)
             .build();
 
         let result = engine.evaluate(&changes, &cost);
@@ -644,8 +631,8 @@ mod tests {
 
         let cost = CostEstimate::builder()
             .resource_id("test")
-            .monthly(72.0)
-            .confidence(0.95)
+            .monthly_cost(72.0)
+            .confidence_score(0.95)
             .build();
 
         let result = engine.evaluate(&changes, &cost);
@@ -729,14 +716,8 @@ mod tests {
             confidence_score: 0.9,
             heuristic_reference: None,
             cold_start_inference: false,
-            monthly: None,
-            yearly: None,
             one_time: None,
             breakdown: None,
-            estimate: None,
-            lower: None,
-            upper: None,
-            confidence: None,
             hourly: None,
             daily: None,
         };

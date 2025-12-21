@@ -386,7 +386,10 @@ fn generate_example_json() -> String {
             }
         }
     ]))
-    .unwrap_or_default()
+    .unwrap_or_else(|e| {
+        eprintln!("Warning: Failed to generate JSON example: {}", e);
+        r#"[{"error": "Failed to generate JSON example"}]"#.to_string()
+    })
 }
 
 #[cfg(test)]

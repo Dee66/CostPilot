@@ -8,10 +8,8 @@ typical production infrastructure patterns.
 """
 
 import json
-import yaml
 import random
 import uuid
-from datetime import datetime, timedelta
 from typing import Dict, Any, List
 import argparse
 
@@ -36,7 +34,6 @@ class ProductionDataGenerator:
 
     def generate_terraform_plan(self, industry: str, scale: str) -> Dict[str, Any]:
         """Generate a synthetic Terraform plan."""
-        plan_id = f"{industry}-{scale}-{self.generate_anonymized_id()}"
 
         plan = {
             "version": "1.0",
@@ -323,14 +320,14 @@ class ProductionDataGenerator:
         }
 
         # Generate resources based on industry and scale
-        resources = self._generate_cf_resources_for_industry(industry, scale)
+        resources = self._generate_cf_resources_for_industry(industry)
 
         for resource_name, resource_def in resources.items():
             template["Resources"][resource_name] = resource_def
 
         return template
 
-    def _generate_cf_resources_for_industry(self, industry: str, scale: str) -> Dict[str, Any]:
+    def _generate_cf_resources_for_industry(self, industry: str) -> Dict[str, Any]:
         """Generate CloudFormation resources."""
         resources = {}
 
@@ -401,12 +398,12 @@ def main():
         if args.format == "terraform":
             dataset = generator.generate_terraform_plan(args.industry, args.scale)
             filename = f"{args.industry}_{args.scale}_terraform_{i+1}.json"
-            with open(os.path.join(args.output_dir, filename), 'w') as f:
+            with open(os.path.join(args.output_dir, filename), 'w', encoding='utf-8') as f:
                 json.dump(dataset, f, indent=2)
         else:
             dataset = generator.generate_cloudformation_template(args.industry, args.scale)
             filename = f"{args.industry}_{args.scale}_cloudformation_{i+1}.json"
-            with open(os.path.join(args.output_dir, filename), 'w') as f:
+            with open(os.path.join(args.output_dir, filename), 'w', encoding='utf-8') as f:
                 json.dump(dataset, f, indent=2)
 
         print(f"Generated {filename}")

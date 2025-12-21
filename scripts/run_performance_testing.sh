@@ -1,6 +1,5 @@
 #!/bin/bash
 # CostPilot Advanced Performance Testing Suite
-# Implements Netflix/Google-grade performance testing surpassing industry standards
 
 set -euo pipefail
 

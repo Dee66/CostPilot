@@ -130,6 +130,27 @@ impl EditionContext {
         !self.is_premium()
     }
 
+    /// Create premium edition context for testing
+    #[cfg(test)]
+    pub fn premium_for_test() -> Self {
+        Self {
+            mode: EditionMode::Premium,
+            license: None,
+            pro_engine: None,
+            capabilities: Capabilities {
+                allow_predict: true,
+                allow_explain_full: true,
+                allow_autofix: true,
+                allow_mapping_deep: true,
+                allow_trend: true,
+                allow_policy_enforce: true,
+                allow_slo_enforce: true,
+            },
+            pro: None,
+            paths: EditionPaths::default(),
+        }
+    }
+
     /// Require Premium edition, returning ProEngineHandle reference
     pub fn require_pro(
         &self,

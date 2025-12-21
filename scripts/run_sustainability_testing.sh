@@ -58,40 +58,60 @@ log_energy() {
 
 # License validation for premium features
 check_license() {
-    log_info "Validating premium license for sustainability analytics..."
+    log_info "Validating premium license token for sustainability analytics..."
 
-    # Use Rust binary to check edition
-    local costpilot_binary="${PROJECT_ROOT}/target/release/costpilot"
-    if [[ ! -f "${costpilot_binary}" ]]; then
-        costpilot_binary="${PROJECT_ROOT}/target/debug/costpilot"
-    fi
+    # Determine license file path
+    local license_path="${COSTPILOT_LICENSE_PATH:-${HOME}/.costpilot/license.json}"
 
-    if [[ ! -f "${costpilot_binary}" ]]; then
-        log_error "CostPilot binary not found. Please build the project first."
-        exit 1
-    fi
-
-    # Check edition via version output
-    local version_output
-    version_output="$("${costpilot_binary}" --version 2>&1)"
-    if [[ $? -ne 0 ]]; then
-        log_error "Failed to get CostPilot version information"
-        exit 1
-    fi
-
-    if echo "${version_output}" | grep -q "(Premium)"; then
-        log_success "CostPilot Premium edition detected"
-    elif echo "${version_output}" | grep -q "(Free)"; then
-        log_error "Sustainability analytics requires CostPilot Premium"
-        log_error "Current edition: Free"
-        log_error "Please upgrade to CostPilot Premium to access sustainability analytics"
+    # Check if license file exists
+    if [[ ! -f "${license_path}" ]]; then
+        log_error "License file not found at: ${license_path}"
+        log_error "Please install your CostPilot Premium license"
         log_error "Visit https://costpilot.dev/pricing for more information"
         exit 1
-    else
-        log_error "Unable to determine CostPilot edition"
-        log_error "Version output: ${version_output}"
+    fi
+
+    # Validate JSON syntax
+    if ! jq empty "${license_path}" 2>/dev/null; then
+        log_error "License file contains invalid JSON"
         exit 1
     fi
+
+    # Check required fields exist and are non-empty
+    local required_fields=("email" "license_key" "expires" "signature")
+    for field in "${required_fields[@]}"; do
+        if ! jq -e "has(\"${field}\") and .${field} != null and .${field} != \"\"" "${license_path}" >/dev/null; then
+            log_error "License missing or invalid field: ${field}"
+            exit 1
+        fi
+    done
+
+    # Get and validate expiry date
+    local expiry_iso
+    expiry_iso=$(jq -r '.expires' "${license_path}")
+
+    # Validate ISO 8601 format (basic check)
+    if ! [[ $expiry_iso =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2} ]]; then
+        log_error "License expiry date has invalid ISO 8601 format: ${expiry_iso}"
+        exit 1
+    fi
+
+    # Check if expired
+    local expiry_epoch
+    local current_epoch
+    expiry_epoch=$(date -d "${expiry_iso}" +%s 2>/dev/null)
+    current_epoch=$(date +%s)
+
+    if [[ -z "$expiry_epoch" ]] || [[ "$expiry_epoch" -lt "$current_epoch" ]]; then
+        log_error "License expired on: ${expiry_iso}"
+        exit 1
+    fi
+
+    # Note: Signature verification is currently stubbed in the codebase
+    log_info "License signature validation skipped (currently stubbed)"
+
+    # Success
+    log_success "Premium license validated (expires: ${expiry_iso})"
 }
 
 # Prerequisites check
@@ -758,12 +778,16 @@ main() {
             echo "  full          Run complete sustainability and ethics test suite"
             echo "  help          Show this help message"
             echo ""
+            echo "License: This tool requires a CostPilot Premium license"
+            echo "         Visit https://costpilot.dev/pricing for more information"
+            echo ""
             echo "Environment variables:"
             echo "  SUSTAINABILITY_TEST_DURATION    Test duration (default: 30m)"
             echo "  CARBON_MEASUREMENT_INTERVAL     Carbon measurement interval in seconds (default: 60)"
             echo "  ENERGY_EFFICIENCY_THRESHOLD     Energy efficiency threshold (default: 0.8)"
             echo "  FAIRNESS_TEST_SAMPLES           Number of fairness test samples (default: 1000)"
             echo "  TRANSPARENCY_AUDIT_DEPTH        Transparency audit depth (default: 3)"
+            echo "  COSTPILOT_LICENSE_PATH          Path to license file (default: ~/.costpilot/license.json)"
             ;;
     esac
 }

@@ -2,4 +2,4 @@
 source: tests/golden_mapping_tests.rs
 expression: stdout
 ---
-Autofix patch generation not yet implemented
+

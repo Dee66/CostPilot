@@ -27,8 +27,6 @@ mod determinism_tests {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None, // deprecated
-            after: None,  // deprecated
         }
     }
 
@@ -129,8 +127,6 @@ mod determinism_tests {
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
             ResourceChange {
                 resource_id: "resource-a".to_string(),
@@ -143,8 +139,6 @@ mod determinism_tests {
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
             ResourceChange {
                 resource_id: "resource-b".to_string(),
@@ -157,8 +151,6 @@ mod determinism_tests {
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
         ];
 

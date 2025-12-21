@@ -19,7 +19,6 @@ GATES_DIR="$SCRIPT_DIR/property_coverage/quality_gates"
 # Create directories
 mkdir -p "$REPORTS_DIR" "$GATES_DIR"
 
-# Coverage targets (Netflix/Google standards)
 INVARIANTS_TARGET=100.0
 EDGE_CASES_TARGET=90.0
 

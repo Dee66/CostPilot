@@ -67,6 +67,183 @@ impl DetectionEngine {
         Ok(changes)
     }
 
+    /// Detect cost issues from CloudFormation changeset JSON file
+    pub fn detect_from_cloudformation_changeset(&self, changeset_path: &Path) -> Result<Vec<ResourceChange>> {
+        // Read the changeset file
+        let content = std::fs::read_to_string(changeset_path).map_err(|e| {
+            CostPilotError::new(
+                "DETECT_002",
+                ErrorCategory::FileSystemError,
+                format!("Failed to read CloudFormation changeset file: {}", e),
+            )
+            .with_hint(format!(
+                "Ensure the file exists and is readable: {}",
+                changeset_path.display()
+            ))
+        })?;
+
+        self.detect_from_cloudformation_changeset_json(&content)
+    }
+
+    /// Detect cost issues from CloudFormation changeset JSON string
+    pub fn detect_from_cloudformation_changeset_json(&self, json_content: &str) -> Result<Vec<ResourceChange>> {
+        if self.verbose {
+            println!("Parsing CloudFormation changeset JSON...");
+        }
+
+        // Parse the CloudFormation changeset
+        let changeset = crate::engines::detection::cloudformation::parser::parse_cloudformation_changeset(json_content)?;
+
+        if self.verbose {
+            println!("Changeset: {} - {}", changeset.stack_name, changeset.status);
+            println!("Changes: {}", changeset.changes.len());
+        }
+
+        // Convert to canonical format
+        let changes = crate::engines::detection::cloudformation::parser::changeset_to_resource_changes(&changeset);
+
+        if self.verbose {
+            println!("Detected {} resource changes", changes.len());
+        }
+
+        Ok(changes)
+    }
+
+    /// Detect cost issues from CloudFormation template JSON file
+    pub fn detect_from_cloudformation_template(&self, template_path: &Path) -> Result<Vec<ResourceChange>> {
+        // Read the template file
+        let content = std::fs::read_to_string(template_path).map_err(|e| {
+            CostPilotError::new(
+                "DETECT_003",
+                ErrorCategory::FileSystemError,
+                format!("Failed to read CloudFormation template file: {}", e),
+            )
+            .with_hint(format!(
+                "Ensure the file exists and is readable: {}",
+                template_path.display()
+            ))
+        })?;
+
+        self.detect_from_cloudformation_template_json(&content)
+    }
+
+    /// Detect cost issues from CloudFormation template JSON string
+    pub fn detect_from_cloudformation_template_json(&self, json_content: &str) -> Result<Vec<ResourceChange>> {
+        if self.verbose {
+            println!("Parsing CloudFormation template JSON...");
+        }
+
+        // Parse the CloudFormation template
+        let template = crate::engines::detection::cloudformation::parser::parse_cloudformation_template(json_content)?;
+
+        if self.verbose {
+            println!("Template resources: {}", template.resources.len());
+        }
+
+        // Convert to canonical format
+        let changes = crate::engines::detection::cloudformation::parser::template_to_resource_changes(&template);
+
+        if self.verbose {
+            println!("Detected {} resource changes", changes.len());
+        }
+
+        Ok(changes)
+    }
+
+    /// Detect cost issues from CDK diff JSON file
+    pub fn detect_from_cdk_diff(&self, diff_path: &Path) -> Result<Vec<ResourceChange>> {
+        // Read the diff file
+        let content = std::fs::read_to_string(diff_path).map_err(|e| {
+            CostPilotError::new(
+                "DETECT_004",
+                ErrorCategory::FileSystemError,
+                format!("Failed to read CDK diff file: {}", e),
+            )
+            .with_hint(format!(
+                "Ensure the file exists and is readable: {}",
+                diff_path.display()
+            ))
+        })?;
+
+        self.detect_from_cdk_diff_json(&content)
+    }
+
+    /// Detect cost issues from CDK diff JSON string
+    pub fn detect_from_cdk_diff_json(&self, json_content: &str) -> Result<Vec<ResourceChange>> {
+        if self.verbose {
+            println!("Parsing CDK diff JSON...");
+        }
+
+        // Parse the CDK diff
+        let diff = crate::engines::detection::cdk::parser::parse_cdk_diff(json_content)?;
+
+        if self.verbose {
+            println!("CDK diff success: {}", diff.success);
+            println!("Stacks: {}", diff.stacks.len());
+        }
+
+        // Convert to canonical format
+        let changes = crate::engines::detection::cdk::parser::cdk_diff_to_resource_changes(&diff);
+
+        if self.verbose {
+            println!("Detected {} resource changes", changes.len());
+        }
+
+        Ok(changes)
+    }
+
+    /// Detect cost issues from CDK synthesized template directory
+    pub fn detect_from_cdk_synthesized(&self, cdk_out_path: &Path, stack_name: &str) -> Result<Vec<ResourceChange>> {
+        let template_path = cdk_out_path.join(format!("{}.template.json", stack_name));
+
+        if !template_path.exists() {
+            return Err(CostPilotError::new(
+                "DETECT_005",
+                ErrorCategory::FileSystemError,
+                format!("CDK synthesized template not found: {}", template_path.display()),
+            )
+            .with_hint(format!(
+                "Run 'cdk synth' first to generate synthesized templates in {}",
+                cdk_out_path.display()
+            )));
+        }
+
+        // Read the template file
+        let content = std::fs::read_to_string(&template_path).map_err(|e| {
+            CostPilotError::new(
+                "DETECT_006",
+                ErrorCategory::FileSystemError,
+                format!("Failed to read CDK synthesized template: {}", e),
+            )
+        })?;
+
+        self.detect_from_cdk_template_json(&content, stack_name)
+    }
+
+    /// Detect cost issues from CDK synthesized template JSON string
+    pub fn detect_from_cdk_template_json(&self, json_content: &str, stack_name: &str) -> Result<Vec<ResourceChange>> {
+        if self.verbose {
+            println!("Parsing CDK synthesized template JSON...");
+        }
+
+        // Parse the CDK template
+        let template = crate::engines::detection::cdk::parser::parse_cdk_template(json_content)?;
+
+        if self.verbose {
+            let resource_count = template.resources.as_ref().map(|r| r.len()).unwrap_or(0);
+            println!("Template resources: {}", resource_count);
+        }
+
+        // Convert to canonical format
+        let changes = crate::engines::detection::cdk::parser::cdk_template_to_resource_changes(&template, stack_name);
+
+        if self.verbose {
+            println!("Detected {} resource changes", changes.len());
+        }
+
+        Ok(changes)
+    }
+
     /// Analyze resource changes and generate detections
     pub fn analyze_changes(
         &self,
@@ -129,10 +306,6 @@ impl DetectionEngine {
                 ),
                 fix_snippet: None,
                 estimated_cost: None,
-                resource_type: None,
-                issue: None,
-                confidence: None,
-                monthly_cost: None,
             });
         }
 
@@ -153,10 +326,6 @@ impl DetectionEngine {
                             ),
                             fix_snippet: None,
                             estimated_cost: None,
-                            resource_type: None,
-                            issue: None,
-                            confidence: None,
-                            monthly_cost: None,
                         });
                     }
                 }
@@ -176,10 +345,6 @@ impl DetectionEngine {
                         message: "S3 bucket without lifecycle rules. Consider adding policies to transition old data to cheaper storage.".to_string(),
                         fix_snippet: None,
                         estimated_cost: None,
-                        resource_type: None,
-                        issue: None,
-                        confidence: None,
-                        monthly_cost: None,
                     });
                 }
             }
@@ -199,10 +364,6 @@ impl DetectionEngine {
                 ),
                 fix_snippet: None,
                 estimated_cost: None,
-                resource_type: None,
-                issue: None,
-                confidence: None,
-                monthly_cost: None,
             });
         }
 

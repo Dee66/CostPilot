@@ -142,9 +142,20 @@ fn test_load_from_file_valid_heuristics() {
                     "storage_per_gb": 0.25
                 }
             }
-            }
         },
         "storage": {
+            "s3": {
+                "standard": {
+                    "per_gb": 0.023
+                },
+                "glacier": {
+                    "per_gb": 0.004
+                },
+                "requests": {
+                    "put_copy_post_list_per_1000": 0.005,
+                    "get_select_per_1000": 0.0004
+                }
+            },
             "ebs": {
                 "gp3": {
                     "per_gb": 0.08
@@ -154,7 +165,16 @@ fn test_load_from_file_valid_heuristics() {
         "networking": {
             "nat_gateway": {
                 "hourly": 0.045,
+                "monthly": 32.0,
                 "data_processing_per_gb": 0.045
+            },
+            "load_balancer": {
+                "alb": {
+                    "hourly": 0.0225,
+                    "monthly": 16.2,
+                    "lcu_hourly": 0.008
+                }
+            }
         },
         "cold_start_defaults": {
             "dynamodb_unknown_rcu": 5,
@@ -163,8 +183,6 @@ fn test_load_from_file_valid_heuristics() {
             "nat_gateway_default_gb": 100,
             "s3_default_gb": 100,
             "ec2_default_utilization": 0.7
-        },
-            }
         },
         "prediction_intervals": {
             "range_factor": 0.5
@@ -176,7 +194,7 @@ fn test_load_from_file_valid_heuristics() {
     temp_file.flush().unwrap();
 
     let result = loader.load_from_file(temp_file.path());
-    assert!(result.is_ok());
+    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok());
 
     let heuristics = result.unwrap();
     assert_eq!(heuristics.version, "1.0.0");
@@ -248,9 +266,20 @@ fn test_load_with_valid_file() {
                     "storage_per_gb": 0.25
                 }
             }
-            }
         },
         "storage": {
+            "s3": {
+                "standard": {
+                    "per_gb": 0.023
+                },
+                "glacier": {
+                    "per_gb": 0.004
+                },
+                "requests": {
+                    "put_copy_post_list_per_1000": 0.005,
+                    "get_select_per_1000": 0.0004
+                }
+            },
             "ebs": {
                 "gp3": {
                     "per_gb": 0.08
@@ -260,7 +289,16 @@ fn test_load_with_valid_file() {
         "networking": {
             "nat_gateway": {
                 "hourly": 0.045,
+                "monthly": 32.0,
                 "data_processing_per_gb": 0.045
+            },
+            "load_balancer": {
+                "alb": {
+                    "hourly": 0.0225,
+                    "monthly": 16.2,
+                    "lcu_hourly": 0.008
+                }
+            }
         },
         "cold_start_defaults": {
             "dynamodb_unknown_rcu": 5,
@@ -269,8 +307,6 @@ fn test_load_with_valid_file() {
             "nat_gateway_default_gb": 100,
             "s3_default_gb": 100,
             "ec2_default_utilization": 0.7
-        },
-            }
         },
         "prediction_intervals": {
             "range_factor": 0.5
@@ -285,7 +321,7 @@ fn test_load_with_valid_file() {
     let loader = HeuristicsLoader::with_paths(custom_paths);
 
     let result = loader.load();
-    assert!(result.is_ok());
+    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok());
 
     let heuristics = result.unwrap();
     assert_eq!(heuristics.version, "1.0.0");
@@ -690,9 +726,20 @@ fn test_load_from_file_with_validation() {
                     "storage_per_gb": 0.25
                 }
             }
-            }
         },
         "storage": {
+            "s3": {
+                "standard": {
+                    "per_gb": 0.023
+                },
+                "glacier": {
+                    "per_gb": 0.004
+                },
+                "requests": {
+                    "put_copy_post_list_per_1000": 0.005,
+                    "get_select_per_1000": 0.0004
+                }
+            },
             "ebs": {
                 "gp3": {
                     "per_gb": 0.08
@@ -702,7 +749,16 @@ fn test_load_from_file_with_validation() {
         "networking": {
             "nat_gateway": {
                 "hourly": 0.045,
+                "monthly": 32.0,
                 "data_processing_per_gb": 0.045
+            },
+            "load_balancer": {
+                "alb": {
+                    "hourly": 0.0225,
+                    "monthly": 16.2,
+                    "lcu_hourly": 0.008
+                }
+            }
         },
         "cold_start_defaults": {
             "dynamodb_unknown_rcu": 5,
@@ -711,8 +767,6 @@ fn test_load_from_file_with_validation() {
             "nat_gateway_default_gb": 100,
             "s3_default_gb": 100,
             "ec2_default_utilization": 0.7
-        },
-            }
         },
         "prediction_intervals": {
             "range_factor": 0.5
@@ -724,7 +778,7 @@ fn test_load_from_file_with_validation() {
     temp_file.flush().unwrap();
 
     let result = loader.load_from_file(temp_file.path());
-    assert!(result.is_ok());
+    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok());
 
     let heuristics = result.unwrap();
     let stats = loader.get_statistics(&heuristics);
@@ -815,9 +869,20 @@ fn test_load_fallback_behavior() {
                     "storage_per_gb": 0.25
                 }
             }
-            }
         },
         "storage": {
+            "s3": {
+                "standard": {
+                    "per_gb": 0.023
+                },
+                "glacier": {
+                    "per_gb": 0.004
+                },
+                "requests": {
+                    "put_copy_post_list_per_1000": 0.005,
+                    "get_select_per_1000": 0.0004
+                }
+            },
             "ebs": {
                 "gp3": {
                     "per_gb": 0.08
@@ -827,7 +892,16 @@ fn test_load_fallback_behavior() {
         "networking": {
             "nat_gateway": {
                 "hourly": 0.045,
+                "monthly": 32.0,
                 "data_processing_per_gb": 0.045
+            },
+            "load_balancer": {
+                "alb": {
+                    "hourly": 0.0225,
+                    "monthly": 16.2,
+                    "lcu_hourly": 0.008
+                }
+            }
         },
         "cold_start_defaults": {
             "dynamodb_unknown_rcu": 5,
@@ -836,8 +910,6 @@ fn test_load_fallback_behavior() {
             "nat_gateway_default_gb": 100,
             "s3_default_gb": 100,
             "ec2_default_utilization": 0.7
-        },
-            }
         },
         "prediction_intervals": {
             "range_factor": 0.5
@@ -856,7 +928,7 @@ fn test_load_fallback_behavior() {
     let loader = HeuristicsLoader::with_paths(custom_paths);
 
     let result = loader.load();
-    assert!(result.is_ok()); // Should find the valid file
+    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok()); // Should find the valid file
 }
 
 // ===== EDGE CASE TESTS =====
@@ -1041,9 +1113,20 @@ fn test_validate_missing_required_fields() {
                     "storage_per_gb": 0.25
                 }
             }
-            }
         },
         "storage": {
+            "s3": {
+                "standard": {
+                    "per_gb": 0.023
+                },
+                "glacier": {
+                    "per_gb": 0.004
+                },
+                "requests": {
+                    "put_copy_post_list_per_1000": 0.005,
+                    "get_select_per_1000": 0.0004
+                }
+            },
             "ebs": {
                 "gp3": {
                     "per_gb": 0.08
@@ -1053,7 +1136,16 @@ fn test_validate_missing_required_fields() {
         "networking": {
             "nat_gateway": {
                 "hourly": 0.045,
+                "monthly": 32.0,
                 "data_processing_per_gb": 0.045
+            },
+            "load_balancer": {
+                "alb": {
+                    "hourly": 0.0225,
+                    "monthly": 16.2,
+                    "lcu_hourly": 0.008
+                }
+            }
         },
         "cold_start_defaults": {
             "dynamodb_unknown_rcu": 5,
@@ -1062,8 +1154,6 @@ fn test_validate_missing_required_fields() {
             "nat_gateway_default_gb": 100,
             "s3_default_gb": 100,
             "ec2_default_utilization": 0.7
-        },
-            }
         },
         "prediction_intervals": {
             "range_factor": 0.5
@@ -1075,7 +1165,7 @@ fn test_validate_missing_required_fields() {
     temp_file.flush().unwrap();
 
     let result = loader.load_from_file(temp_file.path());
-    assert!(result.is_ok());
+    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok());
 }
 
 #[test]
@@ -1134,11 +1224,12 @@ fn test_load_from_file_large_file() {
 
     // Add many EC2 instances to make it large
     for i in 0..1000 {
+        let comma = if i < 999 { "," } else { "" };
         large_content.push_str(&format!(r#"
                 "instance{}": {{
                     "hourly": 0.01,
                     "monthly": 7.0
-                }},"#, i));
+                }}{}"#, i, comma));
     }
 
     large_content.push_str(r#"
@@ -1177,9 +1268,20 @@ fn test_load_from_file_large_file() {
                     "storage_per_gb": 0.25
                 }
             }
-            }
         },
         "storage": {
+            "s3": {
+                "standard": {
+                    "per_gb": 0.023
+                },
+                "glacier": {
+                    "per_gb": 0.004
+                },
+                "requests": {
+                    "put_copy_post_list_per_1000": 0.005,
+                    "get_select_per_1000": 0.0004
+                }
+            },
             "ebs": {
                 "gp3": {
                     "per_gb": 0.08
@@ -1189,7 +1291,16 @@ fn test_load_from_file_large_file() {
         "networking": {
             "nat_gateway": {
                 "hourly": 0.045,
+                "monthly": 32.0,
                 "data_processing_per_gb": 0.045
+            },
+            "load_balancer": {
+                "alb": {
+                    "hourly": 0.0225,
+                    "monthly": 16.2,
+                    "lcu_hourly": 0.008
+                }
+            }
         },
         "cold_start_defaults": {
             "dynamodb_unknown_rcu": 5,
@@ -1198,8 +1309,6 @@ fn test_load_from_file_large_file() {
             "nat_gateway_default_gb": 100,
             "s3_default_gb": 100,
             "ec2_default_utilization": 0.7
-        },
-            }
         },
         "prediction_intervals": {
             "range_factor": 0.5

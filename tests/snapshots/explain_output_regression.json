@@ -7,12 +7,12 @@
         "percentage": 100.0
       }
     ],
-    "interval_high": 0.0,
-    "interval_low": 0.0,
+    "interval_high": 195.0,
+    "interval_low": 105.0,
     "monthly_cost": 30.37
   },
   "key_assumptions": [],
-  "overall_confidence": 0.0,
+  "overall_confidence": 0.95,
   "resource_id": "test-aws-instance-regression-1",
   "resource_type": "aws_instance",
   "steps": [
@@ -121,17 +121,12 @@
           "name": "factor",
           "source": "PreviousStep",
           "value": "Heuristics available"
-        },
-        {
-          "name": "factor",
-          "source": "PreviousStep",
-          "value": "Cold-start inference used"
         }
       ],
       "output_value": {
         "name": "confidence_score",
         "unit": null,
-        "value": "0%"
+        "value": "95%"
       },
       "step_number": 5,
       "title": "Calculate Confidence"
@@ -154,7 +149,7 @@
       "output_value": {
         "name": "interval",
         "unit": "monthly",
-        "value": "$0.00 - $0.00"
+        "value": "$105.00 - $195.00"
       },
       "step_number": 6,
       "title": "Calculate Prediction Interval"

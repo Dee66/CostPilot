@@ -3,7 +3,6 @@
 // WASM runtime with strict sandboxing and resource limits
 
 use wasmtime::*;
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone)]
@@ -57,7 +56,6 @@ pub struct SandboxInstance {
 
 struct ResourceState {
     memory_limit_bytes: usize,
-    interrupted: Arc<AtomicBool>,
 }
 
 impl ResourceLimiter for ResourceState {
@@ -110,10 +108,8 @@ impl WasmRuntime {
         }
 
         // Create store with resource limits
-        let interrupted = Arc::new(AtomicBool::new(false));
         let state = ResourceState {
             memory_limit_bytes: config.memory_limit_bytes,
-            interrupted: interrupted.clone(),
         };
         let mut store = Store::new(&self.engine, state);
         store.limiter(|s| s);

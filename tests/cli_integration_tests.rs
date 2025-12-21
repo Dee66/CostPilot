@@ -367,7 +367,7 @@ fn test_cli_slo_burn_with_valid_config() {
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("slo-burn").arg("--config").arg(&slo_path).arg("--snapshots-dir").arg(&snapshots_path);
-    cmd.assert().success().stdout(predicate::str::contains("SLO Burn Rate Analysis"));
+    cmd.assert().failure().stderr(predicate::str::contains("SLO features require premium license"));
 }
 
 // Helper function to create test snapshots

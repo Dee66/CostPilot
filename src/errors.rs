@@ -29,17 +29,4 @@ impl CostPilotError {
             ),
         )
     }
-
-    // Legacy error constructors for backward compatibility
-    pub fn Timeout(message: String) -> Self {
-        Self::timeout(message)
-    }
-
-    pub fn InvalidJson(message: String) -> Self {
-        Self::invalid_json(message)
-    }
-
-    pub fn CircuitBreaker(message: String) -> Self {
-        Self::circuit_breaker(message)
-    }
 }

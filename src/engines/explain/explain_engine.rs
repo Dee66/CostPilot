@@ -444,10 +444,6 @@ mod tests {
             message: "Configuration change detected".to_string(),
             fix_snippet: None,
             estimated_cost: Some(7.59),
-            resource_type: None,
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         };
 
         let explanation = ExplainEngine::explain(&detection, &change, Some(&estimate), None);
@@ -479,10 +475,6 @@ mod tests {
                 message: "Scaling detected".to_string(),
                 fix_snippet: None,
                 estimated_cost: Some(100.0),
-                resource_type: None,
-                issue: None,
-                confidence: None,
-                monthly_cost: None,
             },
             Detection {
                 rule_id: "CONFIG_001".to_string(),
@@ -493,10 +485,6 @@ mod tests {
                 message: "Configuration change".to_string(),
                 fix_snippet: None,
                 estimated_cost: Some(50.0),
-                resource_type: None,
-                issue: None,
-                confidence: None,
-                monthly_cost: None,
             },
         ];
 

@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import os
-COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: slo command not present."""
 
 import subprocess
@@ -19,7 +17,8 @@ def test_slo_command_not_present():
         [COSTPILOT_PATH, "slo", "--help"],
         capture_output=True,
         text=True,
-        timeout=10
+        timeout=10,
+        check=False
     )
 
     # Should fail - slo not available in Free
@@ -47,14 +46,15 @@ def test_slo_with_config_rejected():
             ]
         }
 
-        with open(slo_path, 'w') as f:
+        with open(slo_path, 'w', encoding='utf-8') as f:
             json.dump(slo_content, f)
 
         result = subprocess.run(
             [COSTPILOT_PATH, "slo", "--config", str(slo_path)],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail
@@ -67,7 +67,8 @@ def test_slo_not_in_help():
         [COSTPILOT_PATH, "--help"],
         capture_output=True,
         text=True,
-        timeout=10
+        timeout=10,
+        check=False
     )
 
     # slo should not appear in help as a command
@@ -90,7 +91,8 @@ def test_slo_subcommand_rejected():
             cmd,
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail
@@ -112,14 +114,15 @@ def test_slo_with_baseline_rejected():
             ]
         }
 
-        with open(baseline_path, 'w') as f:
+        with open(baseline_path, 'w', encoding='utf-8') as f:
             json.dump(baseline_content, f)
 
         result = subprocess.run(
             [COSTPILOT_PATH, "slo", "--baseline", str(baseline_path)],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail
@@ -132,7 +135,8 @@ def test_slo_burn_rate_rejected():
         [COSTPILOT_PATH, "slo", "burn-rate"],
         capture_output=True,
         text=True,
-        timeout=10
+        timeout=10,
+        check=False
     )
 
     # Should fail

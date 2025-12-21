@@ -27,8 +27,6 @@ fn test_every_detected_finding_referenced_in_predict_output() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let detections = detection_engine.detect(&vec![change.clone()]).unwrap();
@@ -62,8 +60,6 @@ fn test_every_predicted_cost_referenced_in_explain_output() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let estimates = prediction_engine.predict(&vec![change.clone()]).unwrap();
@@ -101,8 +97,6 @@ fn test_explain_output_references_same_resource_ids_as_detect_and_predict() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let detections = detection_engine.detect(&vec![change.clone()]).unwrap();
@@ -151,8 +145,6 @@ fn test_explain_output_references_same_cost_figures_as_predict() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let estimates = prediction_engine.predict(&vec![change.clone()]).unwrap();
@@ -198,8 +190,6 @@ fn test_no_orphan_findings_across_outputs() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
         ResourceChange {
             resource_id: "aws_instance.orphan_test2".to_string(),
@@ -215,8 +205,6 @@ fn test_no_orphan_findings_across_outputs() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
     ];
 

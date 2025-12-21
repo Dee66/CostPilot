@@ -29,11 +29,24 @@ impl ExitCode {
     fn exit(self) -> ! {
         process::exit(self as i32)
     }
+
+    /// Convert CostPilotError to appropriate exit code
+    fn from_costpilot_error(error: &costpilot::engines::shared::error_model::CostPilotError) -> Self {
+        use costpilot::engines::shared::error_model::ErrorCategory;
+        match error.category {
+            ErrorCategory::PolicyViolation => ExitCode::PolicyBlock,
+            ErrorCategory::SLOBreach => ExitCode::SloBurn,
+            ErrorCategory::InvalidInput | ErrorCategory::ParseError | ErrorCategory::ValidationError => {
+                ExitCode::InvalidInput
+            }
+            _ => ExitCode::InternalError,
+        }
+    }
 }
 
 #[derive(Parser)]
 #[command(name = "costpilot")]
-#[command(about = "Zero-IAM FinOps engine for Terraform, CDK, and CloudFormation", long_about = None)]
+#[command(about = "Zero-IAM FinOps engine for Terraform", long_about = None)]
 #[command(version = VERSION)]
 struct Cli {
     #[command(subcommand)]
@@ -193,6 +206,20 @@ enum Commands {
         command: Option<SloCommands>,
     },
 
+    /// Analyze cost trends and generate reports
+    ///
+    /// Track cost changes over time, detect regressions, and generate
+    /// visual trend reports. Requires Premium edition.
+    ///
+    /// Examples:
+    ///   costpilot trend show
+    ///   costpilot trend snapshot --plan tfplan.json
+    ///   costpilot trend regressions --threshold 10.0
+    Trend {
+        #[command(subcommand)]
+        command: TrendCommands,
+    },
+
     /// Detect cost anomalies
     Anomaly {
         /// Path to Terraform plan JSON file
@@ -217,6 +244,21 @@ enum Commands {
 
     /// Generate autofix snippets
     AutofixSnippet,
+
+    /// Generate drift-safe autofix patches
+    AutofixDriftSafe {
+        /// Path to Terraform plan JSON file
+        #[arg(short, long)]
+        plan: PathBuf,
+
+        /// Output file for patches (default: stdout)
+        #[arg(short, long, value_name = "FILE")]
+        output: Option<PathBuf>,
+
+        /// Show detailed patch metadata
+        #[arg(short, long)]
+        verbose: bool,
+    },
 
     /// Manage escrow operations
     Escrow,
@@ -260,6 +302,58 @@ enum SloCommands {
         /// Minimum R² threshold for predictions
         #[arg(long, default_value = "0.7")]
         min_r_squared: f64,
+    },
+}
+
+#[derive(Subcommand)]
+enum TrendCommands {
+    /// Show cost trend history and generate visual report
+    Show {
+        /// Output format (text, json, html, svg)
+        #[arg(short, long, default_value = "text")]
+        format: String,
+
+        /// Output file path (for html/svg formats)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+
+        /// Path to snapshots directory
+        #[arg(long)]
+        snapshots_dir: Option<PathBuf>,
+    },
+
+    /// Create a cost snapshot from Terraform plan
+    Snapshot {
+        /// Path to Terraform plan JSON file
+        #[arg(short, long)]
+        plan: PathBuf,
+
+        /// Commit hash for this snapshot
+        #[arg(long)]
+        commit: Option<String>,
+
+        /// Branch name for this snapshot
+        #[arg(long)]
+        branch: Option<String>,
+
+        /// Path to snapshots directory
+        #[arg(long)]
+        snapshots_dir: Option<PathBuf>,
+    },
+
+    /// Detect cost regressions compared to baseline
+    Regressions {
+        /// Regression threshold as percentage (e.g., 10.0 for 10%)
+        #[arg(long, default_value = "5.0")]
+        threshold: f64,
+
+        /// Path to snapshots directory
+        #[arg(long)]
+        snapshots_dir: Option<PathBuf>,
+
+        /// Output format (text, json)
+        #[arg(short, long, default_value = "text")]
+        format: String,
     },
 }
 
@@ -457,6 +551,26 @@ enum PerformanceCommands {
 }
 
 fn main() {
+    // Add panic recovery to prevent crashes
+    let result = std::panic::catch_unwind(|| {
+        main_inner()
+    });
+
+    match result {
+        Ok(exit_code) => exit_code.exit(),
+        Err(panic_info) => {
+            eprintln!("{} Fatal error: CostPilot encountered an unexpected panic", "💥".bright_red());
+            if let Some(location) = panic_info.downcast_ref::<&std::panic::Location>() {
+                eprintln!("  Location: {}:{}", location.file(), location.line());
+            }
+            eprintln!("  This is a bug. Please report it with the command that caused it.");
+            eprintln!("  https://github.com/costpilot/costpilot/issues");
+            ExitCode::InternalError.exit();
+        }
+    }
+}
+
+fn main_inner() -> ExitCode {
     // Load edition context BEFORE parsing CLI
     // This allows us to gate premium commands early
     let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
@@ -470,7 +584,7 @@ fn main() {
         if arg == "--version" || arg == "-V" {
             let edition_str = if edition.is_premium() { "Premium" } else { "Free" };
             println!("costpilot {} ({})", VERSION, edition_str);
-            return;
+            return ExitCode::Success;
         }
     }
 
@@ -481,11 +595,11 @@ fn main() {
             if e.kind() == clap::error::ErrorKind::DisplayHelp
                 || e.kind() == clap::error::ErrorKind::DisplayVersion {
                 e.print().ok();
-                std::process::exit(0);
+                return ExitCode::Success;
             }
             eprintln!("error_class=invalid_input");
             eprintln!("{}", e);
-            ExitCode::InvalidInput.exit();
+            return ExitCode::InvalidInput;
         }
     };
 
@@ -590,14 +704,16 @@ fn main() {
         }
         Commands::Version { detailed } => {
             cmd_version(detailed, &edition);
-            return;
+            return ExitCode::Success;
         }
         Commands::SloBurn { config, snapshots_dir, min_snapshots, min_r_squared } => cmd_slo_burn(config, snapshots_dir, min_snapshots, min_r_squared, &cli.format, cli.verbose, &edition),
         Commands::SloCheck { config } => cmd_slo_check(config, &cli.format, cli.verbose, &edition),
         Commands::Slo { command } => cmd_slo(command, &cli.format, cli.verbose, &edition),
+        Commands::Trend { command } => cmd_trend(command, &cli.format, cli.verbose, &edition),
         Commands::Anomaly { plan, baseline, threshold, format } => cmd_anomaly(plan, baseline, threshold, &format, cli.verbose, &edition),
         Commands::AutofixPatch => cmd_autofix_patch(&cli.format, cli.verbose),
         Commands::AutofixSnippet => cmd_autofix_snippet(&cli.format, cli.verbose),
+        Commands::AutofixDriftSafe { plan, output, verbose } => cmd_autofix_drift_safe(plan, output, &cli.format, verbose || cli.verbose),
         Commands::Escrow => cmd_escrow(&cli.format, cli.verbose),
         Commands::Performance { command } => cmd_performance(command, &cli.format, cli.verbose),
         Commands::Usage { days_in_month } => cmd_usage(days_in_month, &cli.format, cli.verbose),
@@ -608,8 +724,22 @@ fn main() {
         if cli.debug {
             eprintln!("{} Error details: {:?}", "🔍".bright_black(), e);
         }
-        eprintln!("{} {}", "Error:".bright_red().bold(), e);
-        ExitCode::InternalError.exit();
+
+        // Try to downcast to CostPilotError for better exit code mapping
+        if let Some(cp_error) = e.downcast_ref::<costpilot::engines::shared::error_model::CostPilotError>() {
+            eprintln!("{} {}", "Error:".bright_red().bold(), cp_error);
+            if cli.verbose {
+                eprintln!("  Category: {:?}", cp_error.category);
+                if let Some(context) = &cp_error.context {
+                    eprintln!("  Context: {}", context);
+                }
+            }
+            return ExitCode::from_costpilot_error(cp_error);
+        } else {
+            // Generic error handling
+            eprintln!("{} {}", "Error:".bright_red().bold(), e);
+            return ExitCode::InternalError;
+        }
     }
 
     if let Some(start) = start_time {
@@ -619,6 +749,8 @@ fn main() {
             start.elapsed()
         );
     }
+
+    ExitCode::Success
 }
 
 fn cmd_diff(
@@ -955,6 +1087,226 @@ fn cmd_slo_check(
     Ok(())
 }
 
+fn cmd_trend(
+    command: TrendCommands,
+    _format: &str,
+    verbose: bool,
+    edition: &costpilot::edition::EditionContext,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Trend analysis requires premium license
+    costpilot::edition::require_premium(edition, "Cost trend analysis")
+        .map_err(|e| format!("Trend analysis requires premium license: {}", e))?;
+
+    match command {
+        TrendCommands::Show { format: output_format, output, snapshots_dir } => {
+            cmd_trend_show(output_format, output, snapshots_dir, verbose)
+        }
+        TrendCommands::Snapshot { plan, commit, branch, snapshots_dir } => {
+            cmd_trend_snapshot(plan, commit, branch, snapshots_dir, verbose)
+        }
+        TrendCommands::Regressions { threshold, snapshots_dir, format: output_format } => {
+            cmd_trend_regressions(threshold, snapshots_dir, output_format, verbose)
+        }
+    }
+}
+
+fn cmd_trend_show(
+    output_format: String,
+    output: Option<PathBuf>,
+    snapshots_dir: Option<PathBuf>,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let snapshots_dir = snapshots_dir.unwrap_or_else(|| PathBuf::from(".costpilot/snapshots"));
+    
+    if verbose {
+        eprintln!("📊 Generating cost trend report");
+        eprintln!("  Format: {}", output_format);
+        eprintln!("  Snapshots: {:?}", snapshots_dir);
+        if let Some(ref output_path) = output {
+            eprintln!("  Output: {:?}", output_path);
+        }
+    }
+
+    // Create trend engine
+    let edition = costpilot::edition::EditionContext::new();
+    let trend_engine = costpilot::engines::trend::TrendEngine::new(&snapshots_dir, &edition)?;
+
+    match output_format.as_str() {
+        "json" => {
+            let history = trend_engine.load_history()?;
+            let json = serde_json::to_string_pretty(&history)?;
+            println!("{}", json);
+        }
+        "html" => {
+            let output_path = output.unwrap_or_else(|| PathBuf::from("trend_report.html"));
+            trend_engine.generate_html(&output_path, "CostPilot Trend Report")?;
+            println!("📊 HTML trend report generated: {:?}", output_path);
+        }
+        "svg" => {
+            let svg = trend_engine.generate_svg()?;
+            if let Some(output_path) = output {
+                std::fs::write(&output_path, &svg)?;
+                println!("📊 SVG trend graph generated: {:?}", output_path);
+            } else {
+                println!("{}", svg);
+            }
+        }
+        _ => {
+            let history = trend_engine.load_history()?;
+            println!("{}", "📊 Cost Trend History".bold().cyan());
+            println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+            
+            if history.snapshots.is_empty() {
+                println!("No snapshots found. Create some snapshots first:");
+                println!("  costpilot trend snapshot --plan tfplan.json");
+                return Ok(());
+            }
+
+            println!("Found {} snapshots:", history.snapshots.len());
+            for snapshot in &history.snapshots {
+                println!("  {}: ${:.2} ({})", 
+                    snapshot.id,
+                    snapshot.total_monthly_cost,
+                    snapshot.timestamp
+                );
+            }
+            
+            if history.snapshots.len() >= 2 {
+                let latest = &history.snapshots[history.snapshots.len() - 1];
+                let previous = &history.snapshots[history.snapshots.len() - 2];
+                let change = latest.total_monthly_cost - previous.total_monthly_cost;
+                let percent = if previous.total_monthly_cost > 0.0 {
+                    (change / previous.total_monthly_cost) * 100.0
+                } else {
+                    0.0
+                };
+                
+                println!("\nLatest change: {} ${:.2} ({:.1}%)", 
+                    if change >= 0.0 { "↗️ +".green() } else { "↘️ ".red() },
+                    change.abs(),
+                    percent
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn cmd_trend_snapshot(
+    plan: PathBuf,
+    commit: Option<String>,
+    branch: Option<String>,
+    snapshots_dir: Option<PathBuf>,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let snapshots_dir = snapshots_dir.unwrap_or_else(|| PathBuf::from(".costpilot/snapshots"));
+    
+    if verbose {
+        eprintln!("📸 Creating cost snapshot");
+        eprintln!("  Plan: {:?}", plan);
+        eprintln!("  Snapshots dir: {:?}", snapshots_dir);
+        if let Some(ref commit_hash) = commit {
+            eprintln!("  Commit: {}", commit_hash);
+        }
+        if let Some(ref branch_name) = branch {
+            eprintln!("  Branch: {}", branch_name);
+        }
+    }
+
+    // Load and parse the Terraform plan
+    let detection_engine = costpilot::engines::detection::DetectionEngine::new();
+    let changes = detection_engine.detect_from_terraform_plan(&plan)?;
+    
+    if changes.is_empty() {
+        println!("No resource changes detected in plan");
+        return Ok(());
+    }
+
+    // Create cost estimates
+    let edition = costpilot::edition::EditionContext::new();
+    let estimates = costpilot::engines::prediction::PredictionEngine::predict_static(&changes)?;
+
+    // Create trend engine and snapshot
+    let trend_engine = costpilot::engines::trend::TrendEngine::new(&snapshots_dir, &edition)?;
+    let snapshot = trend_engine.create_snapshot(estimates, commit, branch)?;
+    
+    // Save snapshot
+    let snapshot_path = trend_engine.save_snapshot(&snapshot)?;
+    
+    // Calculate total resource count
+    let resource_count: usize = snapshot.modules.values().map(|m| m.resource_count).sum();
+    
+    println!("✅ Snapshot created: {} (${:.2}/month, {} resources)", 
+        snapshot.id,
+        snapshot.total_monthly_cost,
+        resource_count
+    );
+    
+    if verbose {
+        println!("  Saved to: {:?}", snapshot_path);
+    }
+
+    Ok(())
+}
+
+fn cmd_trend_regressions(
+    threshold: f64,
+    snapshots_dir: Option<PathBuf>,
+    output_format: String,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let snapshots_dir = snapshots_dir.unwrap_or_else(|| PathBuf::from(".costpilot/snapshots"));
+    
+    if verbose {
+        eprintln!("🔍 Detecting cost regressions");
+        eprintln!("  Threshold: {:.1}%", threshold);
+        eprintln!("  Snapshots dir: {:?}", snapshots_dir);
+    }
+
+    // Create trend engine
+    let edition = costpilot::edition::EditionContext::new();
+    let trend_engine = costpilot::engines::trend::TrendEngine::new(&snapshots_dir, &edition)?;
+    
+    // Load history
+    let history = trend_engine.load_history()?;
+    
+    if history.snapshots.len() < 2 {
+        println!("Need at least 2 snapshots to detect regressions. Currently have {}.", history.snapshots.len());
+        return Ok(());
+    }
+
+    // Use the most recent snapshot as current, second most recent as baseline
+    let current = &history.snapshots[history.snapshots.len() - 1];
+    let baseline = &history.snapshots[history.snapshots.len() - 2];
+    
+    let regressions = trend_engine.detect_regressions(current, baseline, threshold);
+    
+    match output_format.as_str() {
+        "json" => {
+            let json = serde_json::to_string_pretty(&regressions)?;
+            println!("{}", json);
+        }
+        _ => {
+            if regressions.is_empty() {
+                println!("✅ No cost regressions detected (threshold: {:.1}%)", threshold);
+            } else {
+                println!("⚠️  {} cost regression(s) detected:", regressions.len());
+                for regression in &regressions {
+                    println!("  {} {}: {:?} ${:.2} increase", 
+                        "↗️".red(),
+                        regression.affected,
+                        regression.regression_type,
+                        regression.baseline_cost
+                    );
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn cmd_anomaly(
     plan: PathBuf,
     baseline: Option<PathBuf>,
@@ -1032,6 +1384,110 @@ fn cmd_autofix_snippet(
     match format {
         "json" => println!("{{\"snippets\": []}}"),
         _ => println!("Autofix snippet generation not yet implemented"),
+    }
+
+    Ok(())
+}
+
+fn cmd_autofix_drift_safe(
+    plan: PathBuf,
+    output: Option<PathBuf>,
+    _format: &str,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Load edition context
+    let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
+        costpilot::edition::EditionContext::free()
+    });
+
+    // Require Premium for drift-safe autofix
+    costpilot::edition::require_premium(&edition, "Drift-safe autofix")
+        .map_err(|e| format!("Drift-safe autofix requires premium license: {}", e))?;
+
+    println!(
+        "{}",
+        "🔧 CostPilot Autofix - Drift-Safe Mode (Beta)".bold().cyan()
+    );
+    println!();
+
+    // Load and parse plan
+    println!("{}", "Loading Terraform plan...".dimmed());
+    let plan_content = std::fs::read_to_string(&plan)?;
+    let plan_json: serde_json::Value = serde_json::from_str(&plan_content)?;
+
+    // Extract resource changes
+    let changes = costpilot::cli::utils::extract_resource_changes(&plan_json)?;
+    println!("   Found {} resource changes", changes.len());
+    println!();
+
+    // Detect cost regressions
+    println!("{}", "Detecting cost regressions...".dimmed());
+    let detection_engine = costpilot::engines::detection::DetectionEngine::new();
+    let detections = detection_engine.detect(&changes)?;
+
+    if detections.is_empty() {
+        println!("   {} No cost issues detected", "✓".green());
+        return Ok(());
+    }
+
+    println!("   Found {} cost issues", detections.len());
+    println!();
+
+    // Generate predictions for cost estimates
+    println!("{}", "Estimating costs...".dimmed());
+    let mut prediction_engine = costpilot::engines::prediction::PredictionEngine::new_with_edition(&edition)?;
+    let cost_estimates = prediction_engine.predict(&changes)?;
+    println!("   Generated {} cost estimates", cost_estimates.len());
+    println!();
+
+    // Generate drift-safe fixes
+    println!("{}", "Generating drift-safe rollback patches...".dimmed());
+    let autofix_result = costpilot::engines::autofix::AutofixEngine::generate_fixes(
+        &detections,
+        &changes,
+        &cost_estimates,
+        costpilot::engines::autofix::AutofixMode::DriftSafe,
+        &edition,
+    )?;
+
+    // Display results
+    if autofix_result.patches.is_empty() {
+        println!("   {} No drift-safe patches generated", "✓".green());
+    } else {
+        println!("   Generated {} drift-safe patches", autofix_result.patches.len());
+    }
+
+    // Show warnings
+    for warning in &autofix_result.warnings {
+        println!("   {} {}", "⚠️".yellow(), warning);
+    }
+
+    // Output patches
+    if !autofix_result.patches.is_empty() {
+        println!();
+        println!("{}", "Drift-Safe Patches:".bold());
+
+        for patch in &autofix_result.patches {
+            println!("  📄 {}", patch.filename.bold());
+            println!("     Resource: {} ({})", patch.resource_id, patch.resource_type);
+            println!("     Changes: {} hunks", patch.hunks.len());
+
+            if verbose {
+                println!("     Metadata:");
+                println!("       Cost before: ${:.2}", patch.metadata.cost_before);
+                println!("       Monthly savings: ${:.2}", patch.metadata.monthly_savings);
+                println!("       Confidence: {:.1}%", patch.metadata.confidence * 100.0);
+                println!("       Rationale: {}", patch.metadata.rationale);
+            }
+        }
+
+        // Save to file if requested
+        if let Some(output_path) = output {
+            let json = serde_json::to_string_pretty(&autofix_result.patches)?;
+            std::fs::write(&output_path, json)?;
+            println!();
+            println!("💾 Patches saved to: {}", output_path.display());
+        }
     }
 
     Ok(())

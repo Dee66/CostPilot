@@ -126,8 +126,6 @@ fn test_resource_change_path_handling() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     assert_eq!(unix_change.resource_type, "aws_instance");
@@ -148,8 +146,6 @@ fn test_resource_change_path_handling() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     assert!(windows_change.module_path.as_ref().unwrap().contains('\\'));
@@ -186,8 +182,6 @@ fn test_prediction_engine_environment_consistency() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let result1 = engine.predict_resource_cost(&change);

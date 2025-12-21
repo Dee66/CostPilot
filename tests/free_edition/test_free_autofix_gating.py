@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-import os
-COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: autofix command not present."""
 
 import subprocess
 import tempfile
 from pathlib import Path
 import json
+import os
+
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'target', 'debug', 'costpilot')
 
 
 def test_autofix_command_not_present():
@@ -15,7 +16,8 @@ def test_autofix_command_not_present():
         [COSTPILOT_PATH, "autofix-patch", "--help"],
         capture_output=True,
         text=True,
-        timeout=10
+        timeout=10,
+        check=False
     )
 
     # Should fail - autofix not available in Free
@@ -43,14 +45,15 @@ def test_autofix_with_template_rejected():
             }
         }
 
-        with open(template_path, 'w') as f:
+        with open(template_path, 'w', encoding='utf-8') as f:
             json.dump(template_content, f)
 
         result = subprocess.run(
             [COSTPILOT_PATH, "autofix", "--plan", str(template_path)],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail
@@ -63,7 +66,8 @@ def test_autofix_not_in_help():
         [COSTPILOT_PATH, "--help"],
         capture_output=True,
         text=True,
-        timeout=10
+        timeout=10,
+        check=False
     )
 
     # autofix should not appear in help
@@ -83,7 +87,8 @@ def test_autofix_subcommand_rejected():
             cmd,
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail
@@ -106,14 +111,15 @@ def test_autofix_with_apply_rejected():
             }
         }
 
-        with open(template_path, 'w') as f:
+        with open(template_path, 'w', encoding='utf-8') as f:
             json.dump(template_content, f)
 
         result = subprocess.run(
             [COSTPILOT_PATH, "autofix", "--plan", str(template_path), "--apply"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail

@@ -49,10 +49,10 @@ zero_cost_policy:
 
 overview:
   description:
-    short: "GitHub-native, zero-IAM FinOps engine for Terraform & CDK."
+    short: "GitHub-native, zero-IAM FinOps engine for Terraform."
     long: >
       CostPilot is a zero-permission, GitHub-native FinOps engine that analyzes
-      Terraform, CDK, and CloudFormation IaC to detect cost regressions, estimate
+      Terraform IaC to detect cost regressions, estimate
       AWS spend, generate autofix patches and snippets, enforce cost SLOs and
       policies, and visualize resource impact via static dependency graphs.
       It runs locally, uses WASM sandboxing, deterministic heuristics, and
@@ -401,11 +401,6 @@ pricing:
       limits:
         - "Single user."
         - "Snippet autofix mode."
-    - name: "solo_lifetime"
-      price: 199
-      limits:
-        - "One-time license."
-        - "Same features as solo monthly."
     - name: "pro"
       price: 99
       limits:

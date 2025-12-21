@@ -49,6 +49,10 @@ pub struct MapCommand {
     /// Show verbose output
     #[arg(short, long)]
     verbose: bool,
+
+    /// Analyze cross-service cost impacts
+    #[arg(long)]
+    cost_impacts: bool,
 }
 
 pub fn execute_map_command(
@@ -233,6 +237,63 @@ pub fn execute_map_command(
         println!("    Modules: {}", module_count);
     }
 
+    // Show cost impact analysis if requested
+    if cmd.cost_impacts {
+        println!();
+        println!("{}", "Cost Impact Analysis:".bold());
+        
+        let impacts = engine.detect_cost_impacts(&graph);
+        
+        if impacts.is_empty() {
+            println!("  No significant cost impacts detected");
+        } else {
+            for impact in &impacts {
+                let severity_icon = match impact.severity {
+                    crate::engines::mapping::ImpactSeverity::High => "🔴",
+                    crate::engines::mapping::ImpactSeverity::Medium => "🟡", 
+                    crate::engines::mapping::ImpactSeverity::Low => "🟢",
+                };
+                
+                println!("  {} {} (${:.2}/mo) - {} affected resources",
+                    severity_icon,
+                    impact.source_label,
+                    impact.source_cost,
+                    impact.affected_resources
+                );
+                
+                if cmd.verbose {
+                    println!("    {}", impact.description);
+                }
+            }
+        }
+
+        // Show cost propagation if verbose
+        if cmd.verbose {
+            println!();
+            println!("{}", "Cost Propagation:".bold());
+            
+            let propagations = engine.cost_propagation_report(&graph);
+            
+            if propagations.is_empty() {
+                println!("  No cost propagation detected");
+            } else {
+                for prop in propagations.iter().take(5) { // Show top 5
+                    println!("  {}: ${:.2} direct + ${:.2} downstream = ${:.2} total ({:.1}x)",
+                        prop.resource_label,
+                        prop.direct_cost,
+                        prop.downstream_cost,
+                        prop.total_propagated_cost,
+                        prop.propagation_factor
+                    );
+                }
+                
+                if propagations.len() > 5 {
+                    println!("  ... and {} more", propagations.len() - 5);
+                }
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -327,6 +388,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: false,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -353,6 +415,7 @@ mod tests {
             hide_costs: true,
             no_modules: false,
             verbose: false,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -379,6 +442,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: false,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -405,6 +469,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: false,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -431,6 +496,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: false,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -456,6 +522,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: false,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -483,6 +550,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: false,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -510,6 +578,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: true,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -536,6 +605,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: false,
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -562,6 +632,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: true, // This should trigger graphviz tips
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();
@@ -588,6 +659,7 @@ mod tests {
             hide_costs: false,
             no_modules: false,
             verbose: true, // This should trigger json tips
+            cost_impacts: false,
         };
 
         let edition = create_test_edition();

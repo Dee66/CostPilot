@@ -26,8 +26,6 @@ fn test_cost_deltas_sum_correctly_across_resources() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
         ResourceChange {
             resource_id: "aws_instance.web2".to_string(),
@@ -43,8 +41,6 @@ fn test_cost_deltas_sum_correctly_across_resources() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
         ResourceChange {
             resource_id: "aws_lambda_function.api".to_string(),
@@ -61,8 +57,6 @@ fn test_cost_deltas_sum_correctly_across_resources() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
     ];
 
@@ -123,8 +117,6 @@ fn test_single_resource_pr_produces_identical_leaf_and_aggregate_values() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
     ];
 
@@ -160,8 +152,6 @@ fn test_aggregates_equal_sum_of_components() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
         ResourceChange {
             resource_id: "aws_instance.test2".to_string(),
@@ -176,8 +166,6 @@ fn test_aggregates_equal_sum_of_components() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
         ResourceChange {
             resource_id: "aws_lambda_function.func".to_string(),
@@ -193,8 +181,6 @@ fn test_aggregates_equal_sum_of_components() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
     ];
 
@@ -235,8 +221,6 @@ fn test_no_negative_costs_unless_explicitly_justified() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
         ResourceChange {
             resource_id: "aws_lambda_function.example".to_string(),
@@ -251,8 +235,6 @@ fn test_no_negative_costs_unless_explicitly_justified() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
     ];
 
@@ -286,8 +268,6 @@ fn test_percentages_normalize_to_exactly_100_percent() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let explanation = engine.explain(&change).unwrap();
@@ -324,8 +304,6 @@ fn test_zero_cost_resources_handled_explicitly() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let estimates = engine.predict(&vec![change.clone()]).unwrap();

@@ -10,6 +10,7 @@ use aes_gcm::{
     aead::{Aead, KeyInit},
     Aes256Gcm, Nonce as AesNonce,
 };
+use base64::{Engine as _, engine::general_purpose};
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use hkdf::SimpleHkdf;
 use sha2::Sha256;
@@ -87,7 +88,7 @@ fn extract_ed25519_pubkey_from_pem(pem: &str) -> Option<[u8; 32]> {
     }
 
     // Decode base64
-    let der = base64::decode(&base64_data).ok()?;
+    let der = general_purpose::STANDARD.decode(&base64_data).ok()?;
 
     // Ed25519 public key in SubjectPublicKeyInfo DER:
     // Last 32 bytes are the raw public key

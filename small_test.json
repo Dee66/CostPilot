@@ -1,0 +1,32 @@
+{
+  "format_version": "1.1",
+  "terraform_version": "1.0.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {"address": "test1","values": {"instance_type": "t2.micro"}},
+        {"address": "test2","values": {"instance_type": "t2.micro"}}
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "test1",
+      "type": "aws_instance",
+      "name": "test1",
+      "change": {
+        "actions": ["create"],
+        "after": {"instance_type": "t2.micro"}
+      }
+    },
+    {
+      "address": "test2", 
+      "type": "aws_instance",
+      "name": "test2",
+      "change": {
+        "actions": ["create"],
+        "after": {"instance_type": "t2.micro"}
+      }
+    }
+  ]
+}

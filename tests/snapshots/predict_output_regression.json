@@ -1,11 +1,11 @@
 [
   {
-    "cold_start_inference": true,
-    "confidence_score": 0.0,
-    "heuristic_reference": "free_static",
+    "cold_start_inference": false,
+    "confidence_score": 0.95,
+    "heuristic_reference": "v1.0.0-minimal",
     "monthly_cost": 150.0,
-    "prediction_interval_high": 0.0,
-    "prediction_interval_low": 0.0,
+    "prediction_interval_high": 195.0,
+    "prediction_interval_low": 105.0,
     "resource_id": "test-aws-instance-regression-1"
   }
 ]

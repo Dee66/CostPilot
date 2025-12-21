@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-import os
-COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: patch command not present."""
 
 import subprocess
 import tempfile
 from pathlib import Path
 import json
+import os
+
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'target', 'debug', 'costpilot')
 
 
 def test_patch_command_not_present():
@@ -15,7 +16,8 @@ def test_patch_command_not_present():
         [COSTPILOT_PATH, "autofix-patch", "--help"],
         capture_output=True,
         text=True,
-        timeout=10
+        timeout=10,
+        check=False
     )
 
     # Should fail - patch not available in Free
@@ -56,17 +58,18 @@ def test_patch_with_template_rejected():
             ]
         }
 
-        with open(template_path, 'w') as f:
+        with open(template_path, 'w', encoding='utf-8') as f:
             json.dump(template_content, f)
 
-        with open(policy_path, 'w') as f:
+        with open(policy_path, 'w', encoding='utf-8') as f:
             json.dump(policy_content, f)
 
         result = subprocess.run(
             [COSTPILOT_PATH, "autofix-patch", "--plan", str(template_path), "--policy", str(policy_path)],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail
@@ -79,7 +82,8 @@ def test_patch_not_in_help():
         [COSTPILOT_PATH, "--help"],
         capture_output=True,
         text=True,
-        timeout=10
+        timeout=10,
+        check=False
     )
 
     # patch should not appear in help (unless as part of another word)
@@ -102,7 +106,8 @@ def test_patch_subcommand_rejected():
             cmd,
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail
@@ -126,14 +131,15 @@ def test_patch_with_output_rejected():
             }
         }
 
-        with open(template_path, 'w') as f:
+        with open(template_path, 'w', encoding='utf-8') as f:
             json.dump(template_content, f)
 
         result = subprocess.run(
             [COSTPILOT_PATH, "autofix-patch", "--plan", str(template_path), "--output", str(output_path)],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
 
         # Should fail

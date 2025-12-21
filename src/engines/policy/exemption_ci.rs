@@ -1,7 +1,6 @@
 // CI integration for exemption validation
 
 use std::process;
-use chrono::Utc;
 
 use super::exemption_types::{ExemptionStatus, ExemptionsFile};
 use super::exemption_validator::ExemptionValidator;
@@ -152,6 +151,7 @@ pub fn validate_and_exit_ci(exemptions_file: &ExemptionsFile) -> ! {
 mod tests {
     use super::*;
     use crate::engines::policy::exemption_types::PolicyExemption;
+    use chrono::Utc;
 
     fn create_test_exemption(id: &str, expires_at: &str) -> PolicyExemption {
         // For expired exemptions (dates in 2024), use a created_at a few months before expiry

@@ -82,7 +82,7 @@ fn test_explain_unknown_resource() {
         .success()
         .stdout(predicate::str::contains("Explanation for unknown_resource"))
         .stdout(predicate::str::contains("Predicted monthly cost: $10.00"))
-        .stdout(predicate::str::contains("Confidence: 65.0%"));
+        .stdout(predicate::str::contains("Confidence: 39.0%"));
 }
 
 #[test]

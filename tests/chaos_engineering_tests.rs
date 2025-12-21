@@ -190,6 +190,8 @@ mod chaos_engineering_tests {
 
     #[test]
     fn test_resource_exhaustion_simulation() {
+        use std::time::Instant;
+
         let engine = DetectionEngine::new();
 
         // Test with many small resources to simulate resource exhaustion
@@ -201,12 +203,31 @@ mod chaos_engineering_tests {
         }
         many_resources.push_str(r#"]}}}"#);
 
+        println!("Testing 1000 resources, plan size: {} bytes", many_resources.len());
+        let start = Instant::now();
         let result = engine.detect_from_terraform_json(&many_resources);
+        let duration = start.elapsed();
+
+        println!("Processing time: {:?}", duration);
 
         // Should handle many resources without crashing
         match result {
             Ok(resources) => {
                 assert_eq!(resources.len(), 1000, "Should process all 1000 resources");
+                println!("✅ Successfully processed {} resources in {:?}", resources.len(), duration);
+                println!("  Average time per resource: {:?}", duration / resources.len() as u32);
+
+                // Extrapolate to realistic file sizes (not 300MB)
+                // Based on real-world Terraform plans: 1MB = ~10,000 resources
+                let bytes_per_resource = many_resources.len() as f64 / 1000.0;
+                let estimated_resources_1mb = (1.0 * 1024.0 * 1024.0) / bytes_per_resource;
+                let estimated_time_1mb = duration.mul_f64(estimated_resources_1mb / 1000.0);
+
+                println!("\n📊 Extrapolation for realistic file sizes:");
+                println!("  1MB file (~10k resources): {:.0} resources, estimated time: {:?}",
+                    estimated_resources_1mb, estimated_time_1mb);
+                println!("  Bytes per resource: {:.1}", bytes_per_resource);
+
                 // Verify they're all valid
                 for (i, resource) in resources.iter().enumerate() {
                     assert_eq!(resource.resource_id, format!("test{}", i),

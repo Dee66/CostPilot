@@ -19,7 +19,6 @@ GATES_DIR="$SCRIPT_DIR/e2e_coverage/quality_gates"
 # Create directories
 mkdir -p "$REPORTS_DIR" "$GATES_DIR"
 
-# Coverage targets (Netflix/Google standards)
 USER_WORKFLOWS_TARGET=100.0
 FAILURE_SCENARIOS_TARGET=100.0
 PLATFORM_MATRIX_TARGET=100.0

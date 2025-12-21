@@ -919,7 +919,7 @@ costpilot_test_strategy:
       security_streaming: continuous_vulnerability_assessment
 
   competitive_advantage:
-    purpose: establish_unmatched_testing_superiority_over_netflix_google_and_others
+    purpose: establish_unmatched_testing
     beyond_netflix:
       chaos_mastery: "netflix_chaos_monkey_plus_ai_predictive_chaos"
       streaming_excellence: "real_time_testing_plus_predictive_streaming"

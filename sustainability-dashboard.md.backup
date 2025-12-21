@@ -1,33 +1,35 @@
 # CostPilot Sustainability and Ethics Dashboard
 
-Generated: Sat 20 Dec 2025 14:01:43 SAST
+<!-- PREMIUM_BANNER -->
+
+Generated: Sat 20 Dec 2025 14:02:12 SAST
 
 ## Sustainability Overview
 - **Last Sustainability Test**: <!-- LAST_SUSTAINABILITY_TEST -->
-- **Overall Sustainability Score**: <!-- SUSTAINABILITY_SCORE -->%
+- **Overall Sustainability Score**: 712.8%
 - **Environmental Impact Rating**: <!-- ENVIRONMENTAL_IMPACT -->
 - **Ethical Compliance Rating**: <!-- ETHICAL_COMPLIANCE -->
-- **Social Responsibility Score**: <!-- SOCIAL_RESPONSIBILITY -->
+- **Social Responsibility Score**: 0.800
 
 ## Carbon Footprint Metrics
 
 ### Carbon Emissions Tracking
-- **Total CO2 Emissions (Last 30 Days)**: <!-- TOTAL_CO2_EMISSIONS --> grams
-- **Average CO2 per Operation**: <!-- AVG_CO2_PER_OPERATION --> grams
-- **Carbon Efficiency Rating**: <!-- CARBON_EFFICIENCY_RATING -->
+- **Total CO2 Emissions (Last 30 Days)**: 0.7020000000000001 grams
+- **Average CO2 per Operation**: 0.07020000000000001 grams
+- **Carbon Efficiency Rating**: 35.714
 - **Emissions Trend**: <!-- CO2_EMISSIONS_TREND -->
 
 ### Energy Usage Analysis
 - **Total Energy Consumed**: <!-- TOTAL_ENERGY_CONSUMED --> kWh
 - **Energy per Operation**: <!-- ENERGY_PER_OPERATION --> Wh
 - **Peak Energy Usage**: <!-- PEAK_ENERGY_USAGE --> W
-- **Energy Efficiency Score**: <!-- ENERGY_EFFICIENCY_SCORE -->
+- **Energy Efficiency Score**: 2.219
 
 ## Energy Efficiency Results
 
 ### Algorithm Performance
-- **Baseline Algorithm Energy**: <!-- BASELINE_ENERGY --> J
-- **Optimized Algorithm Energy**: <!-- OPTIMIZED_ENERGY --> J
+- **Baseline Algorithm Energy**: 834 J
+- **Optimized Algorithm Energy**: 426 J
 - **Hardware Accelerated Energy**: <!-- HW_ACCEL_ENERGY --> J
 - **Efficiency Improvement**: <!-- EFFICIENCY_IMPROVEMENT -->%
 
@@ -48,7 +50,7 @@ Generated: Sat 20 Dec 2025 14:01:43 SAST
 - **Middle East Bias Score**: <!-- ME_BIAS_SCORE -->
 
 ### Fairness Metrics
-- **Overall Fairness Score**: <!-- OVERALL_FAIRNESS_SCORE -->
+- **Overall Fairness Score**: -3.9385138333333327
 - **Maximum Bias Detected**: <!-- MAX_BIAS_DETECTED -->
 - **Disparity Index**: <!-- DISPARITY_INDEX -->
 - **Fairness Threshold Compliance**: <!-- FAIRNESS_COMPLIANCE -->
@@ -56,10 +58,10 @@ Generated: Sat 20 Dec 2025 14:01:43 SAST
 ## Transparency Validation
 
 ### Explainability Metrics
-- **Cost Prediction Explainability**: <!-- EXPLAINABILITY_SCORE -->%
+- **Cost Prediction Explainability**: 0.85%
 - **Decision Traceability**: <!-- TRACEABILITY_SCORE -->%
 - **Audit Trail Completeness**: <!-- AUDIT_COMPLETENESS -->%
-- **Transparency Depth**: <!-- TRANSPARENCY_DEPTH -->
+- **Transparency Depth**: 0.850
 
 ### Audit Trail Analysis
 - **Total Audit Events**: <!-- TOTAL_AUDIT_EVENTS -->
@@ -70,7 +72,7 @@ Generated: Sat 20 Dec 2025 14:01:43 SAST
 ## Social Impact Assessment
 
 ### Community Engagement
-- **Community Engagement Score**: <!-- COMMUNITY_ENGAGEMENT -->%
+- **Community Engagement Score**: 0.75%
 - **User Feedback Incorporation**: <!-- USER_FEEDBACK_INCORPORATION -->%
 - **Open Source Contributions**: <!-- OPEN_SOURCE_CONTRIBUTIONS -->
 - **Community Growth Rate**: <!-- COMMUNITY_GROWTH -->
@@ -123,7 +125,25 @@ Generated: Sat 20 Dec 2025 14:01:43 SAST
 
 ---
 
-*Dashboard automatically updated by CI/CD pipeline. Last updated: Sat 20 Dec 2025 14:01:43 SAST
+*Dashboard automatically updated by CI/CD pipeline. Last updated: Sat 20 Dec 2025 14:02:12 SAST
+### Carbon Emissions Trend (Last 12 Weeks)
+```
+Week:  1  2  3  4  5  6  7  8  9 10 11 12
+CO2:   ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁▂▃▄▅▆▇█▇▆
+```
+
+### Energy Efficiency Trend (Last 12 Weeks)
+```
+Week:  1  2  3  4  5  6  7  8  9 10 11 12
+Eff:   ▁▂▃▄▅▆▇███▇▆▅▄▃▂▁▂▃▄▅▆▇
+```
+
+### Fairness Scores Trend (Last 12 Weeks)
+```
+Week:  1  2  3  4  5  6  7  8  9 10 11 12
+Fair:  ▂▃▄▅▆▇███▇▆▅▄▃▂▁▂▃▄▅▆▇█
+```
+
 ### Carbon Emissions Trend (Last 12 Weeks)
 ```
 Week:  1  2  3  4  5  6  7  8  9 10 11 12

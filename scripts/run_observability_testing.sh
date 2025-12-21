@@ -1,6 +1,5 @@
 #!/bin/bash
 # CostPilot Observability and Monitoring Testing Suite
-# Implements Netflix/Google-grade observability testing surpassing industry standards
 
 set -euo pipefail
 

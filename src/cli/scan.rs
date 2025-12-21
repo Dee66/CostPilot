@@ -7,11 +7,15 @@ use clap::Args;
 use colored::Colorize;
 use std::path::PathBuf;
 
-/// Scan Terraform plan for cost issues
+/// Scan infrastructure changes for cost issues
 #[derive(Debug, Args)]
 pub struct ScanCommand {
-    /// Path to Terraform plan JSON file
+    /// Path to infrastructure change file (Terraform plan, CloudFormation changeset, CDK diff)
     plan: PathBuf,
+
+    /// Infrastructure format: terraform, cloudformation, cdk
+    #[arg(short, long, default_value = "terraform")]
+    format: String,
 
     /// Enable detailed explanations
     #[arg(short, long)]
@@ -32,6 +36,10 @@ pub struct ScanCommand {
     /// Show autofix snippets
     #[arg(long)]
     autofix: bool,
+
+    /// Stack name for CDK synthesized templates (required for CDK format)
+    #[arg(long)]
+    stack: Option<String>,
 }
 
 #[derive(Debug, Clone, clap::ValueEnum)]
@@ -51,17 +59,43 @@ impl ScanCommand {
         &self,
         edition: &crate::edition::EditionContext,
     ) -> Result<(), CostPilotError> {
-        // Validate plan file exists
+        // Validate input file exists
         if !self.plan.exists() {
+            let hint = match self.format.as_str() {
+                "terraform" => "Run 'terraform plan -out=tfplan && terraform show -json tfplan > tfplan.json'",
+                "cloudformation" => "Create a CloudFormation changeset and export it as JSON",
+                "cdk" => "Run 'cdk diff --json' and save the output",
+                _ => "Ensure the input file exists and is readable",
+            };
             return Err(CostPilotError::new(
                 "SCAN_001",
                 crate::errors::ErrorCategory::FileSystemError,
-                format!("Terraform plan file not found: {}", self.plan.display()),
+                format!("{} file not found: {}", self.format, self.plan.display()),
             )
-            .with_hint(
-                "Run 'terraform plan -out=tfplan && terraform show -json tfplan > tfplan.json'"
-                    .to_string(),
-            ));
+            .with_hint(hint.to_string()));
+        }
+
+        // Validate format-specific requirements
+        match self.format.as_str() {
+            "terraform" | "cloudformation" | "cdk" => {}
+            _ => {
+                return Err(CostPilotError::new(
+                    "SCAN_003",
+                    crate::errors::ErrorCategory::ValidationError,
+                    format!("Unsupported format: {}", self.format),
+                )
+                .with_hint("Supported formats: terraform, cloudformation, cdk".to_string()));
+            }
+        }
+
+        // For CDK format, stack name is required
+        if self.format == "cdk" && self.stack.is_none() {
+            return Err(CostPilotError::new(
+                "SCAN_004",
+                crate::errors::ErrorCategory::ValidationError,
+                "Stack name is required for CDK format".to_string(),
+            )
+            .with_hint("Use --stack <name> to specify the CDK stack name".to_string()));
         }
 
         println!("{}", "🔍 CostPilot Scan".bold().cyan());
@@ -70,7 +104,22 @@ impl ScanCommand {
         // Step 1: Detection
         println!("{}", "📊 Step 1: Detection".bold());
         let detection_engine = DetectionEngine::new();
-        let changes = detection_engine.detect_from_terraform_plan(&self.plan)?;
+        let changes = match self.format.as_str() {
+            "terraform" => {
+                println!("   Format: Terraform plan");
+                detection_engine.detect_from_terraform_plan(&self.plan)?
+            }
+            "cloudformation" => {
+                println!("   Format: CloudFormation changeset");
+                detection_engine.detect_from_cloudformation_changeset(&self.plan)?
+            }
+            "cdk" => {
+                let stack_name = self.stack.as_ref().unwrap();
+                println!("   Format: CDK diff (stack: {})", stack_name);
+                detection_engine.detect_from_cdk_diff(&self.plan)?
+            }
+            _ => unreachable!(),
+        };
         println!("   Found {} resource changes\n", changes.len());
 
         if changes.is_empty() {
@@ -117,6 +166,21 @@ impl ScanCommand {
         println!("   ({} resources analyzed)\n", estimates.len());
 
         // Step 3: Policy Evaluation (if policy file provided)
+        // Convert TotalCost to CostEstimate for policy/SLO evaluation
+        let total_cost_estimate = CostEstimate {
+            resource_id: "total".to_string(),
+            monthly_cost: total_monthly,
+            prediction_interval_low: 0.0,
+            prediction_interval_high: 0.0,
+            confidence_score: 0.0,
+            heuristic_reference: None,
+            cold_start_inference: false,
+            one_time: None,
+            breakdown: None,
+            hourly: None,
+            daily: None,
+        };
+
         if let Some(policy_path) = &self.policy {
             println!("{}", "📋 Step 3: Policy Evaluation".bold());
             let policy_config = PolicyLoader::load_from_file(policy_path)?;
@@ -163,25 +227,6 @@ impl ScanCommand {
             };
 
             // Convert TotalCost to CostEstimate for policy evaluation
-            let total_cost_estimate = CostEstimate {
-                resource_id: "total".to_string(),
-                monthly_cost: total_monthly,
-                prediction_interval_low: 0.0,
-                prediction_interval_high: 0.0,
-                confidence_score: 0.0,
-                heuristic_reference: None,
-                cold_start_inference: false,
-                monthly: None,
-                yearly: None,
-                one_time: None,
-                breakdown: None,
-                estimate: None,
-                lower: None,
-                upper: None,
-                confidence: None,
-                hourly: None,
-                daily: None,
-            };
 
             let mut policy_result = policy_engine.evaluate(&changes, &total_cost_estimate);
 
@@ -261,9 +306,34 @@ impl ScanCommand {
             println!();
         }
 
-        // Step 4: Explanation (if requested)
+        // Step 4: SLO Evaluation (if SLO config exists)
+        let slo_config_path = std::path::PathBuf::from(".costpilot/slo.json");
+        if slo_config_path.exists() {
+            println!("{}", "📏 Step 4: SLO Evaluation".bold());
+            match self.evaluate_slos(&total_cost_estimate, &estimates, edition) {
+                Ok(slo_passed) => {
+                    if slo_passed {
+                        println!("   {} All SLOs passed", "✅".green());
+                    } else {
+                        println!("   {} SLO violations detected", "❌".red());
+                        // In premium edition, this would block deployment
+                        if edition.capabilities.allow_slo_enforce {
+                            println!("   {} Deployment blocked by SLO violation", "🚫".red());
+                        } else {
+                            println!("   {} Free edition: SLO violations logged only", "⚠️".yellow());
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("   {} SLO evaluation failed: {}", "❌".red(), e);
+                }
+            }
+            println!();
+        }
+
+        // Step 5: Explanation (if requested)
         if self.explain {
-            println!("{}", "💡 Step 4: Explanation".bold());
+            println!("{}", "💡 Step 5: Explanation".bold());
             let _explain_engine = crate::engines::explain::ExplainEngine::new();
             // TODO: Implement detect_anti_patterns
             let anti_patterns: Vec<String> = Vec::new();
@@ -277,7 +347,7 @@ impl ScanCommand {
 
         // Step 5: Autofix snippets (if requested)
         if self.autofix {
-            println!("{}", "🔧 Step 5: Autofix Snippets".bold());
+            println!("{}", "🔧 Step 6: Autofix Snippets".bold());
             let _autofix_engine = crate::engines::autofix::AutofixEngine::new();
             // TODO: generate_fixes requires 4 args: detections, changes, estimates, mode
             // Stub for now
@@ -312,14 +382,8 @@ impl ScanCommand {
                 confidence_score: 0.0,
                 heuristic_reference: None,
                 cold_start_inference: false,
-                monthly: None,
-                yearly: None,
                 one_time: None,
                 breakdown: None,
-                estimate: None,
-                lower: None,
-                upper: None,
-                confidence: None,
                 hourly: None,
                 daily: None,
             };
@@ -348,6 +412,60 @@ impl ScanCommand {
 
         println!();
         Ok(())
+    }
+
+    /// Evaluate SLOs against the current cost estimates
+    fn evaluate_slos(
+        &self,
+        total_cost: &CostEstimate,
+        estimates: &[CostEstimate],
+        edition: &crate::edition::EditionContext,
+    ) -> Result<bool, Box<dyn std::error::Error>> {
+        use crate::engines::slo::{SloEngine, SloDefinition};
+
+        // Load SLO config
+        let slo_config_path = std::path::PathBuf::from(".costpilot/slo.json");
+        let content = std::fs::read_to_string(&slo_config_path)?;
+        let config: crate::engines::slo::SloConfig = serde_json::from_str(&content)?;
+
+        // Convert to SloDefinitions for the engine
+        let definitions: Vec<SloDefinition> = config.slos.into_iter().map(|slo| {
+            SloDefinition {
+                id: slo.id,
+                name: slo.name,
+                description: slo.description,
+                slo_type: slo.slo_type,
+                target: slo.target,
+                threshold: slo.threshold.max_value,
+                enforcement: slo.enforcement,
+            }
+        }).collect();
+
+        // Create total cost structure
+        let total_cost_struct = crate::engines::shared::models::TotalCost {
+            monthly: total_cost.monthly_cost,
+            prediction_interval_low: total_cost.prediction_interval_low,
+            prediction_interval_high: total_cost.prediction_interval_high,
+            confidence_score: total_cost.confidence_score,
+            resource_count: estimates.len(),
+        };
+
+        // Create SLO engine and evaluate
+        let engine = SloEngine::new(definitions, edition);
+        let result = engine.check_slo(&total_cost_struct, estimates);
+
+        // Print evaluation details
+        for evaluation in &result.evaluations {
+            let icon = match evaluation.status {
+                crate::engines::slo::SloStatus::Pass => "✅",
+                crate::engines::slo::SloStatus::Warning => "⚠️",
+                crate::engines::slo::SloStatus::Violation => "❌",
+                crate::engines::slo::SloStatus::NoData => "❓",
+            };
+            println!("     {} {}: {}", icon, evaluation.slo_name, evaluation.message);
+        }
+
+        Ok(result.passed)
     }
 
     /// Format severity with color (utility for future output modes)
@@ -380,11 +498,13 @@ mod tests {
     fn test_scan_command_validation() {
         let cmd = ScanCommand {
             plan: PathBuf::from("nonexistent.json"),
+            format: "terraform".to_string(),
             explain: false,
             policy: None,
             exemptions: None,
             fail_on_critical: false,
             autofix: false,
+            stack: None,
         };
 
         let result = cmd.execute();

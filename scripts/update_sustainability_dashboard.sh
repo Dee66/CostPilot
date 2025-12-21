@@ -20,6 +20,43 @@ log_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
+# Check if premium license is valid
+check_license_status() {
+    local license_path="${COSTPILOT_LICENSE_PATH:-${HOME}/.costpilot/license.json}"
+
+    # Check if license file exists
+    if [[ ! -f "${license_path}" ]]; then
+        return 1
+    fi
+
+    # Validate JSON syntax
+    if ! jq empty "${license_path}" 2>/dev/null; then
+        return 1
+    fi
+
+    # Check required fields
+    local required_fields=("email" "license_key" "expires" "signature")
+    for field in "${required_fields[@]}"; do
+        if ! jq -e "has(\"${field}\") and .${field} != null and .${field} != \"\"" "${license_path}" >/dev/null; then
+            return 1
+        fi
+    done
+
+    # Check expiry
+    local expiry_iso
+    expiry_iso=$(jq -r '.expires' "${license_path}")
+    local expiry_epoch
+    local current_epoch
+    expiry_epoch=$(date -d "${expiry_iso}" +%s 2>/dev/null)
+    current_epoch=$(date +%s)
+
+    if [[ -z "$expiry_epoch" ]] || [[ "$expiry_epoch" -lt "$current_epoch" ]]; then
+        return 1
+    fi
+
+    return 0
+}
+
 # Update dashboard with latest results
 update_dashboard() {
     log_info "Updating sustainability dashboard..."
@@ -33,7 +70,35 @@ update_dashboard() {
     # Update test execution info
     sed -i "s/Last Sustainability Test: .*/Last Sustainability Test: $(date -Iseconds)/" "$DASHBOARD_FILE"
 
-    # Update metrics from test results
+    # Check license status
+    if ! check_license_status; then
+        log_info "No valid premium license found - updating dashboard with premium messaging"
+        
+        # Replace premium banner
+        sed -i 's|<!-- PREMIUM_BANNER -->|🚀 **Upgrade to CostPilot Premium**\n\nSustainability Analytics require a premium license. Unlock comprehensive ESG compliance testing including carbon footprint analysis, energy efficiency monitoring, fairness validation, and social impact assessment.\n\n**Premium Features ($29/month):**\n- ✅ Carbon footprint tracking \& emissions analysis\n- ✅ Energy efficiency optimization\n- ✅ AI fairness \& bias testing\n- ✅ Transparency \& audit trail validation\n- ✅ Social impact \& ethical compliance scoring\n\n[Upgrade to Premium](https://costpilot.dev/pricing) \| [Learn More](https://costpilot.dev/docs/premium)|g' "$DASHBOARD_FILE"
+        
+        # Replace data placeholders with premium notices
+        sed -i 's|<!-- TOTAL_CO2_EMISSIONS -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- AVG_CO2_PER_OPERATION -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- CARBON_EFFICIENCY_RATING -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- TOTAL_ENERGY_CONSUMED -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- ENERGY_PER_OPERATION -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- PEAK_ENERGY_USAGE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- NA_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- EU_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- AP_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- LA_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- AFRICA_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        sed -i 's|<!-- ME_BIAS_SCORE -->|🔒 Premium Feature|g' "$DASHBOARD_FILE"
+        
+        # Add upgrade notice at bottom
+        echo -e "\n---\n*Upgrade to CostPilot Premium to view detailed sustainability metrics and trends*" >> "$DASHBOARD_FILE"
+        
+        return
+    fi
+
+    # Premium license validated - update with real data
+    log_info "Premium license validated - updating dashboard with real metrics"
     if [ -d "${PROJECT_ROOT}/sustainability-results" ]; then
 
         # Carbon metrics

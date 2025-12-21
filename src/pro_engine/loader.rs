@@ -5,7 +5,7 @@ use aes_gcm::{
     Aes256Gcm, Nonce,
 };
 use chrono::{DateTime, Utc};
-use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+use ed25519_dalek::{Signature, VerifyingKey};
 use hkdf::Hkdf;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;

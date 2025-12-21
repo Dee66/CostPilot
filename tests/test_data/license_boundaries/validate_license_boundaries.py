@@ -20,9 +20,8 @@ import json
 import yaml
 import subprocess
 import tempfile
-import shutil
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple
 
 class LicenseBoundaryValidator:
     def __init__(self, test_data_dir: str):
@@ -31,13 +30,13 @@ class LicenseBoundaryValidator:
         self.costpilot_binary = self.project_root / "target" / "release" / "costpilot"
 
         # Load test data
-        with open(self.test_data_dir / "license_boundary_tests.yml") as f:
+        with open(self.test_data_dir / "license_boundary_tests.yml", encoding='utf-8') as f:
             self.test_config = yaml.safe_load(f)
 
-        with open(self.test_data_dir / "expected_outputs.yml") as f:
+        with open(self.test_data_dir / "expected_outputs.yml", encoding='utf-8') as f:
             self.expected_outputs = yaml.safe_load(f)
 
-        with open(self.test_data_dir / "sample_input_plans.yml") as f:
+        with open(self.test_data_dir / "sample_input_plans.yml", encoding='utf-8') as f:
             self.sample_plans = yaml.safe_load(f)
 
     def run_costpilot(self, plan_data: Dict[str, Any], license_mode: str = "free") -> Tuple[int, str, str]:
@@ -62,7 +61,8 @@ class LicenseBoundaryValidator:
                 capture_output=True,
                 text=True,
                 env=env,
-                cwd=self.project_root
+                cwd=self.project_root,
+                check=False
             )
 
             return result.returncode, result.stdout, result.stderr
@@ -80,8 +80,8 @@ class LicenseBoundaryValidator:
             return False
 
         # Run both tiers
-        free_exit, free_out, free_err = self.run_costpilot(plan_data, "free")
-        pro_exit, pro_out, pro_err = self.run_costpilot(plan_data, "pro")
+        free_exit, free_out, _ = self.run_costpilot(plan_data, "free")
+        pro_exit, pro_out, _ = self.run_costpilot(plan_data, "pro")
 
         # Extract decisions (simplified - in real implementation, parse structured output)
         free_decision = self.extract_decision(free_out, free_exit)
@@ -104,8 +104,8 @@ class LicenseBoundaryValidator:
             return False
 
         # Run both tiers
-        free_exit, free_out, free_err = self.run_costpilot(plan_data, "free")
-        pro_exit, pro_out, pro_err = self.run_costpilot(plan_data, "pro")
+        free_exit, free_out, _ = self.run_costpilot(plan_data, "free")
+        pro_exit, pro_out, _ = self.run_costpilot(plan_data, "pro")
 
         expected = self.expected_outputs.get(f"{scenario}_outputs")
         if not expected:
@@ -120,7 +120,7 @@ class LicenseBoundaryValidator:
         if not self.validate_output_against_expectations(pro_out, pro_exit, expected["pro_tier"], "Pro"):
             return False
 
-        print(f"    PASS: Outputs match expected differences")
+        print("    PASS: Outputs match expected differences")
         return True
 
     def validate_output_against_expectations(self, output: str, exit_code: int,

@@ -26,8 +26,6 @@ fn test_severity_score_always_within_defined_bounds() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let detections = engine.detect(&vec![change]).unwrap();
@@ -61,8 +59,6 @@ fn test_confidence_score_always_within_defined_bounds() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
         ResourceChange {
             resource_id: "aws_lambda_function.test".to_string(),
@@ -79,8 +75,6 @@ fn test_confidence_score_always_within_defined_bounds() {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         },
     ];
 
@@ -114,8 +108,6 @@ fn test_severity_monotonically_increases_with_cost_delta() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let large_change = ResourceChange {
@@ -132,8 +124,6 @@ fn test_severity_monotonically_increases_with_cost_delta() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let small_detections = engine.detect(&vec![small_change]).unwrap();
@@ -169,8 +159,6 @@ fn test_confidence_decreases_under_cold_start_assumptions() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     // Create a change for an unknown instance type (should trigger cold start)
@@ -188,8 +176,6 @@ fn test_confidence_decreases_under_cold_start_assumptions() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let known_estimates = engine.predict(&vec![known_change]).unwrap();
@@ -227,8 +213,6 @@ fn test_incident_classification_consistent_with_severity_and_materiality() {
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     };
 
     let detections = engine.detect(&vec![change]).unwrap();

@@ -5,8 +5,8 @@ Generated: <!-- CHAOS_DASHBOARD_TIMESTAMP -->
 ## Chaos Testing Status Overview
 - **Last Chaos Test**: <!-- LAST_CHAOS_TEST -->
 - **Overall Resilience Score**: <!-- CHAOS_RESILIENCE_SCORE -->%
-- **Netflix Simian Army Compliance**: <!-- NETFLIX_COMPLIANCE -->
-- **Google SRE Practices Compliance**: <!-- GOOGLE_SRE_COMPLIANCE -->
+- **Simian Army Compliance**: <!-- NETFLIX_COMPLIANCE -->
+- **SRE Practices Compliance**: <!-- GOOGLE_SRE_COMPLIANCE -->
 
 ## Chaos Scenarios Results
 

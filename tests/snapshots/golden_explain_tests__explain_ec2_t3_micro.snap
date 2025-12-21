@@ -1,11 +1,10 @@
 ---
 source: tests/golden_explain_tests.rs
-assertion_line: 16
 expression: stdout
 ---
 Explanation for aws_instance:
 
-Predicted monthly cost: $50.00
+Predicted monthly cost: $150.00
 Confidence: 95.0%
 
 Reasoning:

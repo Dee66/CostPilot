@@ -2,7 +2,7 @@
 // Ensures SLA compliance and prevents resource exhaustion
 
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Performance budgets for all engines
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -531,6 +531,7 @@ impl Default for PerformanceBudgets {
 mod tests {
     use super::*;
     use std::thread;
+    use std::time::Duration;
 
     #[test]
     fn test_performance_tracker_within_budget() {

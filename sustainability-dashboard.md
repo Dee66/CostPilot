@@ -1,6 +1,19 @@
 # CostPilot Sustainability and Ethics Dashboard
 
-Generated: Sat 20 Dec 2025 14:02:12 SAST
+🚀 **Upgrade to CostPilot Premium**
+
+Sustainability Analytics require a premium license. Unlock comprehensive ESG compliance testing including carbon footprint analysis, energy efficiency monitoring, fairness validation, and social impact assessment.
+
+**Premium Features ($29/month):**
+- ✅ Carbon footprint tracking & emissions analysis
+- ✅ Energy efficiency optimization
+- ✅ AI fairness & bias testing
+- ✅ Transparency & audit trail validation
+- ✅ Social impact & ethical compliance scoring
+
+[Upgrade to Premium](https://costpilot.dev/pricing) | [Learn More](https://costpilot.dev/docs/premium)
+
+Generated: Sun 21 Dec 2025 16:05:55 SAST
 
 ## Sustainability Overview
 - **Last Sustainability Test**: <!-- LAST_SUSTAINABILITY_TEST -->
@@ -18,9 +31,9 @@ Generated: Sat 20 Dec 2025 14:02:12 SAST
 - **Emissions Trend**: <!-- CO2_EMISSIONS_TREND -->
 
 ### Energy Usage Analysis
-- **Total Energy Consumed**: <!-- TOTAL_ENERGY_CONSUMED --> kWh
-- **Energy per Operation**: <!-- ENERGY_PER_OPERATION --> Wh
-- **Peak Energy Usage**: <!-- PEAK_ENERGY_USAGE --> W
+- **Total Energy Consumed**: 🔒 Premium Feature kWh
+- **Energy per Operation**: 🔒 Premium Feature Wh
+- **Peak Energy Usage**: 🔒 Premium Feature W
 - **Energy Efficiency Score**: 2.219
 
 ## Energy Efficiency Results
@@ -40,12 +53,12 @@ Generated: Sat 20 Dec 2025 14:02:12 SAST
 ## Fairness Testing Results
 
 ### Demographic Analysis
-- **North America Bias Score**: <!-- NA_BIAS_SCORE -->
-- **Europe Bias Score**: <!-- EU_BIAS_SCORE -->
-- **Asia Pacific Bias Score**: <!-- AP_BIAS_SCORE -->
-- **Latin America Bias Score**: <!-- LA_BIAS_SCORE -->
-- **Africa Bias Score**: <!-- AFRICA_BIAS_SCORE -->
-- **Middle East Bias Score**: <!-- ME_BIAS_SCORE -->
+- **North America Bias Score**: 🔒 Premium Feature
+- **Europe Bias Score**: 🔒 Premium Feature
+- **Asia Pacific Bias Score**: 🔒 Premium Feature
+- **Latin America Bias Score**: 🔒 Premium Feature
+- **Africa Bias Score**: 🔒 Premium Feature
+- **Middle East Bias Score**: 🔒 Premium Feature
 
 ### Fairness Metrics
 - **Overall Fairness Score**: -3.9385138333333327
@@ -159,6 +172,27 @@ Eff:   ▁▂▃▄▅▆▇███▇▆▅▄▃▂▁▂▃▄▅▆▇
 Week:  1  2  3  4  5  6  7  8  9 10 11 12
 Fair:  ▂▃▄▅▆▇███▇▆▅▄▃▂▁▂▃▄▅▆▇█
 ```
+
+### Carbon Emissions Trend (Last 12 Weeks)
+```
+Week:  1  2  3  4  5  6  7  8  9 10 11 12
+CO2:   ▁▂▃▄▅▆▇█▇▆▅▄▃▂▁▂▃▄▅▆▇█▇▆
+```
+
+### Energy Efficiency Trend (Last 12 Weeks)
+```
+Week:  1  2  3  4  5  6  7  8  9 10 11 12
+Eff:   ▁▂▃▄▅▆▇███▇▆▅▄▃▂▁▂▃▄▅▆▇
+```
+
+### Fairness Scores Trend (Last 12 Weeks)
+```
+Week:  1  2  3  4  5  6  7  8  9 10 11 12
+Fair:  ▂▃▄▅▆▇███▇▆▅▄▃▂▁▂▃▄▅▆▇█
+```
+
+---
+*Upgrade to CostPilot Premium to view detailed sustainability metrics and trends*
 
 ### Carbon Emissions Trend (Last 12 Weeks)
 ```

@@ -1,6 +1,5 @@
 #!/bin/bash
 # CostPilot Chaos Engineering and Incident Response Testing Suite
-# Implements Netflix Simian Army and Google SRE chaos engineering practices
 
 set -euo pipefail
 
@@ -89,7 +88,7 @@ chaos_network_partitioning() {
 
     # Create test scenario based on baseline
     local test_plan="${scenario_dir}/baselines.json"
-    cp "${PROJECT_ROOT}/baselineest_plan"
+    cp "${PROJECT_ROOT}/examples/baselines.json" "$test_plan"
 
     # Start monitoring
     start_chaos_monitoring "$scenario_dir"

@@ -123,11 +123,11 @@ impl GraphBuilder {
                 eprintln!("   Returning empty graph");
                 Ok(DependencyGraph::new())
             }
-            TimeoutAction::Error => Err(CostPilotError::Timeout(format!(
+            TimeoutAction::Error => Err(CostPilotError::timeout(format!(
                 "Mapping exceeded budget: {} ({}ms budget, {}ms elapsed)",
                 violation.violation_type, violation.budget_value, violation.actual_value
             ))),
-            TimeoutAction::CircuitBreak => Err(CostPilotError::CircuitBreaker(format!(
+            TimeoutAction::CircuitBreak => Err(CostPilotError::circuit_breaker(format!(
                 "Mapping circuit breaker triggered: {} ({}ms budget, {}ms elapsed)",
                 violation.violation_type, violation.budget_value, violation.actual_value
             ))),
@@ -148,13 +148,13 @@ impl GraphBuilder {
                 Ok(partial)
             }
             TimeoutAction::Error => {
-                Err(CostPilotError::Timeout(format!(
+                Err(CostPilotError::timeout(format!(
                     "Mapping exceeded budget: {} ({}ms budget, {}ms elapsed) - partial graph discarded",
                     violation.violation_type, violation.budget_value, violation.actual_value
                 )))
             }
             TimeoutAction::CircuitBreak => {
-                Err(CostPilotError::CircuitBreaker(format!(
+                Err(CostPilotError::circuit_breaker(format!(
                     "Mapping circuit breaker triggered: {} ({}ms budget, {}ms elapsed) - partial graph discarded",
                     violation.violation_type, violation.budget_value, violation.actual_value
                 )))
@@ -558,8 +558,6 @@ mod tests {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         }
     }
 

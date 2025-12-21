@@ -51,7 +51,7 @@ pub fn execute(args: &FeatureArgs) -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-fn list_features(manager: &FeatureFlagManager) -> Result<(), Box<dyn std::error::Error>> {
+fn list_features(_manager: &FeatureFlagManager) -> Result<(), Box<dyn std::error::Error>> {
     let flags = FeatureFlags::load()?;
 
     println!("{}", "🔧 Feature Flags".bright_blue().bold());
@@ -88,7 +88,7 @@ fn list_features(manager: &FeatureFlagManager) -> Result<(), Box<dyn std::error:
     Ok(())
 }
 
-fn enable_feature(feature: &str, manager: &mut FeatureFlagManager) -> Result<(), Box<dyn std::error::Error>> {
+fn enable_feature(feature: &str, _manager: &mut FeatureFlagManager) -> Result<(), Box<dyn std::error::Error>> {
     let mut flags = FeatureFlags::load()?;
     flags.enable_feature(feature);
     flags.save()?;
@@ -97,7 +97,7 @@ fn enable_feature(feature: &str, manager: &mut FeatureFlagManager) -> Result<(),
     Ok(())
 }
 
-fn disable_feature(feature: &str, manager: &mut FeatureFlagManager) -> Result<(), Box<dyn std::error::Error>> {
+fn disable_feature(feature: &str, _manager: &mut FeatureFlagManager) -> Result<(), Box<dyn std::error::Error>> {
     let mut flags = FeatureFlags::load()?;
     flags.disable_feature(feature);
     flags.save()?;
@@ -106,7 +106,7 @@ fn disable_feature(feature: &str, manager: &mut FeatureFlagManager) -> Result<()
     Ok(())
 }
 
-fn set_rollout(feature: &str, percentage: f64, manager: &mut FeatureFlagManager) -> Result<(), Box<dyn std::error::Error>> {
+fn set_rollout(feature: &str, percentage: f64, _manager: &mut FeatureFlagManager) -> Result<(), Box<dyn std::error::Error>> {
     let mut flags = FeatureFlags::load()?;
     flags.set_rollout_percentage(feature, percentage);
     flags.save()?;

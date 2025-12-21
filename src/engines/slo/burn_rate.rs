@@ -20,7 +20,6 @@ use super::slo_types::{Slo, SloType};
 use crate::engines::trend::snapshot_types::CostSnapshot;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Burn rate analysis result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -373,6 +372,7 @@ impl Default for BurnRateCalculator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     fn create_test_snapshots() -> Vec<CostSnapshot> {
         vec![

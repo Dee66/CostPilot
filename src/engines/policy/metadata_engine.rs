@@ -4,7 +4,6 @@ use super::policy_types::*;
 use super::zero_network::*;
 use crate::engines::detection::ResourceChange;
 use crate::engines::prediction::CostEstimate;
-use std::collections::HashMap;
 
 /// Enhanced policy engine with full metadata support
 ///
@@ -553,7 +552,7 @@ mod tests {
         // Test with cost under limit
         let cost = CostEstimate::builder()
             .resource_id("test")
-            .monthly(500.0)
+            .monthly_cost(500.0)
             .build();
 
         let result = engine.evaluate(&[], &cost);
@@ -562,7 +561,7 @@ mod tests {
         // Test with cost over limit
         let cost = CostEstimate::builder()
             .resource_id("test")
-            .monthly(1500.0)
+            .monthly_cost(1500.0)
             .build();
 
         let result = engine.evaluate(&[], &cost);
@@ -597,12 +596,12 @@ mod tests {
         // Evaluate multiple times
         let cost_ok = CostEstimate::builder()
             .resource_id("test")
-            .monthly(500.0)
+            .monthly_cost(500.0)
             .build();
 
         let cost_bad = CostEstimate::builder()
             .resource_id("test")
-            .monthly(1500.0)
+            .monthly_cost(1500.0)
             .build();
 
         engine.evaluate(&[], &cost_ok);

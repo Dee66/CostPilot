@@ -26,7 +26,7 @@ exclude-files = [
 
 # Include only source files
 follow-exec = true
-post-test-delay = "1s"
+post-test-delay = 1
 
 [html]
 # HTML report configuration
