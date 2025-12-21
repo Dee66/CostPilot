@@ -589,5 +589,3 @@ impl Default for Severity {
         Severity::Low
     }
 }
-
-

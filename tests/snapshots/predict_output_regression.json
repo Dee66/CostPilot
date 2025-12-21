@@ -1,9 +1,13 @@
 [
   {
+    "breakdown": null,
     "cold_start_inference": false,
     "confidence_score": 0.95,
+    "daily": null,
     "heuristic_reference": "v1.0.0-minimal",
+    "hourly": null,
     "monthly_cost": 150.0,
+    "one_time": null,
     "prediction_interval_high": 195.0,
     "prediction_interval_low": 105.0,
     "resource_id": "test-aws-instance-regression-1"

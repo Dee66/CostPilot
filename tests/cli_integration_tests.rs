@@ -146,7 +146,7 @@ fn test_cli_audit_command() {
 fn test_cli_scan_missing_file() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("scan").arg("nonexistent.json");
-    cmd.assert().failure().stderr(predicate::str::contains("Terraform plan file not found"));
+    cmd.assert().failure().stderr(predicate::str::contains("terraform file not found"));
 }
 
 #[test]
@@ -452,4 +452,42 @@ fn test_terraform_plan_delta_below_threshold_silent() {
     // - No stderr output
     // Placeholder: assert true for now
     assert!(true);
+}
+
+#[test]
+fn test_json_output_canonical_serialization() {
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("scan")
+        .arg("test_golden_plan.json")
+        .arg("--format")
+        .arg("json");
+    
+    let output1 = cmd.assert().success().get_output().clone();
+    let stdout1 = String::from_utf8_lossy(&output1.stdout);
+    
+    // Run the same command again
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("scan")
+        .arg("test_golden_plan.json")
+        .arg("--format")
+        .arg("json");
+    
+    let output2 = cmd.assert().success().get_output().clone();
+    let stdout2 = String::from_utf8_lossy(&output2.stdout);
+    
+    // Extract JSON part (skip the banner)
+    let json1 = extract_json_from_output(&stdout1);
+    let json2 = extract_json_from_output(&stdout2);
+    
+    // JSON outputs should be byte-for-byte identical
+    assert_eq!(json1, json2, "JSON output should be deterministic and canonical");
+}
+
+fn extract_json_from_output(output: &str) -> &str {
+    // Find the first '{' character and return everything from there
+    if let Some(start) = output.find('{') {
+        &output[start..]
+    } else {
+        output
+    }
 }

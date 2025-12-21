@@ -2,6 +2,40 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Burn risk classification (forward declaration for slo_types)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum BurnRisk {
+    /// No breach predicted
+    Low,
+
+    /// Breach possible but not imminent (>14 days)
+    Medium,
+
+    /// Breach likely within 14 days
+    High,
+
+    /// Breach imminent (<7 days)
+    Critical,
+}
+
+impl BurnRisk {
+    /// Get numeric severity (0-3)
+    pub fn severity(&self) -> u8 {
+        match self {
+            BurnRisk::Low => 0,
+            BurnRisk::Medium => 1,
+            BurnRisk::High => 2,
+            BurnRisk::Critical => 3,
+        }
+    }
+
+    /// Check if action is required
+    pub fn requires_action(&self) -> bool {
+        matches!(self, BurnRisk::High | BurnRisk::Critical)
+    }
+}
+
 /// A Service Level Objective for cost management
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Slo {
@@ -146,6 +180,14 @@ pub struct SloEvaluation {
     /// Affected resources or modules
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub affected: Vec<String>,
+
+    /// Burn risk level (Low/Medium/High/Critical)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub burn_risk: Option<BurnRisk>,
+
+    /// Projected cost after merge/deployment
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub projected_cost_after_merge: Option<f64>,
 }
 
 /// SLO evaluation status
@@ -331,6 +373,8 @@ impl Slo {
             evaluated_at: Utc::now().to_rfc3339(),
             message,
             affected: vec![self.target.clone()],
+            burn_risk: None,
+            projected_cost_after_merge: None,
         }
     }
 }

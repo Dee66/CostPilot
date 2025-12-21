@@ -30,15 +30,17 @@ jobs:
       - name: Package
         env:
           TARGET: linux-amd64
-        run: bash build/package/make_release.sh
+          COSTPILOT_VERSION: ${{ github.ref_name }}
+          OUT_DIR: dist
+        run: bash scripts/make_release_bundle.sh
 
       - name: Validate archives
         run: |
-          bash build/package/validate_release.sh dist/costpilot-linux-amd64.zip
-          bash build/package/validate_release.sh dist/costpilot-linux-amd64.tar.gz
+          bash scripts/verify_release_bundle.sh dist/costpilot-linux-amd64.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-linux-amd64.tar.gz
 
       - name: Verify release policy
-        run: bash packaging/signing/verify_release_policy.sh
+        run: bash scripts/signing/verify_release_policy.sh
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
@@ -73,12 +75,14 @@ jobs:
       - name: Package
         env:
           TARGET: macos-arm64
-        run: bash build/package/make_release.sh
+          COSTPILOT_VERSION: ${{ github.ref_name }}
+          OUT_DIR: dist
+        run: bash scripts/make_release_bundle.sh
 
       - name: Validate archives
         run: |
-          bash build/package/validate_release.sh dist/costpilot-macos-arm64.zip
-          bash build/package/validate_release.sh dist/costpilot-macos-arm64.tar.gz
+          bash scripts/verify_release_bundle.sh dist/costpilot-macos-arm64.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-macos-arm64.tar.gz
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
@@ -113,12 +117,14 @@ jobs:
       - name: Package
         env:
           TARGET: macos-amd64
-        run: bash build/package/make_release.sh
+          COSTPILOT_VERSION: ${{ github.ref_name }}
+          OUT_DIR: dist
+        run: bash scripts/make_release_bundle.sh
 
       - name: Validate archives
         run: |
-          bash build/package/validate_release.sh dist/costpilot-macos-amd64.zip
-          bash build/package/validate_release.sh dist/costpilot-macos-amd64.tar.gz
+          bash scripts/verify_release_bundle.sh dist/costpilot-macos-amd64.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-macos-amd64.tar.gz
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
@@ -147,13 +153,15 @@ jobs:
         shell: bash
         env:
           TARGET: windows-amd64
-        run: bash build/package/make_release.sh
+          COSTPILOT_VERSION: ${{ github.ref_name }}
+          OUT_DIR: dist
+        run: bash scripts/make_release_bundle.sh
 
       - name: Validate archives
         shell: bash
         run: |
-          bash build/package/validate_release.sh dist/costpilot-windows-amd64.zip
-          bash build/package/validate_release.sh dist/costpilot-windows-amd64.tar.gz
+          bash scripts/verify_release_bundle.sh dist/costpilot-windows-amd64.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-windows-amd64.tar.gz
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
@@ -189,18 +197,18 @@ jobs:
       - name: Generate ephemeral signing key (CI-only)
         run: |
           mkdir -p build/keys
-          chmod +x packaging/signing/generate_keypair.sh
-          bash packaging/signing/generate_keypair.sh build/keys ci_signing
+          chmod +x scripts/signing/generate_keypair.sh
+          bash scripts/signing/generate_keypair.sh build/keys ci_signing
 
       - name: Sign checksums (Ed25519)
         run: |
-          chmod +x packaging/signing/sign_checksum_ed25519.sh
-          bash packaging/signing/sign_checksum_ed25519.sh dist/sha256sum.txt build/keys/ci_signing.pem dist/sha256sum.txt.sig
+          chmod +x scripts/signing/sign_checksum_ed25519.sh
+          bash scripts/signing/sign_checksum_ed25519.sh dist/sha256sum.txt build/keys/ci_signing.pem dist/sha256sum.txt.sig
 
       - name: Verify signature (CI smoke)
         run: |
-          chmod +x packaging/signing/verify_checksum_ed25519.sh
-          bash packaging/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/keys/ci_signing.pub.pem
+          chmod +x scripts/signing/verify_checksum_ed25519.sh
+          bash scripts/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/keys/ci_signing.pub.pem
 
       - name: Generate license token (dev)
         if: env.RELEASE_SIGNING == 'true'
@@ -208,8 +216,8 @@ jobs:
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
           SOURCE_DATE_EPOCH: ${{ github.event.head_commit.timestamp }}
         run: |
-          chmod +x packaging/signing/generate_license_token.sh
-          bash packaging/signing/generate_license_token.sh \
+          chmod +x scripts/signing/generate_license_token.sh
+          bash scripts/signing/generate_license_token.sh \
             "demo-license" \
             "dev@example.com" \
             "2026-12-31T23:59:59Z" \
@@ -222,28 +230,28 @@ jobs:
           ED25519_PRIV: ${{ secrets.ED25519_PRIV }}
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
         run: |
-          chmod +x packaging/signing/sign_checksums.sh
-          bash packaging/signing/sign_checksums.sh dist dist/sha256sum.txt dist/sha256sum.sig
+          chmod +x scripts/signing/sign_checksums.sh
+          bash scripts/signing/sign_checksums.sh dist dist/sha256sum.txt dist/sha256sum.sig
 
       - name: Verify signature
         env:
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
         run: |
-          chmod +x packaging/signing/verify_signature.sh
-          if [[ -f packaging/signing/public.key ]]; then
-            bash packaging/signing/verify_signature.sh dist/sha256sum.txt dist/sha256sum.sig packaging/signing/public.key
+          chmod +x scripts/signing/verify_signature.sh
+          if [[ -f scripts/signing/public.key ]]; then
+            bash scripts/signing/verify_signature.sh dist/sha256sum.txt dist/sha256sum.sig scripts/signing/public.key
           else
-            bash packaging/signing/verify_signature.sh dist/sha256sum.txt dist/sha256sum.sig
+            bash scripts/signing/verify_signature.sh dist/sha256sum.txt dist/sha256sum.sig
           fi
 
       - name: Verify release bundles
         env:
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
         run: |
-          chmod +x packaging/verify_release_bundle.sh
+          chmod +x scripts/verify_release_bundle.sh
           for artifact in dist/*.tar.gz dist/*.zip; do
             [[ -f "$artifact" ]] || continue
-            bash packaging/verify_release_bundle.sh "$artifact" dist/sha256sum.txt dist/sha256sum.sig packaging/signing/public.key || true
+            bash scripts/verify_release_bundle.sh "$artifact" dist/sha256sum.txt dist/sha256sum.sig scripts/signing/public.key || true
           done
 
       - name: Verify publisher signature (release)
@@ -252,8 +260,8 @@ jobs:
           PUBLISHER_PUBKEY: ${{ secrets.PUBLISHER_PUBKEY }}
         run: |
           echo "$PUBLISHER_PUBKEY" > build/publisher.pub.pem
-          chmod +x packaging/signing/verify_checksum_ed25519.sh
-          bash packaging/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/publisher.pub.pem
+          chmod +x scripts/signing/verify_checksum_ed25519.sh
+          bash scripts/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/publisher.pub.pem
 
       - name: Upload checksum and signature
         uses: actions/upload-artifact@v4

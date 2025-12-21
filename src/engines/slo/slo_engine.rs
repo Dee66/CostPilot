@@ -2,7 +2,9 @@
 
 use super::slo_manager::SloManager;
 use super::slo_types::{Slo, SloConfig, SloEvaluation, SloReport, SloType, EnforcementLevel};
+use super::burn_rate::BurnAnalysis;
 use crate::engines::shared::models::{CostEstimate, TotalCost};
+use crate::engines::trend::snapshot_types::CostSnapshot;
 use crate::edition::EditionContext;
 use serde::{Deserialize, Serialize};
 
@@ -55,10 +57,26 @@ impl SloEngine {
         // Evaluate against the snapshot
         let report = self.manager.evaluate_snapshot(&snapshot);
 
+        // Load historical snapshots for burn rate analysis
+        let burn_analyses = self.compute_burn_risk(&snapshot);
+
+        // Check if there are violations and should block before moving evaluations
+        let has_violations = report.has_violations();
+        let should_block = self.manager.should_block_deployment(&report);
+
+        // Merge burn risk data into evaluations (clone to avoid moving)
+        let evaluations = report.evaluations.clone().into_iter().map(|mut eval| {
+            if let Some(burn_analysis) = burn_analyses.iter().find(|ba| ba.slo_id == eval.slo_id) {
+                eval.burn_risk = Some(burn_analysis.risk.clone());
+                eval.projected_cost_after_merge = Some(burn_analysis.projected_cost);
+            }
+            eval
+        }).collect();
+
         SloResult {
-            passed: !report.has_violations(),
-            evaluations: report.evaluations.clone(),
-            should_block: self.manager.should_block_deployment(&report),
+            passed: !has_violations,
+            evaluations,
+            should_block,
             message: self.format_result_message(&report),
         }
     }
@@ -113,6 +131,38 @@ impl SloEngine {
         }
 
         snapshot
+    }
+
+    /// Compute burn risk for all SLOs using historical snapshots
+    fn compute_burn_risk(&self, current_snapshot: &CostSnapshot) -> Vec<BurnAnalysis> {
+        use super::burn_rate::BurnRateCalculator;
+        use crate::engines::trend::SnapshotManager;
+
+        // Try to load historical snapshots
+        let snapshot_manager = SnapshotManager::new(&std::path::PathBuf::from(".costpilot/snapshots"));
+        
+        match snapshot_manager.load_history() {
+            Ok(history) => {
+                if history.snapshots.len() >= 3 {
+                    // Create calculator and analyze burn rates
+                    let calculator = BurnRateCalculator::new();
+                    let mut all_snapshots = history.snapshots.clone();
+                    
+                    // Add current snapshot for projection
+                    all_snapshots.push(current_snapshot.clone());
+                    
+                    calculator.analyze_all(&self.manager.config().slos, &all_snapshots)
+                        .analyses
+                } else {
+                    // Not enough historical data, return empty burn analyses
+                    vec![]
+                }
+            }
+            Err(_) => {
+                // No historical data available, return empty burn analyses
+                vec![]
+            }
+        }
     }
 
     /// Format result message for API response

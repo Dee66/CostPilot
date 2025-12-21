@@ -98,16 +98,16 @@ pub fn convert_to_resource_changes(plan: &TerraformPlan) -> Result<Vec<ResourceC
 }
 
 /// Extract module path from resource address
-/// For address "module.vpc.aws_instance.test", returns "vpc"
+/// For address "module.vpc.aws_instance.test", returns "module.vpc"
 /// For address "aws_instance.test", returns None
 fn extract_module_path_from_address(address: &str) -> Option<String> {
     if let Some(module_part) = address.strip_prefix("module.") {
         // Find the first dot after "module." to get the module name
         if let Some(dot_pos) = module_part.find('.') {
-            Some(module_part[..dot_pos].to_string())
+            Some(format!("module.{}", &module_part[..dot_pos]))
         } else {
             // If no dot found, the whole thing after "module." is the module name
-            Some(module_part.to_string())
+            Some(format!("module.{}", module_part))
         }
     } else {
         None

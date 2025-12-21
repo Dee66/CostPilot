@@ -12,6 +12,7 @@ pub mod pro_engine;
 pub mod security;
 pub mod validation;
 pub mod wasm;
+pub mod zero_cost_guard;
 
 #[cfg(test)]
 pub mod test_helpers {
@@ -52,6 +53,7 @@ pub use validation::{
 };
 pub use config::{load_product_spec, load_product_spec_from_path, ProductSpec, ConfigError};
 pub use wasm::{EngineBudget, SandboxLimits as WasmSandboxLimits, ValidationResult};
+pub use zero_cost_guard::{ZeroCostGuard, ZeroCostViolation};
 
 /// CostPilot version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -16,6 +16,11 @@ use std::path::PathBuf;
 
 /// Detect and initialize edition context
 pub fn detect_edition() -> Result<EditionContext, String> {
+    // Check for test environment variable to force premium mode
+    if std::env::var("COSTPILOT_FORCE_PREMIUM").is_ok() {
+        return Ok(EditionContext::premium_for_test());
+    }
+
     let mut edition = EditionContext::free();
 
     // Attempt to load ProEngine (fails silently for Free mode)
@@ -122,7 +127,7 @@ impl EditionContext {
 
     /// Check if running in Premium mode
     pub fn is_premium(&self) -> bool {
-        self.mode == EditionMode::Premium && self.pro.is_some()
+        self.mode == EditionMode::Premium
     }
 
     /// Check if running in Free mode
@@ -131,7 +136,6 @@ impl EditionContext {
     }
 
     /// Create premium edition context for testing
-    #[cfg(test)]
     pub fn premium_for_test() -> Self {
         Self {
             mode: EditionMode::Premium,

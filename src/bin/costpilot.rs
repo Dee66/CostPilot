@@ -2,6 +2,7 @@
 
 use clap::{Parser, Subcommand};
 use colored::*;
+use costpilot::ZeroCostGuard;
 use std::path::PathBuf;
 use std::process;
 
@@ -56,8 +57,8 @@ struct Cli {
     #[arg(short, long, global = true)]
     verbose: bool,
 
-    /// Output format (json, text, markdown)
-    #[arg(short = 'f', long, global = true, default_value = "text")]
+    /// Output format (json, text, markdown, pr-comment)
+    #[arg(long, global = true, default_value = "text")]
     format: String,
 
     /// Enable debug mode (shows internal operations and timing)
@@ -70,9 +71,12 @@ enum Commands {
     /// Scan Terraform plan for cost issues and predictions
     ///
     /// Examples:
-    ///   costpilot scan --plan tfplan.json
-    ///   costpilot scan --plan tfplan.json --explain
-    ///   costpilot scan --plan tfplan.json --policy policy.yaml
+    ///   costpilot scan tfplan.json
+    ///   costpilot scan tfplan.json --explain
+    ///   costpilot scan tfplan.json --policy policy.yaml
+    ///   costpilot scan tfplan.json --infra-format cdk
+    ///   costpilot scan tfplan.json --format json
+    ///   costpilot scan tfplan.json --output-format pr-comment
     Scan(costpilot::cli::scan::ScanCommand),
 
     /// Compare cost between two Terraform plans
@@ -640,9 +644,18 @@ fn main_inner() -> ExitCode {
             if cli.debug {
                 eprintln!("🔍 Executing scan command");
             }
-            scan_cmd
-                .execute_with_edition(&edition)
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+            // Enforce zero-cost policy before executing scan
+            match ZeroCostGuard::new().enforce_zero_cost() {
+                Ok(()) => {
+                    scan_cmd
+                        .execute(&cli.format)
+                        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+                }
+                Err(e) => {
+                    eprintln!("{} Zero-cost policy violation: {}", "🚫".bright_red(), e);
+                    Err(Box::new(e) as Box<dyn std::error::Error>)
+                }
+            }
         }
         Commands::Diff { before, after } => {
             if cli.debug {

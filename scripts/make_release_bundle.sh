@@ -1,17 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: make_release_bundle.sh <version> <platform> <out_dir>
+# Usage: make_release_bundle.sh [<version> [<platform> [<out_dir>]]]
 # Creates deterministic ZIP and TAR.GZ release bundles with SBOM
+# If arguments not provided, uses environment variables or defaults
 
-if [[ $# -ne 3 ]]; then
-  echo "ERROR: Usage: make_release_bundle.sh <version> <platform> <out_dir>" >&2
+if [[ $# -eq 0 ]]; then
+  # No arguments provided, use environment variables or defaults
+  VERSION="${COSTPILOT_VERSION:-$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")}"
+  PLATFORM="${TARGET:-$(uname -m)}"
+  OUT_DIR="${OUT_DIR:-dist}"
+elif [[ $# -eq 3 ]]; then
+  # All arguments provided
+  VERSION="$1"
+  PLATFORM="$2"
+  OUT_DIR="$3"
+else
+  echo "ERROR: Usage: make_release_bundle.sh [<version> [<platform> [<out_dir>]]]" >&2
+  echo "       Or set COSTPILOT_VERSION, TARGET, and OUT_DIR environment variables" >&2
   exit 1
 fi
-
-VERSION="$1"
-PLATFORM="$2"
-OUT_DIR="$3"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BINARY_PATH="${PROJECT_ROOT}/target/release/costpilot"

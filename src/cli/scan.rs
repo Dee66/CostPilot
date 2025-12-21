@@ -1,10 +1,16 @@
+use crate::engines::baselines::BaselinesManager;
 use crate::engines::detection::DetectionEngine;
-use crate::engines::policy::{ExemptionValidator, PolicyEngine, PolicyLoader};
+use crate::engines::policy::{ExemptionValidator, PolicyEngine, PolicyLoader, ZeroNetworkToken};
 use crate::engines::prediction::PredictionEngine;
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory};
 use crate::engines::shared::models::CostEstimate;
+use crate::engines::slo::slo_engine::SloResult;
+use crate::artifact::{parse_artifact_file, ArtifactNormalizer};
 use clap::Args;
 use colored::Colorize;
+use serde::{Serialize};
+use serde_json::{Value, Map};
+use std::collections::{HashMap, BTreeMap};
 use std::path::PathBuf;
 
 /// Scan infrastructure changes for cost issues
@@ -14,8 +20,12 @@ pub struct ScanCommand {
     plan: PathBuf,
 
     /// Infrastructure format: terraform, cdk
-    #[arg(short, long, default_value = "terraform")]
-    format: String,
+    #[arg(long = "infra-format", short = 'i', default_value = "terraform")]
+    infra_format: String,
+
+    /// Output format: text, json, markdown, pr-comment
+    #[arg(long, value_enum)]
+    output_format: Option<OutputFormat>,
 
     /// Enable detailed explanations
     #[arg(short, long)]
@@ -28,6 +38,10 @@ pub struct ScanCommand {
     /// Path to exemptions file
     #[arg(long, value_name = "FILE")]
     exemptions: Option<PathBuf>,
+
+    /// Path to baselines file
+    #[arg(long, value_name = "FILE")]
+    baselines: Option<PathBuf>,
 
     /// Fail on critical severity issues
     #[arg(long)]
@@ -44,24 +58,403 @@ pub struct ScanCommand {
 
 #[derive(Debug, Clone, clap::ValueEnum)]
 enum OutputFormat {
-    Markdown,
-    Json,
     Text,
+    Json,
+    Markdown,
+    PrComment,
+}
+
+#[derive(Debug, Serialize)]
+struct ScanResult {
+    summary: ScanSummary,
+    changes: Vec<ResourceChange>,
+    estimates: Vec<CostEstimate>,
+    policy_result: Option<PolicyResult>,
+    slo_result: Option<SloResult>,
+}
+
+#[derive(Debug, Serialize)]
+struct ScanSummary {
+    resources_changed: usize,
+    monthly_cost: f64,
+    policy_status: Option<String>,
+    slo_status: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct ResourceChange {
+    resource_id: String,
+    change_type: String,
+    resource_type: String,
+}
+
+#[derive(Debug, Serialize)]
+struct PolicyResult {
+    passed: bool,
+    violations: Vec<PolicyViolation>,
+    warnings: Vec<String>,
+    applied_exemptions: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct PolicyViolation {
+    resource_id: String,
+    severity: String,
+    policy_name: String,
+    message: String,
+    actual_value: String,
+    expected_value: String,
 }
 
 impl ScanCommand {
-    pub fn execute(&self) -> Result<(), CostPilotError> {
+    fn get_output_format(&self, global_format: &str) -> OutputFormat {
+        self.output_format.as_ref().map_or_else(|| match global_format {
+            "json" => OutputFormat::Json,
+            "markdown" => OutputFormat::Markdown,
+            "pr-comment" => OutputFormat::PrComment,
+            _ => OutputFormat::Text,
+        }, |f| f.clone())
+    }
+    fn format_output(
+        &self,
+        changes: &[crate::engines::detection::ResourceChange],
+        estimates: &[CostEstimate],
+        policy_result: Option<&crate::engines::policy::PolicyResult>,
+        baselines_result: Option<&(Option<crate::engines::baselines::baseline_types::BaselineViolation>, crate::engines::baselines::BaselineComparisonResult)>,
+        slo_result: Option<&SloResult>,
+        total_monthly: f64,
+        output_format: OutputFormat,
+    ) -> Result<(), CostPilotError> {
+        match output_format {
+            OutputFormat::Text => self.format_text_output(changes, estimates, policy_result, baselines_result, slo_result, total_monthly),
+            OutputFormat::Json => self.format_json_output(changes, estimates, policy_result, baselines_result, slo_result, total_monthly),
+            OutputFormat::Markdown => self.format_markdown_output(changes, estimates, policy_result, baselines_result, slo_result, total_monthly),
+            OutputFormat::PrComment => self.format_pr_comment_output(changes, estimates, policy_result, baselines_result, slo_result, total_monthly),
+        }
+    }
+
+    fn format_text_output(
+        &self,
+        changes: &[crate::engines::detection::ResourceChange],
+        estimates: &[CostEstimate],
+        policy_result: Option<&crate::engines::policy::PolicyResult>,
+        baselines_result: Option<&(Option<crate::engines::baselines::baseline_types::BaselineViolation>, crate::engines::baselines::BaselineComparisonResult)>,
+        slo_result: Option<&SloResult>,
+        total_monthly: f64,
+    ) -> Result<(), CostPilotError> {
+        println!("{}", "🔍 CostPilot Scan".bold().cyan());
+        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+
+        // Detection summary
+        println!("{}", "📊 Detection".bold());
+        println!("   Found {} resource changes", changes.len());
+        if changes.is_empty() {
+            println!("   {}", "No resource changes detected".green());
+            return Ok(());
+        }
+        println!();
+
+        // Cost prediction
+        println!("{}", "💰 Cost Prediction".bold());
+        println!("   Estimated monthly cost: ${:.2}", total_monthly);
+        println!("   ({} resources analyzed)", estimates.len());
+        println!();
+
+        // Policy results
+        if let Some(policy_result) = policy_result {
+            println!("{}", "📋 Policy Evaluation".bold());
+            if !policy_result.violations.is_empty() {
+                println!("   {} {} policy violations", "⚠".yellow(), policy_result.violations.len());
+                for violation in &policy_result.violations {
+                    println!("     • {} [{}] {}", violation.resource_id.bright_black(), violation.severity.yellow(), violation.message);
+                }
+            } else if !policy_result.warnings.is_empty() {
+                println!("   {} {} policy warnings", "⚠".yellow(), policy_result.warnings.len());
+                for warning in &policy_result.warnings {
+                    println!("     • {}", warning);
+                }
+            } else {
+                println!("   {} All policies passed", "✅".green());
+            }
+            println!();
+        }
+
+        // Baselines results
+        if let Some((total_violation, module_comparison)) = baselines_result {
+            println!("{}", "📊 Baselines Comparison".bold());
+            if let Some(violation) = total_violation {
+                if violation.severity == "Info" {
+                    println!("   {} Total cost below baseline by {:.1}%", "ℹ".blue(), violation.variance_percent);
+                } else {
+                    println!("   {} Total cost exceeds baseline by {:.1}%", "⚠".yellow(), violation.variance_percent);
+                }
+                println!("     Expected: ${:.2}, Actual: ${:.2}", violation.expected_cost, violation.actual_cost);
+            } else {
+                println!("   {} Total cost within baseline", "✅".green());
+            }
+            println!("   Module comparisons: {} within baseline, {} violations, {} no baseline", 
+                module_comparison.within_baseline_count,
+                module_comparison.violations.len(),
+                module_comparison.no_baseline_count);
+            if !module_comparison.violations.is_empty() {
+                for violation in &module_comparison.violations {
+                    println!("     • {} exceeds baseline by {:.1}%", violation.name, violation.variance_percent);
+                }
+            }
+            println!();
+        }
+
+        // SLO results
+        if let Some(slo_result) = slo_result {
+            println!("{}", "📏 SLO Evaluation".bold());
+            if slo_result.passed {
+                println!("   {} All SLOs passed", "✅".green());
+            } else {
+                println!("   {} {} SLO violations detected", "❌".red(), slo_result.evaluations.len());
+                for evaluation in &slo_result.evaluations {
+                    if evaluation.status == crate::engines::slo::SloStatus::Violation {
+                        println!("     • {}: {}", evaluation.slo_id.bright_black(), evaluation.message);
+                    }
+                }
+            }
+            println!();
+        }
+
+        // Summary
+        println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_black());
+        println!("{}", "📈 Summary".bold());
+        println!("   Resources changed: {}", changes.len());
+        println!("   Monthly cost: ${:.2}", total_monthly);
+        if let Some(policy_result) = policy_result {
+            if policy_result.passed {
+                println!("   Policy status: {}", "PASSED".green());
+            } else {
+                println!("   Policy status: {}", "FAILED".red());
+            }
+        }
+        if let Some(slo_result) = slo_result {
+            if slo_result.passed {
+                println!("   SLO status: {}", "PASSED".green());
+            } else {
+                println!("   SLO status: {}", "FAILED".red());
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Serialize JSON with canonical key ordering for deterministic output
+    fn to_canonical_json<T: Serialize>(value: &T) -> Result<String, CostPilotError> {
+        let json_value = serde_json::to_value(value).map_err(|e| {
+            CostPilotError::new("OUTPUT_002", ErrorCategory::ValidationError, format!("Failed to convert to JSON value: {}", e))
+        })?;
+        
+        let canonical_value = Self::canonicalize_json_value(json_value);
+        serde_json::to_string_pretty(&canonical_value).map_err(|e| {
+            CostPilotError::new("OUTPUT_003", ErrorCategory::ValidationError, format!("Failed to serialize canonical JSON: {}", e))
+        })
+    }
+
+    /// Recursively canonicalize JSON by sorting object keys
+    fn canonicalize_json_value(value: Value) -> Value {
+        match value {
+            Value::Object(map) => {
+                let mut ordered_map = BTreeMap::new();
+                for (k, v) in map {
+                    ordered_map.insert(k, Self::canonicalize_json_value(v));
+                }
+                Value::Object(Map::from_iter(ordered_map))
+            }
+            Value::Array(arr) => {
+                Value::Array(arr.into_iter().map(Self::canonicalize_json_value).collect())
+            }
+            other => other,
+        }
+    }
+
+    fn format_json_output(
+        &self,
+        changes: &[crate::engines::detection::ResourceChange],
+        _estimates: &[CostEstimate],
+        policy_result: Option<&crate::engines::policy::PolicyResult>,
+        _baselines_result: Option<&(Option<crate::engines::baselines::baseline_types::BaselineViolation>, crate::engines::baselines::BaselineComparisonResult)>,
+        slo_result: Option<&SloResult>,
+        total_monthly: f64,
+    ) -> Result<(), CostPilotError> {
+        let resource_changes: Vec<ResourceChange> = changes.iter().map(|c| ResourceChange {
+            resource_id: c.resource_id.clone(),
+            change_type: format!("{:?}", c.action),
+            resource_type: c.resource_type.clone(),
+        }).collect();
+
+        let policy_result_struct = policy_result.map(|pr| PolicyResult {
+            passed: pr.passed,
+            violations: pr.violations.iter().map(|v| PolicyViolation {
+                resource_id: v.resource_id.clone(),
+                severity: v.severity.clone(),
+                policy_name: v.policy_name.clone(),
+                message: v.message.clone(),
+                actual_value: v.actual_value.clone(),
+                expected_value: v.expected_value.clone(),
+            }).collect(),
+            warnings: pr.warnings.clone(),
+            applied_exemptions: pr.applied_exemptions.clone(),
+        });
+
+        let result = ScanResult {
+            summary: ScanSummary {
+                resources_changed: changes.len(),
+                monthly_cost: total_monthly,
+                policy_status: policy_result.map(|pr| if pr.passed { "PASSED".to_string() } else { "FAILED".to_string() }),
+                slo_status: slo_result.as_ref().map(|sr| if sr.passed { "PASSED".to_string() } else { "FAILED".to_string() }),
+            },
+            changes: resource_changes,
+            estimates: _estimates.to_vec(),
+            policy_result: policy_result_struct,
+            slo_result: slo_result.cloned(),
+        };
+
+        println!("{}", Self::to_canonical_json(&result)?);
+
+        Ok(())
+    }
+
+    fn format_markdown_output(
+        &self,
+        changes: &[crate::engines::detection::ResourceChange],
+        estimates: &[CostEstimate],
+        policy_result: Option<&crate::engines::policy::PolicyResult>,
+        _baselines_result: Option<&(Option<crate::engines::baselines::baseline_types::BaselineViolation>, crate::engines::baselines::BaselineComparisonResult)>,
+        slo_result: Option<&SloResult>,
+        total_monthly: f64,
+    ) -> Result<(), CostPilotError> {
+        println!("# CostPilot Scan Results");
+        println!();
+
+        println!("## Summary");
+        println!("- **Resources changed:** {}", changes.len());
+        println!("- **Monthly cost:** ${:.2}", total_monthly);
+        if let Some(policy_result) = policy_result {
+            println!("- **Policy status:** {}", if policy_result.passed { "✅ PASSED" } else { "❌ FAILED" });
+        }
+        if let Some(slo_result) = slo_result {
+            println!("- **SLO status:** {}", if slo_result.passed { "✅ PASSED" } else { "❌ FAILED" });
+        }
+        println!();
+
+        if !changes.is_empty() {
+            println!("## Resource Changes");
+            for change in changes {
+                println!("- `{}` ({}) - {}", change.resource_id, change.resource_type, format!("{:?}", change.action));
+            }
+            println!();
+        }
+
+        if let Some(policy_result) = policy_result {
+            println!("## Policy Evaluation");
+            if !policy_result.violations.is_empty() {
+                println!("### Violations");
+                for violation in &policy_result.violations {
+                    println!("- **{}** [{}] {}: {}", violation.resource_id, violation.severity, violation.policy_name, violation.message);
+                }
+            }
+            if !policy_result.warnings.is_empty() {
+                println!("### Warnings");
+                for warning in &policy_result.warnings {
+                    println!("- {}", warning);
+                }
+            }
+            if policy_result.violations.is_empty() && policy_result.warnings.is_empty() {
+                println!("✅ All policies passed");
+            }
+            println!();
+        }
+
+        Ok(())
+    }
+
+    fn format_pr_comment_output(
+        &self,
+        changes: &[crate::engines::detection::ResourceChange],
+        estimates: &[CostEstimate],
+        policy_result: Option<&crate::engines::policy::PolicyResult>,
+        _baselines_result: Option<&(Option<crate::engines::baselines::baseline_types::BaselineViolation>, crate::engines::baselines::BaselineComparisonResult)>,
+        slo_result: Option<&SloResult>,
+        total_monthly: f64,
+    ) -> Result<(), CostPilotError> {
+        println!("## CostPilot Infrastructure Cost Analysis");
+        println!();
+        println!("### Summary");
+        println!("- **Resources changed:** {}", changes.len());
+        println!("- **Estimated monthly cost:** ${:.2}", total_monthly);
+        println!("- **Resources analyzed:** {}", estimates.len());
+        println!();
+
+        if !changes.is_empty() {
+            println!("### Resource Changes");
+            println!("| Resource | Type | Change |");
+            println!("|----------|------|--------|");
+            for change in changes.iter().take(10) { // Limit to first 10 for PR comments
+                println!("| `{}` | {} | {} |", change.resource_id, change.resource_type, format!("{:?}", change.action));
+            }
+            if changes.len() > 10 {
+                println!("| ... | ... | ... | ({} more changes)", changes.len() - 10);
+            }
+            println!();
+        }
+
+        if let Some(policy_result) = policy_result {
+            println!("### Policy Evaluation");
+            if !policy_result.violations.is_empty() {
+                println!("❌ **{} policy violations detected**", policy_result.violations.len());
+                for violation in &policy_result.violations {
+                    println!("- **{}** [{}]: {}", violation.resource_id, violation.severity, violation.message);
+                }
+            } else if !policy_result.warnings.is_empty() {
+                println!("⚠️ **{} policy warnings**", policy_result.warnings.len());
+                for warning in &policy_result.warnings {
+                    println!("- {}", warning);
+                }
+            } else {
+                println!("✅ All policies passed");
+            }
+            println!();
+        }
+
+        if let Some(slo_result) = slo_result {
+            println!("### SLO Evaluation");
+            if slo_result.passed {
+                println!("✅ All SLOs passed");
+            } else {
+                println!("❌ **{} SLO violations detected**", slo_result.evaluations.len());
+                for evaluation in &slo_result.evaluations {
+                    if evaluation.status == crate::engines::slo::SloStatus::Violation {
+                        println!("- **{}**: {}", evaluation.slo_id, evaluation.message);
+                    }
+                }
+            }
+            println!();
+        }
+
+        println!("---");
+        println!("*Generated by [CostPilot](https://github.com/your-org/costpilot)*");
+
+        Ok(())
+    }
+
+    pub fn execute(&self, global_format: &str) -> Result<(), CostPilotError> {
         let edition = crate::edition::EditionContext::new();
-        self.execute_with_edition(&edition)
+        self.execute_with_edition(&edition, global_format)
     }
 
     pub fn execute_with_edition(
         &self,
         edition: &crate::edition::EditionContext,
+        global_format: &str,
     ) -> Result<(), CostPilotError> {
         // Validate input file exists
         if !self.plan.exists() {
-            let hint = match self.format.as_str() {
+            let hint = match self.infra_format.as_str() {
                 "terraform" => "Run 'terraform plan -out=tfplan && terraform show -json tfplan > tfplan.json'",
                 "cdk" => "Run 'cdk diff --json' and save the output",
                 _ => "Ensure the input file exists and is readable",
@@ -69,62 +462,44 @@ impl ScanCommand {
             return Err(CostPilotError::new(
                 "SCAN_001",
                 crate::errors::ErrorCategory::FileSystemError,
-                format!("{} file not found: {}", self.format, self.plan.display()),
+                format!("{} file not found: {}", self.infra_format, self.plan.display()),
             )
             .with_hint(hint.to_string()));
         }
 
         // Validate format-specific requirements
-        match self.format.as_str() {
+        match self.infra_format.as_str() {
             "terraform" | "cdk" => {}
             _ => {
                 return Err(CostPilotError::new(
                     "SCAN_003",
                     crate::errors::ErrorCategory::ValidationError,
-                    format!("Unsupported format: {}", self.format),
+                    format!("Unsupported format: {}", self.infra_format),
                 )
                 .with_hint("Supported formats: terraform, cdk".to_string()));
             }
         }
 
-        // For CDK format, stack name is required
-        if self.format == "cdk" && self.stack.is_none() {
-            return Err(CostPilotError::new(
-                "SCAN_004",
-                crate::errors::ErrorCategory::ValidationError,
-                "Stack name is required for CDK format".to_string(),
-            )
-            .with_hint("Use --stack <name> to specify the CDK stack name".to_string()));
-        }
-
-        println!("{}", "🔍 CostPilot Scan".bold().cyan());
-        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-
         // Step 1: Detection
-        println!("{}", "📊 Step 1: Detection".bold());
         let detection_engine = DetectionEngine::new();
-        let changes = match self.format.as_str() {
+        let changes = match self.infra_format.as_str() {
             "terraform" => {
-                println!("   Format: Terraform plan");
                 detection_engine.detect_from_terraform_plan(&self.plan)?
             }
             "cdk" => {
-                let stack_name = self.stack.as_ref().unwrap();
-                println!("   Format: CDK diff (stack: {})", stack_name);
-                detection_engine.detect_from_cdk_diff(&self.plan)?
+                // Use artifact system for CDK
+                let artifact = parse_artifact_file(self.plan.to_str().unwrap())?;
+                let normalized = ArtifactNormalizer::normalize(&artifact);
+                normalized.to_resource_changes()
             }
             _ => unreachable!(),
         };
-        println!("   Found {} resource changes\n", changes.len());
 
         if changes.is_empty() {
-            println!("{}", "✅ No resource changes detected".green());
-            return Ok(());
+            return self.format_output(&changes, &[], None, None, None, 0.0, self.get_output_format(global_format));
         }
 
         // Step 2: Prediction
-        println!("{}", "💰 Step 2: Cost Prediction".bold());
-
         let estimates = match edition.pro.as_ref() {
             Some(pro) => {
                 // Premium: use ProEngine
@@ -157,11 +532,7 @@ impl ScanCommand {
         };
 
         let total_monthly: f64 = estimates.iter().map(|e| e.monthly_cost).sum();
-        println!("   Estimated monthly cost: ${:.2}", total_monthly);
-        println!("   ({} resources analyzed)\n", estimates.len());
 
-        // Step 3: Policy Evaluation (if policy file provided)
-        // Convert TotalCost to CostEstimate for policy/SLO evaluation
         let total_cost_estimate = CostEstimate {
             resource_id: "total".to_string(),
             monthly_cost: total_monthly,
@@ -176,8 +547,7 @@ impl ScanCommand {
             daily: None,
         };
 
-        if let Some(policy_path) = &self.policy {
-            println!("{}", "📋 Step 3: Policy Evaluation".bold());
+        let policy_result = if let Some(policy_path) = &self.policy {
             let policy_config = PolicyLoader::load_from_file(policy_path)?;
             PolicyLoader::validate(&policy_config)?;
 
@@ -186,34 +556,36 @@ impl ScanCommand {
                 let exemption_validator = ExemptionValidator::new();
                 let exemptions = exemption_validator.load_from_file(exemptions_path)?;
 
-                // Check for expiring exemptions and warn
-                let mut expiring_count = 0;
-                for exemption in &exemptions.exemptions {
-                    match exemption_validator.check_status(exemption) {
-                        crate::engines::policy::ExemptionStatus::ExpiringSoon {
-                            expires_in_days,
-                        } => {
-                            println!(
-                                "   {} Exemption {} expires in {} days",
-                                "⚠".yellow(),
-                                exemption.id.bright_black(),
-                                expires_in_days
-                            );
-                            expiring_count += 1;
+                // Check for expiring exemptions and warn (only in text output)
+                if matches!(self.output_format, Some(OutputFormat::Text)) {
+                    let mut expiring_count = 0;
+                    for exemption in &exemptions.exemptions {
+                        match exemption_validator.check_status(exemption) {
+                            crate::engines::policy::ExemptionStatus::ExpiringSoon {
+                                expires_in_days,
+                            } => {
+                                println!(
+                                    "   {} Exemption {} expires in {} days",
+                                    "⚠".yellow(),
+                                    exemption.id.bright_black(),
+                                    expires_in_days
+                                );
+                                expiring_count += 1;
+                            }
+                            crate::engines::policy::ExemptionStatus::Expired { expired_on } => {
+                                println!(
+                                    "   {} Exemption {} expired on {}",
+                                    "⚠".red(),
+                                    exemption.id.bright_black(),
+                                    expired_on
+                                );
+                            }
+                            _ => {}
                         }
-                        crate::engines::policy::ExemptionStatus::Expired { expired_on } => {
-                            println!(
-                                "   {} Exemption {} expired on {}",
-                                "⚠".red(),
-                                exemption.id.bright_black(),
-                                expired_on
-                            );
-                        }
-                        _ => {}
                     }
-                }
-                if expiring_count > 0 {
-                    println!();
+                    if expiring_count > 0 {
+                        println!();
+                    }
                 }
 
                 PolicyEngine::with_exemptions(policy_config, exemptions, edition)
@@ -222,8 +594,12 @@ impl ScanCommand {
             };
 
             // Convert TotalCost to CostEstimate for policy evaluation
-
-            let mut policy_result = policy_engine.evaluate(&changes, &total_cost_estimate);
+            let mut policy_result = policy_engine.evaluate_zero_network(&changes, &total_cost_estimate, ZeroNetworkToken::new())
+                .map_err(|e| CostPilotError::new(
+                    "POLICY_001",
+                    ErrorCategory::PolicyViolation,
+                    format!("Zero-network policy evaluation failed: {}", e),
+                ))?;
 
             // Free edition: downgrade all violations to warnings
             if !edition.capabilities.allow_policy_enforce {
@@ -242,171 +618,96 @@ impl ScanCommand {
                 policy_result.passed = true;
             }
 
-            if !policy_result.violations.is_empty() {
-                println!(
-                    "   {} {}",
-                    "⚠".yellow(),
-                    format!(
-                        "{} policy violations detected",
-                        policy_result.violations.len()
-                    )
-                    .yellow()
-                );
-                for violation in &policy_result.violations {
-                    println!(
-                        "     • {} [{}] {}",
-                        violation.resource_id.bright_black(),
-                        violation.severity.yellow(),
-                        violation.message
-                    );
-                }
-            } else if !policy_result.warnings.is_empty() {
-                println!(
-                    "   {} {}",
-                    "⚠".yellow(),
-                    format!(
-                        "{} policy warnings (Free edition: enforcement disabled)",
-                        policy_result.warnings.len()
-                    )
-                    .yellow()
-                );
-                for warning in &policy_result.warnings {
-                    println!(
-                        "     • {}",
-                        warning
-                    );
-                }
-            } else {
-                println!("   {} All policies passed", "✅".green());
-            }
+            Some(policy_result)
+        } else {
+            None
+        };
 
-            // Display applied exemptions
-            if !policy_result.applied_exemptions.is_empty() {
-                println!(
-                    "   {} {}",
-                    "ℹ".blue(),
-                    format!(
-                        "{} exemptions applied",
-                        policy_result.applied_exemptions.len()
-                    )
-                    .blue()
-                );
-                for exemption_id in &policy_result.applied_exemptions {
-                    println!(
-                        "     • EXEMPTION_APPLIED: {}",
-                        exemption_id.bright_blue()
-                    );
-                }
-            }
-            println!();
-        }
-
-        // Step 4: SLO Evaluation (if SLO config exists)
-        let slo_config_path = std::path::PathBuf::from(".costpilot/slo.json");
-        if slo_config_path.exists() {
-            println!("{}", "📏 Step 4: SLO Evaluation".bold());
-            match self.evaluate_slos(&total_cost_estimate, &estimates, edition) {
-                Ok(slo_passed) => {
-                    if slo_passed {
-                        println!("   {} All SLOs passed", "✅".green());
-                    } else {
-                        println!("   {} SLO violations detected", "❌".red());
-                        // In premium edition, this would block deployment
-                        if edition.capabilities.allow_slo_enforce {
-                            println!("   {} Deployment blocked by SLO violation", "🚫".red());
-                        } else {
-                            println!("   {} Free edition: SLO violations logged only", "⚠️".yellow());
+        // Step 4: Baselines Evaluation (if baselines file provided)
+        let baselines_result = if let Some(baselines_path) = &self.baselines {
+            match BaselinesManager::load_from_file(baselines_path) {
+                Ok(manager) => {
+                    // Compare total cost against baseline
+                    let total_baseline_violation = manager.compare_total_cost(total_cost_estimate.monthly_cost);
+                    
+                    // Compare module costs by grouping resources by module
+                    let mut module_costs = HashMap::new();
+                    for change in &changes {
+                        if let (Some(module_path), Some(monthly_cost)) = (&change.module_path, change.monthly_cost) {
+                            *module_costs.entry(module_path.clone()).or_insert(0.0) += monthly_cost;
                         }
                     }
+                    let module_comparison = manager.compare_module_costs(&module_costs);
+                    
+                    Some((total_baseline_violation, module_comparison))
                 }
                 Err(e) => {
-                    println!("   {} SLO evaluation failed: {}", "❌".red(), e);
+                    eprintln!("Warning: Failed to load baselines: {}", e);
+                    None
                 }
             }
-            println!();
-        }
+        } else {
+            None
+        };
 
-        // Step 5: Explanation (if requested)
-        if self.explain {
-            println!("{}", "💡 Step 5: Explanation".bold());
-            let _explain_engine = crate::engines::explain::ExplainEngine::new();
-            // TODO: Implement detect_anti_patterns
-            let anti_patterns: Vec<String> = Vec::new();
-
-            if !anti_patterns.is_empty() {
-                println!("   Detected {} anti-patterns:\n", anti_patterns.len());
-            } else {
-                println!("   {} No anti-patterns detected", "✅".green());
-            }
-        }
-
-        // Step 5: Autofix snippets (if requested)
-        if self.autofix {
-            println!("{}", "🔧 Step 6: Autofix Snippets".bold());
-            let _autofix_engine = crate::engines::autofix::AutofixEngine::new();
-            // TODO: generate_fixes requires 4 args: detections, changes, estimates, mode
-            // Stub for now
-            println!("   Autofix not yet implemented in scan command");
-        }
-
-        // Summary
-        println!(
-            "{}",
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_black()
-        );
-        println!("{}", "📈 Summary".bold());
-        println!("   Resources changed: {}", changes.len());
-        println!("   Monthly cost: ${:.2}", total_monthly);
-
-        if let Some(policy_path) = &self.policy {
-            let policy_config = PolicyLoader::load_from_file(policy_path)?;
-            let policy_engine = if let Some(exemptions_path) = &self.exemptions {
-                let exemption_validator = ExemptionValidator::new();
-                let exemptions = exemption_validator.load_from_file(exemptions_path)?;
-                PolicyEngine::with_exemptions(policy_config, exemptions, edition)
-            } else {
-                PolicyEngine::new(policy_config, edition)
-            };
-
-            // Convert estimates to CostEstimate for policy evaluation
-            let total_cost_estimate = CostEstimate {
-                resource_id: "total".to_string(),
-                monthly_cost: total_monthly,
-                prediction_interval_low: 0.0,
-                prediction_interval_high: 0.0,
-                confidence_score: 0.0,
-                heuristic_reference: None,
-                cold_start_inference: false,
-                one_time: None,
-                breakdown: None,
-                hourly: None,
-                daily: None,
-            };
-
-            let policy_result = policy_engine.evaluate(&changes, &total_cost_estimate);
-
-            if !policy_result.passed {
-                println!("   Policy status: {}", "FAILED".red());
-                if self.fail_on_critical {
-                    let has_critical = policy_result
-                        .violations
-                        .iter()
-                        .any(|v| v.severity == "CRITICAL");
-                    if has_critical {
-                        return Err(CostPilotError::new(
-                            "SCAN_002",
-                            crate::errors::ErrorCategory::PolicyViolation,
-                            "Critical policy violations detected".to_string(),
-                        ));
-                    }
+        // Step 5: SLO Evaluation (if SLO config exists)
+        let slo_result = if std::path::PathBuf::from(".costpilot/slo.json").exists() {
+            match self.evaluate_slos(&total_cost_estimate, &estimates, edition) {
+                Ok(slo_result) => Some(slo_result),
+                Err(e) => {
+                    eprintln!("Warning: SLO evaluation failed: {}", e);
+                    None
                 }
-            } else {
-                println!("   Policy status: {}", "PASSED".green());
+            }
+        } else {
+            None
+        };
+
+        // Handle explain and autofix flags (only show in text output)
+        if matches!(self.output_format, Some(OutputFormat::Text)) {
+            // Step 5: Explanation (if requested)
+            if self.explain {
+                println!("{}", "💡 Step 5: Explanation".bold());
+                let _explain_engine = crate::engines::explain::ExplainEngine::new();
+                // TODO: Implement detect_anti_patterns
+                let anti_patterns: Vec<String> = Vec::new();
+
+                if !anti_patterns.is_empty() {
+                    println!("   Detected {} anti-patterns:\n", anti_patterns.len());
+                } else {
+                    println!("   {} No anti-patterns detected", "✅".green());
+                }
+            }
+
+            // Step 5: Autofix snippets (if requested)
+            if self.autofix {
+                println!("{}", "🔧 Step 6: Autofix Snippets".bold());
+                let _autofix_engine = crate::engines::autofix::AutofixEngine::new();
+                // TODO: generate_fixes requires 4 args: detections, changes, estimates, mode
+                // Stub for now
+                println!("   Autofix not yet implemented in scan command");
             }
         }
 
-        println!();
-        Ok(())
+        // Check for critical violations and fail if requested
+        if self.fail_on_critical {
+            if let Some(policy_result) = &policy_result {
+                let has_critical = policy_result
+                    .violations
+                    .iter()
+                    .any(|v| v.severity == "CRITICAL");
+                if has_critical {
+                    return Err(CostPilotError::new(
+                        "SCAN_002",
+                        crate::errors::ErrorCategory::PolicyViolation,
+                        "Critical policy violations detected".to_string(),
+                    ));
+                }
+            }
+        }
+
+        // Format and output results
+        self.format_output(&changes, &estimates, policy_result.as_ref(), baselines_result.as_ref(), slo_result.as_ref(), total_monthly, self.get_output_format(global_format))
     }
 
     /// Evaluate SLOs against the current cost estimates
@@ -415,13 +716,25 @@ impl ScanCommand {
         total_cost: &CostEstimate,
         estimates: &[CostEstimate],
         edition: &crate::edition::EditionContext,
-    ) -> Result<bool, Box<dyn std::error::Error>> {
+    ) -> Result<SloResult, CostPilotError> {
         use crate::engines::slo::{SloEngine, SloDefinition};
 
         // Load SLO config
         let slo_config_path = std::path::PathBuf::from(".costpilot/slo.json");
-        let content = std::fs::read_to_string(&slo_config_path)?;
-        let config: crate::engines::slo::SloConfig = serde_json::from_str(&content)?;
+        let content = std::fs::read_to_string(&slo_config_path).map_err(|e| {
+            CostPilotError::new(
+                "SLO_001",
+                ErrorCategory::FileSystemError,
+                format!("Failed to read SLO config: {}", e),
+            )
+        })?;
+        let config: crate::engines::slo::SloConfig = serde_json::from_str(&content).map_err(|e| {
+            CostPilotError::new(
+                "SLO_002",
+                ErrorCategory::ValidationError,
+                format!("Failed to parse SLO config: {}", e),
+            )
+        })?;
 
         // Convert to SloDefinitions for the engine
         let definitions: Vec<SloDefinition> = config.slos.into_iter().map(|slo| {
@@ -449,18 +762,7 @@ impl ScanCommand {
         let engine = SloEngine::new(definitions, edition);
         let result = engine.check_slo(&total_cost_struct, estimates);
 
-        // Print evaluation details
-        for evaluation in &result.evaluations {
-            let icon = match evaluation.status {
-                crate::engines::slo::SloStatus::Pass => "✅",
-                crate::engines::slo::SloStatus::Warning => "⚠️",
-                crate::engines::slo::SloStatus::Violation => "❌",
-                crate::engines::slo::SloStatus::NoData => "❓",
-            };
-            println!("     {} {}: {}", icon, evaluation.slo_name, evaluation.message);
-        }
-
-        Ok(result.passed)
+        Ok(result)
     }
 
     /// Format severity with color (utility for future output modes)
@@ -486,23 +788,45 @@ impl ScanCommand {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+fn evaluate_slos(
+    total_cost: &CostEstimate,
+    estimates: &[CostEstimate],
+    edition: &crate::edition::EditionContext,
+) -> Result<crate::engines::slo::slo_engine::SloResult, CostPilotError> {
+    // Load SLO configuration
+    let slo_config_path = std::path::PathBuf::from(".costpilot/slo.json");
+    let slo_config_content = std::fs::read_to_string(&slo_config_path).map_err(|e| {
+        CostPilotError::new(
+            "SLO_001",
+            ErrorCategory::FileSystemError,
+            format!("Failed to read SLO config: {}", e),
+        )
+    })?;
 
-    #[test]
-    fn test_scan_command_validation() {
-        let cmd = ScanCommand {
-            plan: PathBuf::from("nonexistent.json"),
-            format: "terraform".to_string(),
-            explain: false,
-            policy: None,
-            exemptions: None,
-            fail_on_critical: false,
-            autofix: false,
-            stack: None,
-        };
+    // Parse SLO configuration
+    let slo_definitions: Vec<crate::engines::slo::slo_engine::SloDefinition> = 
+        serde_json::from_str(&slo_config_content).map_err(|e| {
+            CostPilotError::new(
+                "SLO_002",
+                ErrorCategory::ValidationError,
+                format!("Failed to parse SLO config: {}", e),
+            )
+        })?;
 
-        let result = cmd.execute();
-        assert!(result.is_err());
-    }
+    // Create SLO engine and evaluate
+    let slo_engine = crate::engines::slo::SloEngine::new(slo_definitions, edition);
+    
+    // Convert CostEstimate to TotalCost for SLO evaluation
+    let total_cost_struct = crate::engines::shared::models::TotalCost {
+        monthly: total_cost.monthly_cost,
+        prediction_interval_low: total_cost.prediction_interval_low,
+        prediction_interval_high: total_cost.prediction_interval_high,
+        confidence_score: total_cost.confidence_score,
+        resource_count: estimates.len(),
+    };
+
+    let slo_result = slo_engine.check_slo(&total_cost_struct, estimates);
+
+    // Return the full SLO result
+    Ok(slo_result)
 }

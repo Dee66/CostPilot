@@ -27,6 +27,9 @@ pub use exemption_ci::*;
 pub use exemption_types::*;
 pub use exemption_validator::*;
 
+// Zero-network exports
+pub use zero_network::{ZeroNetworkToken, ZeroNetworkViolation, ZeroNetworkValidator};
+
 // Lifecycle exports - PolicyLifecycle from lifecycle module (state machine)
 pub use lifecycle::{
     PolicyState, StateTransition, ApprovalConfig, ApprovalRequest,

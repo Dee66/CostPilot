@@ -3,9 +3,9 @@
     {
       "sequence": 0,
       "event": {
-        "id": "audit_51bb2b46b5217145",
+        "id": "audit_23271b265eb96879",
         "event_type": "policy_state_change",
-        "timestamp": "2025-12-21T16:13:57.718984807Z",
+        "timestamp": "2025-12-21T17:05:31.415309151Z",
         "actor": "test_user",
         "resource_id": "test_policy",
         "resource_type": "policy",
@@ -14,9 +14,27 @@
         "metadata": {},
         "success": true
       },
-      "hash": "34e951b3a4c70e32baf46527395d2f48dd5c64648868e60805364b5cc5eb2e45",
+      "hash": "661052029fc4955533cc4ec6b1ce6f52b672b5597cce3980651223beeec4e212",
       "previous_hash": "153921536002551f17d87a181f9c7d7b27b2e911645f5f89102405ef04ddc043",
-      "signature": "7d721bd92159ca4c6b01b38aac6128e5fabf0defdad8d616f1a267e3053c0d74"
+      "signature": "634c358f04ebe9d5d9244201e2e1b947baeed35e574f578903d44f6c80535d48"
+    },
+    {
+      "sequence": 1,
+      "event": {
+        "id": "audit_02e4157104e30079",
+        "event_type": "policy_approval",
+        "timestamp": "2025-12-21T17:05:31.416424537Z",
+        "actor": "test_user",
+        "resource_id": "test_policy",
+        "resource_type": "policy",
+        "severity": "medium",
+        "description": "Test approval",
+        "metadata": {},
+        "success": true
+      },
+      "hash": "be2b040975b228b18abb1dfa48769a8221a2adcdb715f718aa65e5d2cee104f4",
+      "previous_hash": "661052029fc4955533cc4ec6b1ce6f52b672b5597cce3980651223beeec4e212",
+      "signature": "9534da7e20ecb15206ab4bdbc1551926f5785ca30f57e373f6964160d89e562f"
     }
   ],
   "genesis_hash": "153921536002551f17d87a181f9c7d7b27b2e911645f5f89102405ef04ddc043"

@@ -48,7 +48,8 @@ fn test_slo_burn_low_risk() {
     create_test_snapshot(&snapshots_path, "2025-03-01", 140.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn")
+    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+        .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
         .arg("--snapshots-dir")
@@ -131,7 +132,8 @@ fn test_slo_burn_critical_risk() {
     create_test_snapshot(&snapshots_path, "2025-03-01", 190.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn")
+    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+        .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
         .arg("--snapshots-dir")
@@ -198,7 +200,8 @@ fn test_slo_burn_composed_slo() {
     create_test_snapshot(&snapshots_path, "2025-03-01", 235.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn")
+    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+        .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
         .arg("--snapshots-dir")
@@ -253,7 +256,8 @@ fn test_slo_burn_insufficient_data() {
     create_test_snapshot(&snapshots_path, "2025-01-01", 100.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn")
+    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+        .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
         .arg("--snapshots-dir")
@@ -300,7 +304,8 @@ fn test_slo_burn_text_output() {
     create_test_snapshot(&snapshots_path, "2025-03-01", 200.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn")
+    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+        .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
         .arg("--snapshots-dir")
@@ -352,7 +357,8 @@ fn test_slo_burn_markdown_output() {
     create_test_snapshot(&snapshots_path, "2025-03-01", 200.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn")
+    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+        .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
         .arg("--snapshots-dir")
@@ -407,7 +413,8 @@ fn test_slo_burn_custom_parameters() {
     create_test_snapshot(&snapshots_path, "2025-05-01", 300.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn")
+    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+        .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
         .arg("--snapshots-dir")
@@ -477,7 +484,8 @@ fn test_slo_burn_multiple_slos() {
     create_test_snapshot(&snapshots_path, "2025-03-01", 400.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn")
+    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+        .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
         .arg("--snapshots-dir")

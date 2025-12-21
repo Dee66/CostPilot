@@ -207,6 +207,8 @@ impl SloManager {
                         evaluated_at: chrono::Utc::now().to_rfc3339(),
                         message: format!("Module '{}' not found in snapshot", slo.target),
                         affected: vec![slo.target.clone()],
+                        burn_risk: None,
+                        projected_cost_after_merge: None,
                     })
                 }
             }
@@ -225,6 +227,8 @@ impl SloManager {
                         evaluated_at: chrono::Utc::now().to_rfc3339(),
                         message: format!("Service '{}' not found in snapshot", slo.target),
                         affected: vec![slo.target.clone()],
+                        burn_risk: None,
+                        projected_cost_after_merge: None,
                     })
                 }
             }
@@ -245,6 +249,8 @@ impl SloManager {
                     evaluated_at: chrono::Utc::now().to_rfc3339(),
                     message: "Growth rate calculation requires historical data".to_string(),
                     affected: vec![],
+                    burn_risk: None,
+                    projected_cost_after_merge: None,
                 })
             }
             SloType::ResourceBudget => {
@@ -259,6 +265,8 @@ impl SloManager {
                     evaluated_at: chrono::Utc::now().to_rfc3339(),
                     message: "Resource-level budget checks not implemented".to_string(),
                     affected: vec![],
+                    burn_risk: None,
+                    projected_cost_after_merge: None,
                 })
             }
         }
@@ -334,6 +342,8 @@ impl SloManager {
             evaluated_at: chrono::Utc::now().to_rfc3339(),
             message,
             affected: vec![slo.target.clone()],
+            burn_risk: None,
+            projected_cost_after_merge: None,
         }
     }
 

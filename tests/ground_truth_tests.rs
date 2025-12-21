@@ -27,8 +27,6 @@ mod ground_truth_tests {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         };
 
         let estimates = engine.predict(&[change]).unwrap();
@@ -64,8 +62,6 @@ mod ground_truth_tests {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         };
 
         let estimates = engine.predict(&[change]).unwrap();
@@ -99,8 +95,6 @@ mod ground_truth_tests {
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
             ResourceChange {
                 resource_id: "test-rds-multi".to_string(),
@@ -116,8 +110,6 @@ mod ground_truth_tests {
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
         ];
 
@@ -159,8 +151,6 @@ mod ground_truth_tests {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         };
 
         let estimates = engine.predict(&[change]).unwrap();
@@ -195,8 +185,6 @@ mod ground_truth_tests {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         };
 
         let estimates = engine.predict(&[change]).unwrap();
@@ -231,8 +219,6 @@ mod ground_truth_tests {
             monthly_cost: Some(0.0), // Explicitly set to zero
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         };
 
         let estimates = engine.predict(&[change]).unwrap();
@@ -269,8 +255,6 @@ mod ground_truth_tests {
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
             ResourceChange {
                 resource_id: "fixture-instance-2".to_string(),
@@ -285,8 +269,6 @@ mod ground_truth_tests {
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             },
         ];
 

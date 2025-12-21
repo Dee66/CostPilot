@@ -3,8 +3,8 @@
 use colored::*;
 use std::path::PathBuf;
 
-use crate::engines::slo::burn_rate::{BurnRateCalculator, BurnReport, BurnRisk};
-use crate::engines::slo::SloManager;
+use crate::engines::slo::burn_rate::{BurnRateCalculator, BurnReport};
+use crate::engines::slo::{BurnRisk, SloManager};
 use crate::engines::trend::SnapshotManager;
 
 /// Execute the SLO burn rate analysis command

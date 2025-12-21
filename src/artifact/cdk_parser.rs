@@ -3,11 +3,81 @@ use serde_json::Value;
 use std::path::Path;
 use std::collections::HashMap;
 
+/// CDK diff structure (output from `cdk diff --json`)
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CdkDiff {
+    /// Success status
+    success: bool,
+    /// List of stacks with changes
+    stacks: Vec<CdkStackDiff>,
+    /// Error message if any
+    error: Option<String>,
+}
+
+/// Stack diff in CDK
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CdkStackDiff {
+    /// Stack name
+    stack_name: String,
+    /// Stack path
+    stack_path: Option<String>,
+    /// Changes in this stack
+    changes: Vec<CdkResourceChange>,
+}
+
+/// Resource change in CDK diff
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CdkResourceChange {
+    /// Resource logical ID
+    logical_id: String,
+    /// Resource type
+    resource_type: String,
+    /// Change type
+    change_type: CdkChangeType,
+    /// Impact level
+    impact: Option<String>,
+    /// Property changes
+    property_changes: Option<Vec<CdkPropertyChange>>,
+    /// Old values
+    old_values: Option<serde_json::Value>,
+    /// New values
+    new_values: Option<serde_json::Value>,
+}
+
+/// Type of change in CDK
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+enum CdkChangeType {
+    Create,
+    Update,
+    Delete,
+}
+
+/// Property change details
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CdkPropertyChange {
+    /// Property path
+    property_path: String,
+    /// Old value
+    old_value: Option<serde_json::Value>,
+    /// New value
+    new_value: Option<serde_json::Value>,
+    /// Change impact
+    change_impact: Option<String>,
+}
+
+/// Parse CDK diff JSON
+fn parse_cdk_diff(json_content: &str) -> ArtifactResult<CdkDiff> {
+    serde_json::from_str(json_content).map_err(|e| {
+        ArtifactError::ParseError(format!("Failed to parse CDK diff JSON: {}", e))
+    })
+}
+
 /// CloudFormation template structure (subset needed for CDK)
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 struct CloudFormationTemplate {
     /// Resources
-    #[serde(default)]
+    #[serde(rename = "Resources", default)]
     pub resources: HashMap<String, CloudFormationResource>,
 }
 
@@ -20,6 +90,12 @@ struct CloudFormationResource {
     /// Resource properties
     #[serde(rename = "Properties")]
     pub properties: Option<serde_json::Value>,
+    /// Resource metadata
+    #[serde(rename = "Metadata", default)]
+    pub metadata: Option<serde_json::Value>,
+    /// Dependencies
+    #[serde(rename = "DependsOn", default)]
+    pub depends_on: Option<serde_json::Value>,
 }
 
 /// Parse CloudFormation template JSON
@@ -86,6 +162,46 @@ fn map_cloudformation_resource_type(cf_type: &str) -> String {
 pub struct CdkParser;
 
 impl CdkParser {
+    /// Parse CDK diff to artifact
+    fn parse_cdk_diff_to_artifact(&self, diff: &CdkDiff) -> ArtifactResult<Artifact> {
+        let mut all_resources = Vec::new();
+        let mut stack_name = None;
+
+        for stack in &diff.stacks {
+            stack_name = Some(stack.stack_name.clone());
+            for change in &stack.changes {
+                // Only include resources with new values (created/updated)
+                if let Some(new_values) = &change.new_values {
+                    let properties = new_values.as_object()
+                        .map(|m| m.clone().into_iter().collect())
+                        .unwrap_or_default();
+
+                    let resource = ArtifactResource {
+                        id: change.logical_id.clone(),
+                        resource_type: change.resource_type.clone(),
+                        properties,
+                        metadata: HashMap::new(),
+                        depends_on: Vec::new(),
+                    };
+                    all_resources.push(resource);
+                }
+            }
+        }
+
+        Ok(Artifact {
+            format: ArtifactFormat::Cdk,
+            resources: all_resources,
+            metadata: ArtifactMetadata {
+                source: "cdk-diff".to_string(),
+                version: None,
+                stack_name,
+                region: None,
+                tags: HashMap::new(),
+            },
+            outputs: HashMap::new(),
+            parameters: HashMap::new(),
+        })
+    }
     /// Create a new CDK parser
     pub fn new() -> Self {
         Self
@@ -101,13 +217,23 @@ impl CdkParser {
         // Convert template resources to artifact resources
         let mut resources = Vec::new();
         for (logical_id, resource) in &template.resources {
-            let resource_type = map_cloudformation_resource_type(&resource.resource_type);
+            let resource_type = resource.resource_type.clone();
             let properties = resource.properties.as_ref()
                 .and_then(|p| p.as_object())
                 .map(|m| m.clone().into_iter().collect())
                 .unwrap_or_default();
             let mut metadata = HashMap::new();
-            
+            // Extract metadata from CloudFormation resource
+            if let Some(metadata_value) = &resource.metadata {
+                if let Some(metadata_obj) = metadata_value.as_object() {
+                    for (key, value) in metadata_obj {
+                        if let Some(str_value) = value.as_str() {
+                            metadata.insert(key.clone(), str_value.to_string());
+                        }
+                    }
+                }
+            }
+
             // Extract tags into metadata
             if let Some(props) = &resource.properties {
                 if let Some(tags_value) = props.get("Tags") {
@@ -128,7 +254,20 @@ impl CdkParser {
                 id: logical_id.clone(),
                 resource_type: resource.resource_type.clone(), // Keep original CFN type
                 properties,
-                depends_on: Vec::new(),
+                depends_on: if let Some(depends_value) = &resource.depends_on {
+                    if let Some(depends_array) = depends_value.as_array() {
+                        depends_array.iter()
+                            .filter_map(|v| v.as_str())
+                            .map(|s| s.to_string())
+                            .collect()
+                    } else if let Some(depends_str) = depends_value.as_str() {
+                        vec![depends_str.to_string()]
+                    } else {
+                        Vec::new()
+                    }
+                } else {
+                    Vec::new()
+                },
                 metadata,
             });
         }
@@ -295,20 +434,34 @@ impl Default for CdkParser {
 
 impl ArtifactParser for CdkParser {
     fn parse(&self, content: &str) -> ArtifactResult<Artifact> {
-        // For CDK, we expect a CloudFormation template
-        // (CDK synthesizes to CFN)
+        // Try to parse as CDK diff first
+        if let Ok(diff) = parse_cdk_diff(content) {
+            return self.parse_cdk_diff_to_artifact(&diff);
+        }
+
+        // Fall back to CloudFormation template
         let template: CloudFormationTemplate = parse_cloudformation_template(content)?;
-        
+
         // Convert template resources to artifact resources
         let mut resources = Vec::new();
         for (logical_id, resource) in &template.resources {
-            let resource_type = map_cloudformation_resource_type(&resource.resource_type);
+            let resource_type = resource.resource_type.clone();
             let properties = resource.properties.as_ref()
                 .and_then(|p| p.as_object())
                 .map(|m| m.clone().into_iter().collect())
                 .unwrap_or_default();
             let mut metadata = HashMap::new();
-            
+            // Extract metadata from CloudFormation resource
+            if let Some(metadata_value) = &resource.metadata {
+                if let Some(metadata_obj) = metadata_value.as_object() {
+                    for (key, value) in metadata_obj {
+                        if let Some(str_value) = value.as_str() {
+                            metadata.insert(key.clone(), str_value.to_string());
+                        }
+                    }
+                }
+            }
+
             // Extract tags into metadata
             if let Some(props) = &resource.properties {
                 if let Some(tags_value) = props.get("Tags") {
@@ -329,7 +482,20 @@ impl ArtifactParser for CdkParser {
                 id: logical_id.clone(),
                 resource_type: resource.resource_type.clone(), // Keep original CFN type
                 properties,
-                depends_on: Vec::new(),
+                depends_on: if let Some(depends_value) = &resource.depends_on {
+                    if let Some(depends_array) = depends_value.as_array() {
+                        depends_array.iter()
+                            .filter_map(|v| v.as_str())
+                            .map(|s| s.to_string())
+                            .collect()
+                    } else if let Some(depends_str) = depends_value.as_str() {
+                        vec![depends_str.to_string()]
+                    } else {
+                        Vec::new()
+                    }
+                } else {
+                    Vec::new()
+                },
                 metadata,
             });
         }

@@ -6,6 +6,7 @@ expression: stdout
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📊 Step 1: Detection
+   Format: Terraform plan
    Found 2 resource changes
 
 💰 Step 2: Cost Prediction

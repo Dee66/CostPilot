@@ -1,6 +1,7 @@
 use super::artifact_types::*;
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use crate::engines::shared::models::{ResourceChange, ChangeAction as EngineChangeAction};
 
 /// Normalizes different artifact formats to a common internal representation
 pub struct ArtifactNormalizer;
@@ -314,6 +315,40 @@ impl NormalizedPlan {
             *counts.entry(change.resource_type.clone()).or_insert(0) += 1;
         }
         counts
+    }
+
+    /// Convert to ResourceChange format used by detection engine
+    pub fn to_resource_changes(&self) -> Vec<ResourceChange> {
+        self.resource_changes
+            .iter()
+            .map(|change| {
+                // Convert artifact ChangeAction to engine ChangeAction
+                let action = if change.change.actions.contains(&"create".to_string()) {
+                    EngineChangeAction::Create
+                } else if change.change.actions.contains(&"update".to_string()) {
+                    EngineChangeAction::Update
+                } else if change.change.actions.contains(&"delete".to_string()) {
+                    EngineChangeAction::Delete
+                } else if change.change.actions.contains(&"delete".to_string()) && change.change.actions.contains(&"create".to_string()) {
+                    EngineChangeAction::Replace
+                } else {
+                    EngineChangeAction::NoOp
+                };
+
+                ResourceChange {
+                    resource_id: change.name.clone(),
+                    resource_type: change.resource_type.clone(),
+                    action,
+                    module_path: self.source_metadata.stack_name.clone(),
+                    old_config: Some(change.change.before.clone()),
+                    new_config: Some(change.change.after.clone()),
+                    tags: HashMap::new(), // TODO: extract tags from properties
+                    monthly_cost: None,
+                    cost_impact: None,
+                    config: Some(change.change.after.clone()),
+                }
+            })
+            .collect()
     }
 }
 
