@@ -229,3 +229,164 @@ fn print_diff_markdown(before: f64, after: f64, delta: f64, percentage: f64) {
     println!("- Run `costpilot scan --explain` for detailed analysis");
     println!("- Run `costpilot autofix patch` for cost optimization suggestions");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::edition::EditionContext;
+    use crate::test_helpers::edition;
+    use std::fs;
+    use tempfile::TempDir;
+
+    fn create_mock_plan(temp_dir: &TempDir, filename: &str, content: &str) -> std::path::PathBuf {
+        let path = temp_dir.path().join(filename);
+        fs::write(&path, content).unwrap();
+        path
+    }
+
+    #[test]
+    fn test_execute_missing_before_file() {
+        let temp = TempDir::new().unwrap();
+        let before_path = temp.path().join("missing_before.json");
+        let after_path = create_mock_plan(&temp, "after.json", "{}");
+
+        let edition = edition::premium();
+
+        let result = execute(before_path, after_path, "text", false, &edition);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        println!("Actual error message: {}", err_msg);
+        assert!(err_msg.contains("Before plan not found"));
+    }
+
+    #[test]
+    fn test_execute_missing_after_file() {
+        let temp = TempDir::new().unwrap();
+        let before_path = create_mock_plan(&temp, "before.json", "{}");
+        let after_path = temp.path().join("missing_after.json");
+
+        let edition = edition::premium();
+
+        let result = execute(before_path, after_path, "text", false, &edition);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("After plan not found"));
+    }
+
+    #[test]
+    fn test_execute_requires_premium() {
+        let temp = TempDir::new().unwrap();
+        let before_path = create_mock_plan(&temp, "before.json", "{}");
+        let after_path = create_mock_plan(&temp, "after.json", "{}");
+
+        let edition = EditionContext::free();
+
+        let result = execute(before_path, after_path, "text", false, &edition);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Premium"));
+    }
+
+    #[test]
+    fn test_print_diff_text_cost_increase() {
+        // Test that the function doesn't panic
+        print_diff_text(100.0, 120.0, 20.0, 20.0, false);
+        print_diff_text(100.0, 120.0, 20.0, 20.0, true);
+    }
+
+    #[test]
+    fn test_print_diff_text_cost_decrease() {
+        print_diff_text(120.0, 100.0, -20.0, -16.67, false);
+        print_diff_text(120.0, 100.0, -20.0, -16.67, true);
+    }
+
+    #[test]
+    fn test_print_diff_text_no_change() {
+        print_diff_text(100.0, 100.0, 0.0, 0.0, false);
+        print_diff_text(100.0, 100.0, 0.0, 0.0, true);
+    }
+
+    #[test]
+    fn test_print_diff_text_zero_before() {
+        print_diff_text(0.0, 50.0, 50.0, 0.0, false);
+    }
+
+    #[test]
+    fn test_print_diff_json() {
+        print_diff_json(100.0, 120.0, 20.0, 20.0);
+        print_diff_json(120.0, 100.0, -20.0, -16.67);
+        print_diff_json(100.0, 100.0, 0.0, 0.0);
+    }
+
+    #[test]
+    fn test_print_diff_markdown() {
+        print_diff_markdown(100.0, 120.0, 20.0, 20.0);
+        print_diff_markdown(120.0, 100.0, -20.0, -16.67);
+        print_diff_markdown(100.0, 100.0, 0.0, 0.0);
+    }
+
+    #[test]
+    fn test_severity_assessment_high() {
+        // Test HIGH severity (>= 50%)
+        let severity = if 60.0 >= 50.0 {
+            ("HIGH", "🔴")
+        } else if 60.0 >= 20.0 {
+            ("MEDIUM", "🟡")
+        } else if 60.0 >= 5.0 {
+            ("LOW", "🔵")
+        } else {
+            ("INFO", "⚪")
+        };
+        assert_eq!(severity.0, "HIGH");
+        assert_eq!(severity.1, "🔴");
+    }
+
+    #[test]
+    fn test_severity_assessment_medium() {
+        // Test MEDIUM severity (>= 20%)
+        let severity = if 30.0 >= 50.0 {
+            ("HIGH", "🔴")
+        } else if 30.0 >= 20.0 {
+            ("MEDIUM", "🟡")
+        } else if 30.0 >= 5.0 {
+            ("LOW", "🔵")
+        } else {
+            ("INFO", "⚪")
+        };
+        assert_eq!(severity.0, "MEDIUM");
+        assert_eq!(severity.1, "🟡");
+    }
+
+    #[test]
+    fn test_severity_assessment_low() {
+        // Test LOW severity (>= 5%)
+        let severity = if 10.0 >= 50.0 {
+            ("HIGH", "🔴")
+        } else if 10.0 >= 20.0 {
+            ("MEDIUM", "🟡")
+        } else if 10.0 >= 5.0 {
+            ("LOW", "🔵")
+        } else {
+            ("INFO", "⚪")
+        };
+        assert_eq!(severity.0, "LOW");
+        assert_eq!(severity.1, "🔵");
+    }
+
+    #[test]
+    fn test_severity_assessment_info() {
+        // Test INFO severity (< 5%)
+        let severity = if 2.0 >= 50.0 {
+            ("HIGH", "🔴")
+        } else if 2.0 >= 20.0 {
+            ("MEDIUM", "🟡")
+        } else if 2.0 >= 5.0 {
+            ("LOW", "🔵")
+        } else {
+            ("INFO", "⚪")
+        };
+        assert_eq!(severity.0, "INFO");
+        assert_eq!(severity.1, "⚪");
+    }
+}

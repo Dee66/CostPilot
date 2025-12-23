@@ -1,0 +1,33 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_instance.app",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "instance_type": "t3.medium",
+          "tags": {
+            "Environment": "dev",
+            "ManagedBy": "Terraform"
+          }
+        },
+        "before": {
+          "instance_type": "t2.micro",
+          "tags": {
+            "Environment": "dev"
+          }
+        }
+      },
+      "mode": "managed",
+      "name": "app",
+      "type": "aws_instance"
+    }
+  ]
+}

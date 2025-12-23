@@ -1,0 +1,117 @@
+# CostPilot Policy: Monthly Cost Limit
+# This policy enforces a maximum monthly spending limit across all resources
+
+metadata:
+  policy_id: "cost-limit-monthly-budget"
+  policy_version: "1.0.0"
+  policy_type: "cost_limit"
+  severity: "critical"
+  category: "cost_control"
+  description: "Enforce maximum monthly spending limit to prevent cost overruns"
+  created_at: "2025-01-15T00:00:00Z"
+  last_updated: "2025-01-15T00:00:00Z"
+  author: "CostPilot Policy Engine"
+  tags:
+    - cost-control
+    - budget
+    - monthly-limit
+
+# Policy scope - applies to all resources in specified accounts/regions
+scope:
+  accounts:
+    - "*"  # All accounts
+  regions:
+    - "*"  # All regions
+  resource_types:
+    - "*"  # All resource types
+  environments:
+    - production
+    - staging
+    - development
+
+# Cost limit configuration
+cost_limits:
+  monthly_budget: 50000.00  # $50,000 per month
+  currency: "USD"
+  reset_period: "monthly"  # monthly, quarterly, yearly
+  alert_thresholds:
+    - percentage: 80
+      action: "alert"
+      notification_channels: ["email", "slack"]
+    - percentage: 95
+      action: "alert"
+      notification_channels: ["email", "slack", "pagerduty"]
+    - percentage: 100
+      action: "block"
+      notification_channels: ["email", "slack", "pagerduty", "sms"]
+
+# Enforcement rules
+enforcement:
+  mode: "monitor_and_block"  # monitor_only, monitor_and_alert, monitor_and_block
+  block_new_resources: true
+  block_existing_resources: false  # Only block new resources when limit exceeded
+  grace_period_hours: 24  # Allow 24 hours after limit exceeded before blocking
+
+# Exceptions and overrides
+exceptions:
+  emergency_resources:
+    enabled: true
+    max_cost_per_exception: 1000.00
+    approval_required: true
+    approvers:
+      - role: "engineering_manager"
+      - role: "finance_director"
+  service_accounts:
+    - "infrastructure-automation"
+    - "monitoring-system"
+
+# Notification configuration
+notifications:
+  channels:
+    email:
+      recipients:
+        - "engineering@company.com"
+        - "finance@company.com"
+      subject_template: "CostPilot Alert: {{percentage}}% of monthly budget used"
+    slack:
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#cost-alerts"
+      message_template: |
+        🚨 *CostPilot Budget Alert*
+        Monthly budget usage: {{percentage}}%
+        Current spend: ${{current_cost}}
+        Budget limit: ${{budget_limit}}
+        Resources affected: {{resource_count}}
+    pagerduty:
+      integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+      severity: "critical"
+    sms:
+      recipients:
+        - "+1234567890"  # On-call engineer
+        - "+0987654321"  # Finance director
+
+# Reporting configuration
+reporting:
+  frequency: "daily"  # daily, weekly, monthly
+  include_forecasting: true
+  forecast_days: 30
+  report_recipients:
+    - "engineering@company.com"
+    - "finance@company.com"
+  dashboard_url: "https://costpilot.company.com/dashboard"
+
+# Advanced settings
+advanced:
+  cost_attribution:
+    enabled: true
+    tags:
+      - "Environment"
+      - "Team"
+      - "Project"
+      - "CostCenter"
+  predictive_alerts:
+    enabled: true
+    forecast_accuracy_threshold: 85
+  anomaly_detection:
+    enabled: true
+    sensitivity: "medium"  # low, medium, high

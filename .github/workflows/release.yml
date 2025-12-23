@@ -3,222 +3,295 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
-
-permissions:
-  contents: write
-  discussions: write
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
-  test:
-    name: Test Before Release
+  build-linux-amd64:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-          components: clippy
-      
-      - name: Cache Cargo registry
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache Cargo index
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache Cargo build
-        uses: actions/cache@v3
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Run tests
-        run: cargo test --all-features --verbose
-      
-      - name: Run clippy
-        run: cargo clippy --all-features -- -D warnings
-      
-      - name: Check formatting
-        run: cargo fmt -- --check
-      
-      - name: Run security audit
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run ProEngine loader tests
+        run: cargo test --test pro_engine_loader_unit_tests
+
+      - name: Run WASM runtime tests
+        run: cargo test --test wasm_runtime_tests
+
+      - name: Run Pro Engine loader tests
+        run: cargo test --test pro_engine_loader_tests
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Package
+        env:
+          TARGET: linux-amd64
+          COSTPILOT_VERSION: ${{ github.ref_name }}
+          OUT_DIR: dist
+        run: bash scripts/make_release_bundle.sh
+
+      - name: Validate archives
         run: |
-          cargo install cargo-audit
-          cargo audit
-  
-  build:
-    name: Build Release Binaries
-    needs: test
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact: costpilot-linux-x86_64
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            artifact: costpilot-linux-aarch64
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact: costpilot-macos-x86_64
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            artifact: costpilot-macos-aarch64
-    
-    runs-on: ${{ matrix.os }}
-    
+          bash scripts/verify_release_bundle.sh dist/costpilot-linux-amd64.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-linux-amd64.tar.gz
+
+      - name: Verify release policy
+        run: bash scripts/signing/verify_release_policy.sh
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: costpilot-linux-amd64.zip
+          path: dist/costpilot-linux-amd64.zip
+
+      - name: Upload TAR.GZ
+        uses: actions/upload-artifact@v4
+        with:
+          name: costpilot-linux-amd64.tar.gz
+          path: dist/costpilot-linux-amd64.tar.gz
+
+  build-macos-arm64:
+    runs-on: macos-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          profile: minimal
-          target: ${{ matrix.target }}
-          override: true
-      
-      - name: Install cross-compilation tools (Linux ARM64)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
+          targets: aarch64-apple-darwin
+
+      - name: Build release
+        run: cargo build --release --target aarch64-apple-darwin
+
+      - name: Copy binary to standard location
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
-      
-      - name: Build release binary
-        uses: actions-rs/cargo@v1
+          mkdir -p target/release
+          cp target/aarch64-apple-darwin/release/costpilot target/release/
+
+      - name: Package
+        env:
+          TARGET: macos-arm64
+          COSTPILOT_VERSION: ${{ github.ref_name }}
+          OUT_DIR: dist
+        run: bash scripts/make_release_bundle.sh
+
+      - name: Validate archives
+        run: |
+          bash scripts/verify_release_bundle.sh dist/costpilot-macos-arm64.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-macos-arm64.tar.gz
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
         with:
-          command: build
-          args: --release --target ${{ matrix.target }} --verbose
-      
-      - name: Strip binary (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-            aarch64-linux-gnu-strip target/${{ matrix.target }}/release/costpilot
-          else
-            strip target/${{ matrix.target }}/release/costpilot
-          fi
-      
-      - name: Create archive
-        run: |
-          mkdir -p artifacts
-          cp target/${{ matrix.target }}/release/costpilot artifacts/${{ matrix.artifact }}
-          cd artifacts
-          tar -czf ${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
-          sha256sum ${{ matrix.artifact }}.tar.gz > ${{ matrix.artifact }}.tar.gz.sha256
-      
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+          name: costpilot-macos-arm64.zip
+          path: dist/costpilot-macos-arm64.zip
+
+      - name: Upload TAR.GZ
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: artifacts/*
-          retention-days: 1
-  
-  release:
-    name: Create GitHub Release
-    needs: build
+          name: costpilot-macos-arm64.tar.gz
+          path: dist/costpilot-macos-arm64.tar.gz
+
+  build-macos-amd64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
+
+      - name: Build release
+        run: cargo build --release --target x86_64-apple-darwin
+
+      - name: Copy binary to standard location
+        run: |
+          mkdir -p target/release
+          cp target/x86_64-apple-darwin/release/costpilot target/release/
+
+      - name: Package
+        env:
+          TARGET: macos-amd64
+          COSTPILOT_VERSION: ${{ github.ref_name }}
+          OUT_DIR: dist
+        run: bash scripts/make_release_bundle.sh
+
+      - name: Validate archives
+        run: |
+          bash scripts/verify_release_bundle.sh dist/costpilot-macos-amd64.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-macos-amd64.tar.gz
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: costpilot-macos-amd64.zip
+          path: dist/costpilot-macos-amd64.zip
+
+      - name: Upload TAR.GZ
+        uses: actions/upload-artifact@v4
+        with:
+          name: costpilot-macos-amd64.tar.gz
+          path: dist/costpilot-macos-amd64.tar.gz
+
+  build-windows-amd64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run ProEngine loader tests
+        run: cargo test --test pro_engine_loader_unit_tests
+
+      - name: Run WASM runtime tests
+        run: cargo test --test wasm_runtime_tests
+
+      - name: Run Pro Engine loader tests
+        run: cargo test --test pro_engine_loader_tests
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Package
+        shell: bash
+        env:
+          TARGET: windows-amd64
+          COSTPILOT_VERSION: ${{ github.ref_name }}
+          OUT_DIR: dist
+        run: bash scripts/make_release_bundle.sh
+
+      - name: Validate archives
+        shell: bash
+        run: |
+          bash scripts/verify_release_bundle.sh dist/costpilot-windows-amd64.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-windows-amd64.tar.gz
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: costpilot-windows-amd64.zip
+          path: dist/costpilot-windows-amd64.zip
+
+      - name: Upload TAR.GZ
+        uses: actions/upload-artifact@v4
+        with:
+          name: costpilot-windows-amd64.tar.gz
+          path: dist/costpilot-windows-amd64.tar.gz
+
+  sign-and-release:
     runs-on: ubuntu-latest
-    
+    needs: [build-linux-amd64, build-macos-arm64, build-macos-amd64, build-windows-amd64]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
+      - uses: actions/checkout@v4
+
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          path: artifacts
-      
-      - name: Flatten artifacts directory
+          path: dist/
+          merge-multiple: true
+
+      - name: Generate checksum file
+        working-directory: dist
         run: |
-          mkdir -p release-artifacts
-          find artifacts -type f -exec cp {} release-artifacts/ \;
-          ls -lah release-artifacts/
-      
-      - name: Extract version from tag
-        id: version
+          sha256sum *.zip *.tar.gz | sort > sha256sum.txt
+          cat sha256sum.txt
+
+      - name: Generate ephemeral signing key (CI-only)
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
-      
-      - name: Generate release notes from changelog
-        id: release_notes
+          mkdir -p build/keys
+          chmod +x scripts/signing/generate_keypair.sh
+          bash scripts/signing/generate_keypair.sh build/keys ci_signing
+
+      - name: Sign checksums (Ed25519)
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          
-          if [ -f CHANGELOG.md ]; then
-            awk "/## \[${VERSION#v}\]/,/## \[/" CHANGELOG.md | head -n -1 > release_notes.md
-            
-            if [ ! -s release_notes.md ]; then
-              echo "Release $VERSION" > release_notes.md
-              echo "" >> release_notes.md
-              echo "See [CHANGELOG.md](CHANGELOG.md) for details." >> release_notes.md
-            fi
+          chmod +x scripts/signing/sign_checksum_ed25519.sh
+          bash scripts/signing/sign_checksum_ed25519.sh dist/sha256sum.txt build/keys/ci_signing.pem dist/sha256sum.txt.sig
+
+      - name: Verify signature (CI smoke)
+        run: |
+          chmod +x scripts/signing/verify_checksum_ed25519.sh
+          bash scripts/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/keys/ci_signing.pub.pem
+
+      - name: Generate license token (dev)
+        if: env.RELEASE_SIGNING == 'true'
+        env:
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+          SOURCE_DATE_EPOCH: ${{ github.event.head_commit.timestamp }}
+        run: |
+          chmod +x scripts/signing/generate_license_token.sh
+          bash scripts/signing/generate_license_token.sh \
+            "demo-license" \
+            "dev@example.com" \
+            "2026-12-31T23:59:59Z" \
+            "dist/license.json"
+
+      - name: Sign checksums
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          ED25519_PRIV: ${{ secrets.ED25519_PRIV }}
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+        run: |
+          chmod +x scripts/signing/sign_checksums.sh
+          bash scripts/signing/sign_checksums.sh dist dist/sha256sum.txt dist/sha256sum.sig
+
+      - name: Verify signature
+        env:
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+        run: |
+          chmod +x scripts/signing/verify_signature.sh
+          if [[ -f scripts/signing/public.key ]]; then
+            bash scripts/signing/verify_signature.sh dist/sha256sum.txt dist/sha256sum.sig scripts/signing/public.key
           else
-            echo "Release $VERSION" > release_notes.md
-            echo "" >> release_notes.md
-            echo "See commit history for changes." >> release_notes.md
+            bash scripts/signing/verify_signature.sh dist/sha256sum.txt dist/sha256sum.sig
           fi
-          
-          cat >> release_notes.md << 'EOF'
-          
-          ## Installation
-          
-          ### Linux (x86_64)
-          ```bash
-          curl -L https://github.com/Dee66/CostPilot/releases/download/${{ steps.version.outputs.version }}/costpilot-linux-x86_64.tar.gz | tar xz
-          sudo mv costpilot /usr/local/bin/
-          costpilot --version
-          ```
-          
-          ### macOS (Apple Silicon)
-          ```bash
-          curl -L https://github.com/Dee66/CostPilot/releases/download/${{ steps.version.outputs.version }}/costpilot-macos-aarch64.tar.gz | tar xz
-          sudo mv costpilot /usr/local/bin/
-          costpilot --version
-          ```
-          
-          ### GitHub Action
-          ```yaml
-          - uses: Dee66/CostPilot@${{ steps.version.outputs.version }}
-          ```
-          EOF
-      
+
+      - name: Verify release bundles
+        env:
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+        run: |
+          chmod +x scripts/verify_release_bundle.sh
+          for artifact in dist/*.tar.gz dist/*.zip; do
+            [[ -f "$artifact" ]] || continue
+            bash scripts/verify_release_bundle.sh "$artifact" dist/sha256sum.txt dist/sha256sum.sig scripts/signing/public.key || true
+          done
+
+      - name: Verify publisher signature (release)
+        if: secrets.PUBLISHER_PUBKEY != ''
+        env:
+          PUBLISHER_PUBKEY: ${{ secrets.PUBLISHER_PUBKEY }}
+        run: |
+          echo "$PUBLISHER_PUBKEY" > build/publisher.pub.pem
+          chmod +x scripts/signing/verify_checksum_ed25519.sh
+          bash scripts/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/publisher.pub.pem
+
+      - name: Upload checksum and signature
+        uses: actions/upload-artifact@v4
+        with:
+          name: checksums-and-signatures
+          path: |
+            dist/sha256sum.txt
+            dist/sha256sum.sig
+            dist/license.json
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: CostPilot ${{ steps.version.outputs.version }}
-          body_path: release_notes.md
-          files: release-artifacts/*
+          files: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/sha256sum.txt
+            dist/sha256sum.sig
+            dist/license.json
           draft: false
-          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Update major version tag
-        if: ${{ !contains(steps.version.outputs.version, '-') }}
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
-          
-          git tag -d "$MAJOR_VERSION" 2>/dev/null || true
-          git push origin ":refs/tags/$MAJOR_VERSION" 2>/dev/null || true
-          
-          git tag "$MAJOR_VERSION"
-          git push origin "$MAJOR_VERSION"

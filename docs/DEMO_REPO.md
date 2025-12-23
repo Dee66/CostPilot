@@ -21,7 +21,7 @@ Public demonstration repository showcasing CostPilot in action with real Terrafo
 resource "aws_instance" "web" {
   ami           = "ami-0c55b159cbfafe1f0"
   instance_type = "t3.micro"
-  
+
   tags = {
     Name = "demo-web-server"
   }
@@ -159,19 +159,19 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: hashicorp/setup-terraform@v3
-      
+
       - name: Terraform Plan
         working-directory: terraform
         run: |
           terraform init
           terraform plan -out=plan.tfplan
           terraform show -json plan.tfplan > plan.json
-      
+
       - uses: Dee66/CostPilot@v1
         with:
           terraform_plan: terraform/plan.json

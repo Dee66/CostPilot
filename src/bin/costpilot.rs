@@ -7,12 +7,12 @@ use std::process;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const BANNER: &str = r#"
-   ____          _   ____  _ _       _   
-  / ___|___  ___| |_|  _ \(_) | ___ | |_ 
+   ____          _   ____  _ _       _
+  / ___|___  ___| |_|  _ \(_) | ___ | |_
  | |   / _ \/ __| __| |_) | | |/ _ \| __|
- | |__| (_) \__ \ |_|  __/| | | (_) | |_ 
+ | |__| (_) \__ \ |_|  __/| | | (_) | |_
   \____\___/|___/\__|_|   |_|_|\___/ \__|
-                                          
+
 "#;
 
 #[derive(Parser)]
@@ -355,19 +355,16 @@ fn main() {
     }
 
     // Check for premium commands in Free mode and fail early
-    if edition.is_free() {
-        if args.len() >= 2 {
-            let premium_commands = ["autofix", "patch", "slo"];
-            let command = args[1].to_lowercase();
-            
-            if premium_commands.contains(&command.as_str()) {
-                eprintln!("{} {}", "Error:".bright_red().bold(), 
-                    format!("Unknown command '{}'", command));
-                eprintln!();
-                eprintln!("This command requires CostPilot Premium.");
-                eprintln!("Upgrade at: https://shieldcraft-ai.com/costpilot/upgrade");
-                process::exit(1);
-            }
+    if edition.is_free() && args.len() >= 2 {
+        let premium_commands = ["autofix", "patch", "slo"];
+        let command = args[1].to_lowercase();
+
+        if premium_commands.contains(&command.as_str()) {
+            eprintln!("{} Unknown command '{}'", "Error:".bright_red().bold(), command);
+            eprintln!();
+            eprintln!("This command requires CostPilot Premium.");
+            eprintln!("Upgrade at: https://shieldcraft-ai.com/costpilot/upgrade");
+            process::exit(1);
         }
     }
 
@@ -411,7 +408,7 @@ fn main() {
                 eprintln!("🔍 Executing scan command");
             }
             scan_cmd
-                .execute_with_edition(&edition)
+                .execute_with_edition(&edition, &cli.format)
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
         }
         Commands::Diff { before, after } => {

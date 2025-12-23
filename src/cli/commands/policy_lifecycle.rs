@@ -474,7 +474,7 @@ pub fn cmd_diff(
             .bold()
     );
 
-    // Mock for demo
+    // Mock for demo - create history with multiple versions
     use serde_json::json;
     use std::collections::HashMap;
 
@@ -486,8 +486,27 @@ pub fn cmd_diff(
         config: HashMap::new(),
     };
 
-    let history = PolicyHistory::new(policy_id, content, "author@example.com".to_string());
-    let diff = history.diff(&from_version, &to_version)?;
+    let mut history =
+        PolicyHistory::new(policy_id, content.clone(), "author@example.com".to_string());
+
+    // Add a second version for diff testing
+    let mut updated_content = content;
+    updated_content.name = "Updated Test Policy".to_string();
+    updated_content.description = "Updated test policy description".to_string();
+    updated_content.rules = json!({"test": "updated_rule"});
+    history
+        .add_version(
+            updated_content,
+            "updater@example.com".to_string(),
+            "Updated policy content".to_string(),
+            false,
+        )
+        .unwrap();
+
+    let diff = history.diff(&from_version, &to_version).map_err(|e| {
+        eprintln!("Diff error: {:?}", e);
+        e
+    })?;
 
     match format {
         "json" => {
@@ -530,4 +549,189 @@ pub fn cmd_diff(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::edition::EditionContext;
+    use std::path::PathBuf;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_cmd_submit() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let policy_file = temp_file.path().to_path_buf();
+        let approvers = vec![
+            "approver1@example.com".to_string(),
+            "approver2@example.com".to_string(),
+        ];
+        let edition = EditionContext::default();
+
+        let result = cmd_submit(policy_file, approvers, "text", false, &edition);
+        assert!(result.is_ok());
+
+        let result = cmd_submit(
+            temp_file.path().to_path_buf(),
+            vec!["approver@example.com".to_string()],
+            "json",
+            false,
+            &edition,
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cmd_approve() {
+        let policy_id = "test-policy".to_string();
+        let approver = "approver@example.com".to_string();
+        let comment = Some("Looks good!".to_string());
+        let edition = EditionContext::default();
+
+        let result = cmd_approve(
+            policy_id.clone(),
+            approver.clone(),
+            comment.clone(),
+            "text",
+            false,
+            &edition,
+        );
+        assert!(result.is_ok());
+
+        let result = cmd_approve(policy_id, approver, comment, "json", false, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cmd_reject() {
+        let policy_id = "test-policy".to_string();
+        let approver = "approver@example.com".to_string();
+        let reason = "Needs more review".to_string();
+        let edition = EditionContext::default();
+
+        let result = cmd_reject(
+            policy_id.clone(),
+            approver.clone(),
+            reason.clone(),
+            "text",
+            false,
+            &edition,
+        );
+        assert!(result.is_ok());
+
+        let result = cmd_reject(policy_id, approver, reason, "json", false, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cmd_activate() {
+        let policy_id = "test-policy".to_string();
+        let actor = "admin@example.com".to_string();
+        let edition = EditionContext::default();
+
+        let result = cmd_activate(policy_id.clone(), actor.clone(), "text", false, &edition);
+        assert!(result.is_ok());
+
+        let result = cmd_activate(policy_id, actor, "json", false, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cmd_deprecate() {
+        let policy_id = "test-policy".to_string();
+        let actor = "admin@example.com".to_string();
+        let reason = "Replaced by new policy".to_string();
+        let edition = EditionContext::default();
+
+        let result = cmd_deprecate(
+            policy_id.clone(),
+            actor.clone(),
+            reason.clone(),
+            "text",
+            false,
+            &edition,
+        );
+        assert!(result.is_ok());
+
+        let result = cmd_deprecate(policy_id, actor, reason, "json", false, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cmd_status() {
+        let policy_id = "test-policy".to_string();
+        let edition = EditionContext::default();
+
+        let result = cmd_status(policy_id.clone(), "text", false, &edition);
+        assert!(result.is_ok());
+
+        let result = cmd_status(policy_id.clone(), "json", false, &edition);
+        assert!(result.is_ok());
+
+        let result = cmd_status(policy_id, "text", true, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cmd_history() {
+        let policy_id = "test-policy".to_string();
+        let edition = EditionContext::default();
+
+        let result = cmd_history(policy_id.clone(), "text", false, &edition);
+        assert!(result.is_ok());
+
+        let result = cmd_history(policy_id, "json", false, &edition);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cmd_diff() {
+        let policy_id = "test-policy".to_string();
+        let from_version = "1.0.0".to_string();
+        let to_version = "1.0.1".to_string();
+        let edition = EditionContext::default();
+
+        // Create a history with multiple versions for testing
+        let mut content = PolicyContent {
+            id: policy_id.clone(),
+            name: "Test Policy".to_string(),
+            description: "Test policy description".to_string(),
+            rules: serde_json::json!({"test": "rule"}),
+            config: std::collections::HashMap::new(),
+        };
+
+        let mut history = PolicyHistory::new(
+            policy_id.clone(),
+            content.clone(),
+            "author@example.com".to_string(),
+        );
+
+        // Modify content and add a new version
+        content.name = "Updated Test Policy".to_string();
+        content.description = "Updated test policy description".to_string();
+        content.rules = serde_json::json!({"test": "updated_rule"});
+        history
+            .add_version(
+                content,
+                "updater@example.com".to_string(),
+                "Updated policy content".to_string(),
+                false,
+            )
+            .unwrap();
+
+        // Test diff with text format
+        let result = cmd_diff(
+            policy_id.clone(),
+            from_version.clone(),
+            to_version.clone(),
+            "text",
+            false,
+            &edition,
+        );
+        assert!(result.is_ok());
+
+        // Test diff with json format
+        let result = cmd_diff(policy_id, from_version, to_version, "json", false, &edition);
+        assert!(result.is_ok());
+    }
 }

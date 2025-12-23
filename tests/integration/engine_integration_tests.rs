@@ -1,6 +1,6 @@
 use std::time::Duration;
 //! Integration tests for engine-to-engine interactions
-//! 
+//!
 //! Tests the entire pipeline flow from detection through policy evaluation,
 //! baselines comparison, and autofix generation.
 
@@ -11,7 +11,7 @@ fn test_full_pipeline_detection_to_policy() {
     // Test that detection engine output flows correctly into policy engine
     let detection_result = mock_detection_result();
     let policy_result = evaluate_policy(&detection_result);
-    
+
     assert!(policy_result.is_ok());
     assert_eq!(policy_result.unwrap().violations.len(), 2);
 }
@@ -22,7 +22,7 @@ fn test_detection_prediction_explain_pipeline() {
     let detection = mock_detection_result();
     let prediction = generate_prediction(&detection);
     let explanation = generate_explanation(&detection, &prediction);
-    
+
     assert!(prediction.confidence > 0.7);
     assert!(!explanation.patterns.is_empty());
     assert_eq!(explanation.patterns.len(), 5); // Top 5 patterns
@@ -33,9 +33,9 @@ fn test_baseline_comparison_with_detection() {
     // Test that baseline engine correctly compares against detection results
     let current_detection = mock_detection_result();
     let baseline = mock_baseline();
-    
+
     let comparison = compare_with_baseline(&current_detection, &baseline);
-    
+
     assert!(comparison.is_ok());
     let result = comparison.unwrap();
     assert!(result.has_regression || result.has_improvement);
@@ -48,9 +48,9 @@ fn test_policy_violation_triggers_autofix() {
     let detection = mock_detection_with_violation();
     let policy_result = evaluate_policy(&detection);
     let violations = policy_result.unwrap().violations;
-    
+
     let autofix_suggestions = generate_autofix_for_violations(&violations);
-    
+
     assert!(!autofix_suggestions.is_empty());
     assert_eq!(autofix_suggestions.len(), violations.len());
     for suggestion in autofix_suggestions {
@@ -63,9 +63,9 @@ fn test_slo_burn_rate_with_trend_data() {
     // Test SLO burn rate calculation using trend engine data
     let trend_history = mock_trend_history();
     let slo_config = mock_slo_config();
-    
+
     let burn_rate = calculate_burn_rate(&trend_history, &slo_config);
-    
+
     assert!(burn_rate.is_ok());
     let rate = burn_rate.unwrap();
     assert!(rate.current_burn_rate >= 0.0);
@@ -77,12 +77,12 @@ fn test_mapping_graph_with_cost_detection() {
     // Test that mapping engine correctly builds graph with cost data
     let detection = mock_detection_result();
     let graph = build_dependency_graph(&detection);
-    
+
     assert!(graph.is_ok());
     let g = graph.unwrap();
     assert!(!g.nodes.is_empty());
     assert!(!g.edges.is_empty());
-    
+
     // Verify cost propagation through graph
     let total_cost: f64 = g.nodes.iter().map(|n| n.monthly_cost).sum();
     assert!(total_cost > 0.0);
@@ -93,16 +93,16 @@ fn test_grouping_engine_with_attribution() {
     // Test that grouping engine correctly attributes costs
     let detection = mock_detection_result();
     let attribution_rules = mock_attribution_rules();
-    
+
     let groups = group_by_team(&detection, &attribution_rules);
-    
+
     assert!(groups.is_ok());
     let grouped = groups.unwrap();
     assert!(!grouped.groups.is_empty());
-    
+
     let total_attributed: f64 = grouped.groups.values().map(|g| g.total_cost).sum();
     let total_detected: f64 = detection.resources.iter().map(|r| r.monthly_cost).sum();
-    
+
     // All costs should be attributed
     assert!((total_attributed - total_detected).abs() < 0.01);
 }
@@ -112,13 +112,13 @@ fn test_drift_safe_autofix_with_checksum_verification() {
     // Test drift-safe autofix with checksum validation
     let detection = mock_detection_result();
     let stored_checksum = calculate_checksum(&detection);
-    
+
     // Simulate drift
     let drifted_detection = introduce_drift(&detection);
     let current_checksum = calculate_checksum(&drifted_detection);
-    
+
     assert_ne!(stored_checksum, current_checksum);
-    
+
     let autofix_result = generate_drift_safe_autofix(&detection, &stored_checksum);
     assert!(autofix_result.is_err()); // Should block due to drift
 }
@@ -129,11 +129,11 @@ fn test_exemption_applies_to_policy_violations() {
     let detection = mock_detection_with_violation();
     let mut policy = mock_policy();
     let exemption = mock_active_exemption();
-    
+
     policy.exemptions.push(exemption);
-    
+
     let result = evaluate_policy_with_exemptions(&detection, &policy);
-    
+
     assert!(result.is_ok());
     let eval = result.unwrap();
     assert_eq!(eval.violations.len(), 0); // Violation should be exempted
@@ -145,45 +145,42 @@ fn test_approval_workflow_requires_reference() {
     // Test that approval workflow enforces reference requirements
     let policy_change = mock_policy_change();
     let approval_without_ref = mock_approval_without_reference();
-    
+
     let result = apply_approval(&policy_change, &approval_without_ref);
-    
+
     assert!(result.is_err());
     assert!(result.unwrap_err().to_string().contains("reference"));
 }
 
 #[test]
 fn test_multi_artifact_detection_consistency() {
-    // Test that detection works consistently across Terraform, CDK, CloudFormation
+    // Test that detection works consistently across Terraform and CDK
     let terraform_plan = mock_terraform_plan();
     let cdk_manifest = mock_cdk_manifest();
-    let cfn_template = mock_cloudformation_template();
-    
+
     let tf_detection = detect_from_terraform(&terraform_plan).unwrap();
     let cdk_detection = detect_from_cdk(&cdk_manifest).unwrap();
-    let cfn_detection = detect_from_cloudformation(&cfn_template).unwrap();
-    
-    // All should produce similar resource counts for equivalent infrastructure
+
+    // Both should produce similar resource counts for equivalent infrastructure
     assert_eq!(tf_detection.resources.len(), cdk_detection.resources.len());
-    assert_eq!(tf_detection.resources.len(), cfn_detection.resources.len());
 }
 
 #[test]
 fn test_performance_budget_enforcement() {
     // Test that performance budgets are enforced across engines
     let large_plan = mock_large_terraform_plan(1000);
-    
+
     let start = std::time::Instant::now();
     let detection = detect_from_terraform(&large_plan);
     let detection_time = start.elapsed();
-    
+
     assert!(detection.is_ok());
     assert!(detection_time.as_secs() < 5); // Detection must complete in <5s
-    
+
     let policy_start = std::time::Instant::now();
     let policy_eval = evaluate_policy(&detection.unwrap());
     let policy_time = policy_start.elapsed();
-    
+
     assert!(policy_eval.is_ok());
     assert!(policy_time.as_millis() < 2000); // Policy eval must complete in <2s
 }
@@ -192,7 +189,7 @@ fn test_performance_budget_enforcement() {
 fn test_zero_network_enforcement_across_engines() {
     // Test that zero-network constraint is enforced in all engines
     let detection = mock_detection_result();
-    
+
     // All these operations should work without network access
     assert!(evaluate_policy(&detection).is_ok());
     assert!(generate_prediction(&detection).is_ok());
@@ -319,12 +316,8 @@ fn mock_cdk_manifest() -> String {
     r#"{"version": "1.0", "artifacts": {}}"#.to_string()
 }
 
-fn mock_cloudformation_template() -> String {
-    r#"{"AWSTemplateFormatVersion": "2010-09-09", "Resources": {}}"#.to_string()
-}
-
 fn mock_large_terraform_plan(resource_count: usize) -> String {
-    format!(r#"{{"resource_changes": [{}]}}"#, 
+    format!(r#"{{"resource_changes": [{}]}}"#,
         (0..resource_count).map(|i| format!(r#"{{"address": "aws_instance.server{}", "type": "aws_instance"}}"#, i))
             .collect::<Vec<_>>()
             .join(",")
@@ -427,10 +420,6 @@ fn detect_from_terraform(_plan: &str) -> Result<DetectionResult, String> {
 }
 
 fn detect_from_cdk(_manifest: &str) -> Result<DetectionResult, String> {
-    Ok(mock_detection_result())
-}
-
-fn detect_from_cloudformation(_template: &str) -> Result<DetectionResult, String> {
     Ok(mock_detection_result())
 }
 

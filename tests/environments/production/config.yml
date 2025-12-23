@@ -1,0 +1,62 @@
+environment:
+  name: production-sim
+  type: production-simulation
+  isolation: multi-account
+  cleanup: manual
+
+database:
+  type: aurora_postgresql
+  cluster: costpilot-prod-sim
+  instances: 3
+  regions: ["us-east-1", "us-west-2", "eu-west-1"]
+  backup_retention: 7_days
+
+external_services:
+  mock_all: false
+  aws:
+    regions: ["us-east-1", "us-west-2", "eu-west-1"]
+    accounts: ["prod-sim-1", "prod-sim-2", "prod-sim-3"]
+  azure:
+    regions: ["eastus", "westus2", "northeurope"]
+  gcp:
+    regions: ["us-central1", "us-west1", "europe-west1"]
+
+logging:
+  level: warn
+  format: json
+  output: centralized
+  retention: 90_days
+  encryption: enabled
+
+monitoring:
+  enabled: true
+  metrics: datadog
+  alerts: critical_only
+  dashboard: production-sim
+  slo_tracking: enabled
+
+security:
+  authentication: saml
+  authorization: rbac
+  encryption: kms
+  secrets: vault
+  compliance: soc2
+
+networking:
+  architecture: hub-spoke
+  regions: 3
+  availability_zones: 3
+  cdn: cloudfront
+  waf: enabled
+
+scaling:
+  auto_scaling: enabled
+  min_instances: 3
+  max_instances: 50
+  target_cpu: 70
+  target_memory: 80
+
+resources:
+  memory: 16GB
+  cpu: 8
+  disk: 500GB

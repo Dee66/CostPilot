@@ -1,0 +1,15 @@
+{
+  "trace_id": "trace-1766229882",
+  "spans": [
+    {
+      "span_id": "span-1",
+      "operation": "costpilot.validate",
+      "start_time": 1766229882000000,
+      "duration": 3056,
+      "tags": {
+        "component": "costpilot",
+        "operation": "validation"
+      }
+    }
+  ]
+}

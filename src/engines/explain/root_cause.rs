@@ -197,7 +197,9 @@ impl RootCauseAnalysis {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ResourceChange, ChangeAction, Detection, Severity, RegressionType};
+    use crate::engines::shared::models::{
+        ChangeAction, Detection, RegressionType, ResourceChange, Severity,
+    };
     use serde_json::json;
 
     #[test]

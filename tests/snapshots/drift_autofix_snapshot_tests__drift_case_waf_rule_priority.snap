@@ -1,0 +1,36 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_wafv2_web_acl.main",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "rule": [
+            {
+              "name": "rate-limit",
+              "priority": 10
+            }
+          ]
+        },
+        "before": {
+          "rule": [
+            {
+              "name": "rate-limit",
+              "priority": 1
+            }
+          ]
+        }
+      },
+      "mode": "managed",
+      "name": "main",
+      "type": "aws_wafv2_web_acl"
+    }
+  ]
+}

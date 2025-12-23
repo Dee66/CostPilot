@@ -1,0 +1,33 @@
+# CostPilot SLO Configuration
+# Version: 1.0.0
+# Schema: https://github.com/Dee66/CostPilot/schemas/slo.schema.json
+
+version: "1.0.0"
+metadata:
+  owner: "team@example.com"
+  created_at: "2025-12-07"
+  description: "Cost SLOs for infrastructure management"
+
+slos:
+  - id: "monthly-cost-slo"
+    name: "Monthly Cost SLO"
+    description: "Keep monthly AWS costs within SLO target"
+    type: "cost"
+    target:
+      monthly_cost: 5000.0
+      currency: "USD"
+      tolerance_percent: 10.0  # Allow 10% over target before breach
+    burn_thresholds:
+      warning: 0.8   # Warn at 80% of budget consumed
+      critical: 0.95  # Critical at 95% of budget consumed
+    window_days: 30
+    enforcement_mode: "warn"  # warn | block
+
+  - id: "weekly-growth-slo"
+    name: "Weekly Growth Rate SLO"
+    description: "Limit week-over-week cost growth rate"
+    type: "growth_rate"
+    target:
+      max_weekly_growth_percent: 15.0
+    window_days: 7
+    enforcement_mode: "warn"

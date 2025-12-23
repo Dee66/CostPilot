@@ -15,7 +15,7 @@ def test_slo_command_exists():
         text=True,
         timeout=10
     )
-    
+
     # In Premium, should succeed
     # In Free, should fail
     if result.returncode == 0:
@@ -27,7 +27,7 @@ def test_slo_check():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         slo_config_path = Path(tmpdir) / "slo.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -38,7 +38,7 @@ def test_slo_check():
                 }
             }
         }
-        
+
         slo_config = {
             "version": "1.0.0",
             "slos": [
@@ -50,20 +50,20 @@ def test_slo_check():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(slo_config_path, 'w') as f:
             json.dump(slo_config, f)
-        
+
         result = subprocess.run(
             ["costpilot", "slo", "check", "--plan", str(template_path), "--config", str(slo_config_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should check SLOs
         if result.returncode == 0:
             assert len(result.stdout) > 0, "Should have SLO check output"
@@ -75,7 +75,7 @@ def test_slo_with_baseline():
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
         slo_config_path = Path(tmpdir) / "slo.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -86,7 +86,7 @@ def test_slo_with_baseline():
                 }
             }
         }
-        
+
         baseline_content = {
             "resources": [
                 {
@@ -100,7 +100,7 @@ def test_slo_with_baseline():
             ],
             "total_cost": 50.0
         }
-        
+
         slo_config = {
             "version": "1.0.0",
             "slos": [
@@ -111,24 +111,24 @@ def test_slo_with_baseline():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         with open(slo_config_path, 'w') as f:
             json.dump(slo_config, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "slo", "check", "--plan", str(template_path), 
+            ["costpilot", "slo", "check", "--plan", str(template_path),
              "--baseline", str(baseline_path), "--config", str(slo_config_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should compare against baseline
         if result.returncode == 0:
             output = result.stdout.lower()
@@ -140,7 +140,7 @@ def test_slo_burn_rate():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         slo_config_path = Path(tmpdir) / "slo.json"
-        
+
         template_content = {
             "Resources": {
                 f"Lambda{i}": {
@@ -152,7 +152,7 @@ def test_slo_burn_rate():
                 for i in range(10)
             }
         }
-        
+
         slo_config = {
             "version": "1.0.0",
             "slos": [
@@ -165,20 +165,20 @@ def test_slo_burn_rate():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(slo_config_path, 'w') as f:
             json.dump(slo_config, f)
-        
+
         result = subprocess.run(
             ["costpilot", "slo", "burn-rate", "--plan", str(template_path), "--config", str(slo_config_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should calculate burn rate
 
 
@@ -187,7 +187,7 @@ def test_slo_validate():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         slo_config_path = Path(tmpdir) / "slo.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -198,7 +198,7 @@ def test_slo_validate():
                 }
             }
         }
-        
+
         slo_config = {
             "version": "1.0.0",
             "slos": [
@@ -210,20 +210,20 @@ def test_slo_validate():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(slo_config_path, 'w') as f:
             json.dump(slo_config, f)
-        
+
         result = subprocess.run(
             ["costpilot", "slo", "validate", "--plan", str(template_path), "--config", str(slo_config_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should validate SLO compliance
 
 
@@ -233,7 +233,7 @@ def test_slo_output_format():
         template_path = Path(tmpdir) / "template.json"
         slo_config_path = Path(tmpdir) / "slo.json"
         output_path = Path(tmpdir) / "slo_result.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -244,7 +244,7 @@ def test_slo_output_format():
                 }
             }
         }
-        
+
         slo_config = {
             "version": "1.0.0",
             "slos": [
@@ -256,21 +256,21 @@ def test_slo_output_format():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(slo_config_path, 'w') as f:
             json.dump(slo_config, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "slo", "check", "--plan", str(template_path), 
+            ["costpilot", "slo", "check", "--plan", str(template_path),
              "--config", str(slo_config_path), "--output", str(output_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should create output file
         if result.returncode == 0 and output_path.exists():
             with open(output_path) as f:

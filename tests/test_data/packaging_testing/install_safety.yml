@@ -1,0 +1,333 @@
+# CostPilot Packaging Testing: Install Safety
+# Test data for installation safety validation
+
+# Clean system installation
+clean_system_install:
+  metadata:
+    test_case: "clean_system_install"
+    description: "Install on a completely clean system"
+    environment: "clean_system"
+    expected_behavior: "successful_installation"
+  system_state:
+    os_version: "ubuntu_20.04"
+    package_manager: "apt"
+    installed_packages: []
+    existing_users: ["root", "ubuntu"]
+    existing_groups: ["root", "ubuntu"]
+    disk_space: "50GB_free"
+    memory: "4GB"
+  installation_steps:
+    - step: "download_package"
+      command: "wget https://github.com/costpilot/releases/download/v1.0.0/costpilot-1.0.0-linux-amd64.tar.gz"
+      expected_result: "download_successful"
+    - step: "verify_signature"
+      command: "gpg --verify costpilot-1.0.0-linux-amd64.tar.gz.asc costpilot-1.0.0-linux-amd64.tar.gz"
+      expected_result: "signature_valid"
+    - step: "extract_archive"
+      command: "tar -xzf costpilot-1.0.0-linux-amd64.tar.gz"
+      expected_result: "extraction_successful"
+    - step: "run_installer"
+      command: "cd costpilot-1.0.0 && sudo ./install.sh"
+      expected_result: "installation_successful"
+    - step: "verify_installation"
+      command: "costpilot --version"
+      expected_result: "version_displayed"
+  post_install_checks:
+    - check: "binary_executable"
+      command: "which costpilot"
+      expected_result: "path_found"
+    - check: "permissions_correct"
+      command: "ls -la /usr/local/bin/costpilot"
+      expected_result: "755_permissions"
+    - check: "config_created"
+      command: "ls -la ~/.costpilot/"
+      expected_result: "config_directory_exists"
+    - check: "no_conflicts"
+      command: "dpkg -l | grep costpilot"
+      expected_result: "no_package_conflicts"
+
+# Read-only filesystem installation
+read_only_fs_install:
+  metadata:
+    test_case: "read_only_fs_install"
+    description: "Install on system with read-only filesystem"
+    environment: "read_only_fs"
+    expected_behavior: "graceful_failure_with_clear_error"
+  system_state:
+    filesystem_type: "overlayfs_readonly"
+    writable_paths: ["/tmp", "/var/tmp", "/home/ubuntu"]
+    readonly_paths: ["/usr", "/opt", "/etc"]
+    available_space: "1GB_writable"
+  expected_errors:
+    - error_type: "permission_denied"
+      expected_message: "Cannot write to /usr/local/bin"
+      acceptable: true
+    - error_type: "readonly_filesystem"
+      expected_message: "Read-only file system"
+      acceptable: true
+  recovery_suggestions:
+    - suggestion: "use_alternative_path"
+      command: "./install.sh --prefix=/home/ubuntu/costpilot"
+      expected_result: "installation_successful"
+    - suggestion: "use_portable_mode"
+      command: "tar -xzf costpilot.tar.gz && export PATH=$PWD/costpilot/bin:$PATH"
+      expected_result: "portable_execution"
+
+# Non-root user installation
+non_root_user_install:
+  metadata:
+    test_case: "non_root_user_install"
+    description: "Install as non-privileged user"
+    environment: "non_root_user"
+    expected_behavior: "successful_user_installation"
+  system_state:
+    current_user: "ubuntu"
+    user_privileges: "sudo_access"
+    home_directory: "/home/ubuntu"
+    available_space: "10GB"
+  installation_approach:
+    - approach: "user_local_install"
+      description: "Install to user directory without root"
+      commands:
+        - "tar -xzf costpilot.tar.gz -C ~/costpilot"
+        - "export PATH=$HOME/costpilot/bin:$PATH"
+        - "echo 'export PATH=$HOME/costpilot/bin:$PATH' >> ~/.bashrc"
+      expected_result: "user_installation_successful"
+    - approach: "sudo_install"
+      description: "Use sudo for system installation"
+      commands:
+        - "sudo tar -xzf costpilot.tar.gz -C /opt"
+        - "sudo ln -s /opt/costpilot/bin/costpilot /usr/local/bin/"
+      expected_result: "system_installation_successful"
+
+# CI runner filesystem installation
+ci_runner_fs_install:
+  metadata:
+    test_case: "ci_runner_fs_install"
+    description: "Install in CI runner environment"
+    environment: "ci_runner_fs"
+    expected_behavior: "successful_ephemeral_installation"
+  system_state:
+    environment: "github_actions"
+    runner_type: "ubuntu-latest"
+    workspace_path: "/home/runner/work/costpilot"
+    temp_space: "14GB"
+    ephemeral_storage: true
+  installation_pattern:
+    - pattern: "workspace_install"
+      description: "Install directly in workspace"
+      commands:
+        - "cd /home/runner/work/costpilot"
+        - "tar -xzf costpilot.tar.gz"
+        - "export PATH=$PWD/costpilot/bin:$PATH"
+      expected_result: "workspace_installation"
+    - pattern: "tool_cache_install"
+      description: "Install to GitHub tool cache"
+      commands:
+        - "mkdir -p $RUNNER_TOOL_CACHE/costpilot/1.0.0"
+        - "tar -xzf costpilot.tar.gz -C $RUNNER_TOOL_CACHE/costpilot/1.0.0"
+        - "echo \"$RUNNER_TOOL_CACHE/costpilot/1.0.0/bin\" >> $GITHUB_PATH"
+      expected_result: "tool_cache_installation"
+
+# Installation conflict scenarios
+installation_conflicts:
+  metadata:
+    test_case: "installation_conflicts"
+    description: "Handle installation conflicts gracefully"
+    expected_behavior: "conflict_detection_and_resolution"
+  conflict_scenarios:
+    - scenario: "existing_installation"
+      description: "Upgrade over existing installation"
+      existing_version: "0.9.0"
+      new_version: "1.0.0"
+      expected_behavior: "clean_upgrade"
+      backup_created: true
+    - scenario: "package_manager_conflict"
+      description: "Conflict with system package manager"
+      conflicting_package: "costpilot-system-package"
+      expected_behavior: "user_choice_required"
+      resolution_options: ["remove_system_package", "install_alongside", "cancel_installation"]
+    - scenario: "file_conflicts"
+      description: "File conflicts during installation"
+      conflicting_files: ["/usr/local/bin/costpilot", "~/.costpilot/config.yml"]
+      expected_behavior: "backup_and_replace"
+      user_prompt: true
+
+# Installation verification tests
+installation_verification:
+  metadata:
+    test_case: "installation_verification"
+    description: "Verify installation integrity and functionality"
+    expected_behavior: "fully_functional_installation"
+  verification_checks:
+    - check: "binary_integrity"
+      description: "Binary is not corrupted"
+      method: "file_hash_verification"
+      expected_result: "hash_matches"
+    - check: "dependencies_satisfied"
+      description: "All dependencies available"
+      method: "ldd_analysis"
+      expected_result: "all_libs_found"
+    - check: "configuration_valid"
+      description: "Configuration files are valid"
+      method: "config_validation"
+      expected_result: "valid_config"
+    - check: "permissions_correct"
+      description: "File permissions are secure"
+      method: "permission_audit"
+      expected_result: "secure_permissions"
+    - check: "path_setup"
+      description: "Executable is in PATH"
+      method: "which_command"
+      expected_result: "command_found"
+    - check: "basic_functionality"
+      description: "Basic commands work"
+      method: "smoke_test"
+      expected_result: "commands_execute"
+
+# Uninstallation safety
+uninstallation_safety:
+  metadata:
+    test_case: "uninstallation_safety"
+    description: "Safe and complete uninstallation"
+    expected_behavior: "clean_uninstallation"
+  uninstallation_scenarios:
+    - scenario: "complete_removal"
+      description: "Remove all CostPilot files"
+      commands:
+        - "sudo costpilot uninstall"
+        - "rm -rf ~/.costpilot"
+      expected_result: "no_residual_files"
+    - scenario: "preserve_user_data"
+      description: "Keep user configurations and data"
+      commands:
+        - "costpilot uninstall --keep-config"
+      expected_result: "config_preserved"
+    - scenario: "partial_uninstall"
+      description: "Handle interrupted uninstallation"
+      interruption_point: "during_file_removal"
+      expected_result: "recoverable_state"
+
+# Installation environment variations
+environment_variations:
+  metadata:
+    test_case: "environment_variations"
+    description: "Installation across different environments"
+    expected_behavior: "environment_adaptive_installation"
+  environment_matrix:
+    - environment: "desktop_linux"
+      distros: ["ubuntu", "fedora", "arch"]
+      expected_success: true
+      special_handling: false
+    - environment: "server_linux"
+      distros: ["rhel", "centos", "debian"]
+      expected_success: true
+      special_handling: false
+    - environment: "container"
+      runtimes: ["docker", "podman", "containerd"]
+      expected_success: true
+      special_handling: "portable_install"
+    - environment: "wsl"
+      versions: ["wsl1", "wsl2"]
+      expected_success: true
+      special_handling: "windows_path_handling"
+    - environment: "remote_server"
+      access_methods: ["ssh", "ansible", "terraform"]
+      expected_success: true
+      special_handling: "automated_install"
+
+# Installation performance
+installation_performance:
+  metadata:
+    test_case: "installation_performance"
+    description: "Installation performance metrics"
+    expected_behavior: "fast_installation"
+  performance_targets:
+    - target: "download_time"
+      expected: "< 30_seconds"
+      network_condition: "fast_internet"
+    - target: "extraction_time"
+      expected: "< 10_seconds"
+      archive_size: "< 50MB"
+    - target: "installation_time"
+      expected: "< 20_seconds"
+      system_performance: "normal"
+    - target: "first_run_time"
+      expected: "< 2_seconds"
+      after_installation: true
+
+# Installation security validation
+installation_security:
+  metadata:
+    test_case: "installation_security"
+    description: "Security validation during installation"
+    expected_behavior: "secure_installation_process"
+  security_checks:
+    - check: "no_arbitrary_code_execution"
+      description: "Installation doesn't execute untrusted code"
+      method: "code_review"
+      expected_result: "no_eval_usage"
+    - check: "secure_file_permissions"
+      description: "Files installed with secure permissions"
+      method: "permission_scan"
+      expected_result: "no_world_writable"
+    - check: "no_sensitive_data_exposure"
+      description: "No sensitive data in installation logs"
+      method: "log_analysis"
+      expected_result: "logs_clean"
+    - check: "signature_verification"
+      description: "Package signatures verified"
+      method: "gpg_verification"
+      expected_result: "signature_valid"
+    - check: "integrity_verification"
+      description: "Package integrity verified"
+      method: "hash_verification"
+      expected_result: "hash_matches"
+
+# Installation troubleshooting
+installation_troubleshooting:
+  metadata:
+    test_case: "installation_troubleshooting"
+    description: "Handle common installation issues"
+    expected_behavior: "helpful_error_messages"
+  common_issues:
+    - issue: "missing_dependencies"
+      symptoms: ["library_not_found", "symbol_lookup_error"]
+      solution: "install_dependencies.sh"
+      error_message: "Please install required dependencies"
+    - issue: "insufficient_permissions"
+      symptoms: ["permission_denied", "cannot_create_directory"]
+      solution: "use_sudo_or_user_install"
+      error_message: "Insufficient permissions for installation"
+    - issue: "disk_space_insufficient"
+      symptoms: ["no_space_left", "disk_full"]
+      solution: "free_up_space_or_choose_different_location"
+      error_message: "Insufficient disk space"
+    - issue: "network_connectivity"
+      symptoms: ["download_failed", "connection_timeout"]
+      solution: "check_network_or_use_offline_install"
+      error_message: "Network connectivity issues"
+    - issue: "conflicting_installation"
+      symptoms: ["file_exists", "already_installed"]
+      solution: "uninstall_existing_or_upgrade"
+      error_message: "Conflicting installation detected"
+
+# Installation rollback and recovery
+installation_rollback:
+  metadata:
+    test_case: "installation_rollback"
+    description: "Installation rollback and recovery capabilities"
+    expected_behavior: "safe_rollback"
+  rollback_scenarios:
+    - scenario: "failed_installation"
+      description: "Rollback after installation failure"
+      failure_point: "during_file_copy"
+      expected_result: "clean_rollback"
+    - scenario: "corrupted_installation"
+      description: "Recover from corrupted installation"
+      corruption_type: "partial_file_copy"
+      expected_result: "automatic_recovery"
+    - scenario: "incompatible_system"
+      description: "Rollback from incompatible system"
+      incompatibility: "glibc_version_too_old"
+      expected_result: "compatibility_check_and_rollback"

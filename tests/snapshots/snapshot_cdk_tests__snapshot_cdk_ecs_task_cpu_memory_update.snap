@@ -1,0 +1,22 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "TaskDef": {
+      "ChangeType": "Update",
+      "Properties": {
+        "Cpu": {
+          "New": "1024",
+          "Old": "256"
+        },
+        "Memory": {
+          "New": "2048",
+          "Old": "512"
+        }
+      },
+      "Type": "AWS::ECS::TaskDefinition"
+    }
+  }
+}

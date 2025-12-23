@@ -1,3 +1,4 @@
+use chrono;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -90,6 +91,12 @@ pub struct DependencyGraph {
 /// Metadata about the dependency graph
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphMetadata {
+    /// Schema version
+    pub version: String,
+
+    /// Generation timestamp
+    pub timestamp: String,
+
     /// Total number of nodes
     pub node_count: usize,
 
@@ -213,6 +220,8 @@ impl DependencyGraph {
             nodes: Vec::new(),
             edges: Vec::new(),
             metadata: GraphMetadata {
+                version: env!("CARGO_PKG_VERSION").to_string(),
+                timestamp: chrono::Utc::now().to_rfc3339(),
                 node_count: 0,
                 edge_count: 0,
                 max_depth: 0,

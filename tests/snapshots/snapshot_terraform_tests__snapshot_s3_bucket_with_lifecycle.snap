@@ -1,0 +1,39 @@
+---
+source: tests/snapshot_terraform_tests.rs
+expression: plan
+---
+{
+  "configuration": {
+    "root_module": {}
+  },
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.data",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "bucket": "my-data-bucket",
+          "lifecycle_rule": [
+            {
+              "enabled": true,
+              "transition": [
+                {
+                  "days": 90,
+                  "storage_class": "GLACIER"
+                }
+              ]
+            }
+          ]
+        },
+        "before": null
+      },
+      "mode": "managed",
+      "name": "data",
+      "type": "aws_s3_bucket"
+    }
+  ],
+  "terraform_version": "1.5.0"
+}

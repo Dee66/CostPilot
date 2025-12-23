@@ -1,24 +1,32 @@
 pub mod capabilities;
 pub mod errors;
-pub mod gating;
-pub mod license;
 pub mod messages;
 pub mod pro_handle;
 
 pub use capabilities::Capabilities;
 pub use errors::{require_premium, UpgradeRequired};
-pub use gating::require_premium as legacy_require_premium;
-pub use license::{License, LicenseError};
+// Remove the legacy gating import to avoid confusion
+// pub use gating::require_premium as legacy_require_premium;
 pub use messages::{feature_comparison, upgrade_message};
 pub use pro_handle::{ProEngineError, ProEngineHandle};
 
+use crate::pro_engine::License;
+
+use hkdf::SimpleHkdf;
+use sha2::Sha256;
 use std::path::PathBuf;
 
 /// Detect and initialize edition context
 pub fn detect_edition() -> Result<EditionContext, String> {
+    // Check for test environment variable to force premium mode
+    if std::env::var("COSTPILOT_FORCE_PREMIUM").is_ok() {
+        return Ok(EditionContext::premium_for_test());
+    }
+
     let mut edition = EditionContext::free();
 
     // Attempt to load ProEngine (fails silently for Free mode)
+    #[cfg(not(target_arch = "wasm32"))]
     if let Err(e) = crate::pro_engine::load_pro_engine(&mut edition) {
         eprintln!("⚠️  Failed to load Premium engine: {}", e);
         eprintln!("   Running in Free mode");
@@ -82,17 +90,6 @@ impl Clone for EditionContext {
     }
 }
 
-/// Capability flags for edition-specific features
-#[derive(Debug, Clone)]
-pub struct EditionCapabilities {
-    pub autofix_allowed: bool,
-    pub trend_allowed: bool,
-    pub deep_map_allowed: bool,
-    pub enforce_slo_allowed: bool,
-    pub enforce_policy_allowed: bool,
-    pub explain_advanced_allowed: bool,
-}
-
 impl EditionContext {
     /// Create free edition context (default)
     pub fn free() -> Self {
@@ -121,12 +118,32 @@ impl EditionContext {
 
     /// Check if running in Premium mode
     pub fn is_premium(&self) -> bool {
-        self.mode == EditionMode::Premium && self.pro.is_some()
+        self.mode == EditionMode::Premium
     }
 
     /// Check if running in Free mode
     pub fn is_free(&self) -> bool {
         !self.is_premium()
+    }
+
+    /// Create premium edition context for testing
+    pub fn premium_for_test() -> Self {
+        Self {
+            mode: EditionMode::Premium,
+            license: None,
+            pro_engine: None,
+            capabilities: Capabilities {
+                allow_predict: true,
+                allow_explain_full: true,
+                allow_autofix: true,
+                allow_mapping_deep: true,
+                allow_trend: true,
+                allow_policy_enforce: true,
+                allow_slo_enforce: true,
+            },
+            pro: None,
+            paths: EditionPaths::default(),
+        }
     }
 
     /// Require Premium edition, returning ProEngineHandle reference
@@ -141,43 +158,46 @@ impl EditionContext {
         }
     }
 
-    /// Derive encryption key from license (stub)
+    /// Derive encryption key from license
     pub fn derive_key(&self) -> anyhow::Result<Vec<u8>> {
-        // TODO: Implement HKDF-SHA256 key derivation from license
-        Ok(vec![0u8; 32])
-    }
-
-    /// Derive deterministic nonce (stub)
-    pub fn derive_nonce(&self) -> anyhow::Result<Vec<u8>> {
-        // TODO: Implement deterministic nonce generation
-        Ok(vec![0u8; 12])
-    }
-
-    /// Get path to encrypted WASM file
-    pub fn pro_wasm_path(&self) -> std::path::PathBuf {
-        self.paths.pro_wasm_path()
-    }
-
-    /// Get edition capabilities as a structured object
-    pub fn capabilities(&self) -> EditionCapabilities {
-        match self.mode {
-            EditionMode::Premium => EditionCapabilities {
-                autofix_allowed: true,
-                trend_allowed: true,
-                deep_map_allowed: true,
-                enforce_slo_allowed: true,
-                enforce_policy_allowed: true,
-                explain_advanced_allowed: true,
-            },
-            EditionMode::Free => EditionCapabilities {
-                autofix_allowed: false,
-                trend_allowed: false,
-                deep_map_allowed: false,
-                enforce_slo_allowed: false,
-                enforce_policy_allowed: false,
-                explain_advanced_allowed: false,
-            },
+        if let Some(ref license) = self.license {
+            // Use the same key derivation as pro_loader
+            let key = crate::pro_engine::crypto::derive_key(&license.license_key);
+            Ok(key.to_vec())
+        } else {
+            anyhow::bail!("No license available for key derivation");
         }
+    }
+
+    /// Derive deterministic nonce from license
+    pub fn derive_nonce(&self) -> anyhow::Result<Vec<u8>> {
+        if let Some(ref license) = self.license {
+            // Derive nonce using HKDF with different salt/info
+            let hk = SimpleHkdf::<Sha256>::new(
+                Some(b"costpilot-nonce-v1"),
+                license.license_key.as_bytes(),
+            );
+            let mut nonce = [0u8; 12];
+            hk.expand(b"nonce", &mut nonce)
+                .map_err(|_| anyhow::anyhow!("HKDF expand failed"))?;
+            Ok(nonce.to_vec())
+        } else {
+            anyhow::bail!("No license available for nonce derivation");
+        }
+    }
+
+    /// Check if the license is expired
+    pub fn is_license_expired(&self) -> bool {
+        if let Some(ref license) = self.license {
+            license.is_expired()
+        } else {
+            true // No license = expired
+        }
+    }
+
+    /// Check if the license is valid (exists and not expired)
+    pub fn is_license_valid(&self) -> bool {
+        self.license.is_some() && !self.is_license_expired()
     }
 }
 

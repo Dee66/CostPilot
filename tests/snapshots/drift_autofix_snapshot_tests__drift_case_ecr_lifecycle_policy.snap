@@ -1,0 +1,24 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_ecr_lifecycle_policy.images",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "policy": "{\"rules\":[{\"rulePriority\":1,\"selection\":{\"tagStatus\":\"untagged\",\"countType\":\"sinceImagePushed\",\"countNumber\":14},\"action\":{\"type\":\"expire\"}}]}"
+        },
+        "before": null
+      },
+      "mode": "managed",
+      "name": "images",
+      "type": "aws_ecr_lifecycle_policy"
+    }
+  ]
+}

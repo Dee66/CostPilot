@@ -664,7 +664,12 @@ mod tests {
             .submit_for_approval("test-policy", "author@example.com".to_string())
             .unwrap();
 
-        let result = manager.approve("test-policy", "unauthorized@example.com".to_string(), "REF-001".to_string(), None);
+        let result = manager.approve(
+            "test-policy",
+            "unauthorized@example.com".to_string(),
+            "REF-001".to_string(),
+            None,
+        );
 
         assert!(result.is_err());
     }

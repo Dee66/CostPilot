@@ -1,0 +1,8 @@
+{
+  "email": "test@example.com",
+  "expires": "2025-12-31T23:59:59Z",
+  "issued_at": "2025-12-22T19:02:12.648242024+00:00",
+  "license_key": "TEST123",
+  "signature": "e7fc92eb12507aa7b3b6ed00de3c4f0a5676e5deebf692193c933b7a31fdd5d95ac061de905a29e8cc926f886a36d5a6545a8931dfa9572dbd57f12efa1c110c",
+  "version": "1.0"
+}

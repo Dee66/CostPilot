@@ -1,0 +1,4 @@
+{"channel": "email", "delivered": true, "timestamp": 1766229900}
+{"channel": "slack", "delivered": true, "timestamp": 1766229900}
+{"channel": "pagerduty", "delivered": true, "timestamp": 1766229900}
+{"channel": "webhook", "delivered": false, "timestamp": 1766229900}

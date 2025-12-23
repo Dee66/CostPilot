@@ -23,7 +23,7 @@ impl FreeHeuristics {
                 // Compute
                 FreeRule {
                     resource_type: "aws_instance".to_string(),
-                    base_cost: 50.0, // ~$50/month baseline
+                    base_cost: 150.0, // Free edition static cost for EC2 instances
                 },
                 FreeRule {
                     resource_type: "aws_lambda_function".to_string(),
@@ -53,7 +53,7 @@ impl FreeHeuristics {
                 // Database
                 FreeRule {
                     resource_type: "aws_db_instance".to_string(),
-                    base_cost: 100.0, // ~db.t3.small
+                    base_cost: 0.0, // Free edition static cost for RDS instances
                 },
                 FreeRule {
                     resource_type: "aws_dynamodb_table".to_string(),
@@ -113,7 +113,8 @@ mod tests {
     #[test]
     fn test_get_base_cost() {
         let heuristics = FreeHeuristics::load_free_heuristics();
-        assert_eq!(heuristics.get_base_cost("aws_instance"), 50.0);
+        assert_eq!(heuristics.get_base_cost("aws_instance"), 150.0);
+        assert_eq!(heuristics.get_base_cost("aws_db_instance"), 0.0);
         assert_eq!(heuristics.get_base_cost("aws_s3_bucket"), 2.3);
         assert_eq!(heuristics.get_base_cost("unknown_type"), 10.0);
     }

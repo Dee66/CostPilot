@@ -1,5 +1,5 @@
 use super::slo_types::{
-    EnforcementLevel, Slo, SloConfig, SloEvaluation, SloReport, SloStatus, SloType,
+    EnforcementLevel, Slo, SloConfig, SloEvaluation, SloParams, SloReport, SloStatus, SloType,
 };
 use crate::engines::baselines::BaselinesManager;
 use crate::engines::trend::CostSnapshot;
@@ -207,6 +207,8 @@ impl SloManager {
                         evaluated_at: chrono::Utc::now().to_rfc3339(),
                         message: format!("Module '{}' not found in snapshot", slo.target),
                         affected: vec![slo.target.clone()],
+                        burn_risk: None,
+                        projected_cost_after_merge: None,
                     })
                 }
             }
@@ -225,6 +227,8 @@ impl SloManager {
                         evaluated_at: chrono::Utc::now().to_rfc3339(),
                         message: format!("Service '{}' not found in snapshot", slo.target),
                         affected: vec![slo.target.clone()],
+                        burn_risk: None,
+                        projected_cost_after_merge: None,
                     })
                 }
             }
@@ -245,6 +249,8 @@ impl SloManager {
                     evaluated_at: chrono::Utc::now().to_rfc3339(),
                     message: "Growth rate calculation requires historical data".to_string(),
                     affected: vec![],
+                    burn_risk: None,
+                    projected_cost_after_merge: None,
                 })
             }
             SloType::ResourceBudget => {
@@ -259,6 +265,8 @@ impl SloManager {
                     evaluated_at: chrono::Utc::now().to_rfc3339(),
                     message: "Resource-level budget checks not implemented".to_string(),
                     affected: vec![],
+                    burn_risk: None,
+                    projected_cost_after_merge: None,
                 })
             }
         }
@@ -334,6 +342,8 @@ impl SloManager {
             evaluated_at: chrono::Utc::now().to_rfc3339(),
             message,
             affected: vec![slo.target.clone()],
+            burn_risk: None,
+            projected_cost_after_merge: None,
         }
     }
 
@@ -376,13 +386,13 @@ mod tests {
     use crate::engines::trend::ModuleCost;
 
     fn create_test_slo() -> Slo {
-        Slo::new(
-            "slo-1".to_string(),
-            "Global Budget".to_string(),
-            "Monthly budget limit".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Global Budget".to_string(),
+            description: "Monthly budget limit".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -390,9 +400,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Block,
-            "finance@example.com".to_string(),
-        )
+            enforcement: EnforcementLevel::Block,
+            owner: "finance@example.com".to_string(),
+        })
     }
 
     fn create_test_snapshot(total_cost: f64) -> CostSnapshot {
@@ -512,13 +522,13 @@ mod tests {
     #[test]
     fn test_evaluate_module_budget() {
         let mut config = SloConfig::new();
-        let module_slo = Slo::new(
-            "slo-module".to_string(),
-            "VPC Budget".to_string(),
-            "VPC monthly budget".to_string(),
-            SloType::ModuleBudget,
-            "module.vpc".to_string(),
-            SloThreshold {
+        let module_slo = Slo::new(SloParams {
+            id: "slo-module".to_string(),
+            name: "VPC Budget".to_string(),
+            description: "VPC monthly budget".to_string(),
+            slo_type: SloType::ModuleBudget,
+            target: "module.vpc".to_string(),
+            threshold: SloThreshold {
                 max_value: 3000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -526,9 +536,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Warn,
-            "network@example.com".to_string(),
-        );
+            enforcement: EnforcementLevel::Warn,
+            owner: "network@example.com".to_string(),
+        });
         config.add_slo(module_slo);
 
         let edition = crate::edition::EditionContext::free();

@@ -1,0 +1,32 @@
+---
+source: tests/snapshot_terraform_tests.rs
+expression: plan
+---
+{
+  "configuration": {
+    "root_module": {}
+  },
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_instance.web",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "ami": "ami-0c55b159cbfafe1f0",
+          "instance_type": "t3.xlarge"
+        },
+        "before": {
+          "ami": "ami-0c55b159cbfafe1f0",
+          "instance_type": "t3.small"
+        }
+      },
+      "mode": "managed",
+      "name": "web",
+      "type": "aws_instance"
+    }
+  ],
+  "terraform_version": "1.5.0"
+}

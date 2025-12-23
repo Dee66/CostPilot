@@ -11,7 +11,7 @@ def test_premium_without_license_fails():
     """Test Premium binary refuses to run without valid license."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -22,10 +22,10 @@ def test_premium_without_license_fails():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Try to use premium features without license
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path)],
@@ -33,7 +33,7 @@ def test_premium_without_license_fails():
             text=True,
             timeout=10
         )
-        
+
         # Should fail with license error
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -46,10 +46,10 @@ def test_premium_without_license_fails():
 def test_license_file_required():
     """Test license file is required for Premium features."""
     import os
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -60,15 +60,15 @@ def test_license_file_required():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Ensure no license in environment
         env = os.environ.copy()
         env.pop("COSTPILOT_LICENSE", None)
         env.pop("COSTPILOT_LICENSE_PATH", None)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path)],
             capture_output=True,
@@ -76,7 +76,7 @@ def test_license_file_required():
             timeout=10,
             env=env
         )
-        
+
         # Should fail
         assert result.returncode != 0, "Premium features should require license"
 
@@ -85,7 +85,7 @@ def test_premium_engine_load_blocked():
     """Test Premium engine load is blocked without license."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -96,10 +96,10 @@ def test_premium_engine_load_blocked():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Try to force premium mode
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path), "--mode", "premium"],
@@ -107,7 +107,7 @@ def test_premium_engine_load_blocked():
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -119,10 +119,10 @@ def test_premium_engine_load_blocked():
 def test_license_check_deterministic():
     """Test license check produces deterministic results."""
     results = []
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -133,10 +133,10 @@ def test_license_check_deterministic():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Run multiple times
         for _ in range(3):
             result = subprocess.run(
@@ -146,7 +146,7 @@ def test_license_check_deterministic():
                 timeout=10
             )
             results.append(result.returncode)
-        
+
         # All should have same exit code
         assert results[0] == results[1] == results[2], "License check should be deterministic"
 
@@ -154,10 +154,10 @@ def test_license_check_deterministic():
 def test_no_license_environment_variable():
     """Test Premium features blocked when no license env var."""
     import os
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -168,16 +168,16 @@ def test_no_license_environment_variable():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Explicitly unset license variables
         env = os.environ.copy()
         for key in list(env.keys()):
             if "LICENSE" in key.upper() or "COSTPILOT" in key.upper():
                 env.pop(key, None)
-        
+
         result = subprocess.run(
             ["costpilot", "patch", "--plan", str(template_path)],
             capture_output=True,
@@ -185,7 +185,7 @@ def test_no_license_environment_variable():
             timeout=10,
             env=env
         )
-        
+
         # Should fail
         assert result.returncode != 0, "Premium commands should fail without license"
 

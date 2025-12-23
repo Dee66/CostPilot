@@ -1,0 +1,16 @@
+{
+    "gate_name": "integration_test_coverage",
+    "status": "FAILED",
+    "timestamp": "2025-12-20 11:54:56",
+    "coverage_targets": {
+        "api_endpoints": "100.0%",
+        "data_flows": "95.0%",
+        "error_paths": "100.0%"
+    },
+    "actual_coverage": {
+        "api_endpoints": "25.0%",
+        "data_flows": "100.0%",
+        "error_paths": "100.0%"
+    },
+    "violations": 1
+}

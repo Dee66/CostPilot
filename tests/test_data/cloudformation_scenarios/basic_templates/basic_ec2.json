@@ -1,0 +1,120 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Basic CloudFormation template with simple EC2 instance for CostPilot testing",
+
+  "Parameters": {
+    "InstanceType": {
+      "Type": "String",
+      "Default": "t3.micro",
+      "AllowedValues": ["t3.micro", "t3.small", "t3.medium"],
+      "Description": "EC2 instance type"
+    },
+    "KeyName": {
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Name of an existing EC2 KeyPair"
+    }
+  },
+
+  "Resources": {
+    "BasicEC2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-0c55b159cbfafe1d0",
+        "InstanceType": { "Ref": "InstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Basic-EC2-Instance"
+          },
+          {
+            "Key": "Environment",
+            "Value": "Test"
+          }
+        ]
+      }
+    },
+
+    "BasicSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Basic security group for EC2 instance",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Basic-Security-Group"
+          }
+        ]
+      }
+    },
+
+    "BasicEBSVolume": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "Size": "50",
+        "VolumeType": "gp2",
+        "AvailabilityZone": { "Fn::GetAtt": ["BasicEC2Instance", "AvailabilityZone"] },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Basic-EBS-Volume"
+          }
+        ]
+      }
+    },
+
+    "VolumeAttachment": {
+      "Type": "AWS::EC2::VolumeAttachment",
+      "Properties": {
+        "InstanceId": { "Ref": "BasicEC2Instance" },
+        "VolumeId": { "Ref": "BasicEBSVolume" },
+        "Device": "/dev/sdh"
+      }
+    },
+
+    "BasicElasticIP": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "InstanceId": { "Ref": "BasicEC2Instance" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Basic-Elastic-IP"
+          }
+        ]
+      }
+    }
+  },
+
+  "Outputs": {
+    "InstanceId": {
+      "Description": "Instance ID of the EC2 instance",
+      "Value": { "Ref": "BasicEC2Instance" },
+      "Export": {
+        "Name": "BasicInstanceId"
+      }
+    },
+    "PublicIP": {
+      "Description": "Public IP address of the EC2 instance",
+      "Value": { "Fn::GetAtt": ["BasicEC2Instance", "PublicIp"] }
+    },
+    "SecurityGroupId": {
+      "Description": "Security Group ID",
+      "Value": { "Ref": "BasicSecurityGroup" }
+    }
+  }
+}

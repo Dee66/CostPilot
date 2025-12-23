@@ -1,0 +1,18 @@
+{
+    "gate_name": "security_test_coverage",
+    "status": "FAILED",
+    "timestamp": "2025-12-20 12:04:52",
+    "coverage_targets": {
+        "input_validation": "100.0%",
+        "authentication": "100.0%",
+        "authorization": "100.0%",
+        "data_protection": "100.0%"
+    },
+    "actual_coverage": {
+        "input_validation": "31.2%",
+        "authentication": "41.4%",
+        "authorization": "42.9%",
+        "data_protection": "100.0%"
+    },
+    "violations": 3
+}

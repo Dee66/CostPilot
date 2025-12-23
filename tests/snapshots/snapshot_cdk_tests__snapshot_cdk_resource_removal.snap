@@ -1,0 +1,12 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "OldFunction": {
+      "ChangeType": "Removal",
+      "Type": "AWS::Lambda::Function"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+    "gate_name": "e2e_test_coverage",
+    "status": "FAILED",
+    "timestamp": "2025-12-20 12:02:16",
+    "coverage_targets": {
+        "user_workflows": "100.0%",
+        "failure_scenarios": "100.0%",
+        "platform_matrix": "100.0%"
+    },
+    "actual_coverage": {
+        "user_workflows": "36.8%",
+        "failure_scenarios": "100.0%",
+        "platform_matrix": "100.0%"
+    },
+    "violations": 1
+}

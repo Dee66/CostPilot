@@ -1,0 +1,26 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_kinesis_stream.events",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "shard_count": 2
+        },
+        "before": {
+          "shard_count": 1
+        }
+      },
+      "mode": "managed",
+      "name": "events",
+      "type": "aws_kinesis_stream"
+    }
+  ]
+}

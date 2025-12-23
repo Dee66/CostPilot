@@ -1,0 +1,298 @@
+# CostPilot Baseline Scenario: Seasonal Variations
+# This baseline captures seasonal cost patterns for accurate forecasting
+
+metadata:
+  baseline_id: "seasonal-variations-ecommerce"
+  baseline_version: "1.0.0"
+  baseline_type: "seasonal_variations"
+  description: "Seasonal cost patterns for an e-commerce platform with holiday spikes"
+  created_at: "2025-01-15T00:00:00Z"
+  data_source: "aws_cost_explorer"
+  account_id: "123456789012"
+  region: "us-east-1"
+  currency: "USD"
+  seasonality_type: "retail_ecommerce"
+  analysis_period: "24_months"
+
+# Seasonal patterns by month (averaged over multiple years)
+seasonal_patterns:
+  january:
+    multiplier: 0.85  # 15% below average
+    description: "Post-holiday slowdown"
+    typical_cost_range:
+      min: 35000.00
+      max: 45000.00
+      average: 38750.00
+    drivers:
+      - "Reduced marketing spend"
+      - "Lower traffic after holidays"
+      - "Year-end budget adjustments"
+
+  february:
+    multiplier: 0.78  # 22% below average
+    description: "Lowest activity month"
+    typical_cost_range:
+      min: 32000.00
+      max: 42000.00
+      average: 35600.00
+    drivers:
+      - "Minimal marketing campaigns"
+      - "Lowest natural traffic"
+      - "Budget constraints"
+
+  march:
+    multiplier: 0.92  # 8% below average
+    description: "Early spring recovery"
+    typical_cost_range:
+      min: 38000.00
+      max: 48000.00
+      average: 41800.00
+    drivers:
+      - "Spring marketing campaigns"
+      - "Gradual traffic increase"
+      - "Seasonal product launches"
+
+  april:
+    multiplier: 1.05  # 5% above average
+    description: "Spring shopping season"
+    typical_cost_range:
+      min: 42000.00
+      max: 52000.00
+      average: 46200.00
+    drivers:
+      - "Easter/spring promotions"
+      - "Tax season shopping"
+      - "Spring cleaning sales"
+
+  may:
+    multiplier: 1.12  # 12% above average
+    description: "Mother's Day and early summer"
+    typical_cost_range:
+      min: 45000.00
+      max: 55000.00
+      average: 48750.00
+    drivers:
+      - "Mother's Day promotions"
+      - "Memorial Day sales"
+      - "Summer preparation"
+
+  june:
+    multiplier: 1.08  # 8% above average
+    description: "Summer shopping season"
+    typical_cost_range:
+      min: 43000.00
+      max: 53000.00
+      average: 47500.00
+    drivers:
+      - "Father's Day"
+      - "Summer sales"
+      - "Graduation season"
+
+  july:
+    multiplier: 0.95  # 5% below average
+    description: "Mid-summer slowdown"
+    typical_cost_range:
+      min: 38000.00
+      max: 48000.00
+      average: 42500.00
+    drivers:
+      - "Holiday travel competition"
+      - "Reduced marketing during vacations"
+      - "Economic uncertainty"
+
+  august:
+    multiplier: 0.98  # 2% below average
+    description: "Back-to-school season"
+    typical_cost_range:
+      min: 39000.00
+      max: 49000.00
+      average: 43250.00
+    drivers:
+      - "Back-to-school shopping"
+      - "End of summer sales"
+      - "Pre-holiday preparation"
+
+  september:
+    multiplier: 1.15  # 15% above average
+    description: "Holiday shopping preparation"
+    typical_cost_range:
+      min: 46000.00
+      max: 56000.00
+      average: 50000.00
+    drivers:
+      - "Labor Day sales"
+      - "Back-to-school peak"
+      - "Early holiday marketing"
+
+  october:
+    multiplier: 1.25  # 25% above average
+    description: "Halloween and pre-holiday"
+    typical_cost_range:
+      min: 50000.00
+      max: 60000.00
+      average: 53750.00
+    drivers:
+      - "Halloween promotions"
+      - "Early holiday shopping"
+      - "Marketing campaign ramp-up"
+
+  november:
+    multiplier: 1.45  # 45% above average
+    description: "Black Friday and Cyber Monday"
+    typical_cost_range:
+      min: 58000.00
+      max: 68000.00
+      average: 61250.00
+    drivers:
+      - "Black Friday/Cyber Monday"
+      - "Holiday shopping peak"
+      - "Maximum marketing spend"
+
+  december:
+    multiplier: 1.65  # 65% above average
+    description: "Holiday season peak"
+    typical_cost_range:
+      min: 66000.00
+      max: 76000.00
+      average: 68750.00
+    drivers:
+      - "Christmas shopping"
+      - "Year-end promotions"
+      - "Maximum infrastructure scaling"
+
+# Weekly patterns within months
+weekly_patterns:
+  holiday_season:  # November-December
+    monday: 1.2
+    tuesday: 1.1
+    wednesday: 1.0
+    thursday: 1.3
+    friday: 1.4
+    saturday: 1.6
+    sunday: 1.5
+
+  normal_season:  # January-October
+    monday: 0.9
+    tuesday: 0.95
+    wednesday: 1.0
+    thursday: 1.05
+    friday: 1.1
+    saturday: 1.2
+    sunday: 1.15
+
+# Service-specific seasonal variations
+service_seasonality:
+  ec2_instances:
+    peak_multiplier: 2.5  # Scale up 2.5x during holidays
+    scale_up_events:
+      - "black_friday"
+      - "cyber_monday"
+      - "christmas_eve"
+    scale_down_events:
+      - "post_holiday"
+      - "new_year"
+
+  rds_instances:
+    read_replica_scaling: true
+    peak_multiplier: 3.0
+    auto_scaling_enabled: true
+
+  cloudfront_cdn:
+    traffic_multiplier: 2.8
+    bandwidth_peak: "december_24"
+    geographic_distribution:
+      us_east: 0.4
+      us_west: 0.3
+      europe: 0.2
+      asia: 0.1
+
+  lambda_functions:
+    invocation_multiplier: 4.0
+    duration_increase: 1.8
+    memory_scaling: true
+
+# Cost breakdown by category during different seasons
+seasonal_cost_breakdown:
+  peak_season:  # Nov-Dec
+    infrastructure: 0.45  # 45% of total cost
+    data_transfer: 0.25    # 25% of total cost
+    storage: 0.15         # 15% of total cost
+    monitoring: 0.08      # 8% of total cost
+    other: 0.07          # 7% of total cost
+
+  normal_season:  # Jan-Oct
+    infrastructure: 0.55
+    data_transfer: 0.18
+    storage: 0.12
+    monitoring: 0.09
+    other: 0.06
+
+  low_season:  # Feb-Mar
+    infrastructure: 0.60
+    data_transfer: 0.15
+    storage: 0.11
+    monitoring: 0.08
+    other: 0.06
+
+# Anomaly detection thresholds
+anomaly_detection:
+  standard_deviation_threshold: 2.5
+  percentage_change_threshold: 50.0  # Flag 50%+ changes
+  minimum_anomaly_cost: 5000.00
+
+  known_anomalies:
+    - type: "marketing_campaign"
+      pattern: "spike_followed_by_return_to_normal"
+      duration_days: 14
+    - type: "infrastructure_failure"
+      pattern: "sudden_spike_with_manual_intervention"
+      duration_hours: 48
+    - type: "holiday_traffic"
+      pattern: "gradual_increase_to_peak_then_decline"
+      duration_days: 45
+
+# Forecasting adjustments
+forecasting_adjustments:
+  base_year_over_year_growth: 0.12  # 12% annual growth
+  seasonal_adjustment_weight: 0.7   # 70% weight to seasonal patterns
+  trend_adjustment_weight: 0.3      # 30% weight to overall trends
+
+  confidence_intervals:
+    peak_season: 0.85  # 85% confidence in peak season forecasts
+    normal_season: 0.92 # 92% confidence in normal season forecasts
+    low_season: 0.88   # 88% confidence in low season forecasts
+
+# Resource scaling patterns
+scaling_patterns:
+  auto_scaling_groups:
+    min_instances_normal: 3
+    max_instances_normal: 8
+    min_instances_peak: 6
+    max_instances_peak: 25
+
+  rds_read_replicas:
+    normal_count: 1
+    peak_count: 4
+    scale_up_time: "48h_before_peak"
+    scale_down_time: "24h_after_peak"
+
+  elasticache_clusters:
+    normal_node_count: 2
+    peak_node_count: 6
+    cache_hit_ratio_target: 0.95
+
+# Budget planning recommendations
+budget_planning:
+  recommended_buffer: 0.25  # 25% buffer for seasonal variations
+  quarterly_allocations:
+    q1: 0.18  # 18% of annual budget
+    q2: 0.22  # 22% of annual budget
+    q3: 0.20  # 20% of annual budget
+    q4: 0.40  # 40% of annual budget (holiday season)
+
+  cost_optimization_opportunities:
+    - "Pre-warm infrastructure before peak seasons"
+    - "Use reserved instances for baseline capacity"
+    - "Implement predictive auto-scaling"
+    - "Optimize data transfer costs during peaks"
+    - "Use spot instances for non-critical workloads"

@@ -15,7 +15,7 @@ def test_economic_attack_detection_command():
         text=True,
         timeout=10
     )
-    
+
     # In Premium, should succeed or be subcommand
     if result.returncode != 0:
         result = subprocess.run(
@@ -30,7 +30,7 @@ def test_economic_attack_detection_resource_bomb():
     """Test economic attack detection for resource bombs."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Resource bomb: many expensive resources
         template_content = {
             "Resources": {
@@ -44,17 +44,17 @@ def test_economic_attack_detection_resource_bomb():
                 for i in range(100)
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "economic-attack", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=15
         )
-        
+
         # In Premium, should detect resource bomb
         if result.returncode == 0:
             output = result.stdout.lower()
@@ -66,7 +66,7 @@ def test_economic_attack_detection_cost_spike():
     """Test economic attack detection for cost spikes."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "NatGateway1": {
@@ -83,17 +83,17 @@ def test_economic_attack_detection_cost_spike():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "economic-attack", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should detect expensive resource pattern
         if result.returncode == 0:
             assert len(result.stdout) > 0, "Should report cost spike"
@@ -103,7 +103,7 @@ def test_economic_attack_detection_exponential_growth():
     """Test economic attack detection for exponential growth patterns."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Pattern: each resource creates more resources
         template_content = {
             "Resources": {
@@ -127,17 +127,17 @@ def test_economic_attack_detection_exponential_growth():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "economic-attack", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should detect exponential growth pattern
 
 
@@ -145,7 +145,7 @@ def test_economic_attack_detection_cost_threshold():
     """Test economic attack detection with cost threshold."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 f"Lambda{i}": {
@@ -157,17 +157,17 @@ def test_economic_attack_detection_cost_threshold():
                 for i in range(50)
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "economic-attack", "--plan", str(template_path), "--threshold", "1000.0"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should use threshold for detection
 
 
@@ -176,7 +176,7 @@ def test_economic_attack_detection_output_format():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         output_path = Path(tmpdir) / "attacks.json"
-        
+
         template_content = {
             "Resources": {
                 f"Lambda{i}": {
@@ -188,17 +188,17 @@ def test_economic_attack_detection_output_format():
                 for i in range(100)
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "economic-attack", "--plan", str(template_path), "--output", str(output_path)],
             capture_output=True,
             text=True,
             timeout=15
         )
-        
+
         # Should create output file
         if result.returncode == 0 and output_path.exists():
             with open(output_path) as f:
@@ -210,7 +210,7 @@ def test_economic_attack_detection_severity():
     """Test economic attack detection severity levels."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 # High severity: many expensive resources
@@ -231,17 +231,17 @@ def test_economic_attack_detection_severity():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "economic-attack", "--plan", str(template_path), "--min-severity", "high"],
             capture_output=True,
             text=True,
             timeout=15
         )
-        
+
         # Should filter by severity
 
 

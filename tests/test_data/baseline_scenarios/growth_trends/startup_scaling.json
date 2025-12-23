@@ -1,0 +1,269 @@
+# CostPilot Baseline Scenario: Growth Trends
+# This baseline captures long-term growth patterns and trends for forecasting
+
+metadata:
+  baseline_id: "growth-trends-startup-scale"
+  baseline_version: "1.0.0"
+  baseline_type: "growth_trends"
+  description: "Growth trends for a rapidly scaling SaaS startup"
+  created_at: "2025-01-15T00:00:00Z"
+  data_source: "aws_cost_explorer"
+  account_id: "123456789012"
+  region: "us-east-1"
+  currency: "USD"
+  company_stage: "hypergrowth_startup"
+  analysis_period: "18_months"
+
+# Growth phases and characteristics
+growth_phases:
+  early_stage:  # Months 1-6
+    period: "2023-07-01 to 2023-12-31"
+    characteristics:
+      - "Manual infrastructure management"
+      - "Rapid prototyping"
+      - "Frequent architecture changes"
+      - "Cost optimization not prioritized"
+    monthly_growth_rate: 0.45  # 45% month-over-month
+    cost_pattern: "exponential"
+    risk_level: "high"
+
+  scaling_phase:  # Months 7-12
+    period: "2024-01-01 to 2024-06-30"
+    characteristics:
+      - "Automated deployments"
+      - "Microservices adoption"
+      - "Multi-region expansion"
+      - "Basic cost monitoring"
+    monthly_growth_rate: 0.28  # 28% month-over-month
+    cost_pattern: "linear_accelerating"
+    risk_level: "medium"
+
+  optimization_phase:  # Months 13-18
+    period: "2024-07-01 to 2024-12-31"
+    characteristics:
+      - "Cost optimization focus"
+      - "Reserved instance adoption"
+      - "Automated scaling"
+      - "FinOps team in place"
+    monthly_growth_rate: 0.18  # 18% month-over-month
+    cost_pattern: "linear_stabilizing"
+    risk_level: "low"
+
+# Monthly cost progression with growth trends
+monthly_progression:
+  "2023-07": { total_cost: 12500.00, user_count: 2500, revenue: 37500.00 }
+  "2023-08": { total_cost: 18750.00, user_count: 3200, revenue: 48000.00 }
+  "2023-09": { total_cost: 26500.00, user_count: 4100, revenue: 61500.00 }
+  "2023-10": { total_cost: 35200.00, user_count: 5200, revenue: 78000.00 }
+  "2023-11": { total_cost: 46800.00, user_count: 6500, revenue: 97500.00 }
+  "2023-12": { total_cost: 58900.00, user_count: 8100, revenue: 121500.00 }
+  "2024-01": { total_cost: 67800.00, user_count: 9200, revenue: 138000.00 }
+  "2024-02": { total_cost: 75600.00, user_count: 10100, revenue: 151500.00 }
+  "2024-03": { total_cost: 83400.00, user_count: 11000, revenue: 165000.00 }
+  "2024-04": { total_cost: 91200.00, user_count: 11900, revenue: 178500.00 }
+  "2024-05": { total_cost: 99800.00, user_count: 12900, revenue: 193500.00 }
+  "2024-06": { total_cost: 108900.00, user_count: 14000, revenue: 210000.00 }
+  "2024-07": { total_cost: 115600.00, user_count: 14800, revenue: 222000.00 }
+  "2024-08": { total_cost: 122100.00, user_count: 15600, revenue: 234000.00 }
+  "2024-09": { total_cost: 128300.00, user_count: 16400, revenue: 246000.00 }
+  "2024-10": { total_cost: 134200.00, user_count: 17200, revenue: 258000.00 }
+  "2024-11": { total_cost: 139800.00, user_count: 18000, revenue: 270000.00 }
+  "2024-12": { total_cost: 145100.00, user_count: 18800, revenue: 282000.00 }
+
+# Growth metrics correlation
+growth_correlations:
+  cost_per_user:
+    early_stage: 5.00  # $5 per user
+    scaling_phase: 4.20
+    optimization_phase: 3.80
+    trend: "decreasing"
+
+  revenue_to_cost_ratio:
+    early_stage: 3.0   # $3 revenue per $1 cost
+    scaling_phase: 2.2
+    optimization_phase: 2.0
+    trend: "stabilizing"
+
+  infrastructure_efficiency:
+    early_stage: 0.65  # 65% efficient
+    scaling_phase: 0.78
+    optimization_phase: 0.85
+    trend: "improving"
+
+# Service adoption patterns during growth
+service_adoption_timeline:
+  initial_services:  # Month 1-3
+    - "EC2"
+    - "RDS"
+    - "S3"
+    - "CloudWatch"
+
+  scaling_services:  # Month 4-8
+    - "ELB"
+    - "AutoScaling"
+    - "CloudFront"
+    - "Route53"
+    - "Lambda"
+
+  optimization_services:  # Month 9-12
+    - "ReservedInstances"
+    - "SavingsPlans"
+    - "CostAllocationTags"
+    - "Budgets"
+
+  enterprise_services:  # Month 13+
+    - "Organizations"
+    - "ControlTower"
+    - "Config"
+    - "CloudTrail"
+
+# Cost breakdown evolution
+cost_breakdown_evolution:
+  "2023-07":
+    compute: 0.55
+    storage: 0.15
+    database: 0.20
+    networking: 0.05
+    monitoring: 0.03
+    other: 0.02
+
+  "2023-12":
+    compute: 0.45
+    storage: 0.18
+    database: 0.22
+    networking: 0.08
+    monitoring: 0.04
+    other: 0.03
+
+  "2024-06":
+    compute: 0.40
+    storage: 0.20
+    database: 0.25
+    networking: 0.09
+    monitoring: 0.04
+    other: 0.02
+
+  "2024-12":
+    compute: 0.35
+    storage: 0.22
+    database: 0.28
+    networking: 0.10
+    monitoring: 0.03
+    other: 0.02
+
+# Scaling triggers and patterns
+scaling_triggers:
+  user_milestones:
+    "5000_users": { action: "multi_az_deployment", cost_impact: 2500.00 }
+    "10000_users": { action: "read_replicas", cost_impact: 1800.00 }
+    "15000_users": { action: "multi_region", cost_impact: 4500.00 }
+
+  performance_triggers:
+    cpu_threshold: { threshold: 70, action: "instance_upgrade", cost_impact: 1200.00 }
+    memory_threshold: { threshold: 80, action: "instance_type_change", cost_impact: 800.00 }
+    latency_threshold: { threshold: 500, action: "cdn_implementation", cost_impact: 600.00 }
+
+  cost_triggers:
+    budget_threshold: { threshold: 80, action: "reserved_instances", cost_impact: -3000.00 }
+    efficiency_threshold: { threshold: 0.7, action: "optimization_review", cost_impact: -1500.00 }
+
+# Forecasting models
+forecasting_models:
+  linear_regression:
+    r_squared: 0.94
+    next_6_months: [151200.00, 157800.00, 164900.00, 172500.00, 180600.00, 189200.00]
+    confidence_interval: 0.89
+
+  exponential_smoothing:
+    alpha: 0.3
+    next_6_months: [149800.00, 155100.00, 161000.00, 167400.00, 174300.00, 181700.00]
+    confidence_interval: 0.91
+
+  machine_learning:
+    algorithm: "random_forest"
+    features: ["user_count", "revenue", "seasonal_factor", "marketing_spend"]
+    next_6_months: [150500.00, 156400.00, 162800.00, 169700.00, 177100.00, 185000.00]
+    confidence_interval: 0.93
+
+# Risk assessment during growth
+risk_assessment:
+  cost_runaway_risks:
+    - risk: "Uncontrolled scaling"
+      probability: "high"
+      impact: "severe"
+      mitigation: "Implement cost guards and budgets"
+
+    - risk: "Inefficient architecture"
+      probability: "medium"
+      impact: "high"
+      mitigation: "Regular architecture reviews"
+
+    - risk: "Vendor lock-in costs"
+      probability: "low"
+      impact: "medium"
+      mitigation: "Multi-cloud strategy evaluation"
+
+  optimization_opportunities:
+    - opportunity: "Reserved instances"
+      potential_savings: 0.25  # 25% of compute costs
+      implementation_effort: "medium"
+      timeline: "3_months"
+
+    - opportunity: "Auto-scaling optimization"
+      potential_savings: 0.15
+      implementation_effort: "low"
+      timeline: "1_month"
+
+    - opportunity: "Storage tier optimization"
+      potential_savings: 0.20
+      implementation_effort: "medium"
+      timeline: "2_months"
+
+# Benchmarking against industry standards
+industry_benchmarks:
+  cost_per_user:
+    startup_average: 4.50
+    enterprise_average: 2.80
+    current_position: "above_average"
+    target_position: "at_average"
+
+  infrastructure_efficiency:
+    startup_average: 0.75
+    enterprise_average: 0.88
+    current_position: "at_average"
+    target_position: "above_average"
+
+  cloud_cost_ratio:
+    startup_average: 0.18  # 18% of revenue
+    enterprise_average: 0.12
+    current_position: "above_average"
+    target_position: "at_average"
+
+# Long-term projections
+long_term_projections:
+  year_2_growth_rate: 0.22  # 22% annual growth
+  year_3_growth_rate: 0.18
+  year_4_growth_rate: 0.15
+  year_5_growth_rate: 0.12
+
+  cost_optimization_targets:
+    year_1: { efficiency_target: 0.80, cost_ratio_target: 0.16 }
+    year_2: { efficiency_target: 0.85, cost_ratio_target: 0.14 }
+    year_3: { efficiency_target: 0.88, cost_ratio_target: 0.12 }
+    year_4: { efficiency_target: 0.90, cost_ratio_target: 0.11 }
+    year_5: { efficiency_target: 0.92, cost_ratio_target: 0.10 }
+
+# Key insights and recommendations
+insights:
+  - "Cost growth is stabilizing as company matures"
+  - "Database costs are growing faster than other services"
+  - "Storage costs are becoming significant - implement lifecycle policies"
+  - "Compute costs are well-optimized with reserved instances"
+  - "Monitoring costs are minimal - consider increasing observability investment"
+
+recommendations:
+    - "Implement database read replicas to reduce RDS costs"
+    - "Set up automated EBS snapshot lifecycle policies"
+    - "Consider Savings Plans for flexible compute commitments"
+    - "Implement cost allocation tags for better chargeback"
+    - "Set up multi-region disaster recovery with cost considerations"

@@ -1,0 +1,45 @@
+{
+  "version": 4,
+  "terraform_version": "1.0.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_rds_instance.example",
+          "mode": "managed",
+          "type": "aws_rds_instance",
+          "name": "example",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "allocated_storage": 20,
+            "engine": "mysql",
+            "engine_version": "8.0",
+            "instance_class": "db.t3.micro",
+            "username": "admin",
+            "password": "password123",
+            "db_name": "example"
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_rds_instance.example",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "allocated_storage": 20,
+          "engine": "mysql",
+          "engine_version": "8.0",
+          "instance_class": "db.t3.micro",
+          "username": "admin",
+          "password": "password123",
+          "db_name": "example"
+        }
+      }
+    }
+  ]
+}

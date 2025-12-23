@@ -1,0 +1,31 @@
+---
+source: tests/snapshot_terraform_tests.rs
+expression: plan
+---
+{
+  "configuration": {
+    "root_module": {}
+  },
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_instance.web",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "after": {
+          "availability_zone": "us-east-1b",
+          "instance_type": "t3.small"
+        },
+        "before": {
+          "availability_zone": "us-east-1a",
+          "instance_type": "t3.small"
+        }
+      },
+      "type": "aws_instance"
+    }
+  ],
+  "terraform_version": "1.5.0"
+}

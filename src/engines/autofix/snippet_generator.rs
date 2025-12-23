@@ -22,7 +22,6 @@ pub struct FixSnippet {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SnippetFormat {
     Terraform,
-    CloudFormation,
     CDK,
 }
 
@@ -359,10 +358,6 @@ mod tests {
             message: "High cost instance".to_string(),
             estimated_cost: Some(560.0),
             fix_snippet: None,
-            resource_type: Some("aws_instance".to_string()),
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         };
 
         let anti_pattern = AntiPattern {
@@ -405,10 +400,6 @@ mod tests {
             message: "Unbounded Lambda concurrency".to_string(),
             estimated_cost: None,
             fix_snippet: None,
-            resource_type: None,
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         };
 
         let anti_pattern = AntiPattern {
@@ -450,10 +441,6 @@ mod tests {
             message: "Missing lifecycle policy".to_string(),
             estimated_cost: None,
             fix_snippet: None,
-            resource_type: None,
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         };
 
         let anti_pattern = AntiPattern {

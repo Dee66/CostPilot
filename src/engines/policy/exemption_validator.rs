@@ -279,7 +279,7 @@ mod tests {
         } else {
             "2025-12-01T00:00:00Z"
         };
-        
+
         PolicyExemption {
             id: "EXE-001".to_string(),
             policy_name: "NAT_GATEWAY_LIMIT".to_string(),

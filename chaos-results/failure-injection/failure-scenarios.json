@@ -1,0 +1,126 @@
+{
+  "scenarios": [
+    {
+      "id": "network_partition",
+      "type": "network",
+      "description": "Complete network isolation between services",
+      "impact": "high",
+      "duration_seconds": 60,
+      "recovery_procedure": "automatic_failover"
+    },
+    {
+      "id": "service_crash",
+      "type": "application",
+      "description": "Application process termination",
+      "impact": "medium",
+      "duration_seconds": 30,
+      "recovery_procedure": "process_restart"
+    },
+    {
+      "id": "database_connection_loss",
+      "type": "infrastructure",
+      "description": "Database connection pool exhaustion",
+      "impact": "high",
+      "duration_seconds": 120,
+      "recovery_procedure": "connection_pool_reset"
+    },
+    {
+      "id": "memory_exhaustion",
+      "type": "resource",
+      "description": "Memory usage exceeds limits",
+      "impact": "medium",
+      "duration_seconds": 45,
+      "recovery_procedure": "memory_cleanup"
+    },
+    {
+      "id": "disk_full",
+      "type": "storage",
+      "description": "Disk space completely exhausted",
+      "impact": "high",
+      "duration_seconds": 90,
+      "recovery_procedure": "log_rotation_cleanup"
+    },
+    {
+      "id": "cpu_spike",
+      "type": "resource",
+      "description": "CPU usage spikes to 100%",
+      "impact": "medium",
+      "duration_seconds": 30,
+      "recovery_procedure": "load_shedding"
+    },
+    {
+      "id": "dependency_failure",
+      "type": "external",
+      "description": "External service dependency failure",
+      "impact": "high",
+      "duration_seconds": 180,
+      "recovery_procedure": "circuit_breaker_fallback"
+    },
+    {
+      "id": "configuration_corruption",
+      "type": "configuration",
+      "description": "Configuration files become corrupted",
+      "impact": "critical",
+      "duration_seconds": 60,
+      "recovery_procedure": "config_rollback"
+    },
+    {
+      "id": "certificate_expiry",
+      "type": "security",
+      "description": "SSL/TLS certificates expire",
+      "impact": "high",
+      "duration_seconds": 120,
+      "recovery_procedure": "certificate_renewal"
+    },
+    {
+      "id": "message_queue_overflow",
+      "type": "messaging",
+      "description": "Message queue exceeds capacity",
+      "impact": "medium",
+      "duration_seconds": 90,
+      "recovery_procedure": "queue_draining"
+    },
+    {
+      "id": "cache_failure",
+      "type": "caching",
+      "description": "Cache layer completely fails",
+      "impact": "medium",
+      "duration_seconds": 45,
+      "recovery_procedure": "cache_bypass"
+    },
+    {
+      "id": "load_balancer_failure",
+      "type": "infrastructure",
+      "description": "Load balancer becomes unresponsive",
+      "impact": "critical",
+      "duration_seconds": 30,
+      "recovery_procedure": "dns_failover"
+    },
+    {
+      "id": "api_rate_limit_exceeded",
+      "type": "application",
+      "description": "API rate limits exceeded",
+      "impact": "medium",
+      "duration_seconds": 60,
+      "recovery_procedure": "rate_limit_increase"
+    },
+    {
+      "id": "data_corruption",
+      "type": "data",
+      "description": "Data becomes corrupted in transit",
+      "impact": "critical",
+      "duration_seconds": 120,
+      "recovery_procedure": "data_validation_recovery"
+    },
+    {
+      "id": "time_synchronization_loss",
+      "type": "infrastructure",
+      "description": "NTP time synchronization lost",
+      "impact": "low",
+      "duration_seconds": 30,
+      "recovery_procedure": "ntp_resync"
+    }
+  ],
+  "total_scenarios": 15,
+  "coverage_areas": ["network", "application", "infrastructure", "resource", "storage", "external", "configuration", "security", "messaging", "caching", "data"]
+}

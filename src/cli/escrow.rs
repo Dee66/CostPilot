@@ -289,6 +289,218 @@ use std::path::Path;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_execute_escrow_command_create() {
+        let temp_dir = tempdir().unwrap();
+        let output_dir = temp_dir.path().join("escrow-output");
+
+        // Clean up any existing escrow config to ensure test isolation
+        let _ = std::fs::remove_file(get_config_path().unwrap_or_default());
+
+        let cmd = EscrowCommand::Create {
+            version: "1.0.0".to_string(),
+            output_dir: Some(output_dir.clone()),
+            include_artifacts: false,
+        };
+
+        // This will fail because we're not in a git repo, but we can test the error handling
+        let result = execute_escrow_command(cmd);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err();
+        println!("Actual error: {}", err_msg);
+        assert!(
+            err_msg.contains("Not in a git repository")
+                || err_msg.contains("Failed to run git")
+                || err_msg.contains("Package verification failed")
+        );
+    }
+
+    #[test]
+    fn test_execute_escrow_command_verify() {
+        let temp_dir = tempdir().unwrap();
+        let package_dir = temp_dir.path().join("nonexistent-package");
+
+        let cmd = EscrowCommand::Verify {
+            package_dir: package_dir.clone(),
+        };
+
+        let result = execute_escrow_command(cmd);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err();
+        println!("Verify error: {}", err_msg);
+        assert!(
+            err_msg.contains("Failed to load escrow package")
+                || err_msg.contains("No such file or directory")
+        );
+    }
+
+    #[test]
+    fn test_execute_escrow_command_playbook() {
+        let temp_dir = tempdir().unwrap();
+        let package_dir = temp_dir.path().join("nonexistent-package");
+
+        let cmd = EscrowCommand::Playbook {
+            package_dir: package_dir.clone(),
+            output: None,
+        };
+
+        let result = execute_escrow_command(cmd);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err();
+        println!("Playbook error: {}", err_msg);
+        assert!(
+            err_msg.contains("Failed to load escrow package")
+                || err_msg.contains("No such file or directory")
+        );
+    }
+
+    #[test]
+    fn test_execute_escrow_command_recover() {
+        let temp_dir = tempdir().unwrap();
+        let package_dir = temp_dir.path().join("nonexistent-package");
+        let working_dir = temp_dir.path().join("recovery-workspace");
+
+        let cmd = EscrowCommand::Recover {
+            package_dir: package_dir.clone(),
+            working_dir: working_dir.clone(),
+        };
+
+        let result = execute_escrow_command(cmd);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err();
+        println!("Recover error: {}", err_msg);
+        assert!(
+            err_msg.contains("Failed to load escrow package")
+                || err_msg.contains("No such file or directory")
+        );
+    }
+
+    #[test]
+    fn test_execute_escrow_command_configure() {
+        let cmd = EscrowCommand::Configure {
+            vendor_name: "Test Vendor".to_string(),
+            contact_email: "test@example.com".to_string(),
+            support_url: "https://example.com/support".to_string(),
+        };
+
+        let result = execute_escrow_command(cmd);
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("✅ Escrow configuration saved"));
+        assert!(output.contains("Test Vendor"));
+        assert!(output.contains("test@example.com"));
+        assert!(output.contains("https://example.com/support"));
+    }
+
+    #[test]
+    fn test_execute_escrow_command_list_empty() {
+        let temp_dir = tempdir().unwrap();
+        let escrow_dir = temp_dir.path().join("empty-escrow-dir");
+
+        let cmd = EscrowCommand::List {
+            escrow_dir: Some(escrow_dir.clone()),
+        };
+
+        let result = execute_escrow_command(cmd);
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("No escrow packages found"));
+    }
+
+    #[test]
+    fn test_execute_escrow_command_list_nonexistent() {
+        let temp_dir = tempdir().unwrap();
+        let escrow_dir = temp_dir.path().join("nonexistent-escrow-dir");
+
+        let cmd = EscrowCommand::List {
+            escrow_dir: Some(escrow_dir.clone()),
+        };
+
+        let result = execute_escrow_command(cmd);
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("No escrow packages found"));
+    }
+
+    #[test]
+    fn test_execute_escrow_command_list_default() {
+        let cmd = EscrowCommand::List { escrow_dir: None };
+
+        let result = execute_escrow_command(cmd);
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        // Should handle non-existent default directory gracefully
+        assert!(
+            output.contains("No escrow packages found") || output.contains("📦 Escrow Packages")
+        );
+    }
+
+    #[test]
+    fn test_load_escrow_config_default() {
+        // Test loading default config when no file exists
+        // Temporarily move any existing config file
+        let config_path = get_config_path().unwrap();
+        let backup_path = config_path.with_extension("json.backup");
+
+        let _moved = if config_path.exists() {
+            std::fs::rename(&config_path, &backup_path).ok()
+        } else {
+            None
+        };
+
+        let result = load_escrow_config();
+        assert!(result.is_ok());
+        let config = result.unwrap();
+        assert_eq!(config.vendor.company_name, "CostPilot Inc.");
+        assert_eq!(config.vendor.contact_email, "support@costpilot.io");
+        assert_eq!(config.vendor.support_url, "https://costpilot.io/support");
+        assert!(config.escrow_agent.is_none());
+
+        // Restore the config file if it was moved
+        if backup_path.exists() {
+            let _ = std::fs::rename(&backup_path, &config_path);
+        }
+    }
+
+    #[test]
+    fn test_save_and_load_escrow_config() {
+        let temp_dir = tempdir().unwrap();
+        let config_path = temp_dir.path().join("test-escrow.json");
+
+        // Mock the config path for testing
+        // Note: This is a simplified test since we can't easily mock get_config_path
+        let config = EscrowConfig {
+            vendor: VendorInfo {
+                company_name: "Test Company".to_string(),
+                contact_email: "test@test.com".to_string(),
+                support_url: "https://test.com".to_string(),
+                legal_entity: "Test Company LLC".to_string(),
+            },
+            escrow_agent: None,
+        };
+
+        let json = serde_json::to_string_pretty(&config).unwrap();
+        fs::write(&config_path, &json).unwrap();
+
+        let loaded: EscrowConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(loaded.vendor.company_name, "Test Company");
+        assert_eq!(loaded.vendor.contact_email, "test@test.com");
+        assert_eq!(loaded.vendor.support_url, "https://test.com");
+    }
+
+    #[test]
+    fn test_get_repository_root() {
+        // Test when in a git repository
+        let result = get_repository_root();
+        assert!(result.is_ok());
+        let repo_root = result.unwrap();
+        assert!(repo_root.is_absolute());
+        // Should be the CostPilot project root
+        assert!(repo_root.to_string_lossy().contains("CostPilot"));
+    }
 
     #[test]
     fn test_escrow_config() {

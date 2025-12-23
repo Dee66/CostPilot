@@ -1,5 +1,5 @@
 /// Test data generators for property-based and fuzz testing
-/// 
+///
 /// Provides functions to generate realistic test data for various AWS resources,
 /// plans, and configurations.
 
@@ -36,7 +36,7 @@ pub fn random_rds_engine(seed: usize) -> &'static str {
 /// Generate a Terraform plan with N EC2 instances
 pub fn generate_terraform_plan_with_n_ec2(count: usize) -> serde_json::Value {
     let mut resources = Vec::new();
-    
+
     for i in 0..count {
         let instance_type = random_ec2_instance_type(i);
         resources.push(json!({
@@ -58,7 +58,7 @@ pub fn generate_terraform_plan_with_n_ec2(count: usize) -> serde_json::Value {
             }
         }));
     }
-    
+
     json!({
         "format_version": "1.1",
         "terraform_version": "1.5.0",
@@ -73,7 +73,7 @@ pub fn generate_mixed_terraform_plan(
     lambda_count: usize,
 ) -> serde_json::Value {
     let mut resources = Vec::new();
-    
+
     // EC2 instances
     for i in 0..ec2_count {
         resources.push(json!({
@@ -88,7 +88,7 @@ pub fn generate_mixed_terraform_plan(
             }
         }));
     }
-    
+
     // RDS instances
     for i in 0..rds_count {
         resources.push(json!({
@@ -104,7 +104,7 @@ pub fn generate_mixed_terraform_plan(
             }
         }));
     }
-    
+
     // Lambda functions
     for i in 0..lambda_count {
         resources.push(json!({
@@ -121,7 +121,7 @@ pub fn generate_mixed_terraform_plan(
             }
         }));
     }
-    
+
     json!({
         "format_version": "1.1",
         "terraform_version": "1.5.0",
@@ -142,7 +142,7 @@ pub fn generate_large_terraform_plan(resource_count: usize) -> serde_json::Value
 /// Generate a policy with N rules
 pub fn generate_policy_with_n_rules(rule_count: usize) -> serde_json::Value {
     let mut rules = Vec::new();
-    
+
     for i in 0..rule_count {
         rules.push(json!({
             "id": format!("rule-{}", i),
@@ -156,7 +156,7 @@ pub fn generate_policy_with_n_rules(rule_count: usize) -> serde_json::Value {
             "actions": ["Warn"]
         }));
     }
-    
+
     json!({
         "id": "generated-policy",
         "name": "Generated Test Policy",
@@ -168,11 +168,11 @@ pub fn generate_policy_with_n_rules(rule_count: usize) -> serde_json::Value {
 /// Generate a graph with N nodes for cycle detection testing
 pub fn generate_graph_nodes(node_count: usize) -> Vec<(String, Vec<String>)> {
     let mut nodes = Vec::new();
-    
+
     for i in 0..node_count {
         let node_id = format!("node_{}", i);
         let mut dependencies = Vec::new();
-        
+
         // Create some dependencies (but avoid cycles in this basic generator)
         if i > 0 {
             dependencies.push(format!("node_{}", i - 1));
@@ -180,10 +180,10 @@ pub fn generate_graph_nodes(node_count: usize) -> Vec<(String, Vec<String>)> {
         if i > 1 && i % 3 == 0 {
             dependencies.push(format!("node_{}", i - 2));
         }
-        
+
         nodes.push((node_id, dependencies));
     }
-    
+
     nodes
 }
 
@@ -201,12 +201,12 @@ pub fn generate_cyclic_graph() -> Vec<(String, Vec<String>)> {
 pub fn generate_module_path(depth: usize, index: usize) -> String {
     let components = ["vpc", "compute", "database", "storage", "network"];
     let mut path = "root".to_string();
-    
+
     for d in 0..depth {
         let component = components[(index + d) % components.len()];
         path = format!("{}.{}", path, component);
     }
-    
+
     path
 }
 
@@ -217,18 +217,18 @@ pub fn generate_resource_tags(environment: &str, cost_center: Option<&str>) -> s
         "ManagedBy": "Terraform",
         "Application": "costpilot-test"
     });
-    
+
     if let Some(cc) = cost_center {
         tags["CostCenter"] = json!(cc);
     }
-    
+
     tags
 }
 
 /// Generate a baseline file with multiple modules
 pub fn generate_baseline_with_modules(module_count: usize) -> serde_json::Value {
     let mut baselines = Vec::new();
-    
+
     for i in 0..module_count {
         baselines.push(json!({
             "module_path": generate_module_path(2, i),
@@ -237,7 +237,7 @@ pub fn generate_baseline_with_modules(module_count: usize) -> serde_json::Value 
             "justification": format!("Baseline for module {}", i)
         }));
     }
-    
+
     json!({
         "version": "1.0.0",
         "baselines": baselines
@@ -248,7 +248,7 @@ pub fn generate_baseline_with_modules(module_count: usize) -> serde_json::Value 
 pub fn generate_slo_file(slo_count: usize) -> serde_json::Value {
     let mut slos = Vec::new();
     let slo_types = ["MonthlyCost", "ModuleCost", "ServiceCost", "ResourceCount"];
-    
+
     for i in 0..slo_count {
         let slo_type = slo_types[i % slo_types.len()];
         slos.push(json!({
@@ -259,7 +259,7 @@ pub fn generate_slo_file(slo_count: usize) -> serde_json::Value {
             "enforcement": if i % 2 == 0 { "Block" } else { "Warn" }
         }));
     }
-    
+
     json!({
         "version": "1.0.0",
         "slos": slos

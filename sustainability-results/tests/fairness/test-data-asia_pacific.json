@@ -1,0 +1,1001 @@
+{
+  "demographic": "asia_pacific",
+  "test_cases": [
+    {
+      "case_id": "asia_pacific-1",
+      "infrastructure_cost": 5135,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1315
+    },
+    {
+      "case_id": "asia_pacific-2",
+      "infrastructure_cost": 2007,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1125
+    },
+    {
+      "case_id": "asia_pacific-3",
+      "infrastructure_cost": 1178,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1432
+    },
+    {
+      "case_id": "asia_pacific-4",
+      "infrastructure_cost": 5508,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 827
+    },
+    {
+      "case_id": "asia_pacific-5",
+      "infrastructure_cost": 3107,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 624
+    },
+    {
+      "case_id": "asia_pacific-6",
+      "infrastructure_cost": 2288,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 890
+    },
+    {
+      "case_id": "asia_pacific-7",
+      "infrastructure_cost": 5037,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 741
+    },
+    {
+      "case_id": "asia_pacific-8",
+      "infrastructure_cost": 1782,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1471
+    },
+    {
+      "case_id": "asia_pacific-9",
+      "infrastructure_cost": 4075,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1025
+    },
+    {
+      "case_id": "asia_pacific-10",
+      "infrastructure_cost": 5635,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 741
+    },
+    {
+      "case_id": "asia_pacific-11",
+      "infrastructure_cost": 4537,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1229
+    },
+    {
+      "case_id": "asia_pacific-12",
+      "infrastructure_cost": 2786,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 982
+    },
+    {
+      "case_id": "asia_pacific-13",
+      "infrastructure_cost": 1060,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1442
+    },
+    {
+      "case_id": "asia_pacific-14",
+      "infrastructure_cost": 5084,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1259
+    },
+    {
+      "case_id": "asia_pacific-15",
+      "infrastructure_cost": 2830,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1427
+    },
+    {
+      "case_id": "asia_pacific-16",
+      "infrastructure_cost": 3380,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1460
+    },
+    {
+      "case_id": "asia_pacific-17",
+      "infrastructure_cost": 3411,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 872
+    },
+    {
+      "case_id": "asia_pacific-18",
+      "infrastructure_cost": 1401,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1487
+    },
+    {
+      "case_id": "asia_pacific-19",
+      "infrastructure_cost": 1353,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1124
+    },
+    {
+      "case_id": "asia_pacific-20",
+      "infrastructure_cost": 4384,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 869
+    },
+    {
+      "case_id": "asia_pacific-21",
+      "infrastructure_cost": 5557,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 828
+    },
+    {
+      "case_id": "asia_pacific-22",
+      "infrastructure_cost": 2953,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1041
+    },
+    {
+      "case_id": "asia_pacific-23",
+      "infrastructure_cost": 4017,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 792
+    },
+    {
+      "case_id": "asia_pacific-24",
+      "infrastructure_cost": 4726,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1407
+    },
+    {
+      "case_id": "asia_pacific-25",
+      "infrastructure_cost": 4414,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 960
+    },
+    {
+      "case_id": "asia_pacific-26",
+      "infrastructure_cost": 4985,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 924
+    },
+    {
+      "case_id": "asia_pacific-27",
+      "infrastructure_cost": 5953,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 802
+    },
+    {
+      "case_id": "asia_pacific-28",
+      "infrastructure_cost": 2288,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 837
+    },
+    {
+      "case_id": "asia_pacific-29",
+      "infrastructure_cost": 1560,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 883
+    },
+    {
+      "case_id": "asia_pacific-30",
+      "infrastructure_cost": 3238,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 948
+    },
+    {
+      "case_id": "asia_pacific-31",
+      "infrastructure_cost": 4337,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 534
+    },
+    {
+      "case_id": "asia_pacific-32",
+      "infrastructure_cost": 3168,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 970
+    },
+    {
+      "case_id": "asia_pacific-33",
+      "infrastructure_cost": 5548,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1011
+    },
+    {
+      "case_id": "asia_pacific-34",
+      "infrastructure_cost": 4961,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 942
+    },
+    {
+      "case_id": "asia_pacific-35",
+      "infrastructure_cost": 1917,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1147
+    },
+    {
+      "case_id": "asia_pacific-36",
+      "infrastructure_cost": 1663,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 924
+    },
+    {
+      "case_id": "asia_pacific-37",
+      "infrastructure_cost": 4684,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 799
+    },
+    {
+      "case_id": "asia_pacific-38",
+      "infrastructure_cost": 2258,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1446
+    },
+    {
+      "case_id": "asia_pacific-39",
+      "infrastructure_cost": 2127,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 544
+    },
+    {
+      "case_id": "asia_pacific-40",
+      "infrastructure_cost": 5772,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1446
+    },
+    {
+      "case_id": "asia_pacific-41",
+      "infrastructure_cost": 3239,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 765
+    },
+    {
+      "case_id": "asia_pacific-42",
+      "infrastructure_cost": 2038,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1419
+    },
+    {
+      "case_id": "asia_pacific-43",
+      "infrastructure_cost": 4928,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 990
+    },
+    {
+      "case_id": "asia_pacific-44",
+      "infrastructure_cost": 3206,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1377
+    },
+    {
+      "case_id": "asia_pacific-45",
+      "infrastructure_cost": 2212,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 873
+    },
+    {
+      "case_id": "asia_pacific-46",
+      "infrastructure_cost": 3173,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1123
+    },
+    {
+      "case_id": "asia_pacific-47",
+      "infrastructure_cost": 5535,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1130
+    },
+    {
+      "case_id": "asia_pacific-48",
+      "infrastructure_cost": 2489,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 895
+    },
+    {
+      "case_id": "asia_pacific-49",
+      "infrastructure_cost": 4339,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 675
+    },
+    {
+      "case_id": "asia_pacific-50",
+      "infrastructure_cost": 3939,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1030
+    },
+    {
+      "case_id": "asia_pacific-51",
+      "infrastructure_cost": 3964,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 775
+    },
+    {
+      "case_id": "asia_pacific-52",
+      "infrastructure_cost": 2725,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1300
+    },
+    {
+      "case_id": "asia_pacific-53",
+      "infrastructure_cost": 5677,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1373
+    },
+    {
+      "case_id": "asia_pacific-54",
+      "infrastructure_cost": 4107,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1415
+    },
+    {
+      "case_id": "asia_pacific-55",
+      "infrastructure_cost": 2170,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1447
+    },
+    {
+      "case_id": "asia_pacific-56",
+      "infrastructure_cost": 4421,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 642
+    },
+    {
+      "case_id": "asia_pacific-57",
+      "infrastructure_cost": 3357,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 671
+    },
+    {
+      "case_id": "asia_pacific-58",
+      "infrastructure_cost": 2269,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1436
+    },
+    {
+      "case_id": "asia_pacific-59",
+      "infrastructure_cost": 1914,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1095
+    },
+    {
+      "case_id": "asia_pacific-60",
+      "infrastructure_cost": 1633,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 894
+    },
+    {
+      "case_id": "asia_pacific-61",
+      "infrastructure_cost": 5480,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1012
+    },
+    {
+      "case_id": "asia_pacific-62",
+      "infrastructure_cost": 5794,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 855
+    },
+    {
+      "case_id": "asia_pacific-63",
+      "infrastructure_cost": 2308,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1480
+    },
+    {
+      "case_id": "asia_pacific-64",
+      "infrastructure_cost": 1606,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1405
+    },
+    {
+      "case_id": "asia_pacific-65",
+      "infrastructure_cost": 1654,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1484
+    },
+    {
+      "case_id": "asia_pacific-66",
+      "infrastructure_cost": 1358,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1049
+    },
+    {
+      "case_id": "asia_pacific-67",
+      "infrastructure_cost": 1674,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1233
+    },
+    {
+      "case_id": "asia_pacific-68",
+      "infrastructure_cost": 1850,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1182
+    },
+    {
+      "case_id": "asia_pacific-69",
+      "infrastructure_cost": 3888,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1052
+    },
+    {
+      "case_id": "asia_pacific-70",
+      "infrastructure_cost": 2486,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 633
+    },
+    {
+      "case_id": "asia_pacific-71",
+      "infrastructure_cost": 2361,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1390
+    },
+    {
+      "case_id": "asia_pacific-72",
+      "infrastructure_cost": 3070,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 544
+    },
+    {
+      "case_id": "asia_pacific-73",
+      "infrastructure_cost": 5666,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 538
+    },
+    {
+      "case_id": "asia_pacific-74",
+      "infrastructure_cost": 4027,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 566
+    },
+    {
+      "case_id": "asia_pacific-75",
+      "infrastructure_cost": 4331,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 978
+    },
+    {
+      "case_id": "asia_pacific-76",
+      "infrastructure_cost": 1139,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1481
+    },
+    {
+      "case_id": "asia_pacific-77",
+      "infrastructure_cost": 5141,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 542
+    },
+    {
+      "case_id": "asia_pacific-78",
+      "infrastructure_cost": 3081,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 933
+    },
+    {
+      "case_id": "asia_pacific-79",
+      "infrastructure_cost": 4683,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 794
+    },
+    {
+      "case_id": "asia_pacific-80",
+      "infrastructure_cost": 1572,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1173
+    },
+    {
+      "case_id": "asia_pacific-81",
+      "infrastructure_cost": 3355,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 821
+    },
+    {
+      "case_id": "asia_pacific-82",
+      "infrastructure_cost": 2424,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 558
+    },
+    {
+      "case_id": "asia_pacific-83",
+      "infrastructure_cost": 5041,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 982
+    },
+    {
+      "case_id": "asia_pacific-84",
+      "infrastructure_cost": 3606,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1300
+    },
+    {
+      "case_id": "asia_pacific-85",
+      "infrastructure_cost": 2993,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 824
+    },
+    {
+      "case_id": "asia_pacific-86",
+      "infrastructure_cost": 3846,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1442
+    },
+    {
+      "case_id": "asia_pacific-87",
+      "infrastructure_cost": 1131,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 940
+    },
+    {
+      "case_id": "asia_pacific-88",
+      "infrastructure_cost": 5239,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 623
+    },
+    {
+      "case_id": "asia_pacific-89",
+      "infrastructure_cost": 2153,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1394
+    },
+    {
+      "case_id": "asia_pacific-90",
+      "infrastructure_cost": 4204,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1323
+    },
+    {
+      "case_id": "asia_pacific-91",
+      "infrastructure_cost": 5984,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1354
+    },
+    {
+      "case_id": "asia_pacific-92",
+      "infrastructure_cost": 4481,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1037
+    },
+    {
+      "case_id": "asia_pacific-93",
+      "infrastructure_cost": 3412,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 987
+    },
+    {
+      "case_id": "asia_pacific-94",
+      "infrastructure_cost": 1411,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 562
+    },
+    {
+      "case_id": "asia_pacific-95",
+      "infrastructure_cost": 4526,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1321
+    },
+    {
+      "case_id": "asia_pacific-96",
+      "infrastructure_cost": 5151,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 783
+    },
+    {
+      "case_id": "asia_pacific-97",
+      "infrastructure_cost": 5102,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1066
+    },
+    {
+      "case_id": "asia_pacific-98",
+      "infrastructure_cost": 5023,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 677
+    },
+    {
+      "case_id": "asia_pacific-99",
+      "infrastructure_cost": 2872,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1482
+    },
+    {
+      "case_id": "asia_pacific-100",
+      "infrastructure_cost": 2248,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1120
+    },
+    {
+      "case_id": "asia_pacific-101",
+      "infrastructure_cost": 3625,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 829
+    },
+    {
+      "case_id": "asia_pacific-102",
+      "infrastructure_cost": 2169,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1238
+    },
+    {
+      "case_id": "asia_pacific-103",
+      "infrastructure_cost": 2043,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1337
+    },
+    {
+      "case_id": "asia_pacific-104",
+      "infrastructure_cost": 1952,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 696
+    },
+    {
+      "case_id": "asia_pacific-105",
+      "infrastructure_cost": 4420,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 814
+    },
+    {
+      "case_id": "asia_pacific-106",
+      "infrastructure_cost": 5762,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1319
+    },
+    {
+      "case_id": "asia_pacific-107",
+      "infrastructure_cost": 5567,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1419
+    },
+    {
+      "case_id": "asia_pacific-108",
+      "infrastructure_cost": 3923,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1130
+    },
+    {
+      "case_id": "asia_pacific-109",
+      "infrastructure_cost": 5109,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1294
+    },
+    {
+      "case_id": "asia_pacific-110",
+      "infrastructure_cost": 2399,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1134
+    },
+    {
+      "case_id": "asia_pacific-111",
+      "infrastructure_cost": 3353,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1162
+    },
+    {
+      "case_id": "asia_pacific-112",
+      "infrastructure_cost": 1403,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1017
+    },
+    {
+      "case_id": "asia_pacific-113",
+      "infrastructure_cost": 4087,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 898
+    },
+    {
+      "case_id": "asia_pacific-114",
+      "infrastructure_cost": 5511,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1277
+    },
+    {
+      "case_id": "asia_pacific-115",
+      "infrastructure_cost": 4732,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 827
+    },
+    {
+      "case_id": "asia_pacific-116",
+      "infrastructure_cost": 1312,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1103
+    },
+    {
+      "case_id": "asia_pacific-117",
+      "infrastructure_cost": 5733,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1443
+    },
+    {
+      "case_id": "asia_pacific-118",
+      "infrastructure_cost": 3419,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 705
+    },
+    {
+      "case_id": "asia_pacific-119",
+      "infrastructure_cost": 3153,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1100
+    },
+    {
+      "case_id": "asia_pacific-120",
+      "infrastructure_cost": 2805,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 572
+    },
+    {
+      "case_id": "asia_pacific-121",
+      "infrastructure_cost": 3894,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 888
+    },
+    {
+      "case_id": "asia_pacific-122",
+      "infrastructure_cost": 1742,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1210
+    },
+    {
+      "case_id": "asia_pacific-123",
+      "infrastructure_cost": 5400,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1040
+    },
+    {
+      "case_id": "asia_pacific-124",
+      "infrastructure_cost": 3176,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 682
+    },
+    {
+      "case_id": "asia_pacific-125",
+      "infrastructure_cost": 1494,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1099
+    },
+    {
+      "case_id": "asia_pacific-126",
+      "infrastructure_cost": 1792,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1113
+    },
+    {
+      "case_id": "asia_pacific-127",
+      "infrastructure_cost": 2208,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1121
+    },
+    {
+      "case_id": "asia_pacific-128",
+      "infrastructure_cost": 5605,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1067
+    },
+    {
+      "case_id": "asia_pacific-129",
+      "infrastructure_cost": 3687,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1031
+    },
+    {
+      "case_id": "asia_pacific-130",
+      "infrastructure_cost": 1330,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1197
+    },
+    {
+      "case_id": "asia_pacific-131",
+      "infrastructure_cost": 1578,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1388
+    },
+    {
+      "case_id": "asia_pacific-132",
+      "infrastructure_cost": 3240,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 600
+    },
+    {
+      "case_id": "asia_pacific-133",
+      "infrastructure_cost": 5742,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 899
+    },
+    {
+      "case_id": "asia_pacific-134",
+      "infrastructure_cost": 3351,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 524
+    },
+    {
+      "case_id": "asia_pacific-135",
+      "infrastructure_cost": 2323,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1078
+    },
+    {
+      "case_id": "asia_pacific-136",
+      "infrastructure_cost": 5025,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 856
+    },
+    {
+      "case_id": "asia_pacific-137",
+      "infrastructure_cost": 3578,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1374
+    },
+    {
+      "case_id": "asia_pacific-138",
+      "infrastructure_cost": 1027,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 825
+    },
+    {
+      "case_id": "asia_pacific-139",
+      "infrastructure_cost": 3752,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1012
+    },
+    {
+      "case_id": "asia_pacific-140",
+      "infrastructure_cost": 4994,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1477
+    },
+    {
+      "case_id": "asia_pacific-141",
+      "infrastructure_cost": 1928,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1034
+    },
+    {
+      "case_id": "asia_pacific-142",
+      "infrastructure_cost": 1167,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 755
+    },
+    {
+      "case_id": "asia_pacific-143",
+      "infrastructure_cost": 1087,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1183
+    },
+    {
+      "case_id": "asia_pacific-144",
+      "infrastructure_cost": 1161,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 521
+    },
+    {
+      "case_id": "asia_pacific-145",
+      "infrastructure_cost": 5968,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 614
+    },
+    {
+      "case_id": "asia_pacific-146",
+      "infrastructure_cost": 2560,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1185
+    },
+    {
+      "case_id": "asia_pacific-147",
+      "infrastructure_cost": 1239,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 838
+    },
+    {
+      "case_id": "asia_pacific-148",
+      "infrastructure_cost": 1811,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 913
+    },
+    {
+      "case_id": "asia_pacific-149",
+      "infrastructure_cost": 3839,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 742
+    },
+    {
+      "case_id": "asia_pacific-150",
+      "infrastructure_cost": 2069,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 569
+    },
+    {
+      "case_id": "asia_pacific-151",
+      "infrastructure_cost": 2680,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 786
+    },
+    {
+      "case_id": "asia_pacific-152",
+      "infrastructure_cost": 2209,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1045
+    },
+    {
+      "case_id": "asia_pacific-153",
+      "infrastructure_cost": 4140,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 988
+    },
+    {
+      "case_id": "asia_pacific-154",
+      "infrastructure_cost": 1845,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1006
+    },
+    {
+      "case_id": "asia_pacific-155",
+      "infrastructure_cost": 1368,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1374
+    },
+    {
+      "case_id": "asia_pacific-156",
+      "infrastructure_cost": 2861,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1083
+    },
+    {
+      "case_id": "asia_pacific-157",
+      "infrastructure_cost": 3952,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 840
+    },
+    {
+      "case_id": "asia_pacific-158",
+      "infrastructure_cost": 2625,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1174
+    },
+    {
+      "case_id": "asia_pacific-159",
+      "infrastructure_cost": 4229,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1113
+    },
+    {
+      "case_id": "asia_pacific-160",
+      "infrastructure_cost": 3805,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1360
+    },
+    {
+      "case_id": "asia_pacific-161",
+      "infrastructure_cost": 5164,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 798
+    },
+    {
+      "case_id": "asia_pacific-162",
+      "infrastructure_cost": 1445,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 758
+    },
+    {
+      "case_id": "asia_pacific-163",
+      "infrastructure_cost": 1533,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 999
+    },
+    {
+      "case_id": "asia_pacific-164",
+      "infrastructure_cost": 5803,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 615
+    },
+    {
+      "case_id": "asia_pacific-165",
+      "infrastructure_cost": 1251,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 1389
+    },
+    {
+      "case_id": "asia_pacific-166",
+      "infrastructure_cost": 5161,
+      "region": "asia_pacific",
+      "expected_cost_prediction": 824
+    }
+  ]
+}

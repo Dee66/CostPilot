@@ -1,5 +1,5 @@
 /// Metering test helpers for chargeback calculations
-/// 
+///
 /// Provides fixed unit prices used by tests for deterministic cost calculations.
 
 /// Fixed unit price per resource-hour used in chargeback tests

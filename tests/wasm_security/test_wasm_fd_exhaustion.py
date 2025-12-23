@@ -10,14 +10,14 @@ import json
 def test_wasm_fd_exhaustion():
     """Test that WASM build handles file descriptor exhaustion."""
     wasm_target = Path("target/wasm32-unknown-unknown/release/costpilot.wasm")
-    
+
     if not wasm_target.exists():
         print("WASM build not found, skipping test")
         return
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -28,10 +28,10 @@ def test_wasm_fd_exhaustion():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Open many files to exhaust FD limit (for WASM)
         open_files = []
         try:
@@ -41,7 +41,7 @@ def test_wasm_fd_exhaustion():
                     open_files.append(f)
                 except OSError:
                     break
-            
+
             # Try to run costpilot in WASM with low FD availability
             result = subprocess.run(
                 ["wasmtime", "run", str(wasm_target), "--", "analyze", "--plan", str(template_path)],
@@ -49,7 +49,7 @@ def test_wasm_fd_exhaustion():
                 text=True,
                 timeout=30
             )
-            
+
             # Should handle FD exhaustion gracefully
             assert result.returncode in [0, 1, 2, 101], "WASM should handle FD exhaustion"
         finally:
@@ -63,11 +63,11 @@ def test_wasm_fd_exhaustion():
 def test_wasm_file_handle_limit():
     """Test WASM file handle limits."""
     wasm_target = Path("target/wasm32-unknown-unknown/release/costpilot.wasm")
-    
+
     if not wasm_target.exists():
         print("WASM build not found, skipping test")
         return
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create many template files
         templates = []
@@ -83,12 +83,12 @@ def test_wasm_file_handle_limit():
                     }
                 }
             }
-            
+
             with open(template_path, 'w') as f:
                 json.dump(template_content, f)
-            
+
             templates.append(template_path)
-        
+
         # Process each template (WASM should not leak FDs)
         for template_path in templates[:10]:  # Test first 10
             result = subprocess.run(
@@ -97,7 +97,7 @@ def test_wasm_file_handle_limit():
                 text=True,
                 timeout=30
             )
-            
+
             # Each should complete
             assert result.returncode in [0, 1, 2, 101], f"WASM should process {template_path}"
 
@@ -105,16 +105,16 @@ def test_wasm_file_handle_limit():
 def test_wasm_concurrent_file_access():
     """Test WASM with concurrent file access patterns."""
     wasm_target = Path("target/wasm32-unknown-unknown/release/costpilot.wasm")
-    
+
     if not wasm_target.exists():
         print("WASM build not found, skipping test")
         return
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -125,7 +125,7 @@ def test_wasm_concurrent_file_access():
                 }
             }
         }
-        
+
         baseline_content = {
             "resources": [
                 {
@@ -138,7 +138,7 @@ def test_wasm_concurrent_file_access():
                 }
             ]
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -150,26 +150,26 @@ def test_wasm_concurrent_file_access():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # WASM needs to handle multiple file inputs
         result = subprocess.run(
-            ["wasmtime", "run", str(wasm_target), "--", "analyze", 
+            ["wasmtime", "run", str(wasm_target), "--", "analyze",
              "--plan", str(template_path),
              "--baseline", str(baseline_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle multiple file inputs
         assert result.returncode in [0, 1, 2, 101], "WASM should handle multiple files"
 
@@ -177,14 +177,14 @@ def test_wasm_concurrent_file_access():
 def test_wasm_large_file_fd_usage():
     """Test WASM FD usage with large files."""
     wasm_target = Path("target/wasm32-unknown-unknown/release/costpilot.wasm")
-    
+
     if not wasm_target.exists():
         print("WASM build not found, skipping test")
         return
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Large template
         template_content = {
             "Resources": {
@@ -198,10 +198,10 @@ def test_wasm_large_file_fd_usage():
                 for i in range(1000)
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # WASM should handle large file without FD issues
         result = subprocess.run(
             ["wasmtime", "run", str(wasm_target), "--", "analyze", "--plan", str(template_path)],
@@ -209,7 +209,7 @@ def test_wasm_large_file_fd_usage():
             text=True,
             timeout=120
         )
-        
+
         # Should handle large files
         assert result.returncode in [0, 1, 2, 101], "WASM should handle large files"
 
@@ -217,18 +217,18 @@ def test_wasm_large_file_fd_usage():
 def test_wasm_fd_cleanup_on_error():
     """Test WASM FD cleanup on error."""
     wasm_target = Path("target/wasm32-unknown-unknown/release/costpilot.wasm")
-    
+
     if not wasm_target.exists():
         print("WASM build not found, skipping test")
         return
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Invalid JSON to trigger error
         with open(template_path, 'w') as f:
             f.write("{ invalid json }")
-        
+
         # Run and expect error
         result = subprocess.run(
             ["wasmtime", "run", str(wasm_target), "--", "analyze", "--plan", str(template_path)],
@@ -236,7 +236,7 @@ def test_wasm_fd_cleanup_on_error():
             text=True,
             timeout=30
         )
-        
+
         # Should fail but clean up FDs
         assert result.returncode in [2, 101], "WASM should fail on invalid JSON"
 

@@ -1,0 +1,346 @@
+# Expected outputs for license boundary testing
+# Defines expected behavior differences between Free and Pro tiers
+
+# Expected outputs for basic cost regression
+basic_cost_regression_outputs:
+  free_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Cost regression detected"
+      - "Upgrade to Pro for autofix"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "basic"
+    contains_patch: false
+    contains_snippet: true
+    max_output_lines: 20
+
+  pro_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Cost regression detected"
+      - "Autofix generated"
+    stderr_empty: true
+    autofix_generated: true
+    output_format: "detailed"
+    contains_patch: true
+    contains_snippet: true
+    max_output_lines: 100
+
+# Expected outputs for complex multi-resource
+complex_multi_resource_outputs:
+  free_tier:
+    decision: "warn"
+    exit_code: 0
+    stdout_contains:
+      - "Warning: Cost increase detected"
+      - "Multiple resources affected"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "summary"
+    contains_trend_analysis: false
+    contains_cost_breakdown: false
+
+  pro_tier:
+    decision: "warn"
+    exit_code: 0
+    stdout_contains:
+      - "Warning: Cost increase detected"
+      - "Detailed analysis"
+      - "Trend analysis"
+      - "Cost breakdown by resource"
+    stderr_empty: true
+    autofix_generated: true
+    output_format: "detailed"
+    contains_trend_analysis: true
+    contains_cost_breakdown: true
+
+# Expected outputs for policy violation
+policy_violation_outputs:
+  free_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Policy violation: expensive instance type"
+      - "Upgrade to Pro for detailed remediation"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "error_message"
+    contains_solution_steps: false
+    contains_examples: false
+
+  pro_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Policy violation: expensive instance type"
+      - "Recommended alternatives:"
+      - "Step-by-step remediation"
+      - "Example configurations"
+    stderr_empty: true
+    autofix_generated: true
+    output_format: "remediation_guide"
+    contains_solution_steps: true
+    contains_examples: true
+
+# Expected outputs for drift detection
+drift_detection_outputs:
+  free_tier:
+    decision: "warn"
+    exit_code: 0
+    stdout_contains:
+      - "Warning: Drift detected"
+      - "Configuration drift from baseline"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "notification"
+    contains_drift_analysis: false
+
+  pro_tier:
+    decision: "warn"
+    exit_code: 0
+    stdout_contains:
+      - "Warning: Drift detected"
+      - "Detailed drift analysis"
+      - "Drift timeline"
+      - "Impact assessment"
+    stderr_empty: true
+    autofix_generated: false  # Drift blocks autofix
+    output_format: "analysis"
+    contains_drift_analysis: true
+
+# Expected outputs for seasonal variation
+seasonal_variation_outputs:
+  free_tier:
+    decision: "allow"
+    exit_code: 0
+    stdout_contains:
+      - "Analysis complete"
+      - "No violations detected"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "basic_report"
+    contains_trend_analysis: false
+
+  pro_tier:
+    decision: "allow"
+    exit_code: 0
+    stdout_contains:
+      - "Analysis complete"
+      - "No violations detected"
+      - "Seasonal trend analysis"
+      - "Cost optimization recommendations"
+    stderr_empty: true
+    autofix_generated: true
+    output_format: "trend_analysis"
+    contains_trend_analysis: true
+
+# Expected outputs for exempted violation
+exemption_applied_outputs:
+  free_tier:
+    decision: "allow"
+    exit_code: 0
+    stdout_contains:
+      - "Analysis complete"
+      - "Exemption applied"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "basic"
+    contains_exemption_details: false
+
+  pro_tier:
+    decision: "allow"
+    exit_code: 0
+    stdout_contains:
+      - "Analysis complete"
+      - "Exemption applied"
+      - "Exemption details"
+      - "Exemption justification"
+      - "Review date"
+    stderr_empty: true
+    autofix_generated: true
+    output_format: "detailed"
+    contains_exemption_details: true
+
+# Expected outputs for autofix candidate
+autofix_candidate_outputs:
+  free_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Cost violation detected"
+      - "Upgrade to Pro for autofix"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "basic"
+    contains_patch_preview: false
+
+  pro_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Cost violation detected"
+      - "Autofix generated"
+      - "Patch file created"
+      - "Rollback instructions"
+    stderr_empty: true
+    autofix_generated: true
+    output_format: "detailed"
+    contains_patch_preview: true
+
+# Expected outputs for drift with violation
+drift_with_violation_outputs:
+  free_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Cost violation detected"
+      - "Drift detected - autofix unavailable"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "basic"
+
+  pro_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Cost violation detected"
+      - "Drift detected - autofix unavailable"
+      - "Manual remediation required"
+    stderr_empty: true
+    autofix_generated: false  # Drift blocks autofix
+    output_format: "detailed"
+
+# Expected outputs for patch scenario
+patch_scenario_outputs:
+  free_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Cost violation detected"
+      - "Snippet:"
+      - "instance_type = \"t2.micro\""
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "snippet"
+    contains_line_numbers: false
+    max_snippet_lines: 10
+
+  pro_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Cost violation detected"
+      - "Full patch generated"
+      - "@@ -1,5 +1,5 @@"
+      - "instance_type = \"t2.micro\""
+    stderr_empty: true
+    autofix_generated: true
+    output_format: "full_patch"
+    contains_line_numbers: true
+    max_patch_lines: 50
+
+# Expected outputs for complex analysis
+complex_analysis_outputs:
+  free_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Multiple cost violations detected"
+      - "3 resources affected"
+      - "Total estimated cost increase"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "summary"
+    contains_trend_analysis: false
+    contains_cost_breakdown: false
+    contains_recommendations: false
+
+  pro_tier:
+    decision: "block"
+    exit_code: 1
+    stdout_contains:
+      - "Multiple cost violations detected"
+      - "Detailed trend analysis"
+      - "Cost breakdown by resource type"
+      - "Optimization recommendations"
+      - "Autofix generated for all violations"
+    stderr_empty: true
+    autofix_generated: true
+    output_format: "detailed"
+    contains_trend_analysis: true
+    contains_cost_breakdown: true
+    contains_recommendations: true
+
+# Expected outputs for error scenario
+error_scenario_outputs:
+  free_tier:
+    decision: "error"
+    exit_code: 2
+    stdout_contains:
+      - "Error: Invalid instance type"
+    stderr_empty: true
+    autofix_generated: false
+    output_format: "error_message"
+    contains_solution_steps: false
+    contains_examples: false
+    contains_links: false
+
+  pro_tier:
+    decision: "error"
+    exit_code: 2
+    stdout_contains:
+      - "Error: Invalid instance type 'invalid-type'"
+      - "Solution steps:"
+      - "1. Check available instance types"
+      - "2. Update configuration"
+      - "Example: instance_type = \"t2.micro\""
+      - "See AWS documentation: https://docs.aws.amazon.com/"
+    stderr_empty: true
+    autofix_generated: false  # Errors don't get autofix
+    output_format: "remediation_guide"
+    contains_solution_steps: true
+    contains_examples: true
+    contains_links: true
+
+# License validation scenarios
+license_validation_scenarios:
+  missing_license_file:
+    free_tier:
+      operates_normally: true
+      no_license_warnings: true
+      exit_code: 0
+    pro_tier:
+      license_validation_error: true
+      graceful_degradation: true
+      clear_error_message: true
+      exit_code: 1
+      stdout_contains:
+        - "License file not found"
+        - "Operating in Free mode"
+
+  expired_license:
+    pro_tier:
+      license_expired_error: true
+      reverts_to_free_features: true
+      upgrade_prompt: true
+      data_preserved: true
+      exit_code: 1
+      stdout_contains:
+        - "License expired"
+        - "Reverting to Free tier"
+        - "Contact support to renew"
+
+  corrupt_license:
+    pro_tier:
+      license_validation_failed: true
+      security_error: true
+      no_execution_allowed: true
+      forensic_logging: true
+      exit_code: 1
+      stdout_contains:
+        - "License validation failed"
+        - "Security violation detected"
+        - "Execution terminated"

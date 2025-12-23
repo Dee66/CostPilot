@@ -1,0 +1,14 @@
+{
+    "gate_name": "property_based_test_coverage",
+    "status": "FAILED",
+    "timestamp": "2025-12-22 08:41:58",
+    "coverage_targets": {
+        "invariants": "100.0%",
+        "edge_cases": "90.0%"
+    },
+    "actual_coverage": {
+        "invariants": "79.5%",
+        "edge_cases": "34.4%"
+    },
+    "violations": 2
+}

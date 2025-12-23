@@ -1,0 +1,11 @@
+---
+source: tests/golden_prediction_tests.rs
+expression: output
+---
+{
+  "confidence_score": 0.0,
+  "monthly_cost": 0.0,
+  "prediction_interval_high": 0.0,
+  "prediction_interval_low": 0.0,
+  "resource_id": "aws_nat_gateway.main"
+}

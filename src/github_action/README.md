@@ -29,13 +29,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate Terraform Plan
         run: terraform plan -out=plan.tfplan
-      
+
       - name: Convert Plan to JSON
         run: terraform show -json plan.tfplan > plan.json
-      
+
       - name: Run CostPilot
         uses: Dee66/CostPilot@v1
         with:
@@ -121,21 +121,21 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-      
+
       - name: Terraform Init
         run: terraform init
-      
+
       - name: Terraform Plan
         run: |
           terraform plan -out=plan.tfplan
           terraform show -json plan.tfplan > plan.json
-      
+
       - name: Run CostPilot
         id: costpilot
         uses: Dee66/CostPilot@v1
@@ -148,7 +148,7 @@ jobs:
           fail_on_regression: true
           fail_on_policy: true
           comment_pr: true
-      
+
       - name: Check Results
         run: |
           echo "Total Cost: $${{ steps.costpilot.outputs.total_cost }}"
@@ -187,7 +187,7 @@ policies:
   - name: "EC2 Instance Types"
     rule: "instance_type in ['t3.micro', 't3.small']"
     action: block
-  
+
   - name: "Budget Limit"
     rule: "monthly_cost <= 5000"
     action: warn

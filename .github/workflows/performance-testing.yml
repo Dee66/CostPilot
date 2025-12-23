@@ -1,0 +1,287 @@
+name: Performance Testing
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'products/costpilot/**'
+      - 'scripts/run_performance_testing.sh'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'products/costpilot/**'
+  schedule:
+    # Run comprehensive performance tests weekly
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of performance test to run'
+        required: false
+        default: 'quick'
+        type: choice
+        options:
+          - quick
+          - endurance
+          - spike
+          - capacity
+          - volume
+          - full
+
+jobs:
+  quick-performance-test:
+    name: Quick Performance Test
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule' || github.event.inputs.test_type == 'quick'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Build CostPilot
+      run: |
+        cd products/costpilot
+        cargo build --release --features performance_monitoring
+
+    - name: Run quick performance tests
+      run: |
+        cd products/costpilot
+        ../../scripts/run_performance_testing.sh spike
+
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: quick-performance-results-${{ github.run_number }}
+        path: |
+          products/costpilot/performance-results/
+        retention-days: 7
+
+  endurance-test:
+    name: Endurance Testing (72hr)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.test_type == 'endurance'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Build CostPilot
+      run: |
+        cd products/costpilot
+        cargo build --release --features performance_monitoring
+
+    - name: Run endurance test (shortened for CI)
+      run: |
+        cd products/costpilot
+        # Run shortened endurance test (1 hour instead of 72 hours)
+        ENDURANCE_DURATION=1h ../../scripts/run_performance_testing.sh endurance
+      timeout-minutes: 75
+
+    - name: Upload endurance results
+      uses: actions/upload-artifact@v4
+      with:
+        name: endurance-test-results-${{ github.run_number }}
+        path: |
+          products/costpilot/performance-results/
+        retention-days: 30
+
+  spike-capacity-test:
+    name: Spike & Capacity Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.test_type == 'spike' || github.event.inputs.test_type == 'capacity'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Build CostPilot
+      run: |
+        cd products/costpilot
+        cargo build --release --features performance_monitoring
+
+    - name: Run spike testing
+      run: |
+        cd products/costpilot
+        ../../scripts/run_performance_testing.sh spike
+
+    - name: Run capacity testing
+      run: |
+        cd products/costpilot
+        ../../scripts/run_performance_testing.sh capacity
+
+    - name: Upload spike & capacity results
+      uses: actions/upload-artifact@v4
+      with:
+        name: spike-capacity-results-${{ github.run_number }}
+        path: |
+          products/costpilot/performance-results/
+        retention-days: 30
+
+  volume-test:
+    name: Volume Testing (100x Scale)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.test_type == 'volume'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Build CostPilot
+      run: |
+        cd products/costpilot
+        cargo build --release --features performance_monitoring
+
+    - name: Run volume testing
+      run: |
+        cd products/costpilot
+        ../../scripts/run_performance_testing.sh volume
+      timeout-minutes: 30
+
+    - name: Upload volume test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: volume-test-results-${{ github.run_number }}
+        path: |
+          products/costpilot/performance-results/
+        retention-days: 30
+
+  performance-regression-check:
+    name: Performance Regression Check
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download performance results
+      uses: actions/download-artifact@v4
+      with:
+        name: quick-performance-results-${{ github.run_number }}
+        path: performance-results/
+
+    - name: Check for performance regressions
+      run: |
+        # Compare current performance against baseline
+        # This would typically compare against stored baseline metrics
+
+        if [ -f "performance-results/spike/spike-report.json" ]; then
+          DEGRADATION=$(jq '.performance_degradation_percent' performance-results/spike/spike-report.json)
+
+          # Allow up to 20% performance degradation
+          if (( $(echo "$DEGRADATION > 20" | bc -l) )); then
+            echo "🚨 Performance regression detected: ${DEGRADATION}% degradation"
+            echo "performance_regression=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Performance within acceptable limits: ${DEGRADATION}% degradation"
+            echo "performance_regression=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "No performance results to analyze"
+          echo "performance_regression=false" >> $GITHUB_OUTPUT
+        fi
+      id: regression_check
+
+    - name: Performance test summary
+      if: always()
+      run: |
+        echo "## 🏃 Performance Test Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Quick performance metrics
+        if [ -f "performance-results/spike/spike-report.json" ]; then
+          DEGRADATION=$(jq '.performance_degradation_percent' performance-results/spike/spike-report.json 2>/dev/null || echo "0")
+          AUTOSCALING=$(jq '.autoscaling_effective' performance-results/spike/spike-report.json 2>/dev/null || echo "false")
+
+          echo "- **Spike Test Degradation**: ${DEGRADATION}%" >> $GITHUB_STEP_SUMMARY
+          echo "- **Autoscaling Effective**: $AUTOSCALING" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Endurance metrics
+        if [ -f "performance-results/endurance/endurance-report.json" ]; then
+          P95_LATENCY=$(jq '.performance_metrics.p95_latency_seconds' performance-results/endurance/endurance-report.json 2>/dev/null || echo "0")
+          MEMORY_LEAK=$(jq '.memory_analysis.leak_detected' performance-results/endurance/endurance-report.json 2>/dev/null || echo "false")
+
+          echo "- **95th Percentile Latency**: ${P95_LATENCY}s" >> $GITHUB_STEP_SUMMARY
+          echo "- **Memory Leak Detected**: $MEMORY_LEAK" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Capacity metrics
+        if [ -f "performance-results/capacity/capacity-report.json" ]; then
+          MAX_CAPACITY=$(jq '.max_capacity' performance-results/capacity/capacity-report.json 2>/dev/null || echo "unknown")
+
+          echo "- **Maximum Capacity**: $MAX_CAPACITY operations" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Volume metrics
+        if [ -f "performance-results/volume/volume-report.json" ]; then
+          VOLUME_TIME=$(jq '.processing_time_seconds' performance-results/volume/volume-report.json 2>/dev/null || echo "0")
+          DATA_INTEGRITY=$(jq '.data_integrity' performance-results/volume/volume-report.json 2>/dev/null || echo "false")
+
+          echo "- **Volume Processing Time**: ${VOLUME_TIME}s" >> $GITHUB_STEP_SUMMARY
+          echo "- **Data Integrity Maintained**: $DATA_INTEGRITY" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Overall Performance Status" >> $GITHUB_STEP_SUMMARY
+
+        if [[ "${{ steps.regression_check.outputs.performance_regression }}" == "true" ]]; then
+          echo "⚠️ **Performance regression detected** - review required" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ **All performance tests passed**" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Fail on performance regression
+      if: steps.regression_check.outputs.performance_regression == 'true'
+      run: |
+        echo "Performance regression detected - failing build"
+        exit 1
+
+  performance-monitoring-setup:
+    name: Set up Performance Monitoring
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up performance monitoring
+      run: |
+        cd products/costpilot
+        ../../scripts/run_performance_testing.sh monitor
+
+    - name: Upload monitoring configuration
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-monitoring-config-${{ github.run_number }}
+        path: |
+          products/costpilot/performance-monitoring/
+        retention-days: 30

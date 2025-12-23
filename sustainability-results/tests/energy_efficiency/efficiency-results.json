@@ -1,0 +1,10 @@
+{
+  "baseline_energy": 834,
+  "optimized_energy": 426,
+  "hw_accel_energy": 336,
+  "baseline_efficiency": 1.0,
+  "optimized_efficiency": 1.957,
+  "hw_efficiency": 2.482,
+  "energy_threshold": 0.8,
+  "overall_efficiency_score": 2.219
+}

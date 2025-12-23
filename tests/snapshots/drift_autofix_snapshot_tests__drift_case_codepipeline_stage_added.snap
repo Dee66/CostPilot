@@ -1,0 +1,43 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_codepipeline.app",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "stage": [
+            {
+              "name": "Source"
+            },
+            {
+              "name": "Build"
+            },
+            {
+              "name": "Deploy"
+            }
+          ]
+        },
+        "before": {
+          "stage": [
+            {
+              "name": "Source"
+            },
+            {
+              "name": "Build"
+            }
+          ]
+        }
+      },
+      "mode": "managed",
+      "name": "app",
+      "type": "aws_codepipeline"
+    }
+  ]
+}

@@ -1,0 +1,383 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CloudFormation template with cross-region resources for CostPilot testing",
+
+  "Parameters": {
+    "PrimaryRegion": {
+      "Type": "String",
+      "Default": "us-east-1",
+      "Description": "Primary AWS region"
+    },
+    "SecondaryRegion": {
+      "Type": "String",
+      "Default": "us-west-2",
+      "Description": "Secondary AWS region"
+    },
+    "Environment": {
+      "Type": "String",
+      "Default": "test",
+      "Description": "Environment name"
+    }
+  },
+
+  "Resources": {
+    "PrimaryVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-Primary-VPC" }
+          },
+          {
+            "Key": "Region",
+            "Value": { "Ref": "PrimaryRegion" }
+          }
+        ]
+      }
+    },
+
+    "PrimarySubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "PrimaryVPC" },
+        "CidrBlock": "10.0.1.0/24",
+        "AvailabilityZone": { "Fn::Sub": "${PrimaryRegion}a" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-Primary-Subnet" }
+          }
+        ]
+      }
+    },
+
+    "PrimaryEC2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-0c55b159cbfafe1d0",
+        "InstanceType": "t3.micro",
+        "SubnetId": { "Ref": "PrimarySubnet" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-Primary-EC2" }
+          },
+          {
+            "Key": "Region",
+            "Value": { "Ref": "PrimaryRegion" }
+          }
+        ]
+      }
+    },
+
+    "GlobalAccelerator": {
+      "Type": "AWS::GlobalAccelerator::Accelerator",
+      "Properties": {
+        "Name": { "Fn::Sub": "${Environment}-global-accelerator" },
+        "IpAddressType": "IPV4",
+        "Enabled": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-Global-Accelerator" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "GlobalAcceleratorListener": {
+      "Type": "AWS::GlobalAccelerator::Listener",
+      "Properties": {
+        "AcceleratorArn": { "Ref": "GlobalAccelerator" },
+        "Protocol": "TCP",
+        "PortRanges": [
+          {
+            "FromPort": 80,
+            "ToPort": 80
+          },
+          {
+            "FromPort": 443,
+            "ToPort": 443
+          }
+        ],
+        "ClientAffinity": "NONE"
+      }
+    },
+
+    "GlobalAcceleratorEndpointGroup": {
+      "Type": "AWS::GlobalAccelerator::EndpointGroup",
+      "Properties": {
+        "ListenerArn": { "Ref": "GlobalAcceleratorListener" },
+        "EndpointGroupRegion": { "Ref": "PrimaryRegion" },
+        "EndpointConfigurations": [
+          {
+            "EndpointId": { "Ref": "PrimaryEC2Instance" },
+            "Weight": 100,
+            "ClientIPPreservationEnabled": false
+          }
+        ]
+      }
+    },
+
+    "CloudFrontDistribution": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "Comment": { "Fn::Sub": "CloudFront distribution for ${Environment}" },
+          "DefaultCacheBehavior": {
+            "TargetOriginId": "primary-origin",
+            "ViewerProtocolPolicy": "redirect-to-https",
+            "Compress": true,
+            "ForwardedValues": {
+              "QueryString": false,
+              "Cookies": {
+                "Forward": "none"
+              }
+            }
+          },
+          "Origins": [
+            {
+              "DomainName": { "Fn::GetAtt": ["PrimaryEC2Instance", "PublicIp"] },
+              "Id": "primary-origin",
+              "CustomOriginConfig": {
+                "HTTPPort": 80,
+                "HTTPSPort": 443,
+                "OriginProtocolPolicy": "http-only"
+              }
+            }
+          ],
+          "Enabled": true,
+          "DefaultRootObject": "index.html",
+          "PriceClass": "PriceClass_100"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-CloudFront" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "Route53HostedZone": {
+      "Type": "AWS::Route53::HostedZone",
+      "Properties": {
+        "Name": { "Fn::Sub": "${Environment}.example.com" },
+        "HostedZoneConfig": {
+          "Comment": { "Fn::Sub": "Hosted zone for ${Environment} environment" }
+        }
+      }
+    },
+
+    "Route53Record": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": { "Ref": "Route53HostedZone" },
+        "Name": { "Fn::Sub": "app.${Environment}.example.com" },
+        "Type": "A",
+        "AliasTarget": {
+          "DNSName": { "Fn::GetAtt": ["CloudFrontDistribution", "DomainName"] },
+          "HostedZoneId": { "Fn::FindInMap": ["CloudFrontHostedZoneId", { "Ref": "PrimaryRegion" }, "Id"] },
+          "EvaluateTargetHealth": false
+        }
+      }
+    },
+
+    "S3BucketReplication": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": { "Fn::Sub": "${Environment}-replication-bucket-${AWS::AccountId}" },
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        },
+        "ReplicationConfiguration": {
+          "Role": { "Fn::GetAtt": ["ReplicationRole", "Arn"] },
+          "Rules": [
+            {
+              "Id": "replication-rule",
+              "Status": "Enabled",
+              "Prefix": "",
+              "Destination": {
+                "Bucket": { "Fn::Sub": "arn:aws:s3:::${Environment}-replica-bucket-${AWS::AccountId}" },
+                "StorageClass": "STANDARD"
+              }
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-Replication-Bucket" }
+          }
+        ]
+      }
+    },
+
+    "ReplicationRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": { "Fn::Sub": "${Environment}-s3-replication-role" },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "s3.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "s3-replication-policy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetReplicationConfiguration",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    { "Fn::Sub": "arn:aws:s3:::${Environment}-replication-bucket-${AWS::AccountId}" }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging"
+                  ],
+                  "Resource": [
+                    { "Fn::Sub": "arn:aws:s3:::${Environment}-replication-bucket-${AWS::AccountId}/*" }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ReplicateObject",
+                    "s3:ReplicateDelete",
+                    "s3:ReplicateTags"
+                  ],
+                  "Resource": [
+                    { "Fn::Sub": "arn:aws:s3:::${Environment}-replica-bucket-${AWS::AccountId}/*" }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    "DynamoDBGlobalTable": {
+      "Type": "AWS::DynamoDB::GlobalTable",
+      "Properties": {
+        "TableName": { "Fn::Sub": "${Environment}-global-table" },
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        },
+        "Replicas": [
+          {
+            "Region": { "Ref": "PrimaryRegion" }
+          },
+          {
+            "Region": { "Ref": "SecondaryRegion" }
+          }
+        ]
+      }
+    },
+
+    "DataTransferLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": { "Fn::Sub": "/aws/data-transfer/${Environment}" },
+        "RetentionInDays": 30
+      }
+    },
+
+    "DataTransferMetricFilter": {
+      "Type": "AWS::Logs::MetricFilter",
+      "Properties": {
+        "LogGroupName": { "Ref": "DataTransferLogGroup" },
+        "FilterPattern": "[timestamp, request_id, source_ip, method, url, status, bytes_sent]",
+        "MetricTransformations": [
+          {
+            "MetricValue": "$bytes_sent",
+            "MetricNamespace": { "Fn::Sub": "${Environment}/DataTransfer" },
+            "MetricName": "BytesTransferred"
+          }
+        ]
+      }
+    }
+  },
+
+  "Mappings": {
+    "CloudFrontHostedZoneId": {
+      "us-east-1": {
+        "Id": "Z2FDTNDATAQYW2"
+      },
+      "us-west-2": {
+        "Id": "Z2FDTNDATAQYW2"
+      },
+      "eu-west-1": {
+        "Id": "Z2FDTNDATAQYW2"
+      }
+    }
+  },
+
+  "Outputs": {
+    "PrimaryVPCId": {
+      "Description": "Primary VPC ID",
+      "Value": { "Ref": "PrimaryVPC" },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-PrimaryVPCId" }
+      }
+    },
+    "GlobalAcceleratorDNS": {
+      "Description": "Global Accelerator DNS name",
+      "Value": { "Fn::GetAtt": ["GlobalAccelerator", "DnsName"] }
+    },
+    "CloudFrontDomainName": {
+      "Description": "CloudFront distribution domain name",
+      "Value": { "Fn::GetAtt": ["CloudFrontDistribution", "DomainName"] }
+    },
+    "Route53HostedZoneId": {
+      "Description": "Route53 hosted zone ID",
+      "Value": { "Ref": "Route53HostedZone" }
+    },
+    "DynamoDBGlobalTableName": {
+      "Description": "DynamoDB global table name",
+      "Value": { "Ref": "DynamoDBGlobalTable" }
+    }
+  }
+}

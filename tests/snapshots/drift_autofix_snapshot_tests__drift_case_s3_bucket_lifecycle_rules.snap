@@ -1,0 +1,34 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.data",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "lifecycle_rule": [
+            {
+              "enabled": true,
+              "expiration": {
+                "days": 30
+              },
+              "id": "cleanup"
+            }
+          ]
+        },
+        "before": {
+          "lifecycle_rule": []
+        }
+      },
+      "mode": "managed",
+      "name": "data",
+      "type": "aws_s3_bucket"
+    }
+  ]
+}

@@ -285,7 +285,10 @@ fn current_timestamp() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|_| {
+            eprintln!("Warning: System time is set before UNIX epoch, using 0 as timestamp");
+            std::time::Duration::from_secs(0)
+        })
         .as_secs()
 }
 

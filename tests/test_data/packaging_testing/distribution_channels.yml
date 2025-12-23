@@ -1,0 +1,298 @@
+# CostPilot Packaging Testing: Distribution Channels
+# Test data for distribution channel validation
+
+# Gumroad distribution validation
+gumroad_distribution:
+  metadata:
+    test_case: "gumroad_distribution"
+    description: "Validate Gumroad distribution packages"
+    distribution_channel: "gumroad"
+    expected_behavior: "consistent_gumroad_packages"
+  channel_requirements:
+    - requirement: "package_naming"
+      description: "Consistent package naming across versions"
+      expected_pattern: "costpilot-{version}-{platform}.zip"
+      validation_rules:
+        - "version_format": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9]+)?$"
+        - "platform_format": "^(linux|macos|windows)-(amd64|arm64)$"
+        - "extension_format": "\\.zip$"
+    - requirement: "file_integrity"
+      description: "SHA256 checksums provided for all packages"
+      expected_files:
+        - "SHA256SUMS.txt"
+        - "SHA256SUMS.txt.asc"
+      signature_required: true
+    - requirement: "metadata_consistency"
+      description: "Consistent metadata across platforms"
+      required_metadata:
+        - "version"
+        - "release_date"
+        - "supported_platforms"
+        - "minimum_requirements"
+    - requirement: "download_validation"
+      description: "Packages download correctly"
+      expected_content_type: "application/zip"
+      expected_headers:
+        - "Content-Length: >0"
+        - "Last-Modified: valid_date"
+
+# GitHub distribution validation
+github_distribution:
+  metadata:
+    test_case: "github_distribution"
+    description: "Validate GitHub release packages"
+    distribution_channel: "github"
+    expected_behavior: "consistent_github_releases"
+  channel_requirements:
+    - requirement: "release_artifacts"
+      description: "All required artifacts present in releases"
+      required_artifacts:
+        - "costpilot-{version}-{platform}.zip"
+        - "costpilot-{version}-{platform}.tar.gz"
+        - "SHA256SUMS.txt"
+        - "SHA256SUMS.txt.asc"
+      optional_artifacts:
+        - "costpilot-{version}.deb"
+        - "costpilot-{version}.rpm"
+    - requirement: "release_notes"
+      description: "Comprehensive release notes"
+      required_sections:
+        - "What's Changed"
+        - "Installation"
+        - "Breaking Changes"
+        - "Security Updates"
+      formatting: "markdown"
+    - requirement: "tag_consistency"
+      description: "Git tags match version numbers"
+      expected_pattern: "^v[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9]+)?$"
+    - requirement: "prerelease_handling"
+      description: "Prerelease versions properly marked"
+      prerelease_indicators:
+        - "tag_suffix": "-alpha|-beta|-rc"
+        - "release_title": "Pre-release"
+        - "download_warnings": "unstable_software"
+
+# Cross-channel consistency validation
+cross_channel_consistency:
+  metadata:
+    test_case: "cross_channel_consistency"
+    description: "Ensure consistency across distribution channels"
+    expected_behavior: "bit_identical_or_auditable_differences"
+  consistency_checks:
+    - check: "version_alignment"
+      description: "Same version numbers across channels"
+      validation_method: "exact_match"
+      allowed_differences: []
+    - check: "package_contents"
+      description: "Identical package contents"
+      validation_method: "file_hash_comparison"
+      allowed_differences: ["metadata_files", "channel_specific_configs"]
+    - check: "binary_equivalence"
+      description: "Functionally equivalent binaries"
+      validation_method: "behavior_testing"
+      allowed_differences: ["performance_optimizations", "platform_specific_features"]
+    - check: "documentation_consistency"
+      description: "Consistent documentation"
+      validation_method: "content_comparison"
+      allowed_differences: ["channel_specific_installation_instructions"]
+
+# Package verification workflows
+package_verification:
+  metadata:
+    test_case: "package_verification"
+    description: "Automated package verification workflows"
+    expected_behavior: "verifiable_packages"
+  verification_steps:
+    - step: "download_integrity"
+      description: "Verify package downloads correctly"
+      checks:
+        - "http_status_200"
+        - "content_length_matches"
+        - "no_corruption_indicators"
+    - step: "signature_verification"
+      description: "Verify cryptographic signatures"
+      required_keys:
+        - "primary_gpg_key"
+        - "backup_gpg_key"
+      signature_formats: ["gpg", "minisign"]
+    - step: "checksum_verification"
+      description: "Verify file checksums"
+      algorithms: ["SHA256", "SHA512", "BLAKE2b"]
+      checksum_formats: ["hex", "base64"]
+    - step: "package_extraction"
+      description: "Verify package extracts correctly"
+      checks:
+        - "no_extraction_errors"
+        - "expected_file_structure"
+        - "correct_permissions"
+    - step: "binary_verification"
+      description: "Verify binary functionality"
+      tests:
+        - "executable_runs"
+        - "basic_functionality"
+        - "version_reporting"
+    - step: "installation_verification"
+      description: "Verify installation process"
+      checks:
+        - "installation_succeeds"
+        - "configuration_works"
+        - "integration_tests_pass"
+
+# Channel-specific requirements
+channel_specific_requirements:
+  metadata:
+    test_case: "channel_specific_requirements"
+    description: "Channel-specific packaging requirements"
+    expected_behavior: "channel_optimized_packages"
+  gumroad_specific:
+    - requirement: "single_file_download"
+      description: "Easy single-file download experience"
+      max_package_size: "100MB"
+      preferred_format: "zip"
+    - requirement: "immediate_availability"
+      description: "Packages available immediately after payment"
+      max_delay: "5_minutes"
+    - requirement: "refund_support"
+      description: "Support for refunds and redownloads"
+      retention_period: "2_years"
+    - requirement: "license_delivery"
+      description: "Automatic license key delivery"
+      license_format: "text_file"
+
+  github_specific:
+    - requirement: "release_automation"
+      description: "Automated release publishing"
+      trigger: "tag_creation"
+      max_publish_delay: "10_minutes"
+    - requirement: "artifact_retention"
+      description: "Long-term artifact retention"
+      retention_period: "unlimited"
+    - requirement: "download_statistics"
+      description: "Download count tracking"
+      metrics_available: true
+    - requirement: "fork_distribution"
+      description: "Allow redistribution by forks"
+      allowed: false
+
+# Update mechanism validation
+update_mechanism_validation:
+  metadata:
+    test_case: "update_mechanism_validation"
+    description: "Validate in-place update mechanisms"
+    expected_behavior: "safe_updates"
+  update_scenarios:
+    - scenario: "patch_update"
+      description: "Minor version updates"
+      expected_behavior: "automatic_update"
+      rollback_supported: true
+    - scenario: "minor_update"
+      description: "Feature additions"
+      expected_behavior: "user_initiated_update"
+      rollback_supported: true
+    - scenario: "major_update"
+      description: "Breaking changes"
+      expected_behavior: "manual_update_required"
+      rollback_supported: false
+    - scenario: "security_update"
+      description: "Critical security fixes"
+      expected_behavior: "automatic_emergency_update"
+      rollback_supported: true
+
+# Distribution analytics
+distribution_analytics:
+  metadata:
+    test_case: "distribution_analytics"
+    description: "Track and analyze distribution metrics"
+    expected_behavior: "measurable_distribution"
+  metrics_to_track:
+    - metric: "download_counts"
+      breakdown: ["channel", "platform", "version"]
+      retention: "unlimited"
+    - metric: "installation_success"
+      breakdown: ["platform", "version", "channel"]
+      retention: "1_year"
+    - metric: "update_adoption"
+      breakdown: ["from_version", "to_version", "channel"]
+      retention: "2_years"
+    - metric: "failure_rates"
+      breakdown: ["failure_type", "platform", "channel"]
+      retention: "6_months"
+  reporting:
+    - report: "weekly_summary"
+      recipients: ["product_team"]
+      format: "email_digest"
+    - report: "monthly_analytics"
+      recipients: ["executive_team"]
+      format: "dashboard"
+    - report: "quarterly_insights"
+      recipients: ["all_stakeholders"]
+      format: "presentation"
+
+# Compliance and legal validation
+compliance_validation:
+  metadata:
+    test_case: "compliance_validation"
+    description: "Ensure distribution complies with legal requirements"
+    expected_behavior: "legally_compliant_distribution"
+  legal_requirements:
+    - requirement: "license_distribution"
+      description: "License included with all packages"
+      license_file: "LICENSE"
+      license_format: "text"
+      license_version: "current"
+    - requirement: "attribution_credits"
+      description: "Third-party attribution included"
+      attribution_file: "NOTICE"
+      update_frequency: "per_release"
+    - requirement: "export_controls"
+      description: "Comply with export control regulations"
+      restricted_countries: ["CU", "IR", "KP", "SY"]
+      encryption_allowed: true
+    - requirement: "data_privacy"
+      description: "Respect user privacy in distribution"
+      telemetry_opt_in: true
+      data_collection_minimal: true
+
+# Disaster recovery validation
+disaster_recovery:
+  metadata:
+    test_case: "disaster_recovery"
+    description: "Test distribution system resilience"
+    expected_behavior: "resilient_distribution"
+  failure_scenarios:
+    - scenario: "channel_outage"
+      description: "Primary distribution channel fails"
+      recovery_time: "< 4_hours"
+      backup_channels: ["github", "mirror_sites"]
+    - scenario: "package_corruption"
+      description: "Distributed packages become corrupted"
+      detection_time: "< 1_hour"
+      recovery_time: "< 2_hours"
+    - scenario: "key_compromise"
+      description: "Signing keys compromised"
+      detection_time: "< 30_minutes"
+      recovery_time: "< 1_hour"
+    - scenario: "mass_download_attack"
+      description: "DDoS attack on distribution"
+      mitigation: "rate_limiting"
+      recovery_time: "< 15_minutes"
+
+# International distribution
+international_distribution:
+  metadata:
+    test_case: "international_distribution"
+    description: "Ensure global distribution works"
+    expected_behavior: "global_availability"
+  regional_considerations:
+    - region: "china"
+      special_requirements: ["local_mirroring", "content_filtering"]
+      available_channels: ["github_mirror"]
+    - region: "europe"
+      special_requirements: ["gdpr_compliance", "data_localization"]
+      available_channels: ["gumroad", "github"]
+    - region: "russia"
+      special_requirements: ["local_hosting"]
+      available_channels: ["github_mirror"]
+    - region: "global"
+      standard_channels: ["gumroad", "github"]
+      cdn_distribution: true

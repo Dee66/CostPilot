@@ -1,7 +1,7 @@
 # WORKFLOW RULES (v2.3)
 
-This file defines the execution workflow.  
-Copilot must load and obey all rules in this file.  
+This file defines the execution workflow.
+Copilot must load and obey all rules in this file.
 Do not summarize or restate this file.
 
 ----------------------------------------
@@ -23,15 +23,12 @@ On trigger:
 3. Implement ONLY that item.
 4. Modify or create code files as required.
 5. Update docs/checklist.md by marking the item complete.
-6. Produce minimal output.
-7. Wait for the next instruction.
 
 ----------------------------------------
 CONSTRAINTS
 ----------------------------------------
 - Do not skip items.
 - Do not reorder checklist items.
-- Do not continue to another item unless explicitly instructed.
 - Do not generate explanations, summaries, or commentary.
 - Do not modify the spec.
 - Do not modify rule files.

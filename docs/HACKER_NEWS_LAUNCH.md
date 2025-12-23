@@ -479,7 +479,7 @@ One limitation: we can't analyze dynamic module counts (count/for_each with unkn
 
 **Pulumi:** Not yet. We'd need to parse Pulumi's state format. Open to PRs!
 
-**CDK:** Yes for CDK for Terraform (same as regular TF). No for CDK CloudFormation (different format).
+**CDK:** Yes! CDK templates are supported.
 
 ### "How accurate are the AI predictions?"
 

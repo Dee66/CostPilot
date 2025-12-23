@@ -1,0 +1,9 @@
+{
+  "true_positives": 2,
+  "false_positives": 0,
+  "true_negatives": 0,
+  "false_negatives": 0,
+  "precision_percent": 100,
+  "recall_percent": 100,
+  "alert_accuracy_high": true
+}

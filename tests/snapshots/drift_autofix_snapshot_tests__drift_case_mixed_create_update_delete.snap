@@ -1,0 +1,49 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_instance.new",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "after": {
+          "instance_type": "t3.medium"
+        }
+      }
+    },
+    {
+      "address": "aws_instance.updated",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "instance_type": "t3.small"
+        },
+        "before": {
+          "instance_type": "t2.micro"
+        }
+      }
+    },
+    {
+      "address": "aws_instance.replaced",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "after": {
+          "instance_type": "t3.large"
+        },
+        "before": {
+          "instance_type": "t3.large"
+        }
+      }
+    }
+  ]
+}

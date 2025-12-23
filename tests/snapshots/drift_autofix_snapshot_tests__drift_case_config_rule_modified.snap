@@ -1,0 +1,26 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_config_config_rule.encryption",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "maximum_execution_frequency": "Six_Hours"
+        },
+        "before": {
+          "maximum_execution_frequency": "TwentyFour_Hours"
+        }
+      },
+      "mode": "managed",
+      "name": "encryption",
+      "type": "aws_config_config_rule"
+    }
+  ]
+}

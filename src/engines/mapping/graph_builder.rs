@@ -123,11 +123,11 @@ impl GraphBuilder {
                 eprintln!("   Returning empty graph");
                 Ok(DependencyGraph::new())
             }
-            TimeoutAction::Error => Err(CostPilotError::Timeout(format!(
+            TimeoutAction::Error => Err(CostPilotError::timeout(format!(
                 "Mapping exceeded budget: {} ({}ms budget, {}ms elapsed)",
                 violation.violation_type, violation.budget_value, violation.actual_value
             ))),
-            TimeoutAction::CircuitBreak => Err(CostPilotError::CircuitBreaker(format!(
+            TimeoutAction::CircuitBreak => Err(CostPilotError::circuit_breaker(format!(
                 "Mapping circuit breaker triggered: {} ({}ms budget, {}ms elapsed)",
                 violation.violation_type, violation.budget_value, violation.actual_value
             ))),
@@ -148,13 +148,13 @@ impl GraphBuilder {
                 Ok(partial)
             }
             TimeoutAction::Error => {
-                Err(CostPilotError::Timeout(format!(
+                Err(CostPilotError::timeout(format!(
                     "Mapping exceeded budget: {} ({}ms budget, {}ms elapsed) - partial graph discarded",
                     violation.violation_type, violation.budget_value, violation.actual_value
                 )))
             }
             TimeoutAction::CircuitBreak => {
-                Err(CostPilotError::CircuitBreaker(format!(
+                Err(CostPilotError::circuit_breaker(format!(
                     "Mapping circuit breaker triggered: {} ({}ms budget, {}ms elapsed) - partial graph discarded",
                     violation.violation_type, violation.budget_value, violation.actual_value
                 )))
@@ -408,7 +408,7 @@ impl GraphBuilder {
 
         for node in &graph.nodes {
             if !visited.contains(&node.id) {
-                self.dfs_cycle_detect(
+                Self::dfs_cycle_detect(
                     &node.id,
                     graph,
                     &mut visited,
@@ -424,7 +424,6 @@ impl GraphBuilder {
 
     /// DFS helper for cycle detection
     fn dfs_cycle_detect(
-        &self,
         node_id: &str,
         graph: &DependencyGraph,
         visited: &mut HashSet<String>,
@@ -438,7 +437,7 @@ impl GraphBuilder {
 
         for edge in graph.edges_from(node_id) {
             if !visited.contains(&edge.to) {
-                self.dfs_cycle_detect(&edge.to, graph, visited, rec_stack, path, cycles);
+                Self::dfs_cycle_detect(&edge.to, graph, visited, rec_stack, path, cycles);
             } else if rec_stack.contains(&edge.to) {
                 // Found a cycle
                 if let Some(cycle_start) = path.iter().position(|id| id == &edge.to) {
@@ -558,8 +557,6 @@ mod tests {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         }
     }
 

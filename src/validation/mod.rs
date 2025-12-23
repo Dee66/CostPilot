@@ -15,12 +15,16 @@
 pub mod baselines;
 pub mod config;
 pub mod error;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod output;
 pub mod policy;
 pub mod slo;
 
 pub use baselines::BaselinesValidator;
 pub use config::ConfigValidator;
 pub use error::{ValidationError, ValidationResult, ValidationWarning};
+#[cfg(not(target_arch = "wasm32"))]
+pub use output::OutputValidator;
 pub use policy::PolicyValidator;
 pub use slo::SloValidator;
 
@@ -160,6 +164,14 @@ pub enum FileType {
 pub fn validate_file(path: impl AsRef<Path>) -> ValidationResult<ValidationReport> {
     let path = path.as_ref();
 
+    // Check if file exists first
+    if !path.exists() {
+        return Err(Box::new(ValidationError::new(format!(
+            "No such file: {}",
+            path.display()
+        ))));
+    }
+
     // Detect file type from name/extension
     let file_type = detect_file_type(path)?;
 
@@ -193,10 +205,10 @@ fn detect_file_type(path: &Path) -> ValidationResult<FileType> {
         // Assume policy file
         Ok(FileType::Policy)
     } else {
-        Err(ValidationError::new(format!(
+        Err(Box::new(ValidationError::new(format!(
             "Could not detect file type for: {}. Supported: costpilot.yaml, baselines.json, slo.yaml, *.yaml (policies)",
             file_name
-        )))
+        ))))
     }
 }
 

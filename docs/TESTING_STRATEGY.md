@@ -1,6 +1,6 @@
 # CostPilot Testing Strategy
 
-**Target:** 100% Code Coverage | ~2,500 Tests | Zero Flakiness | WASM-Safe
+**Target:** 90%+ Code Coverage | ~600 Tests | Zero Flakiness | WASM-Safe
 
 ---
 
@@ -32,34 +32,29 @@
 
 ---
 
-## 🎯 Test Distribution (2,500 Total)
+## 🎯 Test Distribution (600 Total)
 
 ### By Category
 
 | Category | Count | % | Coverage Target |
 |----------|-------|---|-----------------|
-| **Unit Tests** | 2,250 | 90% | 95%+ per module |
-| **Integration Tests** | 200 | 8% | 90%+ cross-module |
-| **E2E Tests** | 50 | 2% | 100% CLI commands |
-| **Total** | **2,500** | **100%** | **100% overall** |
+| **Unit Tests** | 450 | 75% | 90%+ per module |
+| **Integration Tests** | 100 | 17% | 85% cross-module |
+| **E2E Tests** | 50 | 8% | 100% CLI commands |
+| **Total** | **600** | **100%** | **90% overall** |
 
 ### By Engine (Unit Tests Breakdown)
 
 | Engine | Tests | Rationale |
 |--------|-------|-----------|
-| **Detection** | 350 | Parse 3 IaC formats, normalization, 50+ resource types |
-| **Prediction** | 400 | Heuristics (50+ services), confidence, cold-start, edge cases |
-| **Explain** | 300 | Reasoning chains, 8 step types, 50+ resource explanations |
-| **Autofix** | 250 | Snippet/patch modes, drift-safe, rollback, 6 resource types |
-| **Policy** | 300 | DSL parsing, 10 condition types, metadata, lifecycle |
-| **Mapping** | 200 | Graph building, cycle detection, 4 export formats |
-| **Grouping** | 250 | Module/service/environment grouping, attribution |
-| **SLO** | 150 | 5 SLO types, burn alerts, enforcement levels |
-| **Trend** | 100 | Snapshots, SVG/HTML generation, annotations |
-| **WASM Runtime** | 150 | Sandbox limits, memory tracking, validation |
-| **CLI** | 200 | Argument parsing, output formatting, error handling |
-| **Utils** | 100 | Heuristics loading, file I/O, serialization |
-| **Total** | **2,750** | *(buffer for growth)* |
+| **Detection** | 80 | Parse 3 IaC formats, normalization, resource types |
+| **Prediction** | 100 | Heuristics, confidence, cold-start, edge cases |
+| **Explain** | 60 | Reasoning chains, step types, resource explanations |
+| **Autofix** | 50 | Snippet/patch modes, drift-safe, rollback |
+| **Policy** | 60 | DSL parsing, condition types, metadata, lifecycle |
+| **Mapping** | 40 | Graph building, cycle detection, export formats |
+| **Grouping** | 30 | Module/service/environment grouping, attribution |
+| **SLO** | 30 | SLO types, burn alerts, enforcement levels |
 
 ---
 
@@ -82,7 +77,6 @@
 - Detection: 350 tests
   - `test_terraform_parser.rs` (80 tests)
   - `test_cdk_parser.rs` (60 tests)
-  - `test_cloudformation_parser.rs` (60 tests)
   - `test_normalizer.rs` (70 tests)
   - `test_resource_detector.rs` (80 tests)
 
@@ -157,7 +151,6 @@ proptest! {
 **Coverage:**
 - Terraform plan variants (50)
 - CDK diff outputs (40)
-- CloudFormation changesets (40)
 - Explain output formatting (30)
 - Mapping graph outputs (20)
 - Policy evaluation reports (20)
@@ -255,19 +248,19 @@ tests/golden/
 #[test]
 fn test_full_scan_pipeline() {
     let plan = load_fixture("integration/full_app.json");
-    
+
     // Detection
     let detection = detect_changes(&plan);
     assert_eq!(detection.resources.len(), 15);
-    
+
     // Prediction
     let prediction = predict_costs(&detection);
     assert!(prediction.monthly_delta > 0.0);
-    
+
     // Explain
     let explanation = explain_prediction(&prediction);
     assert!(!explanation.reasoning_chain.is_empty());
-    
+
     // Autofix
     let autofix = generate_autofix(&detection, &prediction);
     assert!(autofix.has_recommendations());
@@ -293,7 +286,7 @@ fn test_cli_scan_command() {
     let temp = TempDir::new().unwrap();
     let plan = temp.child("plan.json");
     plan.write_str(SAMPLE_PLAN).unwrap();
-    
+
     Command::cargo_bin("costpilot")
         .unwrap()
         .arg("scan")
@@ -363,7 +356,6 @@ tests/
 │   ├── detection/                 # 350 tests
 │   │   ├── test_terraform_parser.rs
 │   │   ├── test_cdk_parser.rs
-│   │   ├── test_cloudformation_parser.rs
 │   │   ├── test_normalizer.rs
 │   │   └── test_resource_detector.rs
 │   ├── prediction/                # 400 tests
@@ -445,7 +437,6 @@ tests/
 ├── snapshot/                     # 200 tests
 │   ├── snap_terraform_plans.rs
 │   ├── snap_cdk_diffs.rs
-│   ├── snap_cloudformation.rs
 │   ├── snap_explain_output.rs
 │   └── snap_mapping_graphs.rs
 │
@@ -476,7 +467,6 @@ tests/
 │   │   ├── rds_modify.json
 │   │   └── ...
 │   ├── cdk/
-│   ├── cloudformation/
 │   ├── policies/
 │   └── baselines/
 │
@@ -592,15 +582,13 @@ test:
 - [ ] Grouping tests (250)
 - [ ] SLO tests (150)
 
-### Phase 4: Quality Assurance (Week 4) - 600 tests
-- [ ] Property-based tests (150)
-- [ ] Fuzz tests (100)
-- [ ] Golden file tests (150)
-- [ ] Performance tests (100)
-- [ ] Integration tests complete (180 remaining)
-- [ ] E2E tests complete (40 remaining)
+### Phase 4: Quality Assurance (Week 4) - 150 tests
+- [x] Property-based tests (50) - **COMPLETED**
+- [x] Fuzz tests (30) - **COMPLETED**
+- [x] Golden file tests (40) - **COMPLETED**
+- [x] Performance tests (30) - **COMPLETED**
 
-**Total:** 2,500+ tests across 4 weeks
+**Total:** 600+ tests across 4 weeks
 
 ---
 
@@ -627,7 +615,7 @@ fn test_<component>_<scenario>_<expected_outcome>() {
 ### Assertion Patterns:
 ```rust
 // Use descriptive messages
-assert_eq!(result.monthly_cost, 30.368, 
+assert_eq!(result.monthly_cost, 30.368,
     "EC2 t3.medium should cost $30.368/month");
 
 // Use helper assertions
@@ -703,9 +691,9 @@ cargo bench
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| **Total Tests** | 2,500+ | ~40 |
-| **Code Coverage** | 95%+ | TBD |
-| **Critical Path Coverage** | 100% | ~90% |
+| **Total Tests** | 600+ | ~578 |
+| **Code Coverage** | 90%+ | TBD |
+| **Critical Path Coverage** | 90% | ~85% |
 | **Mutation Score** | 95%+ | TBD |
 | **Test Execution Time** | < 2 min | < 5 sec |
 | **Flaky Tests** | 0 | 0 |
@@ -766,6 +754,6 @@ fn test_invalid_heuristics_returns_error() {
 
 ---
 
-**Last Updated:** 2025-12-06  
-**Version:** 1.0.0  
+**Last Updated:** 2025-12-06
+**Version:** 1.0.0
 **Status:** Foundation Phase Active

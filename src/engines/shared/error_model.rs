@@ -169,7 +169,7 @@ impl CostPilotError {
                 "Check input format and ensure it's valid JSON/YAML".to_string()
             }
             ErrorCategory::ParseError => {
-                "Verify the file is a valid Terraform/CDK/CloudFormation document".to_string()
+                "Verify the file is a valid Terraform/CDK document".to_string()
             }
             ErrorCategory::PredictionError => {
                 "Check resource configuration and ensure heuristics are up to date".to_string()
@@ -228,6 +228,50 @@ impl std::error::Error for CostPilotError {}
 
 /// Type alias for Results
 pub type Result<T> = std::result::Result<T, CostPilotError>;
+
+impl From<crate::artifact::ArtifactError> for CostPilotError {
+    fn from(err: crate::artifact::ArtifactError) -> Self {
+        let (id, category, message) = match err {
+            crate::artifact::ArtifactError::UnsupportedFormat(msg) => (
+                "ARTIFACT_001",
+                ErrorCategory::ValidationError,
+                format!("Unsupported artifact format: {}", msg),
+            ),
+            crate::artifact::ArtifactError::ParseError(msg) => (
+                "ARTIFACT_002",
+                ErrorCategory::ParseError,
+                format!("Failed to parse artifact: {}", msg),
+            ),
+            crate::artifact::ArtifactError::InvalidResource(msg) => (
+                "ARTIFACT_003",
+                ErrorCategory::ValidationError,
+                format!("Invalid resource definition: {}", msg),
+            ),
+            crate::artifact::ArtifactError::MissingField(msg) => (
+                "ARTIFACT_004",
+                ErrorCategory::ValidationError,
+                format!("Missing required field: {}", msg),
+            ),
+            crate::artifact::ArtifactError::InvalidVersion(msg) => (
+                "ARTIFACT_005",
+                ErrorCategory::ValidationError,
+                format!("Invalid template version: {}", msg),
+            ),
+            crate::artifact::ArtifactError::UnsupportedFunction(msg) => (
+                "ARTIFACT_007",
+                ErrorCategory::ValidationError,
+                format!("Unsupported intrinsic function: {}", msg),
+            ),
+            crate::artifact::ArtifactError::IoError(err) => (
+                "ARTIFACT_006",
+                ErrorCategory::IoError,
+                format!("IO error: {}", err),
+            ),
+        };
+
+        CostPilotError::new(id, category, message)
+    }
+}
 
 /// Map error category to stable error ID prefix
 pub fn map_category_to_id(category: &ErrorCategory) -> &'static str {

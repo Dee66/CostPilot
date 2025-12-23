@@ -176,21 +176,21 @@ use wasmtime::*;
 fn load_costpilot_wasm() -> Result<()> {
     let engine = Engine::default();
     let module = Module::from_file(&engine, "costpilot.wasm")?;
-    
+
     let mut store = Store::new(
         &engine,
         WasmState {
             memory_limit: 256 * 1024 * 1024, // 256 MB
         }
     );
-    
+
     // Configure limits
     let mut config = Config::new();
     config.max_wasm_stack(1024 * 1024); // 1 MB stack
     config.epoch_interruption(true); // Enable timeout
-    
+
     let instance = Instance::new(&mut store, &module, &[])?;
-    
+
     // Call engine functions...
     Ok(())
 }
@@ -203,10 +203,10 @@ import init, { predict_cost, analyze_plan } from './pkg/costpilot.js';
 
 async function runCostPilot() {
     await init();
-    
+
     const plan = JSON.stringify({ /* Terraform plan */ });
     const result = predict_cost(plan);
-    
+
     console.log('Predicted monthly cost:', result.monthly_cost);
 }
 ```
@@ -279,10 +279,10 @@ wasm-pack test --headless --firefox
 #[test]
 fn test_deterministic_output() {
     let plan = load_test_plan();
-    
+
     let result1 = predict_cost(&plan);
     let result2 = predict_cost(&plan);
-    
+
     assert_eq!(result1, result2, "Outputs must be identical");
 }
 
@@ -290,10 +290,10 @@ fn test_deterministic_output() {
 fn test_deterministic_across_runs() {
     let plan = load_test_plan();
     let expected_hash = "a1b2c3d4..."; // Known good hash
-    
+
     let result = predict_cost(&plan);
     let actual_hash = hash_output(&result);
-    
+
     assert_eq!(actual_hash, expected_hash);
 }
 ```
@@ -303,7 +303,7 @@ fn test_deterministic_across_runs() {
 #[test]
 fn test_memory_limit() {
     let large_plan = generate_large_plan(10_000); // 10k resources
-    
+
     // Should complete within 256 MB
     let result = predict_cost(&large_plan);
     assert!(result.is_ok());
@@ -315,11 +315,11 @@ fn test_memory_limit() {
 #[test]
 fn test_performance_budget() {
     let plan = load_test_plan();
-    
+
     let start = Instant::now();
     let result = predict_cost(&plan);
     let duration = start.elapsed();
-    
+
     assert!(duration.as_millis() < 300, "Prediction exceeded 300ms budget");
 }
 ```
@@ -338,16 +338,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: wasm32-unknown-unknown
-          
+
       - name: Build WASM
         run: cargo build --target wasm32-unknown-unknown --release --lib
-        
+
       - name: Check WASM Size
         run: |
           SIZE=$(stat -c%s target/wasm32-unknown-unknown/release/costpilot.wasm)
@@ -356,10 +356,10 @@ jobs:
             echo "WASM size ($SIZE bytes) exceeds limit ($MAX bytes)"
             exit 1
           fi
-          
+
       - name: Run WASM Tests
         run: cargo test --target wasm32-unknown-unknown
-        
+
       - name: Upload WASM Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -461,5 +461,5 @@ cargo install wasm-bindgen-cli
 
 ---
 
-**Last Updated:** 2025-12-06  
+**Last Updated:** 2025-12-06
 **Version:** 1.0.0

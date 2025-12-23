@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "timestamp": "2025-12-07T00:00:00Z",
+  "total_monthly_cost": 0.0,
+  "resources": {},
+  "metadata": {
+    "terraform_version": "1.6.0",
+    "provider_versions": {}
+  }
+}

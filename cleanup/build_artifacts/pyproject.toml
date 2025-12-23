@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "costpilot"
+version = "1.0.0"
+description = "Cost analysis and prediction for infrastructure as code"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "GuardSuite", email = "info@guardsuite.com"}
+]
+keywords = ["cost", "infrastructure", "terraform", "aws", "finops", "iac", "cloud"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.urls]
+Homepage = "https://costpilot.dev"
+Repository = "https://github.com/Dee66/CostPilot"
+Issues = "https://github.com/Dee66/CostPilot/issues"
+Documentation = "https://docs.costpilot.dev"
+
+[project.scripts]
+costpilot = "costpilot:main"
+
+[tool.setuptools]
+include-package-data = true

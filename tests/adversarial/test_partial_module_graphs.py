@@ -11,7 +11,7 @@ def test_missing_resource_dependencies():
     """Test handling of graphs with missing resource dependencies."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -23,17 +23,17 @@ def test_missing_resource_dependencies():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle missing dependencies
         assert result.returncode in [0, 1, 2, 101], "Should handle missing dependencies"
 
@@ -42,7 +42,7 @@ def test_circular_dependency_incomplete():
     """Test handling of incomplete circular dependencies."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "LambdaA": {
@@ -62,17 +62,17 @@ def test_circular_dependency_incomplete():
                 # LambdaC missing - incomplete cycle
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle incomplete cycles
         assert result.returncode in [0, 1, 2, 101], "Should handle incomplete cycles"
 
@@ -81,7 +81,7 @@ def test_orphaned_resources():
     """Test handling of orphaned resources with no connections."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda1": {
@@ -105,17 +105,17 @@ def test_orphaned_resources():
                 # All independent - no dependencies
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle orphaned resources
         assert result.returncode in [0, 1, 2, 101], "Should handle orphaned resources"
 
@@ -124,7 +124,7 @@ def test_partially_defined_intrinsic_functions():
     """Test handling of partially defined intrinsic functions."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -136,17 +136,17 @@ def test_partially_defined_intrinsic_functions():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle incomplete intrinsics
         assert result.returncode in [0, 1, 2, 101], "Should handle incomplete intrinsic functions"
 
@@ -155,7 +155,7 @@ def test_missing_parameters_in_graph():
     """Test handling of graphs with missing parameter references."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -166,17 +166,17 @@ def test_missing_parameters_in_graph():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle missing parameter refs
         assert result.returncode in [0, 1, 2, 101], "Should handle missing parameter refs"
 
@@ -185,7 +185,7 @@ def test_disconnected_subgraphs():
     """Test handling of multiple disconnected subgraphs."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 # Subgraph 1
@@ -218,17 +218,17 @@ def test_disconnected_subgraphs():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle disconnected subgraphs
         assert result.returncode in [0, 1, 2, 101], "Should handle disconnected subgraphs"
 
@@ -237,7 +237,7 @@ def test_self_referential_resource():
     """Test handling of self-referential resources."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -249,17 +249,17 @@ def test_self_referential_resource():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should detect self-reference
         assert result.returncode in [0, 1, 2, 101], "Should handle self-referential resources"
 
@@ -268,7 +268,7 @@ def test_partial_graph_with_conditions():
     """Test handling of partial graphs with conditional resources."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Conditions": {
                 "CreateResource": {"Fn::Equals": ["true", "false"]}
@@ -290,17 +290,17 @@ def test_partial_graph_with_conditions():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle conditional dependencies
         assert result.returncode in [0, 1, 2, 101], "Should handle conditional dependencies"
 
@@ -309,7 +309,7 @@ def test_incomplete_nested_stacks():
     """Test handling of incomplete nested stack references."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "NestedStack": {
@@ -326,17 +326,17 @@ def test_incomplete_nested_stacks():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle nested stack references
         assert result.returncode in [0, 1, 2, 101], "Should handle nested stack references"
 
@@ -345,7 +345,7 @@ def test_graph_with_only_outputs():
     """Test handling of graphs with only outputs (no resources)."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Outputs": {
                 "OutputValue": {
@@ -353,17 +353,17 @@ def test_graph_with_only_outputs():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Should handle output-only templates
         assert result.returncode in [0, 1, 2, 101], "Should handle output-only templates"
 

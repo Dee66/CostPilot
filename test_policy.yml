@@ -1,0 +1,26 @@
+version: "1.0"
+metadata:
+  deeply:
+    nested:
+      structure:
+        with:
+          many:
+            levels:
+              of:
+                nesting:
+                  value: "deep"
+                  number: 42
+                  array: [1, 2, 3]
+                  object:
+                    another: "level"
+rules:
+  - id: "nested-metadata-test"
+    name: "Nested Metadata Test"
+    condition: "true"
+    action: "warn"
+    metadata:
+      level1:
+        level2:
+          level3:
+            level4:
+              level5: "deep nesting"

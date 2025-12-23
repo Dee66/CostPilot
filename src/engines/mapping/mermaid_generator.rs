@@ -214,10 +214,7 @@ impl MermaidGenerator {
             std::collections::HashMap::new();
 
         for node in &graph.nodes {
-            groups
-                .entry(node.module.clone())
-                .or_default()
-                .push(node);
+            groups.entry(node.module.clone()).or_default().push(node);
         }
 
         groups.into_iter().collect()
@@ -316,7 +313,7 @@ impl MermaidGenerator {
 <body>
     <div class="container">
         <h1>{}</h1>
-        
+
         <div class="metadata">
             <strong>Nodes:</strong> {} |
             <strong>Edges:</strong> {} |
@@ -324,11 +321,11 @@ impl MermaidGenerator {
             <strong>Cycles:</strong> {} |
             <strong>Total Cost:</strong> ${}
         </div>
-        
+
         <div class="mermaid">
 {}
         </div>
-        
+
         <div class="legend">
             <h3>Legend</h3>
             <ul>
@@ -340,9 +337,9 @@ impl MermaidGenerator {
             </ul>
         </div>
     </div>
-    
+
     <script>
-        mermaid.initialize({{ 
+        mermaid.initialize({{
             startOnLoad: true,
             theme: 'default',
             flowchart: {{

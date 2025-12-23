@@ -201,7 +201,7 @@ provideCodeActions(document, range, context)
     - fixAction.edit = new WorkspaceEdit()
     - fixAction.edit.replace(uri, diagnostic.range, fix)
     - fixAction.isPreferred = true
-    
+
     - Create explainAction: CodeAction("Explain cost issue", QuickFix)
     - explainAction.command = { command: 'costpilot.explainIssue', arguments: [diagnostic] }
   → Return actions
@@ -360,7 +360,7 @@ graph TD
 ```
 
 #### SLO Report
-**Displays**: 
+**Displays**:
 - Compliant SLOs with ✅
 - Violations with ⚠️, burn rate, time-to-breach
 
@@ -733,7 +733,7 @@ vsce publish
 - **Icon**: 128x128 PNG, recognizable at small size
 - **Screenshots**: Show key features (diagnostics, tree view, webview)
 - **README**: Clear value proposition, GIFs/videos demonstrating usage
-- **Keywords**: aws, cost, finops, terraform, cdk, cloudformation
+- **Keywords**: aws, cost, finops, terraform, cdk
 - **Categories**: Programming Languages, Linters, Formatters
 
 ---

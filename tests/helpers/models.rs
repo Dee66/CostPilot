@@ -1,5 +1,5 @@
 /// Test model builders for canonical production structs
-/// 
+///
 /// These builders provide simple, deterministic construction of model types
 /// used across the test suite, minimizing test fragility when struct fields change.
 
@@ -124,7 +124,7 @@ pub fn make_test_detection_with_cost(
 /// Create a test ScanMetadata
 pub fn make_test_scan_metadata() -> ScanMetadata {
     ScanMetadata {
-        timestamp: "2025-01-01T00:00:00Z".to_string(),
+        timestamp: Some("2025-01-01T00:00:00Z".to_string()),
         heuristics_version: "test-1.0".to_string(),
         policy_version: None,
         deterministic: true,
@@ -138,7 +138,7 @@ pub fn make_test_scan_result(
     detections: Vec<Detection>,
 ) -> ScanResult {
     let total_monthly_delta = cost_estimates.iter().map(|e| e.monthly_cost).sum();
-    
+
     ScanResult {
         resource_changes,
         cost_estimates,
@@ -182,10 +182,10 @@ pub fn make_resource_change(action: ChangeAction, monthly: Option<f64>) -> Resou
         .old_config(serde_json::Value::Null)
         .new_config(serde_json::Value::Null)
         .tags(HashMap::new());
-    
+
     if let Some(cost) = monthly {
         builder = builder.monthly_cost(cost);
     }
-    
+
     builder.build()
 }

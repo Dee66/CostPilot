@@ -209,7 +209,9 @@ impl TrendEngine {
         let mut violations = Vec::new();
 
         // Check global baseline
-        if let Some(global_violation) = baselines.compare_total_cost(snapshot.total_monthly_cost) {
+        if let Some(global_violation) =
+            baselines.compare_total_cost(snapshot.total_monthly_cost, None)
+        {
             violations.push(global_violation);
         }
 
@@ -220,7 +222,7 @@ impl TrendEngine {
         }
 
         // Check module baselines
-        let comparison = baselines.compare_module_costs(&module_costs);
+        let comparison = baselines.compare_module_costs(&module_costs, None);
         violations.extend(comparison.violations);
 
         violations
@@ -338,7 +340,8 @@ mod tests {
     #[test]
     fn test_trend_engine_creation() {
         let temp_dir = TempDir::new().unwrap();
-        let engine = TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
+        let engine =
+            TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
 
         // Should be able to load empty history
         let history = engine.load_history();
@@ -348,7 +351,8 @@ mod tests {
     #[test]
     fn test_extract_module_name() {
         let temp_dir = TempDir::new().unwrap();
-        let engine = TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
+        let engine =
+            TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
 
         assert_eq!(
             engine.extract_module_name("module.vpc.aws_nat_gateway.main"),
@@ -361,7 +365,8 @@ mod tests {
     #[ignore] // TODO: extract_service_name method removed
     fn test_extract_service_name() {
         let temp_dir = TempDir::new().unwrap();
-        let _engine = TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
+        let _engine =
+            TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
 
         // assert_eq!(
         //     engine.extract_service_name("aws_nat_gateway"),
@@ -373,7 +378,8 @@ mod tests {
     #[test]
     fn test_detect_regressions() {
         let temp_dir = TempDir::new().unwrap();
-        let engine = TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
+        let engine =
+            TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
 
         let baseline = CostSnapshot::new("baseline".to_string(), 1000.0);
         let mut current = CostSnapshot::new("current".to_string(), 1300.0);
@@ -389,7 +395,8 @@ mod tests {
         use crate::engines::baselines::{Baseline, BaselinesConfig, BaselinesManager};
 
         let temp_dir = TempDir::new().unwrap();
-        let engine = TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
+        let engine =
+            TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
 
         // Create baselines
         let mut config = BaselinesConfig::new();
@@ -420,7 +427,8 @@ mod tests {
         use std::collections::HashMap;
 
         let temp_dir = TempDir::new().unwrap();
-        let engine = TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
+        let engine =
+            TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
 
         // Create baselines with module
         let mut config = BaselinesConfig::new();

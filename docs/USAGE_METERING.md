@@ -409,7 +409,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Run CostPilot
         run: |
           # Record usage event
@@ -420,10 +420,10 @@ jobs:
             --repository "${{ github.repository }}" \
             --pr "${{ github.event.pull_request.number }}" \
             --commit "${{ github.sha }}" \
-            
+
           # Run scan
           costpilot scan --format json > scan-result.json
-          
+
           # Update PR tracker
           costpilot meter pr-update \
             --pr "${{ github.event.pull_request.number }}" \
@@ -456,7 +456,7 @@ async fn current_usage() -> Json<UsageMetrics> {
     let meter = get_usage_meter();
     let now = current_timestamp();
     let start_of_period = start_of_current_billing_period();
-    
+
     let metrics = meter.get_metrics(start_of_period, now);
     Json(metrics)
 }
@@ -469,18 +469,18 @@ async fn current_usage() -> Json<UsageMetrics> {
 fn cost_center_report(cost_center: &str) -> Result<ChargebackReport> {
     let meter = load_meter();
     let teams = get_teams_by_cost_center(cost_center);
-    
+
     let mut builder = ChargebackReportBuilder::new(
         get_org_id(),
         start_of_month(),
         end_of_month(),
     );
-    
+
     for team in teams {
         let summary = meter.team_summary(&team.id, start, end)?;
         builder.add_team(summary);
     }
-    
+
     builder.build()
 }
 ```
@@ -553,7 +553,7 @@ impl UsageMeter {
         }
         Ok(())
     }
-    
+
     pub fn load_from_file(path: &Path, pricing: PricingModel) -> Result<Self> {
         let file = std::fs::File::open(path)?;
         let reader = std::io::BufReader::new(file);
@@ -561,7 +561,7 @@ impl UsageMeter {
             .filter_map(|line| line.ok())
             .filter_map(|line| serde_json::from_str(&line).ok())
             .collect();
-        
+
         Ok(Self { events, pricing })
     }
 }
@@ -681,13 +681,13 @@ cargo test --test chargeback_generation
 #[test]
 fn test_high_volume_events() {
     let mut meter = UsageMeter::new(PricingModel::default());
-    
+
     // Simulate 10,000 events
     for i in 0..10000 {
         let event = create_test_event(i);
         meter.record_event(event).unwrap();
     }
-    
+
     let metrics = meter.get_metrics(0, u64::MAX);
     assert_eq!(metrics.total_events, 10000);
 }

@@ -29,7 +29,122 @@ impl PolicyLoader {
         })?;
 
         // Parse YAML
-        Self::parse_yaml(&content)
+        let mut policy = Self::parse_yaml(&content)?;
+
+        // Initialize metadata for backward compatibility
+        policy.initialize_metadata(None);
+
+        Ok(policy)
+    }
+
+    /// Load policy and check if it has changed compared to existing version
+    pub fn load_with_version_check(
+        path: &Path,
+        existing_policy: Option<&PolicyConfig>,
+    ) -> Result<(PolicyConfig, bool), CostPilotError> {
+        let new_policy = Self::load_from_file(path)?;
+
+        let has_changed = if let Some(existing) = existing_policy {
+            Self::has_policy_changed(existing, &new_policy)
+        } else {
+            true // First time loading
+        };
+
+        Ok((new_policy, has_changed))
+    }
+
+    /// Check if policy content has changed (excluding metadata timestamps)
+    pub fn has_policy_changed(old_policy: &PolicyConfig, new_policy: &PolicyConfig) -> bool {
+        // Compare version
+        if old_policy.version != new_policy.version {
+            return true;
+        }
+
+        // Compare budgets
+        if old_policy.budgets.global != new_policy.budgets.global {
+            return true;
+        }
+        if old_policy.budgets.modules != new_policy.budgets.modules {
+            return true;
+        }
+
+        // Compare resources
+        if old_policy.resources != new_policy.resources {
+            return true;
+        }
+
+        // Compare SLOs
+        if old_policy.slos != new_policy.slos {
+            return true;
+        }
+
+        // Compare enforcement
+        if old_policy.enforcement != new_policy.enforcement {
+            return true;
+        }
+
+        // Compare metadata (excluding timestamps and update fields)
+        if old_policy.metadata.approval_required != new_policy.metadata.approval_required {
+            return true;
+        }
+        if old_policy.metadata.owners != new_policy.metadata.owners {
+            return true;
+        }
+        if old_policy.metadata.reviewers != new_policy.metadata.reviewers {
+            return true;
+        }
+        if old_policy.metadata.tags != new_policy.metadata.tags {
+            return true;
+        }
+        if old_policy.metadata.description != new_policy.metadata.description {
+            return true;
+        }
+
+        false
+    }
+
+    /// Save policy configuration to file with version increment if content changed
+    pub fn save_to_file(
+        path: &Path,
+        mut policy: PolicyConfig,
+        user: Option<String>,
+        increment_version: bool,
+    ) -> Result<(), CostPilotError> {
+        // Increment version if requested and content has changed
+        if increment_version {
+            policy.increment_version(user);
+        }
+
+        // Serialize to YAML
+        let yaml_content = serde_yaml::to_string(&policy).map_err(|e| {
+            CostPilotError::new(
+                "POLICY_004",
+                ErrorCategory::ValidationError,
+                format!("Failed to serialize policy to YAML: {}", e),
+            )
+        })?;
+
+        // Ensure directory exists
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| {
+                CostPilotError::new(
+                    "POLICY_005",
+                    ErrorCategory::FileSystemError,
+                    format!("Failed to create policy directory: {}", e),
+                )
+            })?;
+        }
+
+        // Write file
+        fs::write(path, yaml_content).map_err(|e| {
+            CostPilotError::new(
+                "POLICY_006",
+                ErrorCategory::FileSystemError,
+                format!("Failed to write policy file: {}", e),
+            )
+        })?;
+
+        Ok(())
     }
 
     /// Parse policy configuration from YAML string

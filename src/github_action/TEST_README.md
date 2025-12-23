@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run CostPilot
         uses: Dee66/CostPilot@main
         with:
@@ -79,7 +79,7 @@ jobs:
           mode: 'estimate'
           output_format: 'markdown'
           fail_on_regression: 'false'
-      
+
       - name: Check outputs
         run: |
           echo "Total cost: ${{ steps.analyze.outputs.total_cost }}"
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run CostPilot with Policy
         uses: Dee66/CostPilot@main
         with:
@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run CostPilot with Baseline
         uses: Dee66/CostPilot@main
         with:

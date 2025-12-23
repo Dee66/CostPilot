@@ -1,0 +1,7 @@
+# Private keys must never be committed
+*.pem
+!*.pub.pem
+
+# Ephemeral keys
+ci_signing.*
+test_*.*

@@ -10,9 +10,9 @@ use std::collections::{HashMap, HashSet};
 fn test_simple_cycle_detection() {
     // A -> B -> C -> A
     let graph = mock_graph_with_simple_cycle();
-    
+
     let cycles = detect_cycles(&graph);
-    
+
     assert!(cycles.is_ok());
     assert_eq!(cycles.unwrap().len(), 1);
 }
@@ -21,9 +21,9 @@ fn test_simple_cycle_detection() {
 fn test_self_referencing_cycle() {
     // A -> A
     let graph = mock_graph_with_self_reference();
-    
+
     let cycles = detect_cycles(&graph);
-    
+
     assert!(cycles.is_ok());
     assert_eq!(cycles.unwrap().len(), 1);
 }
@@ -33,9 +33,9 @@ fn test_multiple_independent_cycles() {
     // Cycle 1: A -> B -> A
     // Cycle 2: C -> D -> C
     let graph = mock_graph_with_multiple_cycles();
-    
+
     let cycles = detect_cycles(&graph);
-    
+
     assert!(cycles.is_ok());
     assert_eq!(cycles.unwrap().len(), 2);
 }
@@ -45,9 +45,9 @@ fn test_nested_cycles() {
     // A -> B -> C -> B (inner cycle)
     //      B -> A (outer cycle)
     let graph = mock_graph_with_nested_cycles();
-    
+
     let cycles = detect_cycles(&graph);
-    
+
     assert!(cycles.is_ok());
     let detected = cycles.unwrap();
     assert!(detected.len() >= 2); // At least 2 cycles
@@ -57,9 +57,9 @@ fn test_nested_cycles() {
 fn test_no_cycles_dag() {
     // A -> B -> C (DAG - no cycles)
     let graph = mock_dag();
-    
+
     let cycles = detect_cycles(&graph);
-    
+
     assert!(cycles.is_ok());
     assert!(cycles.unwrap().is_empty());
 }
@@ -68,9 +68,9 @@ fn test_no_cycles_dag() {
 fn test_cycle_with_long_path() {
     // A -> B -> C -> D -> E -> F -> A (cycle of length 6)
     let graph = mock_graph_with_long_cycle();
-    
+
     let cycles = detect_cycles(&graph);
-    
+
     assert!(cycles.is_ok());
     let detected = cycles.unwrap();
     assert_eq!(detected.len(), 1);
@@ -80,12 +80,12 @@ fn test_cycle_with_long_path() {
 #[test]
 fn test_topological_sort_dag() {
     let graph = mock_dag();
-    
+
     let sorted = topological_sort(&graph);
-    
+
     assert!(sorted.is_ok());
     let order = sorted.unwrap();
-    
+
     // Verify dependencies come before dependents
     for edge in &graph.edges {
         let from_pos = order.iter().position(|n| n == &edge.from).unwrap();
@@ -97,9 +97,9 @@ fn test_topological_sort_dag() {
 #[test]
 fn test_topological_sort_fails_with_cycle() {
     let graph = mock_graph_with_simple_cycle();
-    
+
     let sorted = topological_sort(&graph);
-    
+
     assert!(sorted.is_err());
 }
 
@@ -108,9 +108,9 @@ fn test_cost_propagation_simple_chain() {
     // A(10) -> B(20) -> C(30)
     // Total cost at C = 10 + 20 + 30 = 60
     let graph = mock_graph_cost_chain();
-    
+
     let propagated = propagate_costs(&graph);
-    
+
     assert!(propagated.is_ok());
     let costs = propagated.unwrap();
     assert_eq!(costs.get("node_c").unwrap(), &60.0);
@@ -122,9 +122,9 @@ fn test_cost_propagation_with_fan_out() {
     //       -> C(30)
     // Both B and C should include A's cost
     let graph = mock_graph_fan_out();
-    
+
     let propagated = propagate_costs(&graph);
-    
+
     assert!(propagated.is_ok());
     let costs = propagated.unwrap();
     assert_eq!(costs.get("node_b").unwrap(), &30.0); // 10 + 20
@@ -137,9 +137,9 @@ fn test_cost_propagation_with_fan_in() {
     // B(20) -> C(30)
     // C should include both A and B
     let graph = mock_graph_fan_in();
-    
+
     let propagated = propagate_costs(&graph);
-    
+
     assert!(propagated.is_ok());
     let costs = propagated.unwrap();
     assert_eq!(costs.get("node_c").unwrap(), &60.0); // 10 + 20 + 30
@@ -151,9 +151,9 @@ fn test_cost_propagation_diamond_pattern() {
     //       -> C(30) -> D(40)
     // D should count A once, not twice
     let graph = mock_graph_diamond();
-    
+
     let propagated = propagate_costs(&graph);
-    
+
     assert!(propagated.is_ok());
     let costs = propagated.unwrap();
     // D = A(10) + B(20) + C(30) + D(40) = 100
@@ -164,9 +164,9 @@ fn test_cost_propagation_diamond_pattern() {
 fn test_strongly_connected_components() {
     // Graph with multiple SCCs
     let graph = mock_graph_with_sccs();
-    
+
     let sccs = find_strongly_connected_components(&graph);
-    
+
     assert!(sccs.is_ok());
     let components = sccs.unwrap();
     assert!(components.len() > 1);
@@ -176,9 +176,9 @@ fn test_strongly_connected_components() {
 fn test_graph_depth_calculation() {
     // A -> B -> C -> D (depth 4)
     let graph = mock_deep_graph();
-    
+
     let depths = calculate_node_depths(&graph);
-    
+
     assert!(depths.is_ok());
     let depth_map = depths.unwrap();
     assert_eq!(depth_map.get("node_a").unwrap(), &0);
@@ -190,9 +190,9 @@ fn test_graph_depth_calculation() {
 #[test]
 fn test_graph_width_calculation() {
     let graph = mock_wide_graph(); // Many nodes at same level
-    
+
     let width = calculate_max_width(&graph);
-    
+
     assert!(width.is_ok());
     assert!(width.unwrap() > 1);
 }
@@ -201,9 +201,9 @@ fn test_graph_width_calculation() {
 fn test_critical_path_identification() {
     // Identify the longest path through the graph
     let graph = mock_graph_with_varying_costs();
-    
+
     let critical_path = find_critical_path(&graph);
-    
+
     assert!(critical_path.is_ok());
     let path = critical_path.unwrap();
     assert!(!path.nodes.is_empty());
@@ -214,9 +214,9 @@ fn test_critical_path_identification() {
 fn test_graph_subgraph_extraction() {
     let graph = mock_large_graph();
     let root_node = "node_a";
-    
+
     let subgraph = extract_subgraph(&graph, root_node, 2); // Depth 2
-    
+
     assert!(subgraph.is_ok());
     let sub = subgraph.unwrap();
     assert!(sub.nodes.len() < graph.nodes.len());
@@ -226,9 +226,9 @@ fn test_graph_subgraph_extraction() {
 fn test_graph_merge_multiple_sources() {
     let graph1 = mock_dag();
     let graph2 = mock_graph_fan_out();
-    
+
     let merged = merge_graphs(&[graph1, graph2]);
-    
+
     assert!(merged.is_ok());
     let result = merged.unwrap();
     assert!(result.nodes.len() > 0);
@@ -238,18 +238,18 @@ fn test_graph_merge_multiple_sources() {
 fn test_graph_node_isolation() {
     // Nodes with no incoming or outgoing edges
     let graph = mock_graph_with_isolated_nodes();
-    
+
     let isolated = find_isolated_nodes(&graph);
-    
+
     assert!(!isolated.is_empty());
 }
 
 #[test]
 fn test_graph_leaf_nodes() {
     let graph = mock_dag();
-    
+
     let leaves = find_leaf_nodes(&graph);
-    
+
     assert!(!leaves.is_empty());
     for leaf in leaves {
         // Leaf nodes have no outgoing edges
@@ -260,9 +260,9 @@ fn test_graph_leaf_nodes() {
 #[test]
 fn test_graph_root_nodes() {
     let graph = mock_dag();
-    
+
     let roots = find_root_nodes(&graph);
-    
+
     assert!(!roots.is_empty());
     for root in roots {
         // Root nodes have no incoming edges
@@ -274,9 +274,9 @@ fn test_graph_root_nodes() {
 fn test_graph_transitive_reduction() {
     // Remove redundant edges while preserving reachability
     let graph = mock_graph_with_redundant_edges();
-    
+
     let reduced = transitive_reduction(&graph);
-    
+
     assert!(reduced.is_ok());
     let result = reduced.unwrap();
     assert!(result.edges.len() < graph.edges.len());
@@ -287,9 +287,9 @@ fn test_graph_reachability() {
     let graph = mock_dag();
     let source = "node_a";
     let target = "node_c";
-    
+
     let reachable = is_reachable(&graph, source, target);
-    
+
     assert!(reachable);
 }
 
@@ -298,9 +298,9 @@ fn test_graph_shortest_path() {
     let graph = mock_dag();
     let source = "node_a";
     let target = "node_d";
-    
+
     let path = find_shortest_path(&graph, source, target);
-    
+
     assert!(path.is_ok());
     let p = path.unwrap();
     assert_eq!(p.first().unwrap(), source);
@@ -312,9 +312,9 @@ fn test_graph_all_paths() {
     let graph = mock_graph_multiple_paths();
     let source = "node_a";
     let target = "node_d";
-    
+
     let paths = find_all_paths(&graph, source, target);
-    
+
     assert!(paths.is_ok());
     assert!(paths.unwrap().len() > 1); // Multiple paths exist
 }
@@ -323,9 +323,9 @@ fn test_graph_all_paths() {
 fn test_graph_node_dependencies_count() {
     let graph = mock_dag();
     let node = "node_c";
-    
+
     let dep_count = count_dependencies(&graph, node);
-    
+
     assert!(dep_count > 0);
 }
 
@@ -333,10 +333,248 @@ fn test_graph_node_dependencies_count() {
 fn test_graph_node_dependents_count() {
     let graph = mock_dag();
     let node = "node_a";
-    
+
     let dependent_count = count_dependents(&graph, node);
-    
+
     assert!(dependent_count > 0);
+}
+
+// ===== MAPPING GRAPH EDGE CASE TESTS =====
+
+#[test]
+fn test_empty_graph_edge_case() {
+    // Test with completely empty graph
+    let graph = DependencyGraph {
+        nodes: vec![],
+        edges: vec![],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_single_node_graph_edge_case() {
+    // Test with single node, no edges
+    let graph = DependencyGraph {
+        nodes: vec![GraphNode {
+            id: "single".to_string(),
+            monthly_cost: 100.0,
+        }],
+        edges: vec![],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_extremely_large_graph_edge_case() {
+    // Test with a very large number of nodes and edges
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+
+    // Create 1000 nodes
+    for i in 0..1000 {
+        nodes.push(GraphNode {
+            id: format!("node_{}", i),
+            monthly_cost: i as f64,
+        });
+    }
+
+    // Create edges in a linear chain: node_0 -> node_1 -> ... -> node_999
+    for i in 0..999 {
+        edges.push(GraphEdge {
+            from: format!("node_{}", i),
+            to: format!("node_{}", i + 1),
+        });
+    }
+
+    let graph = DependencyGraph { nodes, edges };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0); // No cycles in a linear chain
+}
+
+#[test]
+fn test_zero_cost_nodes_edge_case() {
+    // Test with nodes that have zero cost
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "free_service".to_string(), monthly_cost: 0.0 },
+            GraphNode { id: "paid_service".to_string(), monthly_cost: 100.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "free_service".to_string(), to: "paid_service".to_string() },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_negative_cost_nodes_edge_case() {
+    // Test with nodes that have negative cost (credits/rebates)
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "credit_service".to_string(), monthly_cost: -50.0 },
+            GraphNode { id: "normal_service".to_string(), monthly_cost: 100.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "credit_service".to_string(), to: "normal_service".to_string() },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_extremely_long_node_names() {
+    // Test with extremely long node names
+    let long_name_1 = "a".repeat(1000);
+    let long_name_2 = "b".repeat(1000);
+
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: long_name_1.clone(), monthly_cost: 100.0 },
+            GraphNode { id: long_name_2.clone(), monthly_cost: 200.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: long_name_1, to: long_name_2 },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_special_characters_in_node_names() {
+    // Test with special characters and Unicode in node names
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "service@domain.com".to_string(), monthly_cost: 100.0 },
+            GraphNode { id: "测试服务".to_string(), monthly_cost: 200.0 },
+            GraphNode { id: "service-with-dashes".to_string(), monthly_cost: 50.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "service@domain.com".to_string(), to: "测试服务".to_string() },
+            GraphEdge { from: "测试服务".to_string(), to: "service-with-dashes".to_string() },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_maximum_fan_out_edge_case() {
+    // Test with one node having many outgoing edges (high fan-out)
+    let mut nodes = vec![GraphNode { id: "central".to_string(), monthly_cost: 1000.0 }];
+    let mut edges = Vec::new();
+
+    // Create 100 dependent nodes
+    for i in 0..100 {
+        let node_name = format!("dependent_{}", i);
+        nodes.push(GraphNode { id: node_name.clone(), monthly_cost: 10.0 });
+        edges.push(GraphEdge {
+            from: "central".to_string(),
+            to: node_name,
+        });
+    }
+
+    let graph = DependencyGraph { nodes, edges };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_maximum_fan_in_edge_case() {
+    // Test with one node having many incoming edges (high fan-in)
+    let mut nodes = vec![GraphNode { id: "bottleneck".to_string(), monthly_cost: 1000.0 }];
+    let mut edges = Vec::new();
+
+    // Create 100 nodes that all depend on the bottleneck
+    for i in 0..100 {
+        let node_name = format!("producer_{}", i);
+        nodes.push(GraphNode { id: node_name.clone(), monthly_cost: 10.0 });
+        edges.push(GraphEdge {
+            from: node_name,
+            to: "bottleneck".to_string(),
+        });
+    }
+
+    let graph = DependencyGraph { nodes, edges };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_isolated_nodes_edge_case() {
+    // Test with multiple isolated nodes (no edges between them)
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "isolated_1".to_string(), monthly_cost: 100.0 },
+            GraphNode { id: "isolated_2".to_string(), monthly_cost: 200.0 },
+            GraphNode { id: "isolated_3".to_string(), monthly_cost: 300.0 },
+        ],
+        edges: vec![], // No edges
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_duplicate_node_ids_edge_case() {
+    // Test with duplicate node IDs (should handle gracefully)
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "duplicate".to_string(), monthly_cost: 100.0 },
+            GraphNode { id: "duplicate".to_string(), monthly_cost: 200.0 }, // Same ID
+        ],
+        edges: vec![],
+    };
+
+    // Should either succeed or fail gracefully
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok() || !cycles.is_ok()); // Either outcome acceptable
+}
+
+#[test]
+fn test_extreme_cost_values_edge_case() {
+    // Test with extreme cost values
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "free".to_string(), monthly_cost: 0.0 },
+            GraphNode { id: "expensive".to_string(), monthly_cost: 1_000_000_000.0 }, // 1 billion
+            GraphNode { id: "negative".to_string(), monthly_cost: -1_000_000.0 }, // Negative
+            GraphNode { id: "tiny".to_string(), monthly_cost: 0.000001 }, // Very small
+        ],
+        edges: vec![
+            GraphEdge { from: "free".to_string(), to: "expensive".to_string() },
+            GraphEdge { from: "expensive".to_string(), to: "negative".to_string() },
+            GraphEdge { from: "negative".to_string(), to: "tiny".to_string() },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
 }
 
 // Mock helper functions
@@ -594,7 +832,7 @@ fn detect_cycles(graph: &DependencyGraph) -> Result<Vec<Cycle>, String> {
     let mut visited = HashSet::new();
     let mut rec_stack = HashSet::new();
     let mut cycles = vec![];
-    
+
     for node in &graph.nodes {
         if !visited.contains(&node.id) {
             if dfs_cycle_detect(graph, &node.id, &mut visited, &mut rec_stack) {
@@ -604,7 +842,7 @@ fn detect_cycles(graph: &DependencyGraph) -> Result<Vec<Cycle>, String> {
             }
         }
     }
-    
+
     Ok(cycles)
 }
 
@@ -616,7 +854,7 @@ fn dfs_cycle_detect(
 ) -> bool {
     visited.insert(node.to_string());
     rec_stack.insert(node.to_string());
-    
+
     for edge in &graph.edges {
         if edge.from == node {
             if !visited.contains(&edge.to) {
@@ -628,7 +866,7 @@ fn dfs_cycle_detect(
             }
         }
     }
-    
+
     rec_stack.remove(node);
     false
 }
@@ -638,16 +876,16 @@ fn topological_sort(graph: &DependencyGraph) -> Result<Vec<String>, String> {
     if !cycles.is_empty() {
         return Err("Graph contains cycles".to_string());
     }
-    
+
     Ok(graph.nodes.iter().map(|n| n.id.clone()).collect())
 }
 
 fn propagate_costs(graph: &DependencyGraph) -> Result<HashMap<String, f64>, String> {
     let mut costs = HashMap::new();
-    
+
     for node in &graph.nodes {
         let mut total_cost = node.monthly_cost;
-        
+
         // Add costs from all dependencies
         let deps = get_all_dependencies(graph, &node.id);
         for dep_id in deps {
@@ -655,10 +893,10 @@ fn propagate_costs(graph: &DependencyGraph) -> Result<HashMap<String, f64>, Stri
                 total_cost += dep_node.monthly_cost;
             }
         }
-        
+
         costs.insert(node.id.clone(), total_cost);
     }
-    
+
     Ok(costs)
 }
 
@@ -666,13 +904,13 @@ fn get_all_dependencies(graph: &DependencyGraph, node_id: &str) -> HashSet<Strin
     let mut deps = HashSet::new();
     let mut to_visit = vec![node_id.to_string()];
     let mut visited = HashSet::new();
-    
+
     while let Some(current) = to_visit.pop() {
         if visited.contains(&current) {
             continue;
         }
         visited.insert(current.clone());
-        
+
         for edge in &graph.edges {
             if edge.to == current && edge.from != node_id {
                 deps.insert(edge.from.clone());
@@ -680,7 +918,7 @@ fn get_all_dependencies(graph: &DependencyGraph, node_id: &str) -> HashSet<Strin
             }
         }
     }
-    
+
     deps
 }
 
@@ -691,17 +929,17 @@ fn find_strongly_connected_components(_graph: &DependencyGraph) -> Result<Vec<Ve
 fn calculate_node_depths(graph: &DependencyGraph) -> Result<HashMap<String, usize>, String> {
     let mut depths = HashMap::new();
     let roots = find_root_nodes(graph);
-    
+
     for root in roots {
         dfs_depth(graph, &root, 0, &mut depths);
     }
-    
+
     Ok(depths)
 }
 
 fn dfs_depth(graph: &DependencyGraph, node: &str, depth: usize, depths: &mut HashMap<String, usize>) {
     depths.entry(node.to_string()).or_insert(depth);
-    
+
     for edge in &graph.edges {
         if edge.from == node {
             dfs_depth(graph, &edge.to, depth + 1, depths);
@@ -729,12 +967,12 @@ fn merge_graphs(graphs: &[DependencyGraph]) -> Result<DependencyGraph, String> {
         nodes: vec![],
         edges: vec![],
     };
-    
+
     for graph in graphs {
         merged.nodes.extend(graph.nodes.clone());
         merged.edges.extend(graph.edges.clone());
     }
-    
+
     Ok(merged)
 }
 

@@ -1,0 +1,252 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Database child stack for nested CloudFormation testing",
+
+  "Parameters": {
+    "Environment": {
+      "Type": "String",
+      "Description": "Environment name"
+    },
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "VPC ID from VPC stack"
+    },
+    "PrivateSubnetId": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "Private subnet ID from VPC stack"
+    },
+    "DBSecurityGroupId": {
+      "Type": "AWS::EC2::SecurityGroup::Id",
+      "Description": "Database security group ID from security stack"
+    },
+    "DBPassword": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "Password for the database"
+    }
+  },
+
+  "Resources": {
+    "DBSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": { "Fn::Sub": "Subnet group for ${Environment} database" },
+        "SubnetIds": [
+          { "Ref": "PrivateSubnetId" }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-DB-Subnet-Group" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "RDSInstance": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBInstanceIdentifier": { "Fn::Sub": "${Environment}-db" },
+        "DBInstanceClass": "db.t3.micro",
+        "Engine": "mysql",
+        "EngineVersion": "8.0",
+        "MasterUsername": "admin",
+        "MasterUserPassword": { "Ref": "DBPassword" },
+        "AllocatedStorage": "20",
+        "StorageType": "gp2",
+        "DBSubnetGroupName": { "Ref": "DBSubnetGroup" },
+        "VPCSecurityGroups": [
+          { "Ref": "DBSecurityGroupId" }
+        ],
+        "BackupRetentionPeriod": 7,
+        "MultiAZ": false,
+        "StorageEncrypted": true,
+        "EnablePerformanceInsights": true,
+        "PerformanceInsightsRetentionPeriod": 7,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-RDS-Instance" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "DBParameterGroup": {
+      "Type": "AWS::RDS::DBParameterGroup",
+      "Properties": {
+        "Family": "mysql8.0",
+        "Description": { "Fn::Sub": "Parameter group for ${Environment} MySQL database" },
+        "Parameters": {
+          "max_connections": "100",
+          "innodb_buffer_pool_size": "{DBInstanceClassMemory*3/4}"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-DB-Parameter-Group" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "ReadReplica": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBInstanceIdentifier": { "Fn::Sub": "${Environment}-db-read-replica" },
+        "DBInstanceClass": "db.t3.micro",
+        "SourceDBInstanceIdentifier": { "Ref": "RDSInstance" },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-RDS-Read-Replica" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "ElastiCacheSubnetGroup": {
+      "Type": "AWS::ElastiCache::SubnetGroup",
+      "Properties": {
+        "Description": { "Fn::Sub": "Subnet group for ${Environment} ElastiCache cluster" },
+        "SubnetIds": [
+          { "Ref": "PrivateSubnetId" }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-Cache-Subnet-Group" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "ElastiCacheCluster": {
+      "Type": "AWS::ElastiCache::CacheCluster",
+      "Properties": {
+        "CacheNodeType": "cache.t3.micro",
+        "Engine": "redis",
+        "NumCacheNodes": 1,
+        "CacheSubnetGroupName": { "Ref": "ElastiCacheSubnetGroup" },
+        "VpcSecurityGroupIds": [
+          { "Ref": "CacheSecurityGroup" }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-ElastiCache-Cluster" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "CacheSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for ElastiCache cluster",
+        "VpcId": { "Ref": "VpcId" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "6379",
+            "ToPort": "6379",
+            "SourceSecurityGroupId": { "Ref": "DBSecurityGroupId" }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-Cache-SG" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "DatabaseAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": { "Fn::Sub": "${Environment}-db-cpu-alarm" },
+        "AlarmDescription": "Alarm for high database CPU utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/RDS",
+        "Statistic": "Average",
+        "Period": 300,
+        "Threshold": 80,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": 2,
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "RDSInstance" }
+          }
+        ]
+      }
+    }
+  },
+
+  "Outputs": {
+    "DatabaseEndpoint": {
+      "Description": "RDS instance endpoint",
+      "Value": { "Fn::GetAtt": ["RDSInstance", "Endpoint.Address"] },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-DBEndpoint" }
+      }
+    },
+    "DatabasePort": {
+      "Description": "RDS instance port",
+      "Value": { "Fn::GetAtt": ["RDSInstance", "Endpoint.Port"] },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-DBPort" }
+      }
+    },
+    "ReadReplicaEndpoint": {
+      "Description": "Read replica endpoint",
+      "Value": { "Fn::GetAtt": ["ReadReplica", "Endpoint.Address"] },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-ReadReplicaEndpoint" }
+      }
+    },
+    "ElastiCacheEndpoint": {
+      "Description": "ElastiCache cluster endpoint",
+      "Value": { "Fn::GetAtt": ["ElastiCacheCluster", "RedisEndpoint.Address"] },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-CacheEndpoint" }
+      }
+    },
+    "DBInstanceIdentifier": {
+      "Description": "RDS instance identifier",
+      "Value": { "Ref": "RDSInstance" },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-DBIdentifier" }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "ApiHandler": {
+      "ChangeType": "Update",
+      "Properties": {
+        "MemorySize": {
+          "New": 1024,
+          "Old": 256
+        }
+      },
+      "Type": "AWS::Lambda::Function"
+    }
+  }
+}

@@ -87,7 +87,8 @@ pub fn execute(
         &changes,
         &[], // estimates not used for patch mode
         AutofixMode::Patch,
-    );
+        edition,
+    )?;
 
     if autofix_result.patches.is_empty() {
         println!("   {} No patches available", "ℹ".bright_blue());

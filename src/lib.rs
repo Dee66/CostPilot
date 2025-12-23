@@ -2,26 +2,29 @@
 
 pub mod artifact;
 pub mod cli;
+pub mod config;
 pub mod edition;
 pub mod engines;
 pub mod errors;
+pub mod feature_flags;
 pub mod heuristics;
 pub mod pro_engine;
 pub mod security;
 pub mod validation;
 pub mod wasm;
+pub mod zero_cost_guard;
 
 #[cfg(test)]
 pub mod test_helpers {
     pub mod edition {
         pub use crate::edition::EditionContext;
-        
+
         pub fn premium() -> EditionContext {
-            use crate::edition::{EditionMode, Capabilities, pro_handle::ProEngineHandle};
+            use crate::edition::{pro_handle::ProEngineHandle, Capabilities, EditionMode};
             use std::path::PathBuf;
-            
+
             let stub_handle = ProEngineHandle::stub(PathBuf::from("/tmp/test_pro.wasm"));
-            
+
             EditionContext {
                 mode: EditionMode::Premium,
                 license: None,
@@ -42,6 +45,7 @@ pub mod test_helpers {
     }
 }
 
+pub use config::{load_product_spec, load_product_spec_from_path, ConfigError, ProductSpec};
 pub use engines::shared::models::*;
 pub use security::{SandboxLimits, SecurityValidator};
 pub use validation::{
@@ -49,6 +53,7 @@ pub use validation::{
     ValidationError, ValidationReport, ValidationWarning,
 };
 pub use wasm::{EngineBudget, SandboxLimits as WasmSandboxLimits, ValidationResult};
+pub use zero_cost_guard::{ZeroCostGuard, ZeroCostViolation};
 
 /// CostPilot version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

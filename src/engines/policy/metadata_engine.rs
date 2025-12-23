@@ -1,10 +1,9 @@
-use super::policy_metadata::*;
+use super::policy_metadata::{PolicyCategory, PolicyMetadata, PolicyWithMetadata, Severity};
 use super::policy_repository::*;
 use super::policy_types::*;
 use super::zero_network::*;
 use crate::engines::detection::ResourceChange;
 use crate::engines::prediction::CostEstimate;
-use std::collections::HashMap;
 
 /// Enhanced policy engine with full metadata support
 ///
@@ -463,6 +462,7 @@ pub struct MetadataPolicyViolation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::engines::policy::policy_metadata::PolicyStatus;
     use crate::engines::shared::models::CostEstimate;
 
     #[test]
@@ -475,6 +475,7 @@ mod tests {
     fn test_from_legacy_config() {
         let config = PolicyConfig {
             version: "1.0".to_string(),
+            metadata: Default::default(),
             budgets: BudgetPolicies {
                 global: Some(BudgetLimit {
                     monthly_limit: 1000.0,
@@ -553,7 +554,7 @@ mod tests {
         // Test with cost under limit
         let cost = CostEstimate::builder()
             .resource_id("test")
-            .monthly(500.0)
+            .monthly_cost(500.0)
             .build();
 
         let result = engine.evaluate(&[], &cost);
@@ -562,7 +563,7 @@ mod tests {
         // Test with cost over limit
         let cost = CostEstimate::builder()
             .resource_id("test")
-            .monthly(1500.0)
+            .monthly_cost(1500.0)
             .build();
 
         let result = engine.evaluate(&[], &cost);
@@ -597,12 +598,12 @@ mod tests {
         // Evaluate multiple times
         let cost_ok = CostEstimate::builder()
             .resource_id("test")
-            .monthly(500.0)
+            .monthly_cost(500.0)
             .build();
 
         let cost_bad = CostEstimate::builder()
             .resource_id("test")
-            .monthly(1500.0)
+            .monthly_cost(1500.0)
             .build();
 
         engine.evaluate(&[], &cost_ok);

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: mapping depth >1 returns structured error."""
 
 import subprocess
@@ -11,7 +13,7 @@ def test_mapping_depth_2_rejected():
     """Test mapping depth >1 returns structured error."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Create template with depth 2 mapping
         template_content = {
             "Resources": {
@@ -32,17 +34,17 @@ def test_mapping_depth_2_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--depth", "2"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--depth", "2"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should reject or limit to depth 1
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -54,7 +56,7 @@ def test_mapping_depth_3_rejected():
     """Test mapping depth 3 explicitly rejected."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -65,17 +67,17 @@ def test_mapping_depth_3_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--depth", "3"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--depth", "3"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should reject depth 3
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -87,7 +89,7 @@ def test_mapping_depth_flag_structured_error():
     """Test --depth flag returns structured error."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -98,17 +100,17 @@ def test_mapping_depth_flag_structured_error():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--depth", "5"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--depth", "5"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should have structured error
         if result.returncode != 0:
             error = result.stderr
@@ -123,7 +125,7 @@ def test_default_depth_is_1():
     """Test default depth is 1 in Free Edition."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -134,17 +136,17 @@ def test_default_depth_is_1():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path)],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should complete with depth 1 (default)
         assert result.returncode in [0, 1, 2, 101], "Should work with default depth 1"
 
@@ -153,7 +155,7 @@ def test_depth_0_allowed():
     """Test depth 0 is allowed."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -164,17 +166,17 @@ def test_depth_0_allowed():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--depth", "0"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--depth", "0"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should allow depth 0
         # Either succeeds or depth 0 means no analysis (implementation-dependent)
         assert result.returncode in [0, 1, 2, 101], "Should handle depth 0"
@@ -184,7 +186,7 @@ def test_depth_1_allowed():
     """Test depth 1 is allowed."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -195,17 +197,17 @@ def test_depth_1_allowed():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--depth", "1"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--depth", "1"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should allow depth 1
         assert result.returncode in [0, 1, 2, 101], "Should allow depth 1 in Free Edition"
 
@@ -214,7 +216,7 @@ def test_depth_error_exit_code():
     """Test depth >1 returns specific exit code."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -225,17 +227,17 @@ def test_depth_error_exit_code():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--depth", "10"],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--depth", "10"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should return non-zero exit code
         assert result.returncode != 0, "Should fail with depth >1"
         # Typically 2 for usage errors

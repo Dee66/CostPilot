@@ -117,7 +117,14 @@ mod tests {
 
     #[test]
     fn test_severity_calculation() {
-        let change = ResourceChange::builder().resource_id("aws_rds_instance.prod".to_string()).resource_type("aws_rds_instance".to_string()).action(ChangeAction::Update).monthly_cost(100.0).module_path("".to_string()).tags(HashMap::new()).build();
+        let change = ResourceChange::builder()
+            .resource_id("aws_rds_instance.prod".to_string())
+            .resource_type("aws_rds_instance".to_string())
+            .action(ChangeAction::Update)
+            .monthly_cost(100.0)
+            .module_path("".to_string())
+            .tags(HashMap::new())
+            .build();
 
         let score = calculate_severity_score(
             &change,

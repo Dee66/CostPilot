@@ -5,16 +5,19 @@
 
 #[cfg(test)]
 mod zero_network_tests {
-    use costpilot::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate, CostImpact, Severity};
-    use costpilot::engines::policy::{*, Severity as PolicySeverity};
-    use costpilot::edition::EditionContext;
     use chrono;
+    use costpilot::edition::EditionContext;
+    use costpilot::engines::policy::{Severity as PolicySeverity, *};
+    use costpilot::engines::shared::models::{
+        ChangeAction, CostEstimate, CostImpact, ResourceChange, Severity,
+    };
     use serde_json::json;
     use std::collections::HashMap;
 
     #[test]
     fn test_policy_engine_zero_network() {
         let config = PolicyConfig {
+            metadata: Default::default(),
             version: "1.0.0".to_string(),
             budgets: BudgetPolicies {
                 global: Some(BudgetLimit {
@@ -105,6 +108,7 @@ mod zero_network_tests {
     #[test]
     fn test_zero_network_with_violations() {
         let config = PolicyConfig {
+            metadata: Default::default(),
             version: "1.0.0".to_string(),
             budgets: BudgetPolicies {
                 global: Some(BudgetLimit {
@@ -140,10 +144,11 @@ mod zero_network_tests {
     #[test]
     fn test_zero_network_with_resource_changes() {
         let config = PolicyConfig {
+            metadata: Default::default(),
             version: "1.0.0".to_string(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies {
-                nat_gateways: Some(NatGatewayPolicy { 
+                nat_gateways: Some(NatGatewayPolicy {
                     max_count: 2,
                     require_justification: false,
                 }),
@@ -205,6 +210,7 @@ mod zero_network_tests {
         // Execute policy evaluation in zero-network runtime
         let result = runtime.execute(|token| {
             let config = PolicyConfig {
+                metadata: Default::default(),
                 version: "1.0.0".to_string(),
                 budgets: BudgetPolicies {
                     global: Some(BudgetLimit {
@@ -238,6 +244,7 @@ mod zero_network_tests {
     #[test]
     fn test_zero_network_determinism() {
         let config = PolicyConfig {
+            metadata: Default::default(),
             version: "1.0.0".to_string(),
             budgets: BudgetPolicies {
                 global: Some(BudgetLimit {
@@ -285,6 +292,7 @@ mod zero_network_tests {
     #[test]
     fn test_zero_network_enforced_wrapper() {
         let config = PolicyConfig {
+            metadata: Default::default(),
             version: "1.0.0".to_string(),
             budgets: BudgetPolicies {
                 global: Some(BudgetLimit {
@@ -298,7 +306,8 @@ mod zero_network_tests {
             enforcement: EnforcementConfig::default(),
         };
 
-        let enforced_engine = ZeroNetworkEnforced::new(PolicyEngine::new(config, &EditionContext::free()));
+        let enforced_engine =
+            ZeroNetworkEnforced::new(PolicyEngine::new(config, &EditionContext::free()));
 
         let cost = CostEstimate::builder()
             .prediction_interval_low(450.0)
@@ -308,7 +317,10 @@ mod zero_network_tests {
             .heuristic_reference("monthly".to_string())
             .build();
 
-        let result = enforced_engine.inner().evaluate_zero_network(&[], &cost, enforced_engine.token());
+        let result =
+            enforced_engine
+                .inner()
+                .evaluate_zero_network(&[], &cost, enforced_engine.token());
         assert!(result.is_ok());
         let policy_result = result.unwrap();
         assert!(policy_result.passed);

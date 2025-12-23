@@ -1,0 +1,26 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_cloudfront_distribution.cdn",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "price_class": "PriceClass_All"
+        },
+        "before": {
+          "price_class": "PriceClass_100"
+        }
+      },
+      "mode": "managed",
+      "name": "cdn",
+      "type": "aws_cloudfront_distribution"
+    }
+  ]
+}

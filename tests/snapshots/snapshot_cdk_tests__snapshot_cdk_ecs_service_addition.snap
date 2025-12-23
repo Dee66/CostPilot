@@ -1,0 +1,22 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "FargateService": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "Cluster": {
+          "Ref": "EcsCluster"
+        },
+        "DesiredCount": 3,
+        "LaunchType": "FARGATE",
+        "TaskDefinition": {
+          "Ref": "TaskDef"
+        }
+      },
+      "Type": "AWS::ECS::Service"
+    }
+  }
+}

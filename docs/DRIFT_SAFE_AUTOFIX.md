@@ -32,13 +32,13 @@ The Drift-Safe Autofix system provides automated cost optimization with comprehe
 
 ## Key Features
 
-✅ **State Snapshots**: Configuration and cost snapshots before/after changes  
-✅ **Drift Detection**: Identify configuration changes since snapshot  
-✅ **6 Safety Checks**: No drift, resource exists, config hash, cost impact, policies, SLOs  
-✅ **Automatic Rollback**: Revert to original state on failure  
-✅ **Execution Logging**: Complete audit trail of operations  
-✅ **Policy Integration**: Validate fixes against policy rules  
-✅ **SLO Integration**: Ensure fixes don't violate budget limits  
+✅ **State Snapshots**: Configuration and cost snapshots before/after changes
+✅ **Drift Detection**: Identify configuration changes since snapshot
+✅ **6 Safety Checks**: No drift, resource exists, config hash, cost impact, policies, SLOs
+✅ **Automatic Rollback**: Revert to original state on failure
+✅ **Execution Logging**: Complete audit trail of operations
+✅ **Policy Integration**: Validate fixes against policy rules
+✅ **SLO Integration**: Ensure fixes don't violate budget limits
 ✅ **Configuration Hashing**: Verify config integrity
 
 ## Safety Checks
@@ -109,9 +109,9 @@ Pending → ValidatingSafety → Applying → Applied
 
 The engine automatically assesses the impact of detected drift:
 
-**Cost Impact**: Changes to instance_type, size, capacity, volume_size  
-**Security Impact**: Changes to security_groups, IAM roles, encryption, public access  
-**Availability Impact**: Changes to availability_zone, multi_az, backup settings  
+**Cost Impact**: Changes to instance_type, size, capacity, volume_size
+**Security Impact**: Changes to security_groups, IAM roles, encryption, public access
+**Availability Impact**: Changes to availability_zone, multi_az, backup settings
 
 ## Usage
 
@@ -152,8 +152,8 @@ match engine.run_safety_checks(&mut operation) {
         eprintln!("❌ Safety checks failed: {}", e);
         for check in &operation.safety_checks {
             if check.status == CheckStatus::Failed {
-                eprintln!("  - {}: {}", 
-                    check.name, 
+                eprintln!("  - {}: {}",
+                    check.name,
                     check.message.as_ref().unwrap()
                 );
             }
@@ -212,10 +212,10 @@ let drift = engine.detect_drift(
 );
 
 if drift.has_drift {
-    println!("⚠️  Drift detected: {} attributes changed", 
+    println!("⚠️  Drift detected: {} attributes changed",
         drift.drifted_attributes.len()
     );
-    
+
     for attr in &drift.drifted_attributes {
         println!("  - {}: {:?} → {:?} ({})",
             attr.name,
@@ -224,9 +224,9 @@ if drift.has_drift {
             attr.impact
         );
     }
-    
+
     if drift.is_blocking() {
-        println!("❌ Drift severity is {}, operation blocked", 
+        println!("❌ Drift severity is {}, operation blocked",
             match drift.severity {
                 DriftSeverity::Major => "MAJOR",
                 DriftSeverity::Critical => "CRITICAL",

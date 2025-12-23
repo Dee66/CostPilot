@@ -1,0 +1,307 @@
+# CostPilot License Boundary Testing
+# Test data for license boundary integrity validation
+
+# Decision equivalence across tiers
+decision_equivalence:
+  metadata:
+    test_case: "decision_equivalence_across_tiers"
+    description: "Free and Pro tiers must make identical decisions for same input"
+    invariant: "decisions_must_be_identical"
+    allowed_differences: ["autofix_mode", "output_artifacts"]
+  test_scenarios:
+    - scenario: "basic_cost_regression"
+      description: "Simple cost increase detection"
+      input_plan: "baseline.json"
+      expected_decision:
+        free_tier: "block"
+        pro_tier: "block"
+        invariant_check: "decisions_match"
+      allowed_differences:
+        autofix_mode:
+          free_tier: "disabled"
+          pro_tier: "enabled"
+        output_artifacts:
+          free_tier: "snippet_only"
+          pro_tier: "full_patch"
+    - scenario: "complex_multi_resource"
+      description: "Complex scenario with multiple resource types"
+      input_plan: "complex_plan.json"
+      expected_decision:
+        free_tier: "warn"
+        pro_tier: "warn"
+        invariant_check: "decisions_match"
+      allowed_differences:
+        autofix_mode:
+          free_tier: "disabled"
+          pro_tier: "enabled"
+        output_artifacts:
+          free_tier: "summary_only"
+          pro_tier: "detailed_report"
+    - scenario: "policy_violation"
+      description: "Policy rule violation detection"
+      input_plan: "policy_violation.json"
+      expected_decision:
+        free_tier: "block"
+        pro_tier: "block"
+        invariant_check: "decisions_match"
+      allowed_differences:
+        autofix_mode:
+          free_tier: "disabled"
+          pro_tier: "enabled"
+        output_artifacts:
+          free_tier: "error_message"
+          pro_tier: "remediation_guide"
+    - scenario: "drift_detection"
+      description: "Drift from baseline detection"
+      input_plan: "drift_scenario.json"
+      expected_decision:
+        free_tier: "warn"
+        pro_tier: "warn"
+        invariant_check: "decisions_match"
+      allowed_differences:
+        autofix_mode:
+          free_tier: "disabled"
+          pro_tier: "disabled"  # Drift prevents autofix
+        output_artifacts:
+          free_tier: "drift_notification"
+          pro_tier: "drift_analysis"
+    - scenario: "seasonal_variation"
+      description: "Seasonal cost pattern within tolerance"
+      input_plan: "seasonal_normal.json"
+      expected_decision:
+        free_tier: "allow"
+        pro_tier: "allow"
+        invariant_check: "decisions_match"
+      allowed_differences:
+        autofix_mode:
+          free_tier: "disabled"
+          pro_tier: "enabled"
+        output_artifacts:
+          free_tier: "basic_report"
+          pro_tier: "trend_analysis"
+    - scenario: "exemption_applied"
+      description: "Valid exemption suppresses violation"
+      input_plan: "exempted_violation.json"
+      expected_decision:
+        free_tier: "allow"
+        pro_tier: "allow"
+        invariant_check: "decisions_match"
+      allowed_differences:
+        autofix_mode:
+          free_tier: "disabled"
+          pro_tier: "enabled"
+        output_artifacts:
+          free_tier: "exemption_note"
+          pro_tier: "exemption_details"
+
+# Autofix mode differences
+autofix_mode_differences:
+  metadata:
+    test_case: "autofix_mode_differences"
+    description: "Autofix availability differences between tiers"
+    allowed_difference: "autofix_mode"
+  test_scenarios:
+    - scenario: "free_tier_autofix_disabled"
+      description: "Free tier cannot generate autofixes"
+      input_plan: "autofix_candidate.json"
+      free_tier_behavior:
+        autofix_available: false
+        output_contains: "Upgrade to Pro for autofix"
+        exit_code: 0
+      pro_tier_behavior:
+        autofix_available: true
+        output_contains: "Autofix generated"
+        exit_code: 0
+    - scenario: "pro_tier_autofix_enabled"
+      description: "Pro tier can generate autofixes"
+      input_plan: "autofix_candidate.json"
+      pro_tier_behavior:
+        autofix_generated: true
+        patch_file_created: true
+        rollback_option: true
+    - scenario: "drift_blocks_autofix"
+      description: "Drift detection blocks autofix in both tiers"
+      input_plan: "drift_with_violation.json"
+      both_tiers_behavior:
+        autofix_blocked: true
+        reason: "drift_detected"
+        message_contains: "Cannot autofix due to drift"
+
+# Output artifacts differences
+output_artifacts_differences:
+  metadata:
+    test_case: "output_artifacts_differences"
+    description: "Output format differences between tiers"
+    allowed_difference: "output_artifacts"
+  test_scenarios:
+    - scenario: "snippet_vs_patch"
+      description: "Free shows snippets, Pro shows full patches"
+      input_plan: "patch_scenario.json"
+      free_tier_output:
+        format: "snippet"
+        contains_line_numbers: false
+        contains_full_context: false
+        max_lines: 10
+      pro_tier_output:
+        format: "full_patch"
+        contains_line_numbers: true
+        contains_full_context: true
+        max_lines: 50
+    - scenario: "summary_vs_detailed"
+      description: "Free shows summary, Pro shows detailed analysis"
+      input_plan: "complex_analysis.json"
+      free_tier_output:
+        format: "summary"
+        contains_trend_analysis: false
+        contains_cost_breakdown: false
+        contains_recommendations: false
+      pro_tier_output:
+        format: "detailed"
+        contains_trend_analysis: true
+        contains_cost_breakdown: true
+        contains_recommendations: true
+    - scenario: "error_vs_guidance"
+      description: "Free shows errors, Pro shows remediation guidance"
+      input_plan: "error_scenario.json"
+      free_tier_output:
+        format: "error_message"
+        contains_solution_steps: false
+        contains_examples: false
+        contains_links: false
+      pro_tier_output:
+        format: "remediation_guide"
+        contains_solution_steps: true
+        contains_examples: true
+        contains_links: true
+
+# Tier gating validation
+tier_gating_validation:
+  metadata:
+    test_case: "tier_gating_validation"
+    description: "Ensure tier gating doesn't influence core decision logic"
+    invariant: "gating_cannot_influence_decisions"
+  validation_scenarios:
+    - scenario: "gating_isolation"
+      description: "Tier gating logic is isolated from decision logic"
+      validation:
+        - decision_logic_unchanged: true
+        - gating_applied_post_decision: true
+        - no_decision_influence: true
+        - consistent_behavior: true
+    - scenario: "feature_flags_clean"
+      description: "Feature flags don't leak into decision making"
+      validation:
+        - feature_flags_isolated: true
+        - decision_pure_function: true
+        - no_side_effects: true
+        - deterministic_output: true
+    - scenario: "license_check_timing"
+      description: "License validation happens after decisions"
+      validation:
+        - license_check_post_decision: true
+        - decision_available_unlicensed: true
+        - gating_applied_at_output: true
+        - core_logic_unrestricted: true
+
+# Cross-tier consistency tests
+cross_tier_consistency:
+  metadata:
+    test_case: "cross_tier_consistency"
+    description: "Ensure consistent behavior across tier boundaries"
+    requirement: "identical_core_behavior"
+  consistency_checks:
+    - check: "deterministic_decisions"
+      description: "Same input always produces same decision"
+      validation:
+        - free_tier_deterministic: true
+        - pro_tier_deterministic: true
+        - cross_tier_consistent: true
+        - no_random_elements: true
+    - check: "policy_enforcement"
+      description: "Policies enforced identically across tiers"
+      validation:
+        - policy_rules_identical: true
+        - enforcement_logic_same: true
+        - exemption_handling_same: true
+        - severity_scoring_same: true
+    - check: "error_handling"
+      description: "Error conditions handled identically"
+      validation:
+        - error_detection_same: true
+        - error_classification_same: true
+        - graceful_degradation_same: true
+        - recovery_behavior_same: true
+    - check: "performance_characteristics"
+      description: "Performance characteristics similar"
+      validation:
+        - decision_speed_similar: true
+        - memory_usage_similar: true
+        - cpu_usage_similar: true
+        - scaling_behavior_same: true
+
+# Boundary edge cases
+boundary_edge_cases:
+  metadata:
+    test_case: "boundary_edge_cases"
+    description: "Edge cases at tier boundaries"
+    requirement: "graceful_boundary_handling"
+  edge_cases:
+    - case: "license_file_missing"
+      description: "Behavior when license file is missing"
+      free_tier_behavior:
+        operates_normally: true
+        no_license_warnings: true
+      pro_tier_behavior:
+        license_validation_error: true
+        graceful_degradation: true
+        clear_error_message: true
+    - case: "expired_license"
+      description: "Behavior with expired Pro license"
+      pro_tier_behavior:
+        license_expired_error: true
+        reverts_to_free_features: true
+        upgrade_prompt: true
+        data_preserved: true
+    - case: "corrupt_license"
+      description: "Behavior with corrupt license file"
+      pro_tier_behavior:
+        license_validation_failed: true
+        security_error: true
+        no_execution_allowed: true
+        forensic_logging: true
+    - case: "downgrade_scenario"
+      description: "Behavior when downgrading from Pro to Free"
+      transition_behavior:
+        existing_data_preserved: true
+        pro_features_disabled: true
+        clear_messaging: true
+        upgrade_path_available: true
+
+# Integration testing
+integration_scenarios:
+  metadata:
+    test_case: "integration_scenarios"
+    description: "End-to-end integration across tier boundaries"
+    requirement: "seamless_integration"
+  scenarios:
+    - scenario: "ci_cd_pipeline"
+      description: "CI/CD pipeline with tier validation"
+      validation:
+        - free_tier_ci_works: true
+        - pro_tier_ci_works: true
+        - license_key_handling: true
+        - consistent_results: true
+    - scenario: "api_integration"
+      description: "API responses across tiers"
+      validation:
+        - decision_api_same: true
+        - output_api_differs: true
+        - error_codes_same: true
+        - response_format_consistent: true
+    - scenario: "configuration_management"
+      description: "Configuration handling across tiers"
+      validation:
+        - config_format_same: true
+        - validation_rules_same: true
+        - policy_loading_same: true
+        - baseline_handling_same: true

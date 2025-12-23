@@ -1,0 +1,35 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "Instance": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "InstanceType": "t3.medium",
+        "SubnetId": {
+          "Ref": "PublicSubnet"
+        }
+      },
+      "Type": "AWS::EC2::Instance"
+    },
+    "PublicSubnet": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "CidrBlock": "10.0.1.0/24",
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      },
+      "Type": "AWS::EC2::Subnet"
+    },
+    "Vpc": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16"
+      },
+      "Type": "AWS::EC2::VPC"
+    }
+  }
+}

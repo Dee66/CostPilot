@@ -1,0 +1,350 @@
+# CostPilot Production-Mirroring CloudFormation Datasets
+# Anonymized production-like CloudFormation templates for comprehensive testing
+
+# Enterprise E-commerce Platform (CloudFormation)
+enterprise_ecommerce_cf:
+  metadata:
+    dataset_id: "enterprise-ecommerce-prod-cf"
+    description: "Anonymized CloudFormation configuration from a large e-commerce platform"
+    industry: "retail"
+    scale: "enterprise"
+    region: "us-east-1"
+    anonymization_level: "high"
+    source: "production_customer_data"
+  cloudformation_template:
+    AWSTemplateFormatVersion: "2010-09-09"
+    Description: "Production E-commerce Platform Infrastructure"
+    Parameters:
+      EnvironmentName:
+        Type: String
+        Default: "prod"
+        Description: "Environment name"
+      InstanceType:
+        Type: String
+        Default: "m5.2xlarge"
+        Description: "EC2 instance type for web servers"
+    Resources:
+      WebAppAutoScalingGroup:
+        Type: "AWS::AutoScaling::AutoScalingGroup"
+        Properties:
+          AutoScalingGroupName: "prod-web-app-asg"
+          LaunchConfigurationName: !Ref WebAppLaunchConfig
+          MinSize: "2"
+          MaxSize: "20"
+          DesiredCapacity: "4"
+          VPCZoneIdentifier:
+            - "subnet-12345678"
+            - "subnet-87654321"
+          TargetGroupARNs:
+            - !Ref WebAppTargetGroup
+          HealthCheckType: "ELB"
+          HealthCheckGracePeriod: 300
+      WebAppLaunchConfig:
+        Type: "AWS::AutoScaling::LaunchConfiguration"
+        Properties:
+          ImageId: "ami-0abcdef1234567890"
+          InstanceType: !Ref InstanceType
+          SecurityGroups:
+            - !Ref WebAppSecurityGroup
+          UserData:
+            Fn::Base64: |
+              #!/bin/bash
+              yum update -y
+              yum install -y httpd
+              systemctl start httpd
+              systemctl enable httpd
+      WebAppSecurityGroup:
+        Type: "AWS::EC2::SecurityGroup"
+        Properties:
+          GroupDescription: "Security group for web application servers"
+          VpcId: "vpc-12345678"
+          SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: 80
+              ToPort: 80
+              CidrIp: "0.0.0.0/0"
+            - IpProtocol: tcp
+              FromPort: 443
+              ToPort: 443
+              CidrIp: "0.0.0.0/0"
+      AuroraCluster:
+        Type: "AWS::RDS::DBCluster"
+        Properties:
+          Engine: "aurora-mysql"
+          EngineVersion: "8.0.mysql_aurora.3.02.0"
+          DatabaseName: "ecommerce_prod"
+          MasterUsername: "admin"
+          MasterUserPassword: "***"
+          BackupRetentionPeriod: 7
+          PreferredBackupWindow: "03:00-04:00"
+          VpcSecurityGroupIds:
+            - "sg-12345678"
+          DBSubnetGroupName: "prod-database-subnet"
+          DBClusterParameterGroupName: "prod-aurora-params"
+      RedisCluster:
+        Type: "AWS::ElastiCache::CacheCluster"
+        Properties:
+          ClusterName: "prod-redis-cluster"
+          Engine: "redis"
+          CacheNodeType: "cache.r5.large"
+          NumCacheNodes: 3
+          CacheParameterGroupName: "default.redis6.x"
+          Port: 6379
+          CacheSubnetGroupName: "prod-cache-subnet"
+          VpcSecurityGroupIds:
+            - "sg-87654321"
+      AssetsBucket:
+        Type: "AWS::S3::Bucket"
+        Properties:
+          BucketName: "prod-ecommerce-assets-123456789"
+          AccessControl: "Private"
+          VersioningConfiguration:
+            Status: "Enabled"
+          BucketEncryption:
+            ServerSideEncryptionConfiguration:
+              - ServerSideEncryptionByDefault:
+                  SSEAlgorithm: "AES256"
+      CDN:
+        Type: "AWS::CloudFront::Distribution"
+        Properties:
+          DistributionConfig:
+            Origins:
+              - DomainName: !GetAtt AssetsBucket.RegionalDomainName
+                Id: "prod-assets-origin"
+                S3OriginConfig:
+                  OriginAccessIdentity: ""
+            Enabled: true
+            DefaultCacheBehavior:
+              TargetOriginId: "prod-assets-origin"
+              ViewerProtocolPolicy: "redirect-to-https"
+              AllowedMethods: ["GET", "HEAD", "OPTIONS"]
+              CachedMethods: ["GET", "HEAD"]
+              ForwardedValues:
+                QueryString: false
+                Cookies:
+                  Forward: "none"
+              MinTTL: 0
+              DefaultTTL: 86400
+              MaxTTL: 31536000
+            Restrictions:
+              GeoRestriction:
+                RestrictionType: "none"
+            ViewerCertificate:
+              CloudFrontDefaultCertificate: true
+
+# Financial Services API Platform (CloudFormation)
+financial_services_api_cf:
+  metadata:
+    dataset_id: "financial-api-prod-cf"
+    description: "Anonymized CloudFormation configuration from a financial services API platform"
+    industry: "financial_services"
+    scale: "large"
+    region: "us-east-1"
+    anonymization_level: "high"
+    source: "production_customer_data"
+  cloudformation_template:
+    AWSTemplateFormatVersion: "2010-09-09"
+    Description: "Production Financial Services API Platform"
+    Resources:
+      ECSCluster:
+        Type: "AWS::ECS::Cluster"
+        Properties:
+          ClusterName: "prod-api-cluster"
+          CapacityProviders:
+            - "FARGATE"
+            - "FARGATE_SPOT"
+          DefaultCapacityProviderStrategy:
+            - CapacityProvider: "FARGATE"
+              Weight: 1
+      ECSService:
+        Type: "AWS::ECS::Service"
+        Properties:
+          ServiceName: "prod-api-service"
+          Cluster: !Ref ECSCluster
+          TaskDefinition: !Ref TaskDefinition
+          DesiredCount: 10
+          LaunchType: "FARGATE"
+          NetworkConfiguration:
+            AwsvpcConfiguration:
+              Subnets:
+                - "subnet-12345678"
+                - "subnet-87654321"
+              SecurityGroups:
+                - "sg-abcdef12"
+              AssignPublicIp: "DISABLED"
+      TaskDefinition:
+        Type: "AWS::ECS::TaskDefinition"
+        Properties:
+          Family: "prod-api-task"
+          Cpu: 1024
+          Memory: 2048
+          NetworkMode: "awsvpc"
+          RequiresCompatibilities:
+            - "FARGATE"
+          ExecutionRoleArn: "arn:aws:iam::123456789012:role/ecsTaskExecutionRole"
+          ContainerDefinitions:
+            - Name: "api-container"
+              Image: "123456789012.dkr.ecr.us-east-1.amazonaws.com/prod-api:latest"
+              Essential: true
+              PortMappings:
+                - ContainerPort: 8080
+                  Protocol: "tcp"
+              Environment:
+                - Name: "STAGE"
+                  Value: "prod"
+                - Name: "LOG_LEVEL"
+                  Value: "INFO"
+              LogConfiguration:
+                LogDriver: "awslogs"
+                Options:
+                  awslogs-group: "/ecs/prod-api"
+                  awslogs-region: "us-east-1"
+                  awslogs-stream-prefix: "ecs"
+      AuroraCluster:
+        Type: "AWS::RDS::DBCluster"
+        Properties:
+          ClusterIdentifier: "prod-api-database"
+          Engine: "aurora-postgresql"
+          EngineVersion: "13.7"
+          DatabaseName: "api_prod"
+          MasterUsername: "api_admin"
+          MasterUserPassword: "***"
+          BackupRetentionPeriod: 30
+          PreferredBackupWindow: "02:00-03:00"
+          VpcSecurityGroupIds:
+            - "sg-fedcba98"
+          DBSubnetGroupName: "prod-api-db-subnet"
+          DBClusterParameterGroupName: "prod-api-aurora-params"
+          ServerlessV2ScalingConfiguration:
+            MinCapacity: 2
+            MaxCapacity: 32
+      LambdaFunction:
+        Type: "AWS::Lambda::Function"
+        Properties:
+          FunctionName: "prod-api-processor"
+          Runtime: "python3.9"
+          Handler: "lambda_function.lambda_handler"
+          Code:
+            S3Bucket: "prod-lambda-code-123456789"
+            S3Key: "api-processor-v1.2.3.zip"
+          MemorySize: 1024
+          Timeout: 300
+          Environment:
+            Variables:
+              STAGE: "prod"
+              LOG_LEVEL: "INFO"
+          VpcConfig:
+            SubnetIds:
+              - "subnet-12345678"
+              - "subnet-87654321"
+            SecurityGroupIds:
+              - "sg-abcdef12"
+      APIGateway:
+        Type: "AWS::ApiGateway::RestApi"
+        Properties:
+          Name: "prod-api-gateway"
+          Description: "Production API Gateway for financial services"
+          EndpointConfiguration:
+            Types:
+              - "REGIONAL"
+          BinaryMediaTypes:
+            - "application/octet-stream"
+
+# Healthcare Data Analytics Platform (CloudFormation)
+healthcare_analytics_cf:
+  metadata:
+    dataset_id: "healthcare-analytics-prod-cf"
+    description: "Anonymized CloudFormation configuration from a healthcare data analytics platform"
+    industry: "healthcare"
+    scale: "enterprise"
+    region: "us-east-1"
+    anonymization_level: "high"
+    compliance: ["HIPAA", "HITRUST"]
+    source: "production_customer_data"
+  cloudformation_template:
+    AWSTemplateFormatVersion: "2010-09-09"
+    Description: "Production Healthcare Data Analytics Platform"
+    Resources:
+      EMRCluster:
+        Type: "AWS::EMR::Cluster"
+        Properties:
+          Name: "prod-healthcare-analytics"
+          ReleaseLabel: "emr-6.4.0"
+          Applications:
+            - Name: "Spark"
+            - Name: "Hadoop"
+            - Name: "Hive"
+            - Name: "Presto"
+          Ec2Attributes:
+            SubnetId: "subnet-12345678"
+            EmrManagedMasterSecurityGroup: "sg-master123"
+            EmrManagedSlaveSecurityGroup: "sg-slave456"
+            InstanceProfile: "EMR_EC2_DefaultRole"
+          MasterInstanceGroup:
+            InstanceType: "m5.4xlarge"
+            InstanceCount: 1
+          CoreInstanceGroup:
+            InstanceType: "m5.2xlarge"
+            InstanceCount: 4
+          EbsRootVolumeSize: 100
+          TerminationProtected: true
+          KeepJobFlowAliveWhenNoSteps: true
+      DataLakeBucket:
+        Type: "AWS::S3::Bucket"
+        Properties:
+          BucketName: "prod-healthcare-data-lake-123456789"
+          AccessControl: "Private"
+          VersioningConfiguration:
+            Status: "Enabled"
+          BucketEncryption:
+            ServerSideEncryptionConfiguration:
+              - ServerSideEncryptionByDefault:
+                  SSEAlgorithm: "AES256"
+          LifecycleConfiguration:
+            Rules:
+              - Id: "data_retention"
+                Status: "Enabled"
+                Transitions:
+                  - Days: 365
+                    StorageClass: "STANDARD_IA"
+                  - Days: 2555
+                    StorageClass: "GLACIER"
+                ExpirationInDays: 3650
+      RedshiftCluster:
+        Type: "AWS::Redshift::Cluster"
+        Properties:
+          ClusterIdentifier: "prod-healthcare-dw"
+          DatabaseName: "healthcare_prod"
+          MasterUsername: "dw_admin"
+          MasterUserPassword: "***"
+          NodeType: "ra3.4xlarge"
+          NumberOfNodes: 3
+          Encrypted: true
+          PubliclyAccessible: false
+          VpcSecurityGroupIds:
+            - "sg-dw789012"
+          ClusterSubnetGroupName: "prod-dw-subnet-group"
+          PreferredMaintenanceWindow: "sun:03:00-sun:04:00"
+          AutomatedSnapshotRetentionPeriod: 7
+          LoggingProperties:
+            BucketName: "prod-healthcare-logs-123456789"
+      KinesisStream:
+        Type: "AWS::Kinesis::Stream"
+        Properties:
+          Name: "prod-healthcare-data-stream"
+          ShardCount: 6
+          RetentionPeriodHours: 24
+          StreamEncryption:
+            EncryptionType: "KMS"
+            KeyId: "alias/aws/kinesis"
+      SageMakerNotebook:
+        Type: "AWS::SageMaker::NotebookInstance"
+        Properties:
+          NotebookInstanceName: "prod-healthcare-analytics-nb"
+          InstanceType: "ml.t3.xlarge"
+          RoleArn: "arn:aws:iam::123456789012:role/SageMakerRole"
+          DefaultCodeRepository: "https://github.com/company/healthcare-analytics.git"
+          LifecycleConfigName: "prod-notebook-lifecycle"
+          SecurityGroupIds:
+            - "sg-notebook345"
+          SubnetId: "subnet-12345678"
