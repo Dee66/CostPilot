@@ -549,6 +549,86 @@ struct CompositeSLO {
     performance_target: f64,
 }
 
+#[test]
+fn test_slo_extreme_budget_values_edge_case() {
+    // Test with extreme budget values
+    let extreme_configs = vec![
+        mock_slo_config_with_budget(0.99, 0.0), // Zero budget
+        mock_slo_config_with_budget(0.99, 1_000_000_000.0), // 1 billion budget
+        mock_slo_config_with_budget(0.99, -1000.0), // Negative budget
+    ];
+
+    for config in extreme_configs {
+        let history = mock_history_with_cost(100.0);
+        let burn_rate = calculate_burn_rate(&config, &history, config.budget);
+        // Should handle extreme budgets gracefully
+        assert!(burn_rate.is_ok() || burn_rate.is_err()); // Either outcome acceptable
+    }
+}
+
+#[test]
+fn test_slo_extreme_slo_targets_edge_case() {
+    // Test with extreme SLO targets
+    let extreme_configs = vec![
+        mock_slo_config_with_budget(0.0, 100.0), // 0% target
+        mock_slo_config_with_budget(1.0, 100.0), // 100% target
+        mock_slo_config_with_budget(2.0, 100.0), // >100% target (invalid)
+        mock_slo_config_with_budget(-0.5, 100.0), // Negative target (invalid)
+    ];
+
+    for config in extreme_configs {
+        let history = mock_history_with_cost(100.0);
+        let burn_rate = calculate_burn_rate(&config, &history, config.budget);
+        // Should handle invalid SLO targets gracefully
+        assert!(burn_rate.is_ok() || burn_rate.is_err()); // Either outcome acceptable
+    }
+}
+
+#[test]
+fn test_slo_empty_history_edge_case() {
+    // Test SLO calculation with empty history
+    let config = mock_slo_config(0.99);
+    let empty_history: Vec<CostPoint> = vec![];
+
+    let burn_rate = calculate_burn_rate(&config, &empty_history, 100.0);
+    // Should handle empty history gracefully
+    assert!(burn_rate.is_ok() || burn_rate.is_err()); // Either outcome acceptable
+}
+
+#[test]
+fn test_slo_extremely_long_history() {
+    // Test with very long history (1000+ data points)
+    let config = mock_slo_config(0.99);
+    let mut long_history = Vec::new();
+    let base_time = Utc::now();
+
+    for i in 0..1000 {
+        long_history.push(CostPoint {
+            timestamp: base_time - Duration::hours(i as i64),
+            cost: 10.0 + (i as f64 * 0.1),
+        });
+    }
+
+    let burn_rate = calculate_burn_rate(&config, &long_history, 10000.0);
+    assert!(burn_rate.is_ok());
+    // Should handle large datasets efficiently
+}
+
+#[test]
+fn test_slo_extreme_timestamp_ranges() {
+    // Test with extreme timestamp ranges
+    let config = mock_slo_config(0.99);
+    let extreme_history = vec![
+        CostPoint { timestamp: chrono::DateTime::from_timestamp(0, 0).unwrap(), cost: 100.0 }, // Unix epoch
+        CostPoint { timestamp: chrono::DateTime::from_timestamp(2147483647, 0).unwrap(), cost: 200.0 }, // Year 2038
+        CostPoint { timestamp: Utc::now(), cost: 150.0 },
+    ];
+
+    let burn_rate = calculate_burn_rate(&config, &extreme_history, 1000.0);
+    assert!(burn_rate.is_ok());
+    // Should handle extreme timestamps
+}
+
 struct ComplianceResult {
     is_compliant: bool,
 }

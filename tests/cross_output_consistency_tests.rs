@@ -34,10 +34,14 @@ fn test_every_detected_finding_referenced_in_predict_output() {
 
     // Every detected resource should have a corresponding cost estimate
     for detection in &detections {
-        let has_estimate = estimates.iter().any(|est| est.resource_id == detection.resource_id);
-        assert!(has_estimate,
+        let has_estimate = estimates
+            .iter()
+            .any(|est| est.resource_id == detection.resource_id);
+        assert!(
+            has_estimate,
             "Detected resource '{}' has no corresponding cost estimate in predict output",
-            detection.resource_id);
+            detection.resource_id
+        );
     }
 }
 
@@ -67,14 +71,19 @@ fn test_every_predicted_cost_referenced_in_explain_output() {
     // Every predicted resource should have an explanation
     for estimate in &estimates {
         let explanation_result = prediction_engine.explain(&change);
-        assert!(explanation_result.is_ok(),
+        assert!(
+            explanation_result.is_ok(),
             "Predicted resource '{}' has no corresponding explanation: {:?}",
-            estimate.resource_id, explanation_result.err());
+            estimate.resource_id,
+            explanation_result.err()
+        );
 
         let explanation = explanation_result.unwrap();
-        assert_eq!(explanation.resource_id, estimate.resource_id,
+        assert_eq!(
+            explanation.resource_id, estimate.resource_id,
             "Explanation resource_id '{}' doesn't match estimate resource_id '{}'",
-            explanation.resource_id, estimate.resource_id);
+            explanation.resource_id, estimate.resource_id
+        );
     }
 }
 
@@ -104,26 +113,34 @@ fn test_explain_output_references_same_resource_ids_as_detect_and_predict() {
     let explanation = prediction_engine.explain(&change).unwrap();
 
     // Collect resource IDs from each output
-    let detect_ids: std::collections::HashSet<_> = detections.iter().map(|d| &d.resource_id).collect();
-    let predict_ids: std::collections::HashSet<_> = estimates.iter().map(|e| &e.resource_id).collect();
+    let detect_ids: std::collections::HashSet<_> =
+        detections.iter().map(|d| &d.resource_id).collect();
+    let predict_ids: std::collections::HashSet<_> =
+        estimates.iter().map(|e| &e.resource_id).collect();
 
     // Explain should reference the same resource ID
-    assert_eq!(explanation.resource_id, change.resource_id,
+    assert_eq!(
+        explanation.resource_id, change.resource_id,
         "Explain output resource_id '{}' doesn't match input resource_id '{}'",
-        explanation.resource_id, change.resource_id);
+        explanation.resource_id, change.resource_id
+    );
 
     // If there are detections, they should be for the same resource
     for detection in &detections {
-        assert_eq!(detection.resource_id, change.resource_id,
+        assert_eq!(
+            detection.resource_id, change.resource_id,
             "Detection resource_id '{}' doesn't match input resource_id '{}'",
-            detection.resource_id, change.resource_id);
+            detection.resource_id, change.resource_id
+        );
     }
 
     // If there are estimates, they should be for the same resource
     for estimate in &estimates {
-        assert_eq!(estimate.resource_id, change.resource_id,
+        assert_eq!(
+            estimate.resource_id, change.resource_id,
             "Estimate resource_id '{}' doesn't match input resource_id '{}'",
-            estimate.resource_id, change.resource_id);
+            estimate.resource_id, change.resource_id
+        );
     }
 }
 
@@ -157,17 +174,31 @@ fn test_explain_output_references_same_cost_figures_as_predict() {
 
     // In Free mode, predict returns fake values (150.0), but explain calculates real costs
     // So we check that explain provides a valid cost breakdown with components that sum to the total
-    let component_total: f64 = explanation.final_estimate.components.iter().map(|c| c.cost).sum();
-    assert!((component_total - explanation.final_estimate.monthly_cost).abs() < 0.01,
+    let component_total: f64 = explanation
+        .final_estimate
+        .components
+        .iter()
+        .map(|c| c.cost)
+        .sum();
+    assert!(
+        (component_total - explanation.final_estimate.monthly_cost).abs() < 0.01,
         "Component costs {:.2} don't sum to total cost {:.2}",
-        component_total, explanation.final_estimate.monthly_cost);
+        component_total,
+        explanation.final_estimate.monthly_cost
+    );
 
     // Check that prediction intervals are reasonable (explain should have valid intervals)
-    assert!(explanation.final_estimate.interval_low >= 0.0,
-        "Interval low should be non-negative, got {:.2}", explanation.final_estimate.interval_low);
-    assert!(explanation.final_estimate.interval_high >= explanation.final_estimate.interval_low,
+    assert!(
+        explanation.final_estimate.interval_low >= 0.0,
+        "Interval low should be non-negative, got {:.2}",
+        explanation.final_estimate.interval_low
+    );
+    assert!(
+        explanation.final_estimate.interval_high >= explanation.final_estimate.interval_low,
         "Interval high {:.2} should be >= interval low {:.2}",
-        explanation.final_estimate.interval_high, explanation.final_estimate.interval_low);
+        explanation.final_estimate.interval_high,
+        explanation.final_estimate.interval_low
+    );
 }
 
 #[test]
@@ -227,18 +258,26 @@ fn test_no_orphan_findings_across_outputs() {
         let has_estimate = estimates.iter().any(|e| &e.resource_id == *resource_id);
 
         if has_detection {
-            assert!(has_estimate,
+            assert!(
+                has_estimate,
                 "Detected resource '{}' has no corresponding cost estimate",
-                resource_id);
+                resource_id
+            );
         }
 
         // If estimated, should have explanation capability
         if has_estimate {
-            let change_for_id = changes.iter().find(|c| &c.resource_id == *resource_id).unwrap();
+            let change_for_id = changes
+                .iter()
+                .find(|c| &c.resource_id == *resource_id)
+                .unwrap();
             let explanation_result = prediction_engine.explain(change_for_id);
-            assert!(explanation_result.is_ok(),
+            assert!(
+                explanation_result.is_ok(),
                 "Estimated resource '{}' cannot be explained: {:?}",
-                resource_id, explanation_result.err());
+                resource_id,
+                explanation_result.err()
+            );
         }
     }
 }

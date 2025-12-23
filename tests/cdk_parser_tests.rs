@@ -1,10 +1,10 @@
-use costpilot::artifact::CdkParser;
+use costpilot::artifact::find_cdk_templates;
+use costpilot::artifact::is_cdk_output_dir;
+use costpilot::artifact::Artifact;
 use costpilot::artifact::ArtifactFormat;
 use costpilot::artifact::ArtifactParser;
-use costpilot::artifact::is_cdk_output_dir;
-use costpilot::artifact::find_cdk_templates;
-use costpilot::artifact::Artifact;
 use costpilot::artifact::ArtifactResult;
+use costpilot::artifact::CdkParser;
 use std::fs;
 use tempfile::TempDir;
 
@@ -30,7 +30,9 @@ fn test_parse_cdk_manifest_basic() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0); // No template file
 }
 
@@ -44,7 +46,9 @@ fn test_parse_cdk_manifest_missing_artifacts() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -70,7 +74,9 @@ fn test_parse_cdk_manifest_missing_version() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -91,7 +97,9 @@ fn test_parse_cdk_manifest_with_runtime() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -111,7 +119,9 @@ fn test_parse_cdk_manifest_non_stack_artifact() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -139,7 +149,9 @@ fn test_parse_cdk_manifest_multiple_stacks() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0); // Templates don't exist
 }
 
@@ -159,7 +171,9 @@ fn test_parse_cdk_manifest_stack_without_template_file() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -174,7 +188,9 @@ fn test_parse_cdk_manifest_empty_artifacts() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -191,7 +207,9 @@ fn test_parse_cdk_manifest_malformed_artifact() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -212,7 +230,9 @@ fn test_parse_cdk_manifest_artifact_without_type() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -234,7 +254,9 @@ fn test_parse_cdk_manifest_artifact_wrong_type() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -257,7 +279,9 @@ fn test_parse_cdk_manifest_with_environment() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -283,7 +307,9 @@ fn test_parse_cdk_manifest_with_tags() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -316,7 +342,9 @@ fn test_parse_cdk_manifest_complex() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -328,7 +356,9 @@ fn test_parse_cdk_manifest_minimal() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -338,12 +368,15 @@ fn test_parse_cdk_manifest_large() {
     let manifest_path = temp_dir.path().join("manifest.json");
     let mut artifacts = std::collections::HashMap::new();
     for i in 0..100 {
-        artifacts.insert(format!("Stack{}", i), serde_json::json!({
-            "type": "aws:cloudformation:stack",
-            "properties": {
-                "templateFile": format!("Stack{}.template.json", i)
-            }
-        }));
+        artifacts.insert(
+            format!("Stack{}", i),
+            serde_json::json!({
+                "type": "aws:cloudformation:stack",
+                "properties": {
+                    "templateFile": format!("Stack{}.template.json", i)
+                }
+            }),
+        );
     }
     let manifest = serde_json::json!({
         "version": "20.0.0",
@@ -352,7 +385,9 @@ fn test_parse_cdk_manifest_large() {
     fs::write(&manifest_path, serde_json::to_string(&manifest).unwrap()).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -377,7 +412,9 @@ fn test_parse_cdk_manifest_unicode() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -404,7 +441,9 @@ fn test_parse_cdk_manifest_deeply_nested() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -440,7 +479,9 @@ fn test_parse_cdk_stack_basic() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     assert_eq!(artifacts[0].format, ArtifactFormat::Cdk);
     assert_eq!(artifacts[0].resource_count(), 1);
@@ -477,7 +518,9 @@ fn test_parse_cdk_stack_with_environment() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     assert_eq!(artifacts[0].metadata.region, Some("us-west-2".to_string()));
 }
@@ -516,7 +559,9 @@ fn test_parse_cdk_stack_with_tags() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     let tags = &artifacts[0].metadata.tags;
     assert_eq!(tags.get("cdk_tag_Environment"), Some(&"prod".to_string()));
@@ -557,7 +602,9 @@ fn test_parse_cdk_stack_metadata_enhancement() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     let resource = artifacts[0].get_resource("MyFunction").unwrap();
     assert!(resource.metadata.contains_key("cdk_construct_path"));
@@ -591,7 +638,9 @@ Resources:
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     // YAML not supported by CloudFormation parser, so no artifacts
     assert_eq!(artifacts.len(), 0);
 }
@@ -619,7 +668,9 @@ fn test_parse_cdk_stack_invalid_template() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0); // Failed to parse template
 }
 
@@ -641,7 +692,9 @@ fn test_parse_cdk_stack_missing_template() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0);
 }
 
@@ -678,7 +731,9 @@ fn test_parse_cdk_stack_nested_stack() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     assert_eq!(artifacts[0].resource_count(), 1);
 }
@@ -719,7 +774,9 @@ fn test_parse_cdk_stack_with_parameters() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
 }
 
@@ -759,7 +816,9 @@ fn test_parse_cdk_stack_with_outputs() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
 }
 
@@ -813,7 +872,9 @@ fn test_parse_cdk_stack_complex_template() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     assert_eq!(artifacts[0].resource_count(), 2);
 }
@@ -843,7 +904,9 @@ fn test_parse_cdk_stack_empty_template() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     assert_eq!(artifacts[0].resource_count(), 0);
 }
@@ -881,7 +944,9 @@ fn test_parse_cdk_stack_template_with_metadata() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
 }
 
@@ -922,7 +987,9 @@ fn test_parse_cdk_stack_with_dependencies() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     assert_eq!(artifacts[0].resource_count(), 2);
 }
@@ -1094,12 +1161,15 @@ fn test_cdk_parser_minimal_template() {
 fn test_cdk_parser_large_template() {
     let mut resources = serde_json::Map::new();
     for i in 0..1000 {
-        resources.insert(format!("Resource{}", i), serde_json::json!({
-            "Type": "AWS::S3::Bucket",
-            "Properties": {
-                "BucketName": format!("bucket-{}", i)
-            }
-        }));
+        resources.insert(
+            format!("Resource{}", i),
+            serde_json::json!({
+                "Type": "AWS::S3::Bucket",
+                "Properties": {
+                    "BucketName": format!("bucket-{}", i)
+                }
+            }),
+        );
     }
     let template = serde_json::json!({
         "AWSTemplateFormatVersion": "2010-09-09",
@@ -1107,7 +1177,9 @@ fn test_cdk_parser_large_template() {
     });
 
     let parser = CdkParser::new();
-    let artifact = parser.parse(&serde_json::to_string(&template).unwrap()).unwrap();
+    let artifact = parser
+        .parse(&serde_json::to_string(&template).unwrap())
+        .unwrap();
     assert_eq!(artifact.format, ArtifactFormat::Cdk);
     assert_eq!(artifact.resource_count(), 1000);
 }
@@ -1162,7 +1234,9 @@ fn test_cdk_parser_template_read_error() {
     fs::create_dir(&template_path).unwrap(); // Directory instead of file
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 0); // Should skip the failing stack
 }
 
@@ -1210,7 +1284,9 @@ fn test_enhance_metadata_basic() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     let resource = artifacts[0].get_resource("MyBucket").unwrap();
     // The CDK path should be in metadata
@@ -1250,7 +1326,9 @@ fn test_enhance_metadata_logical_id() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     let resource = artifacts[0].get_resource("MyBucket").unwrap();
     assert!(resource.metadata.contains_key("original_logical_id"));
@@ -1290,7 +1368,9 @@ fn test_enhance_metadata_both_fields() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     let resource = artifacts[0].get_resource("MyFunction").unwrap();
     assert!(resource.metadata.contains_key("cdk_construct_path"));
@@ -1330,7 +1410,9 @@ fn test_enhance_metadata_no_cdk_metadata() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     let resource = artifacts[0].get_resource("MyBucket").unwrap();
     assert!(!resource.metadata.contains_key("cdk_construct_path"));
@@ -1377,7 +1459,9 @@ fn test_enhance_metadata_multiple_resources() {
     fs::write(&template_path, template_content).unwrap();
 
     let parser = CdkParser::new();
-    let artifacts = parser.parse_cdk_output(temp_dir.path().to_str().unwrap()).unwrap();
+    let artifacts = parser
+        .parse_cdk_output(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(artifacts.len(), 1);
     let bucket1 = artifacts[0].get_resource("Bucket1").unwrap();
     assert!(bucket1.metadata.contains_key("cdk_construct_path"));
@@ -1405,7 +1489,9 @@ fn test_parse_assembly_metadata_basic() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let metadata = parser.parse_assembly_metadata(temp_dir.path().to_str().unwrap()).unwrap();
+    let metadata = parser
+        .parse_assembly_metadata(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(metadata.version, "21.0.0");
     assert!(metadata.runtime.contains("aws-cdk-lib@2.60.0"));
     assert!(metadata.runtime.contains("constructs@10.2.0"));
@@ -1421,7 +1507,9 @@ fn test_parse_assembly_metadata_no_runtime() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let metadata = parser.parse_assembly_metadata(temp_dir.path().to_str().unwrap()).unwrap();
+    let metadata = parser
+        .parse_assembly_metadata(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(metadata.version, "20.0.0");
     assert_eq!(metadata.runtime, "unknown");
 }
@@ -1439,7 +1527,9 @@ fn test_parse_assembly_metadata_empty_runtime() {
     fs::write(&manifest_path, manifest_content).unwrap();
 
     let parser = CdkParser::new();
-    let metadata = parser.parse_assembly_metadata(temp_dir.path().to_str().unwrap()).unwrap();
+    let metadata = parser
+        .parse_assembly_metadata(temp_dir.path().to_str().unwrap())
+        .unwrap();
     assert_eq!(metadata.version, "20.0.0");
     assert_eq!(metadata.runtime, "");
 }
@@ -1495,5 +1585,73 @@ fn test_find_cdk_templates_empty_dir() {
 #[test]
 fn test_find_cdk_templates_invalid_dir() {
     let result = find_cdk_templates("/nonexistent/path");
+    assert!(result.is_err());
+}
+
+// 61-62: CDK diff parsing tests
+
+#[test]
+fn test_parse_cdk_diff_json() {
+    let diff_json = r#"{
+        "success": true,
+        "stacks": [
+            {
+                "stack_name": "MyStack",
+                "changes": [
+                    {
+                        "logical_id": "MyBucket",
+                        "resource_type": "AWS::S3::Bucket",
+                        "change_type": "create",
+                        "new_values": {
+                            "BucketName": "my-test-bucket"
+                        }
+                    }
+                ]
+            }
+        ]
+    }"#;
+
+    let parser = CdkParser::new();
+    let artifact = parser.parse(diff_json).unwrap();
+
+    assert_eq!(artifact.format, ArtifactFormat::Cdk);
+    assert_eq!(artifact.resources.len(), 1);
+
+    // Check the created bucket
+    let bucket = &artifact.resources[0];
+    assert_eq!(bucket.id, "MyBucket");
+    assert_eq!(bucket.resource_type, "AWS::S3::Bucket");
+    assert_eq!(
+        bucket
+            .properties
+            .get("BucketName")
+            .unwrap()
+            .as_str()
+            .unwrap(),
+        "my-test-bucket"
+    );
+}
+
+#[test]
+fn test_parse_cdk_diff_empty() {
+    let diff_json = r#"{
+        "success": true,
+        "stacks": [],
+        "error": null
+    }"#;
+
+    let parser = CdkParser::new();
+    let artifact = parser.parse(diff_json).unwrap();
+
+    assert_eq!(artifact.format, ArtifactFormat::Cdk);
+    assert_eq!(artifact.resource_count(), 0);
+}
+
+#[test]
+fn test_parse_cdk_diff_invalid_json() {
+    let invalid_json = r#"invalid json"#;
+
+    let parser = CdkParser::new();
+    let result = parser.parse(invalid_json);
     assert!(result.is_err());
 }

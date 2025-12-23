@@ -359,10 +359,10 @@ impl ExplainEngine {
 
         for detection in detections.iter().take(5) {
             let pattern = format!(
-                "• {} in {}: {} severity",
-                format!("{:?}", detection.regression_type),
+                "• {:?} in {}: {:?} severity",
+                detection.regression_type,
                 detection.resource_id,
-                format!("{:?}", detection.severity)
+                detection.severity
             );
             patterns.push(pattern);
         }

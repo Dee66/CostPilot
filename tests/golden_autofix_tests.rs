@@ -1,7 +1,7 @@
 // Golden file tests for autofix output
 
 use costpilot::engines::autofix::{AutofixEngine, AutofixMode};
-use costpilot::engines::shared::models::{Detection, Severity, ChangeAction, ResourceChange};
+use costpilot::engines::shared::models::{ChangeAction, Detection, ResourceChange, Severity};
 use serde_json::json;
 
 #[test]

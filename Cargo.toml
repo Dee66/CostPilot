@@ -20,6 +20,7 @@ thiserror = "1.0"
 colored = "2.1"
 indicatif = "0.17"
 chrono = { version = "0.4", features = ["serde"] }
+semver = "1.0"
 regex = "1.10"
 walkdir = "2.4"
 atty = "0.2"
@@ -33,6 +34,8 @@ ed25519-dalek = "2.1"
 base64 = "0.21"
 rand = "0.8"
 zeroize = "1.5"
+hcl = { package = "hcl-rs", version = "0.19" }
+jsonschema = "0.17"
 
 # Conditional crypto dependencies (not available for WASM)
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -40,8 +43,11 @@ ring = "0.17"
 wasmtime = "27"
 hex = "0.4"
 
-hcl-rs = "0.19"
-jsonschema = "0.17"
+# Build dependencies for key generation
+[build-dependencies]
+ed25519-dalek = "2.1"
+rand = "0.8"
+hex = "0.4"
 
 [dev-dependencies]
 # E2E testing
@@ -72,6 +78,10 @@ criterion = { version = "0.3", default-features = false, features = ["cargo_benc
 [[bin]]
 name = "costpilot"
 path = "src/bin/costpilot.rs"
+
+[[bin]]
+name = "license-issuer"
+path = "src/bin/license_issuer.rs"
 
 [lib]
 name = "costpilot"

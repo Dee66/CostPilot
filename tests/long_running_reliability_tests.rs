@@ -3,9 +3,9 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use costpilot::engines::detection::detection_engine::DetectionEngine;
-use costpilot::engines::prediction::prediction_engine::PredictionEngine;
-use costpilot::engines::shared::models::{Detection, ResourceChange, ChangeAction};
 use costpilot::engines::detection::terraform::parser::TerraformPlan;
+use costpilot::engines::prediction::prediction_engine::PredictionEngine;
+use costpilot::engines::shared::models::{ChangeAction, Detection, ResourceChange};
 use costpilot::errors::ErrorCategory;
 
 // Mock data for long-running tests
@@ -42,7 +42,8 @@ fn test_24_hour_soak_test_simulation() {
     let mut errors = 0;
 
     let detection_engine = DetectionEngine::new();
-    let mut prediction_engine = PredictionEngine::new().expect("Failed to create prediction engine");
+    let mut prediction_engine =
+        PredictionEngine::new().expect("Failed to create prediction engine");
     let test_changes = create_test_changes();
 
     while start_time.elapsed() < test_duration {
@@ -52,7 +53,10 @@ fn test_24_hour_soak_test_simulation() {
         match detection_engine.detect(&test_changes) {
             Ok(_) => {}
             Err(e) => {
-                if !matches!(e.category, ErrorCategory::Timeout | ErrorCategory::InternalError) {
+                if !matches!(
+                    e.category,
+                    ErrorCategory::Timeout | ErrorCategory::InternalError
+                ) {
                     errors += 1;
                 }
             }
@@ -62,7 +66,10 @@ fn test_24_hour_soak_test_simulation() {
         match prediction_engine.predict(&test_changes) {
             Ok(_) => {}
             Err(e) => {
-                if !matches!(e.category, ErrorCategory::Timeout | ErrorCategory::InternalError) {
+                if !matches!(
+                    e.category,
+                    ErrorCategory::Timeout | ErrorCategory::InternalError
+                ) {
                     errors += 1;
                 }
             }
@@ -72,7 +79,12 @@ fn test_24_hour_soak_test_simulation() {
     }
 
     // Validate stability - should have very few errors in a stable system
-    assert!(errors < iterations / 100, "Too many errors in soak test: {} out of {}", errors, iterations);
+    assert!(
+        errors < iterations / 100,
+        "Too many errors in soak test: {} out of {}",
+        errors,
+        iterations
+    );
     println!("Completed {} iterations with {} errors", iterations, errors);
 }
 
@@ -91,7 +103,9 @@ fn test_resource_leak_detection() {
 
         thread::spawn(move || {
             let _result = engine.detect(&changes);
-        }).join().expect("Thread should complete without panic");
+        })
+        .join()
+        .expect("Thread should complete without panic");
 
         if i % 100 == 0 {
             // In real implementation, check memory usage hasn't grown significantly
@@ -127,10 +141,15 @@ fn test_concurrent_stress_testing() {
 
     // Wait for all threads to complete
     for handle in handles {
-        handle.join().expect("All threads should complete successfully");
+        handle
+            .join()
+            .expect("All threads should complete successfully");
     }
 
-    assert!(true, "Concurrent stress test completed without deadlocks or crashes");
+    assert!(
+        true,
+        "Concurrent stress test completed without deadlocks or crashes"
+    );
 }
 
 #[test]
@@ -159,10 +178,17 @@ fn test_performance_stability_over_time() {
 
     // Check that performance is reasonably stable (no single operation takes more than 10x average, or allow very fast operations)
     let max_time = times.iter().max().unwrap();
-    let max_reasonable_time = if avg_time.as_millis() == 0 { 1 } else { avg_time.as_millis() * 10 };
-    assert!(max_time.as_millis() <= max_reasonable_time,
-            "Performance degraded significantly: max {}ms vs avg {}ms",
-            max_time.as_millis(), avg_time.as_millis());
+    let max_reasonable_time = if avg_time.as_millis() == 0 {
+        1
+    } else {
+        avg_time.as_millis() * 10
+    };
+    assert!(
+        max_time.as_millis() <= max_reasonable_time,
+        "Performance degraded significantly: max {}ms vs avg {}ms",
+        max_time.as_millis(),
+        avg_time.as_millis()
+    );
 
     println!("Average detection time: {}ms", avg_time.as_millis());
 }
@@ -173,22 +199,26 @@ fn test_endurance_under_sustained_load() {
     let base_changes = create_test_changes();
 
     // Create changes of varying complexity
-    let changes_sets: Vec<Vec<ResourceChange>> = (1..=10).map(|i| {
-        let mut changes = base_changes.clone();
-        // Add more resources to increase complexity
-        for j in 0..i {
-            changes.push(ResourceChange::builder()
-                .resource_id(format!("aws_instance.test{}", j))
-                .resource_type("aws_instance")
-                .action(ChangeAction::Create)
-                .new_config(serde_json::json!({
-                    "instance_type": "t2.micro",
-                    "ami": "ami-12345"
-                }))
-                .build());
-        }
-        changes
-    }).collect();
+    let changes_sets: Vec<Vec<ResourceChange>> = (1..=10)
+        .map(|i| {
+            let mut changes = base_changes.clone();
+            // Add more resources to increase complexity
+            for j in 0..i {
+                changes.push(
+                    ResourceChange::builder()
+                        .resource_id(format!("aws_instance.test{}", j))
+                        .resource_type("aws_instance")
+                        .action(ChangeAction::Create)
+                        .new_config(serde_json::json!({
+                            "instance_type": "t2.micro",
+                            "ami": "ami-12345"
+                        }))
+                        .build(),
+                );
+            }
+            changes
+        })
+        .collect();
 
     let start_time = Instant::now();
     let test_duration = Duration::from_secs(5); // Simulate 5 seconds of sustained load
@@ -201,7 +231,10 @@ fn test_endurance_under_sustained_load() {
     }
 
     println!("Completed {} sustained load iterations", iteration);
-    assert!(iteration > 100, "Should complete reasonable number of iterations under load");
+    assert!(
+        iteration > 100,
+        "Should complete reasonable number of iterations under load"
+    );
 }
 
 #[test]
@@ -219,7 +252,10 @@ fn test_telemetry_stability_simulation() {
     }
 
     // In real test, would validate log format stability and no log corruption
-    assert!(log_entries > 100, "Should generate reasonable number of log entries");
+    assert!(
+        log_entries > 100,
+        "Should generate reasonable number of log entries"
+    );
     println!("Generated {} simulated log entries", log_entries);
 }
 
@@ -249,11 +285,17 @@ fn test_continuous_fuzzing_simulation() {
             Ok(_) => {}
             Err(e) => {
                 // Should handle fuzzing inputs gracefully
-                assert!(!matches!(e.category, ErrorCategory::InternalError),
-                       "Fuzzing input caused internal error: {:?}", e);
+                assert!(
+                    !matches!(e.category, ErrorCategory::InternalError),
+                    "Fuzzing input caused internal error: {:?}",
+                    e
+                );
             }
         }
     }
 
-    assert!(true, "Continuous fuzzing simulation completed without panics");
+    assert!(
+        true,
+        "Continuous fuzzing simulation completed without panics"
+    );
 }

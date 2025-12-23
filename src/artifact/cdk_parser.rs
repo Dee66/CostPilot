@@ -106,6 +106,7 @@ fn parse_cloudformation_template(json_content: &str) -> ArtifactResult<CloudForm
 }
 
 /// Map CloudFormation resource type to Terraform-style resource type
+#[allow(dead_code)]
 fn map_cloudformation_resource_type(cf_type: &str) -> String {
     match cf_type {
         "AWS::EC2::Instance" => "aws_instance".to_string(),
@@ -217,7 +218,7 @@ impl CdkParser {
         // Convert template resources to artifact resources
         let mut resources = Vec::new();
         for (logical_id, resource) in &template.resources {
-            let resource_type = resource.resource_type.clone();
+            let _resource_type = resource.resource_type.clone();
             let properties = resource.properties.as_ref()
                 .and_then(|p| p.as_object())
                 .map(|m| m.clone().into_iter().collect())
@@ -445,7 +446,7 @@ impl ArtifactParser for CdkParser {
         // Convert template resources to artifact resources
         let mut resources = Vec::new();
         for (logical_id, resource) in &template.resources {
-            let resource_type = resource.resource_type.clone();
+            let _resource_type = resource.resource_type.clone();
             let properties = resource.properties.as_ref()
                 .and_then(|p| p.as_object())
                 .map(|m| m.clone().into_iter().collect())

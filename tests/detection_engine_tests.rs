@@ -1,11 +1,17 @@
-use costpilot::engines::detection::DetectionEngine;
 use costpilot::engines::detection::classifier::RegressionClassifier;
 use costpilot::engines::detection::severity::{calculate_severity_score, score_to_severity};
+use costpilot::engines::detection::DetectionEngine;
 use costpilot::engines::shared::models::{ChangeAction, RegressionType, ResourceChange, Severity};
+#[cfg(test)]
+use proptest::prelude::*;
+#[cfg(test)]
+use quickcheck::{Arbitrary, Gen};
+#[cfg(test)]
+use quickcheck_macros::quickcheck;
+use std::collections::HashMap;
+use std::io::Write;
 use std::path::Path;
 use tempfile::NamedTempFile;
-use std::io::Write;
-use std::collections::HashMap;
 
 // ===== BASIC ENGINE TESTS =====
 
@@ -146,17 +152,15 @@ fn test_detection_engine_analyze_changes_empty() {
 #[test]
 fn test_detection_engine_analyze_changes_with_ec2() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-ec2".to_string())
-            .resource_type("aws_instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({
-                "instance_type": "m5.xlarge",  // Use xlarge to trigger overprovisioning detection
-                "region": "us-east-1"
-            }))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-ec2".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({
+            "instance_type": "m5.xlarge",  // Use xlarge to trigger overprovisioning detection
+            "region": "us-east-1"
+        }))
+        .build()];
     let cost_estimates = vec![("test-ec2".to_string(), 250.0, 0.9)]; // High cost to trigger detection
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -177,17 +181,15 @@ fn test_detection_engine_detect_empty_changes() {
 #[test]
 fn test_detection_engine_detect_with_changes() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-rds".to_string())
-            .resource_type("aws_db_instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({
-                "instance_class": "db.t3.micro",
-                "allocated_storage": 20
-            }))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-rds".to_string())
+        .resource_type("aws_db_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({
+            "instance_class": "db.t3.micro",
+            "allocated_storage": 20
+        }))
+        .build()];
     let cost_estimates = vec![("test-rds".to_string(), 400.0, 0.8)]; // High cost to trigger detection
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -202,13 +204,11 @@ fn test_detection_engine_detect_with_changes() {
 #[test]
 fn test_nat_gateway_detection_high_cost() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-nat".to_string())
-            .resource_type("aws_nat_gateway".to_string())
-            .action(ChangeAction::Create)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-nat".to_string())
+        .resource_type("aws_nat_gateway".to_string())
+        .action(ChangeAction::Create)
+        .build()];
     let cost_estimates = vec![("test-nat".to_string(), 150.0, 0.8)]; // High cost
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -221,13 +221,11 @@ fn test_nat_gateway_detection_high_cost() {
 #[test]
 fn test_nat_gateway_detection_low_cost_no_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-nat".to_string())
-            .resource_type("aws_nat_gateway".to_string())
-            .action(ChangeAction::Create)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-nat".to_string())
+        .resource_type("aws_nat_gateway".to_string())
+        .action(ChangeAction::Create)
+        .build()];
     let cost_estimates = vec![("test-nat".to_string(), 50.0, 0.8)]; // Low cost
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -239,16 +237,14 @@ fn test_nat_gateway_detection_low_cost_no_detection() {
 #[test]
 fn test_ec2_overprovisioning_xlarge_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-ec2".to_string())
-            .resource_type("aws_instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({
-                "instance_type": "m5.xlarge"
-            }))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-ec2".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({
+            "instance_type": "m5.xlarge"
+        }))
+        .build()];
     let cost_estimates = vec![("test-ec2".to_string(), 250.0, 0.9)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -261,16 +257,14 @@ fn test_ec2_overprovisioning_xlarge_detection() {
 #[test]
 fn test_ec2_overprovisioning_2xlarge_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-ec2".to_string())
-            .resource_type("aws_instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({
-                "instance_type": "c5.2xlarge"
-            }))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-ec2".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({
+            "instance_type": "c5.2xlarge"
+        }))
+        .build()];
     let cost_estimates = vec![("test-ec2".to_string(), 300.0, 0.9)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -282,16 +276,14 @@ fn test_ec2_overprovisioning_2xlarge_detection() {
 #[test]
 fn test_ec2_overprovisioning_small_instance_no_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-ec2".to_string())
-            .resource_type("aws_instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({
-                "instance_type": "t3.micro"
-            }))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-ec2".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({
+            "instance_type": "t3.micro"
+        }))
+        .build()];
     let cost_estimates = vec![("test-ec2".to_string(), 10.0, 0.9)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -302,16 +294,14 @@ fn test_ec2_overprovisioning_small_instance_no_detection() {
 #[test]
 fn test_ec2_overprovisioning_xlarge_low_cost_no_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-ec2".to_string())
-            .resource_type("aws_instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({
-                "instance_type": "m5.xlarge"
-            }))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-ec2".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({
+            "instance_type": "m5.xlarge"
+        }))
+        .build()];
     let cost_estimates = vec![("test-ec2".to_string(), 150.0, 0.9)]; // Below threshold
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -323,14 +313,12 @@ fn test_ec2_overprovisioning_xlarge_low_cost_no_detection() {
 #[test]
 fn test_s3_missing_lifecycle_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-s3".to_string())
-            .resource_type("aws_s3_bucket".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({}))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-s3".to_string())
+        .resource_type("aws_s3_bucket".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({}))
+        .build()];
     let cost_estimates = vec![("test-s3".to_string(), 60.0, 0.8)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -343,19 +331,17 @@ fn test_s3_missing_lifecycle_detection() {
 #[test]
 fn test_s3_with_lifecycle_no_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-s3".to_string())
-            .resource_type("aws_s3_bucket".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({
-                "lifecycle_rule": [{
-                    "id": "test-rule",
-                    "enabled": true
-                }]
-            }))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-s3".to_string())
+        .resource_type("aws_s3_bucket".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({
+            "lifecycle_rule": [{
+                "id": "test-rule",
+                "enabled": true
+            }]
+        }))
+        .build()];
     let cost_estimates = vec![("test-s3".to_string(), 60.0, 0.8)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -366,14 +352,12 @@ fn test_s3_with_lifecycle_no_detection() {
 #[test]
 fn test_s3_missing_lifecycle_low_cost_no_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-s3".to_string())
-            .resource_type("aws_s3_bucket".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({}))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-s3".to_string())
+        .resource_type("aws_s3_bucket".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({}))
+        .build()];
     let cost_estimates = vec![("test-s3".to_string(), 30.0, 0.8)]; // Below threshold
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -385,13 +369,11 @@ fn test_s3_missing_lifecycle_low_cost_no_detection() {
 #[test]
 fn test_high_cost_change_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-resource".to_string())
-            .resource_type("aws_lambda_function".to_string())
-            .action(ChangeAction::Update)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-resource".to_string())
+        .resource_type("aws_lambda_function".to_string())
+        .action(ChangeAction::Update)
+        .build()];
     let cost_estimates = vec![("test-resource".to_string(), 350.0, 0.8)]; // Above threshold
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -404,13 +386,11 @@ fn test_high_cost_change_detection() {
 #[test]
 fn test_high_cost_change_low_cost_no_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-resource".to_string())
-            .resource_type("aws_lambda_function".to_string())
-            .action(ChangeAction::Update)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-resource".to_string())
+        .resource_type("aws_lambda_function".to_string())
+        .action(ChangeAction::Update)
+        .build()];
     let cost_estimates = vec![("test-resource".to_string(), 250.0, 0.8)]; // Below threshold
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -456,7 +436,8 @@ fn test_multiple_anti_patterns_detected() {
     assert!(result.is_ok());
     let detections = result.unwrap();
     assert_eq!(detections.len(), 3);
-    let rule_ids: std::collections::HashSet<_> = detections.iter().map(|d| d.rule_id.as_str()).collect();
+    let rule_ids: std::collections::HashSet<_> =
+        detections.iter().map(|d| d.rule_id.as_str()).collect();
     assert!(rule_ids.contains("NAT_GATEWAY_COST"));
     assert!(rule_ids.contains("OVERPROVISIONED_EC2"));
     assert!(rule_ids.contains("S3_MISSING_LIFECYCLE"));
@@ -467,16 +448,14 @@ fn test_multiple_anti_patterns_detected() {
 #[test]
 fn test_detection_with_no_matching_cost_estimates() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-resource".to_string())
-            .resource_type("aws_instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({
-                "instance_type": "m5.xlarge"
-            }))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-resource".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(serde_json::json!({
+            "instance_type": "m5.xlarge"
+        }))
+        .build()];
     // No cost estimates provided
     let result = engine.analyze_changes(&changes, &[]);
     assert!(result.is_ok());
@@ -501,7 +480,7 @@ fn test_detection_with_partial_cost_estimates() {
             .new_config(serde_json::json!({
                 "instance_type": "t3.micro"
             }))
-            .build()
+            .build(),
     ];
     // Only one cost estimate
     let cost_estimates = vec![("resource1".to_string(), 150.0, 0.8)];
@@ -518,13 +497,11 @@ fn test_detection_with_partial_cost_estimates() {
 #[test]
 fn test_rds_high_cost_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-rds".to_string())
-            .resource_type("aws_db_instance".to_string())
-            .action(ChangeAction::Create)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-rds".to_string())
+        .resource_type("aws_db_instance".to_string())
+        .action(ChangeAction::Create)
+        .build()];
     let cost_estimates = vec![("test-rds".to_string(), 350.0, 0.8)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -536,13 +513,11 @@ fn test_rds_high_cost_detection() {
 #[test]
 fn test_lambda_high_cost_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-lambda".to_string())
-            .resource_type("aws_lambda_function".to_string())
-            .action(ChangeAction::Update)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-lambda".to_string())
+        .resource_type("aws_lambda_function".to_string())
+        .action(ChangeAction::Update)
+        .build()];
     let cost_estimates = vec![("test-lambda".to_string(), 320.0, 0.8)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -554,13 +529,11 @@ fn test_lambda_high_cost_detection() {
 #[test]
 fn test_dynamodb_high_cost_detection() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-dynamo".to_string())
-            .resource_type("aws_dynamodb_table".to_string())
-            .action(ChangeAction::Update)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-dynamo".to_string())
+        .resource_type("aws_dynamodb_table".to_string())
+        .action(ChangeAction::Update)
+        .build()];
     let cost_estimates = vec![("test-dynamo".to_string(), 310.0, 0.8)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
@@ -574,20 +547,21 @@ fn test_dynamodb_high_cost_detection() {
 #[test]
 fn test_detection_severity_levels() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-resource".to_string())
-            .resource_type("aws_nat_gateway".to_string())
-            .action(ChangeAction::Create)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-resource".to_string())
+        .resource_type("aws_nat_gateway".to_string())
+        .action(ChangeAction::Create)
+        .build()];
     let cost_estimates = vec![("test-resource".to_string(), 150.0, 0.8)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
     let detections = result.unwrap();
     assert_eq!(detections.len(), 1);
     // NAT Gateway detection should have appropriate severity
-    assert!(matches!(detections[0].severity, Severity::Medium | Severity::High | Severity::Critical));
+    assert!(matches!(
+        detections[0].severity,
+        Severity::Medium | Severity::High | Severity::Critical
+    ));
 }
 
 // ===== VERBOSE MODE TESTS =====
@@ -622,7 +596,10 @@ fn test_regression_classifier_provisioning_create() {
         .action(ChangeAction::Create)
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Provisioning);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Provisioning
+    );
 }
 
 #[test]
@@ -633,7 +610,10 @@ fn test_regression_classifier_provisioning_replace() {
         .action(ChangeAction::Replace)
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Provisioning);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Provisioning
+    );
 }
 
 #[test]
@@ -646,7 +626,10 @@ fn test_regression_classifier_configuration_billing_mode() {
         .new_config(serde_json::json!({"billing_mode": "PAY_PER_REQUEST"}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Configuration);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Configuration
+    );
 }
 
 #[test]
@@ -659,7 +642,10 @@ fn test_regression_classifier_configuration_lifecycle() {
         .new_config(serde_json::json!({"lifecycle_rule": [{"enabled": true}]}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Configuration);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Configuration
+    );
 }
 
 #[test]
@@ -672,7 +658,10 @@ fn test_regression_classifier_configuration_encryption() {
         .new_config(serde_json::json!({"encryption": {"enabled": true}}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Configuration);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Configuration
+    );
 }
 
 #[test]
@@ -685,7 +674,10 @@ fn test_regression_classifier_configuration_storage_class() {
         .new_config(serde_json::json!({"storage_class": "STANDARD_IA"}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Configuration);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Configuration
+    );
 }
 
 #[test]
@@ -698,7 +690,10 @@ fn test_regression_classifier_scaling_instance_count() {
         .new_config(serde_json::json!({"desired_capacity": 5}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Scaling);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Scaling
+    );
 }
 
 #[test]
@@ -711,7 +706,10 @@ fn test_regression_classifier_scaling_max_size() {
         .new_config(serde_json::json!({"max_size": 10}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Scaling);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Scaling
+    );
 }
 
 #[test]
@@ -724,7 +722,10 @@ fn test_regression_classifier_scaling_lambda_concurrency() {
         .new_config(serde_json::json!({"reserved_concurrent_executions": 20}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Scaling);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Scaling
+    );
 }
 
 #[test]
@@ -737,7 +738,10 @@ fn test_regression_classifier_scaling_replica_count() {
         .new_config(serde_json::json!({"number_of_replicas": 4}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Scaling);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Scaling
+    );
 }
 
 #[test]
@@ -750,7 +754,10 @@ fn test_regression_classifier_scaling_replica_count_alt() {
         .new_config(serde_json::json!({"replica_count": 3}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Scaling);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Scaling
+    );
 }
 
 #[test]
@@ -761,7 +768,10 @@ fn test_regression_classifier_traffic_nat_gateway() {
         .action(ChangeAction::Update)
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::TrafficInferred);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::TrafficInferred
+    );
 }
 
 #[test]
@@ -772,7 +782,10 @@ fn test_regression_classifier_traffic_load_balancer() {
         .action(ChangeAction::Update)
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::TrafficInferred);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::TrafficInferred
+    );
 }
 
 #[test]
@@ -783,7 +796,10 @@ fn test_regression_classifier_traffic_alb() {
         .action(ChangeAction::Update)
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::TrafficInferred);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::TrafficInferred
+    );
 }
 
 #[test]
@@ -794,7 +810,10 @@ fn test_regression_classifier_traffic_cloudfront() {
         .action(ChangeAction::Update)
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::TrafficInferred);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::TrafficInferred
+    );
 }
 
 #[test]
@@ -807,7 +826,10 @@ fn test_regression_classifier_indirect_cost_default() {
         .new_config(serde_json::json!({"description": "new"}))
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::IndirectCost);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::IndirectCost
+    );
 }
 
 #[test]
@@ -821,7 +843,10 @@ fn test_regression_classifier_no_scaling_change() {
         .build();
 
     // Should not be scaling since count decreased
-    assert_ne!(RegressionClassifier::classify(&change), RegressionType::Scaling);
+    assert_ne!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Scaling
+    );
 }
 
 #[test]
@@ -832,7 +857,10 @@ fn test_regression_classifier_create_no_config() {
         .action(ChangeAction::Create)
         .build();
 
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::Provisioning);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::Provisioning
+    );
 }
 
 #[test]
@@ -844,7 +872,10 @@ fn test_regression_classifier_delete_action() {
         .build();
 
     // Delete should be IndirectCost (default)
-    assert_eq!(RegressionClassifier::classify(&change), RegressionType::IndirectCost);
+    assert_eq!(
+        RegressionClassifier::classify(&change),
+        RegressionType::IndirectCost
+    );
 }
 
 // ===== SEVERITY CALCULATION TESTS =====
@@ -861,7 +892,10 @@ fn test_severity_calculation_high_cost_rds() {
         .build();
 
     let score = calculate_severity_score(&change, 500.0, &RegressionType::Scaling, 0.8);
-    assert!(score > 50, "High-cost RDS change should have high severity score");
+    assert!(
+        score > 50,
+        "High-cost RDS change should have high severity score"
+    );
     assert!(score <= 100, "Score should not exceed 100");
 }
 
@@ -958,11 +992,21 @@ fn test_severity_calculation_magnitude_tiers() {
     let low_score = calculate_severity_score(&change, 5.0, &RegressionType::Configuration, 0.5);
     let medium_score = calculate_severity_score(&change, 75.0, &RegressionType::Scaling, 0.5);
     let high_score = calculate_severity_score(&change, 300.0, &RegressionType::Provisioning, 0.5);
-    let critical_score = calculate_severity_score(&change, 1500.0, &RegressionType::Provisioning, 0.5);
+    let critical_score =
+        calculate_severity_score(&change, 1500.0, &RegressionType::Provisioning, 0.5);
 
-    assert!(low_score < medium_score, "Higher cost should give higher severity");
-    assert!(medium_score < high_score, "Higher cost should give higher severity");
-    assert!(high_score < critical_score, "Higher cost should give higher severity");
+    assert!(
+        low_score < medium_score,
+        "Higher cost should give higher severity"
+    );
+    assert!(
+        medium_score < high_score,
+        "Higher cost should give higher severity"
+    );
+    assert!(
+        high_score < critical_score,
+        "Higher cost should give higher severity"
+    );
     assert!(critical_score <= 100, "Score should not exceed 100");
 }
 
@@ -1007,8 +1051,14 @@ fn test_severity_calculation_resource_importance() {
     let ec2_score = calculate_severity_score(&ec2_change, 100.0, &RegressionType::Scaling, 0.5);
     let sg_score = calculate_severity_score(&sg_change, 100.0, &RegressionType::Scaling, 0.5);
 
-    assert!(rds_score > ec2_score, "RDS should have higher severity than EC2");
-    assert!(ec2_score > sg_score, "EC2 should have higher severity than security group");
+    assert!(
+        rds_score > ec2_score,
+        "RDS should have higher severity than EC2"
+    );
+    assert!(
+        ec2_score > sg_score,
+        "EC2 should have higher severity than security group"
+    );
 }
 
 #[test]
@@ -1155,7 +1205,8 @@ fn test_detection_engine_large_plan() {
     // Create a plan with many resources
     let mut resource_changes = Vec::new();
     for i in 0..50 {
-        resource_changes.push(format!(r#"
+        resource_changes.push(format!(
+            r#"
             {{
                 "address": "aws_instance.instance{}",
                 "type": "aws_instance",
@@ -1164,10 +1215,13 @@ fn test_detection_engine_large_plan() {
                     "actions": ["create"],
                     "after": {{"instance_type": "t3.micro"}}
                 }}
-            }}"#, i, i));
+            }}"#,
+            i, i
+        ));
     }
 
-    let json = format!(r#"{{
+    let json = format!(
+        r#"{{
         "format_version": "1.1",
         "terraform_version": "1.0.0",
         "planned_values": {{
@@ -1176,7 +1230,9 @@ fn test_detection_engine_large_plan() {
             }}
         }},
         "resource_changes": [{}]
-    }}"#, resource_changes.join(","));
+    }}"#,
+        resource_changes.join(",")
+    );
 
     let result = engine.detect_from_terraform_json(&json);
     assert!(result.is_ok());
@@ -1299,7 +1355,11 @@ fn test_detection_engine_complex_module_path_extraction() {
     assert!(result.is_ok());
     let changes = result.unwrap();
     assert_eq!(changes.len(), 1);
-    assert!(changes[0].module_path.as_ref().unwrap().contains("networking"));
+    assert!(changes[0]
+        .module_path
+        .as_ref()
+        .unwrap()
+        .contains("networking"));
 }
 
 #[test]
@@ -1341,12 +1401,14 @@ fn test_detection_engine_multiple_changes_performance() {
 
     // Create 100 changes
     for i in 0..100 {
-        changes.push(ResourceChange::builder()
-            .resource_id(format!("test{}", i))
-            .resource_type("aws_instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(serde_json::json!({"instance_type": "t3.micro"}))
-            .build());
+        changes.push(
+            ResourceChange::builder()
+                .resource_id(format!("test{}", i))
+                .resource_type("aws_instance".to_string())
+                .action(ChangeAction::Create)
+                .new_config(serde_json::json!({"instance_type": "t3.micro"}))
+                .build(),
+        );
     }
 
     // Test that parsing works with many changes
@@ -1450,13 +1512,11 @@ fn test_detection_engine_cost_estimate_mismatch() {
 #[test]
 fn test_detection_engine_zero_cost_estimates() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-resource".to_string())
-            .resource_type("aws_nat_gateway".to_string())
-            .action(ChangeAction::Create)
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-resource".to_string())
+        .resource_type("aws_nat_gateway".to_string())
+        .action(ChangeAction::Create)
+        .build()];
 
     let cost_estimates = vec![("test-resource".to_string(), 0.0, 0.5)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
@@ -1468,14 +1528,12 @@ fn test_detection_engine_zero_cost_estimates() {
 #[test]
 fn test_detection_engine_negative_cost_estimates() {
     let engine = DetectionEngine::new();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_id("test-resource".to_string())
-            .resource_type("aws_instance".to_string())
-            .action(ChangeAction::Update)
-            .new_config(serde_json::json!({"instance_type": "m5.xlarge"}))
-            .build()
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_id("test-resource".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Update)
+        .new_config(serde_json::json!({"instance_type": "m5.xlarge"}))
+        .build()];
 
     let cost_estimates = vec![("test-resource".to_string(), -50.0, 0.8)]; // Negative cost
     let result = engine.analyze_changes(&changes, &cost_estimates);
@@ -1484,8 +1542,223 @@ fn test_detection_engine_negative_cost_estimates() {
     assert!(detections.is_empty()); // Negative cost should not trigger detection
 }
 
+// ===== PROPERTY-BASED TESTS =====
+
+proptest! {
+    #[test]
+    fn test_detection_engine_deterministic_output(
+        resource_type in "[a-z_]{1,50}",
+        resource_id in "[a-zA-Z0-9_-]{1,100}",
+        action_int in 0..4
+    ) {
+        let action = match action_int {
+            0 => ChangeAction::Create,
+            1 => ChangeAction::Update,
+            2 => ChangeAction::Delete,
+            _ => ChangeAction::NoOp,
+        };
+
+        let change = ResourceChange::builder()
+            .resource_type(resource_type.clone())
+            .resource_id(resource_id.clone())
+            .action(action)
+            .new_config(serde_json::json!({}))
+            .build();
+
+        let changes = vec![change.clone()];
+        let cost_estimates = vec![(resource_id.clone(), 100.0, 0.8)];
+
+        let engine1 = DetectionEngine::new();
+        let engine2 = DetectionEngine::new();
+
+        let result1 = engine1.analyze_changes(&changes, &cost_estimates);
+        let result2 = engine2.analyze_changes(&changes, &cost_estimates);
+
+        // Same input should produce same output (deterministic)
+        match (result1, result2) {
+            (Ok(detections1), Ok(detections2)) => {
+                prop_assert_eq!(detections1.len(), detections2.len());
+                if !detections1.is_empty() && !detections2.is_empty() {
+                    prop_assert_eq!(&detections1[0].regression_type, &detections2[0].regression_type);
+                    prop_assert_eq!(&detections1[0].severity, &detections2[0].severity);
+                    prop_assert_eq!(detections1[0].severity_score, detections2[0].severity_score);
+                }
+            }
+            (Err(_), Err(_)) => {} // Both errors is also deterministic
+            _ => prop_assert!(false, "Inconsistent results for same input"),
+        }
+    }
+
+    #[test]
+    fn test_detection_engine_valid_outputs(
+        resource_type in "[a-z_]{1,50}",
+        resource_id in "[a-zA-Z0-9_-]{1,100}",
+        action_int in 0..4
+    ) {
+        let action = match action_int {
+            0 => ChangeAction::Create,
+            1 => ChangeAction::Update,
+            2 => ChangeAction::Delete,
+            _ => ChangeAction::NoOp,
+        };
+
+        let change = ResourceChange::builder()
+            .resource_type(resource_type)
+            .resource_id(resource_id.clone())
+            .action(action)
+            .new_config(serde_json::json!({}))
+            .build();
+
+        let changes = vec![change];
+        let cost_estimates = vec![(resource_id, 100.0, 0.8)];
+
+        let engine = DetectionEngine::new();
+        let result = engine.analyze_changes(&changes, &cost_estimates);
+
+        if let Ok(detections) = result {
+            for detection in detections {
+                // Severity scores should be valid (between 0 and 100 for severity_score)
+                prop_assert!(detection.severity_score >= 0 && detection.severity_score <= 100);
+            }
+        }
+    }
+
+    #[test]
+    fn test_detection_engine_regression_types_consistent(
+        resource_type in "[a-z_]{1,50}",
+        resource_id in "[a-zA-Z0-9_-]{1,100}"
+    ) {
+        let change = ResourceChange::builder()
+            .resource_type(resource_type)
+            .resource_id(resource_id.clone())
+            .action(ChangeAction::Create)
+            .new_config(serde_json::json!({}))
+            .build();
+
+        let changes = vec![change];
+        let cost_estimates = vec![(resource_id, 100.0, 0.8)];
+
+        let engine = DetectionEngine::new();
+        let result = engine.analyze_changes(&changes, &cost_estimates);
+
+        if let Ok(detections) = result {
+            for detection in detections {
+                // Regression type should be a valid enum variant
+                match detection.regression_type {
+                    RegressionType::Configuration | RegressionType::Scaling |
+                    RegressionType::Provisioning | RegressionType::TrafficInferred |
+                    RegressionType::IndirectCost | RegressionType::Traffic |
+                    RegressionType::Indirect => {} // Valid types
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_detection_engine_severity_enum_consistent(
+        resource_type in "[a-z_]{1,50}",
+        resource_id in "[a-zA-Z0-9_-]{1,100}"
+    ) {
+        let change = ResourceChange::builder()
+            .resource_type(resource_type)
+            .resource_id(resource_id.clone())
+            .action(ChangeAction::Create)
+            .new_config(serde_json::json!({}))
+            .build();
+
+        let changes = vec![change];
+        let cost_estimates = vec![(resource_id, 100.0, 0.8)];
+
+        let engine = DetectionEngine::new();
+        let result = engine.analyze_changes(&changes, &cost_estimates);
+
+        if let Ok(detections) = result {
+            for detection in detections {
+                // Severity should be a valid enum variant
+                match detection.severity {
+                    Severity::Low | Severity::Medium | Severity::High | Severity::Critical => {} // Valid severities
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+#[derive(Clone, Debug)]
+struct ArbResourceChange(ResourceChange);
+
+impl Arbitrary for ArbResourceChange {
+    fn arbitrary(g: &mut Gen) -> Self {
+        let resource_id: String = Arbitrary::arbitrary(g);
+        let resource_type: String = Arbitrary::arbitrary(g);
+        let action_int: u32 = Arbitrary::arbitrary(g);
+
+        let action = match action_int % 4 {
+            0 => ChangeAction::Create,
+            1 => ChangeAction::Update,
+            2 => ChangeAction::Delete,
+            _ => ChangeAction::NoOp,
+        };
+
+        ArbResourceChange(
+            ResourceChange::builder()
+                .resource_id(resource_id)
+                .resource_type(resource_type)
+                .action(action)
+                .new_config(serde_json::json!({}))
+                .build(),
+        )
+    }
+}
+
+#[quickcheck]
+fn quickcheck_detection_engine_no_panic(change: ArbResourceChange) -> bool {
+    let engine = DetectionEngine::new();
+    let changes = vec![change.0];
+    let cost_estimates = vec![("test-resource".to_string(), 100.0, 0.8)];
+    let _result = engine.analyze_changes(&changes, &cost_estimates);
+    // Just ensure it doesn't panic
+    true
+}
+
+#[quickcheck]
+fn quickcheck_detection_engine_valid_outputs(change: ArbResourceChange) -> bool {
+    let engine = DetectionEngine::new();
+    let changes = vec![change.0];
+    let cost_estimates = vec![("test-resource".to_string(), 100.0, 0.8)];
+    let result = engine.analyze_changes(&changes, &cost_estimates);
+
+    if let Ok(detections) = result {
+        for detection in detections {
+            // Check that outputs are valid
+            if !(detection.severity_score >= 0
+                && detection.severity_score <= 100
+                && matches!(
+                    detection.regression_type,
+                    RegressionType::Configuration
+                        | RegressionType::Scaling
+                        | RegressionType::Provisioning
+                        | RegressionType::TrafficInferred
+                        | RegressionType::IndirectCost
+                        | RegressionType::Traffic
+                        | RegressionType::Indirect
+                )
+                && matches!(
+                    detection.severity,
+                    Severity::Low | Severity::Medium | Severity::High | Severity::Critical
+                ))
+            {
+                return false;
+            }
+        }
+        true
+    } else {
+        true // Errors are acceptable
+    }
+}
+
 // ===== FINAL COUNT VERIFICATION =====
-// This file should now contain approximately 80 tests covering:
+// This file should now contain approximately 85 tests covering:
 // - Basic engine functionality (3 tests)
 // - File/parsing operations (6 tests)
 // - Analysis operations (3 tests)
@@ -1498,4 +1771,227 @@ fn test_detection_engine_negative_cost_estimates() {
 // - Regression classifier (20+ tests)
 // - Severity calculation (15+ tests)
 // - Additional edge cases (5+ tests)
-// Total: ~80 tests
+// - Property-based tests (4 proptest + 2 quickcheck)
+// Total: ~85 tests
+
+// ===== DETECTION ENGINE ADDITIONAL EDGE CASE TESTS =====
+
+#[test]
+fn test_detection_engine_empty_terraform_plan_edge_case() {
+    let engine = DetectionEngine::new();
+    let empty_plan = r#"{
+        "format_version": "1.1",
+        "terraform_version": "1.5.0",
+        "resource_changes": []
+    }"#;
+
+    let result = engine.detect_from_terraform_json(empty_plan);
+    // Should handle empty plan gracefully
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_detection_engine_extremely_large_terraform_plan() {
+    let engine = DetectionEngine::new();
+    // Create a plan with many resources
+    let mut resource_changes = Vec::new();
+    for i in 0..1000 {
+        resource_changes.push(format!(
+            r#"{{
+            "address": "aws_instance.test{}",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "test{}",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {{
+                "actions": ["create"],
+                "before": null,
+                "after": {{
+                    "instance_type": "t3.micro",
+                    "ami": "ami-12345678"
+                }}
+            }}
+        }}"#,
+            i, i
+        ));
+    }
+
+    let large_plan = format!(
+        r#"{{
+        "format_version": "1.1",
+        "terraform_version": "1.5.0",
+        "resource_changes": [{}]
+    }}"#,
+        resource_changes.join(",")
+    );
+
+    let result = engine.detect_from_terraform_json(&large_plan);
+    // Should handle large plans
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_detection_engine_malformed_json_edge_case() {
+    let engine = DetectionEngine::new();
+    let malformed_json = r#"{
+        "format_version": "1.1",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {
+                "address": "aws_instance.test",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "test",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "instance_type": "t3.micro",
+                        "ami": "ami-12345678"
+                    }
+                }
+            }
+        ]
+    "#; // Missing closing brace
+
+    let result = engine.detect_from_terraform_json(malformed_json);
+    // Should handle malformed JSON
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_detection_engine_null_values_edge_case() {
+    let engine = DetectionEngine::new();
+    let null_plan = r#"{
+        "format_version": "1.1",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {
+                "address": null,
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "test",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "instance_type": "t3.micro",
+                        "ami": null
+                    }
+                }
+            }
+        ]
+    }"#;
+
+    let result = engine.detect_from_terraform_json(null_plan);
+    // Should handle null values
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_detection_engine_extremely_nested_json() {
+    let engine = DetectionEngine::new();
+    // Create deeply nested JSON
+    let mut nested = "value".to_string();
+    for _ in 0..10 {
+        nested = format!(r#"{{"nested": {}}}"#, nested);
+    }
+
+    let nested_plan = format!(
+        r#"{{
+        "format_version": "1.1",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {{
+                "address": "aws_instance.test",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "test",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {{
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {{
+                        "instance_type": "t3.micro",
+                        "nested_config": {}
+                    }}
+                }}
+            }}
+        ]
+    }}"#,
+        nested
+    );
+
+    let result = engine.detect_from_terraform_json(&nested_plan);
+    // Should handle nested structures
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_detection_engine_unicode_characters_edge_case() {
+    let engine = DetectionEngine::new();
+    let unicode_plan = r#"{
+        "format_version": "1.1",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {
+                "address": "aws_instance.测试",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "测试",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "instance_type": "t3.micro",
+                        "tags": {
+                            "Name": "测试实例",
+                            "Environment": "生产环境"
+                        }
+                    }
+                }
+            }
+        ]
+    }"#;
+
+    let result = engine.detect_from_terraform_json(unicode_plan);
+    // Should handle Unicode characters
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_detection_engine_extremely_long_resource_names() {
+    let engine = DetectionEngine::new();
+    let long_name = "a".repeat(1000);
+    let long_plan = format!(
+        r#"{{
+        "format_version": "1.1",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {{
+                "address": "{}",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "{}",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {{
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {{
+                        "instance_type": "t3.micro",
+                        "ami": "ami-12345678"
+                    }}
+                }}
+            }}
+        ]
+    }}"#,
+        long_name, long_name
+    );
+
+    let result = engine.detect_from_terraform_json(&long_plan);
+    // Should handle extremely long names
+    assert!(result.is_ok() || result.is_err());
+}

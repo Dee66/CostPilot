@@ -1,5 +1,5 @@
-use costpilot::engines::prediction::{PredictionEngine, prediction_engine::CostHeuristics};
-use costpilot::engines::shared::models::{ResourceChange, ChangeAction};
+use costpilot::engines::prediction::{prediction_engine::CostHeuristics, PredictionEngine};
+use costpilot::engines::shared::models::{ChangeAction, ResourceChange};
 use std::collections::HashMap;
 
 /// Manual ground-truth test cases with hand-computed expected costs
@@ -36,11 +36,17 @@ mod ground_truth_tests {
         assert_eq!(estimate.resource_id, "test-ec2-single");
 
         // Free edition static cost for aws_instance is $150/month
-        assert!((estimate.monthly_cost - 150.0).abs() < 0.01,
-            "aws_instance cost {} should be $150.00 in free edition", estimate.monthly_cost);
+        assert!(
+            (estimate.monthly_cost - 150.0).abs() < 0.01,
+            "aws_instance cost {} should be $150.00 in free edition",
+            estimate.monthly_cost
+        );
 
-        assert!(estimate.confidence_score >= 0.0,
-            "Confidence score should be defined, got {}", estimate.confidence_score);
+        assert!(
+            estimate.confidence_score >= 0.0,
+            "Confidence score should be defined, got {}",
+            estimate.confidence_score
+        );
     }
 
     /// Test case: Single RDS db.t2.micro instance
@@ -71,8 +77,11 @@ mod ground_truth_tests {
         assert_eq!(estimate.resource_id, "test-rds-single");
 
         // Free edition static cost for non-EC2 resources is $0/month
-        assert!((estimate.monthly_cost - 0.0).abs() < 0.01,
-            "aws_db_instance cost {} should be $0.00 in free edition", estimate.monthly_cost);
+        assert!(
+            (estimate.monthly_cost - 0.0).abs() < 0.01,
+            "aws_db_instance cost {} should be $0.00 in free edition",
+            estimate.monthly_cost
+        );
     }
 
     /// Test case: Two resources - manual aggregation verification
@@ -119,17 +128,32 @@ mod ground_truth_tests {
         let total_cost: f64 = estimates.iter().map(|e| e.monthly_cost).sum();
 
         // Combined cost should be exactly $150 ($150 + $0)
-        assert!((total_cost - 150.0).abs() < 0.01,
-            "Total cost {} should be exactly $150.00 ($150 + $0)", total_cost);
+        assert!(
+            (total_cost - 150.0).abs() < 0.01,
+            "Total cost {} should be exactly $150.00 ($150 + $0)",
+            total_cost
+        );
 
         // Verify individual costs are correct
-        let ec2_estimate = estimates.iter().find(|e| e.resource_id == "test-ec2-multi").unwrap();
-        let rds_estimate = estimates.iter().find(|e| e.resource_id == "test-rds-multi").unwrap();
+        let ec2_estimate = estimates
+            .iter()
+            .find(|e| e.resource_id == "test-ec2-multi")
+            .unwrap();
+        let rds_estimate = estimates
+            .iter()
+            .find(|e| e.resource_id == "test-rds-multi")
+            .unwrap();
 
-        assert!((ec2_estimate.monthly_cost - 150.0).abs() < 0.01,
-            "EC2 cost should be $150.00, got {}", ec2_estimate.monthly_cost);
-        assert!((rds_estimate.monthly_cost - 0.0).abs() < 0.01,
-            "RDS cost should be $0.00, got {}", rds_estimate.monthly_cost);
+        assert!(
+            (ec2_estimate.monthly_cost - 150.0).abs() < 0.01,
+            "EC2 cost should be $150.00, got {}",
+            ec2_estimate.monthly_cost
+        );
+        assert!(
+            (rds_estimate.monthly_cost - 0.0).abs() < 0.01,
+            "RDS cost should be $0.00, got {}",
+            rds_estimate.monthly_cost
+        );
     }
 
     /// Test case: Boundary case - small instance (t2.nano)
@@ -159,8 +183,11 @@ mod ground_truth_tests {
         let estimate = &estimates[0];
 
         // Free edition static cost for aws_instance is $150/month regardless of instance type
-        assert!((estimate.monthly_cost - 150.0).abs() < 0.01,
-            "t2.nano cost {} should be $150.00 in free edition (static for all instances)", estimate.monthly_cost);
+        assert!(
+            (estimate.monthly_cost - 150.0).abs() < 0.01,
+            "t2.nano cost {} should be $150.00 in free edition (static for all instances)",
+            estimate.monthly_cost
+        );
 
         // Should be positive
         assert!(estimate.monthly_cost > 0.0, "Cost should be positive");
@@ -193,8 +220,11 @@ mod ground_truth_tests {
         let estimate = &estimates[0];
 
         // Free edition static cost for aws_instance is $150/month regardless of instance type
-        assert!((estimate.monthly_cost - 150.0).abs() < 0.01,
-            "m5.24xlarge cost {} should be $150.00 in free edition (static for all instances)", estimate.monthly_cost);
+        assert!(
+            (estimate.monthly_cost - 150.0).abs() < 0.01,
+            "m5.24xlarge cost {} should be $150.00 in free edition (static for all instances)",
+            estimate.monthly_cost
+        );
 
         // Should be positive
         assert!(estimate.monthly_cost > 0.0, "Cost should be positive");
@@ -227,7 +257,11 @@ mod ground_truth_tests {
         let estimate = &estimates[0];
 
         // Should handle zero cost gracefully (not crash)
-        assert!(estimate.monthly_cost >= 0.0, "Cost should not be negative, got {}", estimate.monthly_cost);
+        assert!(
+            estimate.monthly_cost >= 0.0,
+            "Cost should not be negative, got {}",
+            estimate.monthly_cost
+        );
 
         // Even with explicit zero, the engine might still estimate based on instance type
         // This is acceptable behavior - the test ensures no crashes
@@ -278,13 +312,24 @@ mod ground_truth_tests {
         let total_cost: f64 = estimates.iter().map(|e| e.monthly_cost).sum();
 
         // Expected: $300/month for 2 x $150 instances
-        assert!((total_cost - 300.0).abs() < 0.01,
-            "2 x aws_instance total cost {} should be exactly $300.00 (2 x $150)", total_cost);
+        assert!(
+            (total_cost - 300.0).abs() < 0.01,
+            "2 x aws_instance total cost {} should be exactly $300.00 (2 x $150)",
+            total_cost
+        );
 
         // Each instance should cost exactly $150
         let cost1 = estimates[0].monthly_cost;
         let cost2 = estimates[1].monthly_cost;
-        assert!((cost1 - 150.0).abs() < 0.01, "First instance cost should be $150.00, got {}", cost1);
-        assert!((cost2 - 150.0).abs() < 0.01, "Second instance cost should be $150.00, got {}", cost2);
+        assert!(
+            (cost1 - 150.0).abs() < 0.01,
+            "First instance cost should be $150.00, got {}",
+            cost1
+        );
+        assert!(
+            (cost2 - 150.0).abs() < 0.01,
+            "Second instance cost should be $150.00, got {}",
+            cost2
+        );
     }
 }

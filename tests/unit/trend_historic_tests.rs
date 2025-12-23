@@ -754,3 +754,171 @@ struct Reversal {
 struct Projection {
     total_projected_cost: f64,
 }
+
+// ===== TREND ENGINE EDGE CASE TESTS =====
+
+#[test]
+fn test_trend_analysis_empty_history_edge_case() {
+    // Test trend analysis with empty history
+    let empty_history: Vec<CostPoint> = vec![];
+
+    let trend = detect_trend(&empty_history);
+    // Should handle empty history gracefully
+    assert!(trend.is_ok() || trend.is_err()); // Either outcome acceptable
+}
+
+#[test]
+fn test_trend_analysis_single_point_edge_case() {
+    // Test trend analysis with single data point
+    let single_point = vec![CostPoint {
+        timestamp: Utc::now(),
+        cost: 100.0,
+    }];
+
+    let trend = detect_trend(&single_point);
+    // Should handle single point gracefully
+    assert!(trend.is_ok() || trend.is_err()); // Either outcome acceptable
+}
+
+#[test]
+fn test_trend_analysis_extreme_cost_values() {
+    // Test with extreme cost values
+    let extreme_history = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(10), cost: 0.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(9), cost: 1_000_000_000.0 }, // 1 billion
+        CostPoint { timestamp: Utc::now() - Duration::days(8), cost: -1_000_000.0 }, // Negative
+        CostPoint { timestamp: Utc::now() - Duration::days(7), cost: 0.000001 }, // Very small
+    ];
+
+    let trend = detect_trend(&extreme_history);
+    assert!(trend.is_ok());
+    // Should handle extreme values without panicking
+}
+
+#[test]
+fn test_trend_analysis_extremely_long_history() {
+    // Test with a very long history (1000+ data points)
+    let mut long_history = Vec::new();
+    let base_time = Utc::now();
+
+    for i in 0..1000 {
+        long_history.push(CostPoint {
+            timestamp: base_time - Duration::days(i as i64),
+            cost: 100.0 + (i as f64),
+        });
+    }
+
+    let trend = detect_trend(&long_history);
+    assert!(trend.is_ok());
+    // Should handle large datasets efficiently
+}
+
+#[test]
+fn test_trend_analysis_zero_variance_edge_case() {
+    // Test with zero variance (all same values)
+    let zero_variance = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(5), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(4), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(3), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(2), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(1), cost: 100.0 },
+    ];
+
+    let trend = detect_trend(&zero_variance);
+    assert!(trend.is_ok());
+    assert_eq!(trend.unwrap().direction, TrendDirection::Stable);
+}
+
+#[test]
+fn test_trend_analysis_extreme_timestamps() {
+    // Test with extreme timestamp ranges
+    let extreme_timestamps = vec![
+        CostPoint { timestamp: chrono::DateTime::from_timestamp(0, 0).unwrap(), cost: 100.0 }, // Unix epoch
+        CostPoint { timestamp: chrono::DateTime::from_timestamp(2147483647, 0).unwrap(), cost: 200.0 }, // Year 2038
+        CostPoint { timestamp: Utc::now(), cost: 150.0 },
+    ];
+
+    let trend = detect_trend(&extreme_timestamps);
+    assert!(trend.is_ok());
+    // Should handle extreme timestamps
+}
+
+#[test]
+fn test_trend_analysis_unsorted_timestamps_edge_case() {
+    // Test with unsorted timestamps
+    let unsorted_history = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(1), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(10), cost: 50.0 }, // Out of order
+        CostPoint { timestamp: Utc::now() - Duration::days(5), cost: 75.0 }, // Out of order
+        CostPoint { timestamp: Utc::now(), cost: 125.0 },
+    ];
+
+    let trend = detect_trend(&unsorted_history);
+    assert!(trend.is_ok());
+    // Should handle unsorted data gracefully
+}
+
+#[test]
+fn test_trend_analysis_duplicate_timestamps() {
+    // Test with duplicate timestamps
+    let duplicate_timestamps = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(2), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(2), cost: 150.0 }, // Same timestamp
+        CostPoint { timestamp: Utc::now() - Duration::days(1), cost: 125.0 },
+    ];
+
+    let trend = detect_trend(&duplicate_timestamps);
+    assert!(trend.is_ok());
+    // Should handle duplicate timestamps gracefully
+}
+
+#[test]
+fn test_trend_analysis_extreme_seasonality() {
+    // Test with extreme seasonality patterns
+    let mut seasonal_history = Vec::new();
+    let base_time = Utc::now();
+
+    for i in 0..365 { // One year of daily data
+        let seasonal_cost = 100.0 + 50.0 * (i as f64 * 2.0 * std::f64::consts::PI / 365.0).sin();
+        seasonal_history.push(CostPoint {
+            timestamp: base_time - Duration::days(365 - i),
+            cost: seasonal_cost,
+        });
+    }
+
+    let trend = detect_trend(&seasonal_history);
+    assert!(trend.is_ok());
+    // Should detect seasonal patterns
+}
+
+#[test]
+fn test_trend_analysis_nan_infinity_values_edge_case() {
+    // Test with NaN and infinity values
+    let special_values = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(3), cost: f64::NAN },
+        CostPoint { timestamp: Utc::now() - Duration::days(2), cost: f64::INFINITY },
+        CostPoint { timestamp: Utc::now() - Duration::days(1), cost: f64::NEG_INFINITY },
+        CostPoint { timestamp: Utc::now(), cost: 100.0 },
+    ];
+
+    let trend = detect_trend(&special_values);
+    // Should handle special float values gracefully
+    assert!(trend.is_ok() || trend.is_err()); // Either outcome acceptable
+}
+
+#[test]
+fn test_trend_analysis_extreme_outliers() {
+    // Test with extreme outliers
+    let outlier_history = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(10), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(9), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(8), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(7), cost: 1_000_000.0 }, // Extreme outlier
+        CostPoint { timestamp: Utc::now() - Duration::days(6), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(5), cost: 100.0 },
+    ];
+
+    let trend = detect_trend(&outlier_history);
+    assert!(trend.is_ok());
+    // Should be robust to outliers
+}

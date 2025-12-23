@@ -3,7 +3,7 @@
 use crate::engines::policy::parser::{EvaluationContext, PolicyRuleLoader, RuleEvaluator};
 use clap::Args;
 use colored::Colorize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Args)]
 pub struct PolicyDslCommand {
@@ -153,7 +153,7 @@ fn execute_list(
     Ok(())
 }
 
-fn execute_validate(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+fn execute_validate(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "Validating Policy Rules".bold().cyan());
     println!("Path: {}", path.display());
     println!();
@@ -173,7 +173,7 @@ fn execute_validate(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn execute_test(
-    policy_path: &PathBuf,
+    policy_path: &Path,
     resource_type: &str,
     monthly_cost: Option<f64>,
     verbose: bool,

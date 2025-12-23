@@ -10,7 +10,12 @@ fn create_test_engine() -> PredictionEngine {
 
 // Test helper to predict a single change
 fn predict_single(engine: &mut PredictionEngine, change: ResourceChange) -> CostEstimate {
-    engine.predict(&[change]).unwrap().into_iter().next().unwrap()
+    engine
+        .predict(&[change])
+        .unwrap()
+        .into_iter()
+        .next()
+        .unwrap()
 }
 
 // Test helper to create a resource change
@@ -104,8 +109,14 @@ fn test_interval_symmetric_around_estimate() {
     let expected_cost = 150.0;
     let expected_half_interval = expected_cost * range_factor;
 
-    assert!((result.prediction_interval_high - result.monthly_cost - expected_half_interval).abs() < 0.01);
-    assert!((result.monthly_cost - result.prediction_interval_low - expected_half_interval).abs() < 0.01);
+    assert!(
+        (result.prediction_interval_high - result.monthly_cost - expected_half_interval).abs()
+            < 0.01
+    );
+    assert!(
+        (result.monthly_cost - result.prediction_interval_low - expected_half_interval).abs()
+            < 0.01
+    );
 }
 
 #[test]
@@ -268,7 +279,7 @@ fn test_confidence_with_multiple_penalties() {
         .build();
 
     let confidence = calculate_confidence(&change, true, "aws_lambda_function"); // cold start: *0.6
-    // Expected: 0.70 * 0.6 * 0.75 * 0.9 = 0.2835
+                                                                                 // Expected: 0.70 * 0.6 * 0.75 * 0.9 = 0.2835
     assert!((confidence - 0.2835).abs() < 0.01);
 }
 
@@ -525,7 +536,7 @@ fn test_interval_symmetry_with_different_range_factors() {
     let range_factors = vec![0.1, 0.2, 0.3, 0.4, 0.5];
 
     for range_factor in range_factors {
-    let mut engine = create_test_engine();
+        let mut engine = create_test_engine();
 
         let change = create_resource_change("aws_instance", json!({"instance_type": "t3.large"}));
         let result = predict_single(&mut engine, change.clone());
@@ -555,8 +566,14 @@ fn test_interval_calculation_deterministic() {
     let result1 = predict_single(&mut engine, change.clone());
     let result2 = predict_single(&mut engine, change.clone());
 
-    assert_eq!(result1.prediction_interval_low, result2.prediction_interval_low);
-    assert_eq!(result1.prediction_interval_high, result2.prediction_interval_high);
+    assert_eq!(
+        result1.prediction_interval_low,
+        result2.prediction_interval_low
+    );
+    assert_eq!(
+        result1.prediction_interval_high,
+        result2.prediction_interval_high
+    );
     assert_eq!(result1.confidence_score, result2.confidence_score);
 }
 
@@ -684,9 +701,9 @@ fn test_interval_bounds_never_negative_regression() {
 fn test_confidence_predictability_correlation() {
     let mut engine = create_test_engine();
     let test_cases = vec![
-        ("aws_instance", 0.95),      // High confidence
+        ("aws_instance", 0.95),        // High confidence
         ("aws_lambda_function", 0.70), // Medium confidence
-        ("aws_ecs_service", 0.60),   // Low confidence
+        ("aws_ecs_service", 0.60),     // Low confidence
     ];
 
     for (resource_type, expected_confidence) in test_cases {
@@ -725,8 +742,12 @@ fn test_confidence_score_distribution() {
     let mut confidences = Vec::new();
 
     let resource_types = vec![
-        "aws_instance", "aws_rds_instance", "aws_lambda_function",
-        "aws_s3_bucket", "aws_ecs_service", "unknown_resource"
+        "aws_instance",
+        "aws_rds_instance",
+        "aws_lambda_function",
+        "aws_s3_bucket",
+        "aws_ecs_service",
+        "unknown_resource",
     ];
 
     for resource_type in resource_types {
@@ -737,7 +758,10 @@ fn test_confidence_score_distribution() {
 
     // Should have a reasonable distribution
     let min_conf = confidences.iter().cloned().fold(f64::INFINITY, f64::min);
-    let max_conf = confidences.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let max_conf = confidences
+        .iter()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
 
     assert!(max_conf > min_conf); // Should have variation
     assert!(min_conf >= 0.0 && max_conf <= 1.0); // All within bounds
@@ -749,7 +773,8 @@ fn test_interval_width_vs_confidence_relationship() {
     // This test documents that behavior and can be updated if it changes
     let mut engine = create_test_engine();
 
-    let high_conf_change = create_resource_change("aws_instance", json!({"instance_type": "t3.large"}));
+    let high_conf_change =
+        create_resource_change("aws_instance", json!({"instance_type": "t3.large"}));
     let low_conf_change = create_resource_change("unknown_resource", json!({}));
 
     let high_result = predict_single(&mut engine, high_conf_change);
@@ -803,7 +828,7 @@ fn test_confidence_with_maximum_penalties() {
         .build();
 
     let confidence = calculate_confidence(&change, true, "aws_api_gateway_rest_api"); // Cold start (*0.6)
-    // Expected: 0.50 * 0.6 * 0.75 * 0.9 = 0.2025
+                                                                                      // Expected: 0.50 * 0.6 * 0.75 * 0.9 = 0.2025
     assert!((confidence - 0.2025).abs() < 0.01);
     assert!(confidence > 0.0); // Should still be positive
 }

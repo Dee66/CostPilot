@@ -1,4 +1,4 @@
-use super::policy_metadata::*;
+use super::policy_metadata::{PolicyMetadata, PolicyCategory, Severity, PolicyWithMetadata};
 use super::policy_repository::*;
 use super::policy_types::*;
 use super::zero_network::*;
@@ -463,6 +463,7 @@ pub struct MetadataPolicyViolation {
 mod tests {
     use super::*;
     use crate::engines::shared::models::CostEstimate;
+    use crate::engines::policy::policy_metadata::PolicyStatus;
 
     #[test]
     fn test_metadata_engine_new() {
@@ -474,6 +475,7 @@ mod tests {
     fn test_from_legacy_config() {
         let config = PolicyConfig {
             version: "1.0".to_string(),
+            metadata: Default::default(),
             budgets: BudgetPolicies {
                 global: Some(BudgetLimit {
                     monthly_limit: 1000.0,

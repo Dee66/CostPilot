@@ -107,10 +107,55 @@ analyze_edge_cases() {
     # Remove duplicates (functions might match multiple patterns)
     ((edge_cases_found = edge_cases_found / 2))  # Rough deduplication
 
-    # Check for edge case tests
-    local edge_tests
-    edge_tests=$(find tests -name "*edge*" -o -name "*boundary*" -o -name "*extreme*" -o -name "*limit*" 2>/dev/null | wc -l)
-    local case_tests=$((edge_tests * 6))  # Estimate: each edge test covers ~6 cases
+    # Check for edge case tests - count actual test functions
+    local edge_tests=0
+
+    # Count all tests in dedicated edge case files
+    local dedicated_edge_files
+    dedicated_edge_files=$(find tests -name "*edge_cases_tests.rs" -o -name "*edge_cases*.rs" -type f 2>/dev/null)
+    for file in $dedicated_edge_files; do
+        local count
+        count=$(grep -c "#\[test\]" "$file" 2>/dev/null | tr -d '\n' || echo "0")
+        if [[ "$count" =~ ^[0-9]+$ ]]; then
+            ((edge_tests += count))
+        fi
+    done
+
+    # Count edge case tests in engine deep files
+    local engine_deep_files
+    engine_deep_files=$(find tests/engines -name "*_deep.rs" -type f 2>/dev/null)
+    for file in $engine_deep_files; do
+        local count
+        count=$(grep -A1 "#\[test\]" "$file" | grep -c "edge_case" 2>/dev/null | tr -d '\n' || echo "0")
+        if [[ "$count" =~ ^[0-9]+$ ]]; then
+            ((edge_tests += count))
+        fi
+    done
+
+    # Count edge case tests in various test files
+    local other_files=("tests/policy_enforcement_tests.rs" "tests/slo_burn_tests.rs" "tests/prediction_explainer_tests.rs" "tests/golden_explain_tests.rs" "tests/detection_engine_tests.rs")
+    for file in "${other_files[@]}"; do
+        if [[ -f "$file" ]]; then
+            local count
+            count=$(grep -A1 "#\[test\]" "$file" | grep -c "edge_case" 2>/dev/null | tr -d '\n' || echo "0")
+            if [[ "$count" =~ ^[0-9]+$ ]]; then
+                ((edge_tests += count))
+            fi
+        fi
+    done
+
+    # Also count edge case tests in engine deep files (only those with edge_case in name)
+    local engine_deep_files
+    engine_deep_files=$(find tests/engines -name "*_deep.rs" 2>/dev/null)
+    for file in $engine_deep_files; do
+        local count
+        count=$(grep -A1 "#\[test\]" "$file" | grep -c "edge_case" 2>/dev/null | tr -d '\n' || echo "0")
+        # Ensure count is a valid number
+        if [[ "$count" =~ ^[0-9]+$ ]]; then
+            ((edge_tests += count))
+        fi
+    done
+    local case_tests=$edge_tests  # Each test function covers 1 case
 
     # Cap at reasonable maximum
     if [ "$case_tests" -gt "$edge_cases_found" ]; then

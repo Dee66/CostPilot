@@ -1,8 +1,14 @@
 // Probabilistic modeling unit tests - comprehensive testing for uncertainty quantification
 
-use costpilot::engines::prediction::monte_carlo::{MonteCarloSimulator, UncertaintyInput, UncertaintyType};
-use costpilot::engines::prediction::probabilistic::{ProbabilisticPredictor, RiskLevel, CostScenario};
-use costpilot::engines::prediction::seasonality::{SeasonalityDetector, CostDataPoint, PatternType};
+use costpilot::engines::prediction::monte_carlo::{
+    MonteCarloSimulator, UncertaintyInput, UncertaintyType,
+};
+use costpilot::engines::prediction::probabilistic::{
+    CostScenario, ProbabilisticPredictor, RiskLevel,
+};
+use costpilot::engines::prediction::seasonality::{
+    CostDataPoint, PatternType, SeasonalityDetector,
+};
 
 #[cfg(test)]
 mod probabilistic_modeling_tests {
@@ -27,8 +33,9 @@ mod probabilistic_modeling_tests {
 
     #[test]
     fn test_probabilistic_predictor_with_custom_runs() {
-        let predictor = ProbabilisticPredictor::new(50.0, 0.9, "aws_lambda_function".to_string(), false)
-            .with_simulation_runs(5000);
+        let predictor =
+            ProbabilisticPredictor::new(50.0, 0.9, "aws_lambda_function".to_string(), false)
+                .with_simulation_runs(5000);
 
         let estimate = predictor.generate_estimate("test").unwrap();
         assert_eq!(estimate.simulation_runs, 5000);
@@ -53,7 +60,8 @@ mod probabilistic_modeling_tests {
 
     #[test]
     fn test_generate_estimate_with_cold_start() {
-        let predictor = ProbabilisticPredictor::new(150.0, 0.7, "aws_lambda_function".to_string(), true);
+        let predictor =
+            ProbabilisticPredictor::new(150.0, 0.7, "aws_lambda_function".to_string(), true);
         let estimate = predictor.generate_estimate("lambda-cold").unwrap();
 
         // Cold start should increase uncertainty
@@ -61,7 +69,9 @@ mod probabilistic_modeling_tests {
         assert!(estimate.uncertainty_factors.len() > 0);
 
         // Should have cold start uncertainty factor
-        assert!(estimate.uncertainty_factors.iter()
+        assert!(estimate
+            .uncertainty_factors
+            .iter()
             .any(|f| f.name == "cold_start_inference"));
     }
 
@@ -72,7 +82,9 @@ mod probabilistic_modeling_tests {
 
         // Low confidence should increase uncertainty
         assert!(estimate.coefficient_of_variation > 0.2);
-        assert!(estimate.uncertainty_factors.iter()
+        assert!(estimate
+            .uncertainty_factors
+            .iter()
             .any(|f| f.name == "low_confidence"));
     }
 
@@ -97,7 +109,8 @@ mod probabilistic_modeling_tests {
 
     #[test]
     fn test_risk_classification_high() {
-        let predictor = ProbabilisticPredictor::new(100.0, 0.4, "aws_lambda_function".to_string(), true);
+        let predictor =
+            ProbabilisticPredictor::new(100.0, 0.4, "aws_lambda_function".to_string(), true);
         let estimate = predictor.generate_estimate("high-risk").unwrap();
 
         // With low confidence (0.4), cold start, and lambda function, risk should be VeryHigh
@@ -107,7 +120,12 @@ mod probabilistic_modeling_tests {
 
     #[test]
     fn test_risk_classification_very_high() {
-        let predictor = ProbabilisticPredictor::new(100.0, 0.1, "aws_cloudfront_distribution".to_string(), true);
+        let predictor = ProbabilisticPredictor::new(
+            100.0,
+            0.1,
+            "aws_cloudfront_distribution".to_string(),
+            true,
+        );
         let estimate = predictor.generate_estimate("very-high-risk").unwrap();
 
         assert_eq!(estimate.risk_level, RiskLevel::VeryHigh);
@@ -126,12 +144,15 @@ mod probabilistic_modeling_tests {
 
     #[test]
     fn test_resource_specific_uncertainty_lambda() {
-        let predictor = ProbabilisticPredictor::new(100.0, 0.9, "aws_lambda_function".to_string(), false);
+        let predictor =
+            ProbabilisticPredictor::new(100.0, 0.9, "aws_lambda_function".to_string(), false);
         let estimate = predictor.generate_estimate("lambda").unwrap();
 
         // Lambda should have higher uncertainty due to usage-dependent pricing
         assert!(estimate.coefficient_of_variation > 0.15);
-        assert!(estimate.uncertainty_factors.iter()
+        assert!(estimate
+            .uncertainty_factors
+            .iter()
             .any(|f| f.name == "usage_dependent"));
     }
 
@@ -140,25 +161,37 @@ mod probabilistic_modeling_tests {
         let predictor = ProbabilisticPredictor::new(100.0, 0.9, "aws_s3_bucket".to_string(), false);
         let estimate = predictor.generate_estimate("s3").unwrap();
 
-        assert!(estimate.uncertainty_factors.iter()
+        assert!(estimate
+            .uncertainty_factors
+            .iter()
             .any(|f| f.name == "storage_growth"));
     }
 
     #[test]
     fn test_resource_specific_uncertainty_cloudfront() {
-        let predictor = ProbabilisticPredictor::new(100.0, 0.9, "aws_cloudfront_distribution".to_string(), false);
+        let predictor = ProbabilisticPredictor::new(
+            100.0,
+            0.9,
+            "aws_cloudfront_distribution".to_string(),
+            false,
+        );
         let estimate = predictor.generate_estimate("cloudfront").unwrap();
 
-        assert!(estimate.uncertainty_factors.iter()
+        assert!(estimate
+            .uncertainty_factors
+            .iter()
             .any(|f| f.name == "traffic_variability"));
     }
 
     #[test]
     fn test_resource_specific_uncertainty_ecs() {
-        let predictor = ProbabilisticPredictor::new(100.0, 0.9, "aws_ecs_service".to_string(), false);
+        let predictor =
+            ProbabilisticPredictor::new(100.0, 0.9, "aws_ecs_service".to_string(), false);
         let estimate = predictor.generate_estimate("ecs").unwrap();
 
-        assert!(estimate.uncertainty_factors.iter()
+        assert!(estimate
+            .uncertainty_factors
+            .iter()
             .any(|f| f.name == "scaling_behavior"));
     }
 
@@ -201,7 +234,8 @@ mod probabilistic_modeling_tests {
 
     #[test]
     fn test_scenario_analysis_recommendation_high_risk() {
-        let predictor = ProbabilisticPredictor::new(100.0, 0.3, "aws_lambda_function".to_string(), true);
+        let predictor =
+            ProbabilisticPredictor::new(100.0, 0.3, "aws_lambda_function".to_string(), true);
         let estimate = predictor.generate_estimate("high-risk").unwrap();
         let analysis = estimate.to_scenario_analysis();
 
@@ -216,7 +250,10 @@ mod probabilistic_modeling_tests {
         let analysis = estimate.to_scenario_analysis();
 
         // Cost at risk should be P90 - P50
-        assert_eq!(analysis.cost_at_risk, estimate.p90_monthly_cost - estimate.p50_monthly_cost);
+        assert_eq!(
+            analysis.cost_at_risk,
+            estimate.p90_monthly_cost - estimate.p50_monthly_cost
+        );
         assert!(analysis.cost_at_risk > 0.0);
     }
 
@@ -233,7 +270,8 @@ mod probabilistic_modeling_tests {
     #[test]
     fn test_is_high_risk() {
         let low_risk = ProbabilisticPredictor::new(100.0, 0.9, "aws_instance".to_string(), false);
-        let high_risk = ProbabilisticPredictor::new(100.0, 0.2, "aws_lambda_function".to_string(), true);
+        let high_risk =
+            ProbabilisticPredictor::new(100.0, 0.2, "aws_lambda_function".to_string(), true);
 
         let low_estimate = low_risk.generate_estimate("low").unwrap();
         let high_estimate = high_risk.generate_estimate("high").unwrap();
@@ -448,7 +486,9 @@ mod probabilistic_modeling_tests {
 
         let inputs = vec![UncertaintyInput {
             base_value: 100.0,
-            uncertainty_type: UncertaintyType::Normal { std_dev_ratio: 0.15 },
+            uncertainty_type: UncertaintyType::Normal {
+                std_dev_ratio: 0.15,
+            },
             weight: 1.0,
         }];
 
@@ -497,8 +537,14 @@ mod probabilistic_modeling_tests {
 
         // Test via behavior - can detect seasonality with data
         let data = vec![
-            CostDataPoint { timestamp: 1000, cost: 100.0 },
-            CostDataPoint { timestamp: 2000, cost: 105.0 },
+            CostDataPoint {
+                timestamp: 1000,
+                cost: 100.0,
+            },
+            CostDataPoint {
+                timestamp: 2000,
+                cost: 105.0,
+            },
         ];
         let detector_with_data = detector.with_data(data);
         let result = detector_with_data.detect_seasonality().unwrap();
@@ -507,13 +553,14 @@ mod probabilistic_modeling_tests {
 
     #[test]
     fn test_seasonality_detector_with_custom_params() {
-        let detector = SeasonalityDetector::new()
-            .with_min_data_points(50);
+        let detector = SeasonalityDetector::new().with_min_data_points(50);
 
-        let data = (0..40).map(|i| CostDataPoint {
-            timestamp: i * 86400,
-            cost: 100.0,
-        }).collect();
+        let data = (0..40)
+            .map(|i| CostDataPoint {
+                timestamp: i * 86400,
+                cost: 100.0,
+            })
+            .collect();
         let detector_with_data = detector.with_data(data);
         let result = detector_with_data.detect_seasonality().unwrap();
         // Should not detect seasonality in constant data
@@ -523,8 +570,14 @@ mod probabilistic_modeling_tests {
     #[test]
     fn test_seasonality_insufficient_data() {
         let data = vec![
-            CostDataPoint { timestamp: 1000, cost: 100.0 },
-            CostDataPoint { timestamp: 2000, cost: 105.0 },
+            CostDataPoint {
+                timestamp: 1000,
+                cost: 100.0,
+            },
+            CostDataPoint {
+                timestamp: 2000,
+                cost: 105.0,
+            },
         ];
 
         let detector = SeasonalityDetector::new().with_data(data);
@@ -554,7 +607,9 @@ mod probabilistic_modeling_tests {
         assert!(result.strength > 0.0);
 
         // Should detect weekly pattern
-        assert!(result.patterns.iter()
+        assert!(result
+            .patterns
+            .iter()
             .any(|p| p.pattern_type == PatternType::Weekly));
     }
 
@@ -583,22 +638,31 @@ mod probabilistic_modeling_tests {
     #[test]
     fn test_complete_uncertainty_pipeline() {
         // 1. Generate probabilistic estimate
-        let predictor = ProbabilisticPredictor::new(150.0, 0.75, "aws_lambda_function".to_string(), false);
+        let predictor =
+            ProbabilisticPredictor::new(150.0, 0.75, "aws_lambda_function".to_string(), false);
         let estimate = predictor.generate_estimate("pipeline-test").unwrap();
 
         // 2. Run Monte Carlo simulation with similar parameters
         let simulator = MonteCarloSimulator::new(10000);
         let mc_inputs = vec![UncertaintyInput {
             base_value: 150.0,
-            uncertainty_type: UncertaintyType::Normal { std_dev_ratio: 0.25 }, // Approximate uncertainty
+            uncertainty_type: UncertaintyType::Normal {
+                std_dev_ratio: 0.25,
+            }, // Approximate uncertainty
             weight: 1.0,
         }];
         let mc_result = simulator.simulate(&mc_inputs).unwrap();
 
         // 3. Create seasonal adjustment if seasonality detected
         let seasonal_data = vec![
-            CostDataPoint { timestamp: 1000000, cost: 140.0 },
-            CostDataPoint { timestamp: 1000864, cost: 160.0 },
+            CostDataPoint {
+                timestamp: 1000000,
+                cost: 140.0,
+            },
+            CostDataPoint {
+                timestamp: 1000864,
+                cost: 160.0,
+            },
             // ... more data points would be needed for real seasonality detection
         ];
         let detector = SeasonalityDetector::new().with_data(seasonal_data);
@@ -671,7 +735,10 @@ mod probabilistic_modeling_tests {
 
     #[test]
     fn test_seasonality_single_data_point() {
-        let data = vec![CostDataPoint { timestamp: 1000, cost: 100.0 }];
+        let data = vec![CostDataPoint {
+            timestamp: 1000,
+            cost: 100.0,
+        }];
 
         let detector = SeasonalityDetector::new().with_data(data);
         let result = detector.detect_seasonality().unwrap();
@@ -683,9 +750,18 @@ mod probabilistic_modeling_tests {
     #[test]
     fn test_seasonality_identical_data() {
         let data = vec![
-            CostDataPoint { timestamp: 1000, cost: 100.0 },
-            CostDataPoint { timestamp: 2000, cost: 100.0 },
-            CostDataPoint { timestamp: 3000, cost: 100.0 },
+            CostDataPoint {
+                timestamp: 1000,
+                cost: 100.0,
+            },
+            CostDataPoint {
+                timestamp: 2000,
+                cost: 100.0,
+            },
+            CostDataPoint {
+                timestamp: 3000,
+                cost: 100.0,
+            },
         ];
 
         let detector = SeasonalityDetector::new().with_data(data);

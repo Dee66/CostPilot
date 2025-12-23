@@ -1,4 +1,5 @@
 use super::baseline_types::{Baseline, BaselineStatus, BaselineViolation, BaselinesConfig};
+use crate::engines::shared::models::RegressionType;
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
@@ -99,10 +100,119 @@ impl BaselinesManager {
         }
     }
 
+    /// Classify regression type for a module based on its resource changes
+    fn classify_module_regression(
+        &self,
+        module_name: &str,
+        changes: &[crate::engines::detection::ResourceChange],
+    ) -> RegressionType {
+        // Get changes for this module
+        let module_changes: Vec<_> = changes
+            .iter()
+            .filter(|change| change.module_path.as_deref() == Some(module_name))
+            .collect();
+
+        if module_changes.is_empty() {
+            return RegressionType::IndirectCost;
+        }
+
+        // Check for provisioning (new resources)
+        if module_changes.iter().any(|change| change.action == crate::engines::shared::models::ChangeAction::Create) {
+            return RegressionType::Provisioning;
+        }
+
+        // Check for scaling changes
+        if module_changes.iter().any(|change| {
+            change.action == crate::engines::shared::models::ChangeAction::Update
+                && Self::is_scaling_change(change)
+        }) {
+            return RegressionType::Scaling;
+        }
+
+        // Check for configuration changes
+        if module_changes.iter().any(|change| {
+            change.action == crate::engines::shared::models::ChangeAction::Update
+                && Self::is_configuration_change(change)
+        }) {
+            return RegressionType::Configuration;
+        }
+
+        // Default to indirect cost
+        RegressionType::IndirectCost
+    }
+
+    /// Check if a change represents scaling
+    fn is_scaling_change(change: &crate::engines::detection::ResourceChange) -> bool {
+        // Scaling typically involves instance count, capacity, etc.
+        if let (Some(old_config), Some(new_config)) = (&change.old_config, &change.new_config) {
+            // Check for common scaling attributes
+            let scaling_attrs = ["instance_count", "desired_capacity", "replicas", "node_count"];
+            for attr in &scaling_attrs {
+                if Self::field_changed(old_config, new_config, attr) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    /// Check if a change represents configuration
+    fn is_configuration_change(change: &crate::engines::detection::ResourceChange) -> bool {
+        if let (Some(old_config), Some(new_config)) = (&change.old_config, &change.new_config) {
+            // Check for configuration-type changes
+            let config_attrs = ["billing_mode", "instance_type", "engine_version", "storage_type"];
+            for attr in &config_attrs {
+                if Self::field_changed(old_config, new_config, attr) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    /// Check if a field changed between old and new config
+    fn field_changed(old_config: &serde_json::Value, new_config: &serde_json::Value, field: &str) -> bool {
+        let old_val = old_config.get(field);
+        let new_val = new_config.get(field);
+        old_val != new_val
+    }
+
+    /// Classify regression type for global baseline based on all resource changes
+    fn classify_global_regression(&self, changes: &[crate::engines::detection::ResourceChange]) -> RegressionType {
+        if changes.is_empty() {
+            return RegressionType::IndirectCost;
+        }
+
+        // Check for provisioning (new resources)
+        if changes.iter().any(|change| change.action == crate::engines::shared::models::ChangeAction::Create) {
+            return RegressionType::Provisioning;
+        }
+
+        // Check for scaling changes
+        if changes.iter().any(|change| {
+            change.action == crate::engines::shared::models::ChangeAction::Update
+                && Self::is_scaling_change(change)
+        }) {
+            return RegressionType::Scaling;
+        }
+
+        // Check for configuration changes
+        if changes.iter().any(|change| {
+            change.action == crate::engines::shared::models::ChangeAction::Update
+                && Self::is_configuration_change(change)
+        }) {
+            return RegressionType::Configuration;
+        }
+
+        // Default to indirect cost
+        RegressionType::IndirectCost
+    }
+
     /// Compare snapshot module costs against baselines
     pub fn compare_module_costs(
         &self,
         module_costs: &HashMap<String, f64>,
+        changes: Option<&[crate::engines::detection::ResourceChange]>,
     ) -> BaselineComparisonResult {
         let mut violations = Vec::new();
         let mut within_count = 0;
@@ -127,6 +237,7 @@ impl BaselinesManager {
                             variance_percent,
                             acceptable_variance: baseline.acceptable_variance_percent,
                             severity: calculate_severity(variance_percent),
+                            regression_type: changes.map_or(RegressionType::IndirectCost, |c| self.classify_module_regression(module_name, c)),
                             owner: baseline.owner.clone(),
                             justification: baseline.justification.clone(),
                         });
@@ -145,6 +256,7 @@ impl BaselinesManager {
                             variance_percent,
                             acceptable_variance: baseline.acceptable_variance_percent,
                             severity: "Info".to_string(),
+                            regression_type: changes.map_or(RegressionType::IndirectCost, |c| self.classify_module_regression(module_name, c)),
                             owner: baseline.owner.clone(),
                             justification: baseline.justification.clone(),
                         });
@@ -167,7 +279,7 @@ impl BaselinesManager {
     }
 
     /// Compare total cost against global baseline
-    pub fn compare_total_cost(&self, total_cost: f64) -> Option<BaselineViolation> {
+    pub fn compare_total_cost(&self, total_cost: f64, changes: Option<&[crate::engines::detection::ResourceChange]>) -> Option<BaselineViolation> {
         let global = self.config.global.as_ref()?;
 
         match global.check_variance(total_cost) {
@@ -183,6 +295,7 @@ impl BaselinesManager {
                 variance_percent,
                 acceptable_variance: global.acceptable_variance_percent,
                 severity: calculate_severity(variance_percent),
+                regression_type: changes.map_or(RegressionType::IndirectCost, |c| self.classify_global_regression(c)),
                 owner: global.owner.clone(),
                 justification: global.justification.clone(),
             }),
@@ -198,6 +311,7 @@ impl BaselinesManager {
                 variance_percent,
                 acceptable_variance: global.acceptable_variance_percent,
                 severity: "Info".to_string(),
+                regression_type: changes.map_or(RegressionType::IndirectCost, |c| self.classify_global_regression(c)),
                 owner: global.owner.clone(),
                 justification: global.justification.clone(),
             }),
@@ -350,7 +464,7 @@ mod tests {
         let mut costs = HashMap::new();
         costs.insert("module.vpc".to_string(), 1050.0); // Within 10%
 
-        let result = manager.compare_module_costs(&costs);
+        let result = manager.compare_module_costs(&costs, None);
         assert_eq!(result.within_baseline_count, 1);
         assert_eq!(result.total_violations, 0);
     }
@@ -363,7 +477,7 @@ mod tests {
         let mut costs = HashMap::new();
         costs.insert("module.vpc".to_string(), 1500.0); // 50% over
 
-        let result = manager.compare_module_costs(&costs);
+        let result = manager.compare_module_costs(&costs, None);
         assert_eq!(result.total_violations, 1);
         assert_eq!(result.violations[0].severity, "High");
     }
@@ -376,7 +490,7 @@ mod tests {
         let mut costs = HashMap::new();
         costs.insert("module.unknown".to_string(), 500.0);
 
-        let result = manager.compare_module_costs(&costs);
+        let result = manager.compare_module_costs(&costs, None);
         assert_eq!(result.no_baseline_count, 1);
     }
 
@@ -394,10 +508,10 @@ mod tests {
         let manager = BaselinesManager::from_config(config);
 
         // Within baseline
-        assert!(manager.compare_total_cost(5200.0).is_none());
+        assert!(manager.compare_total_cost(5200.0, None).is_none());
 
         // Exceeded
-        let violation = manager.compare_total_cost(6000.0);
+        let violation = manager.compare_total_cost(6000.0, None);
         assert!(violation.is_some());
         assert_eq!(violation.unwrap().severity, "Medium");
     }
@@ -418,7 +532,7 @@ mod tests {
         let mut costs = HashMap::new();
         costs.insert("module.vpc".to_string(), 1500.0);
 
-        let result = manager.compare_module_costs(&costs);
+        let result = manager.compare_module_costs(&costs, None);
         let formatted = result.format_violations();
 
         assert!(formatted.contains("1 baseline violations"));
@@ -434,7 +548,7 @@ mod tests {
         let mut costs = HashMap::new();
         costs.insert("module.vpc".to_string(), 1600.0); // Critical
 
-        let result = manager.compare_module_costs(&costs);
+        let result = manager.compare_module_costs(&costs, None);
         assert_eq!(result.critical_violations().len(), 1);
         assert!(result.has_critical_violations());
     }

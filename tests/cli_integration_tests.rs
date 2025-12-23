@@ -7,160 +7,208 @@ use std::path::Path;
 fn test_cli_help() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("CostPilot"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("CostPilot"));
 }
 
 #[test]
 fn test_cli_version() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("--version");
-    cmd.assert().success().stdout(predicate::str::contains("costpilot"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("costpilot"));
 }
 
 #[test]
 fn test_cli_no_args() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.assert().failure().stderr(predicate::str::contains("Usage: costpilot"));
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage: costpilot"));
 }
 
 #[test]
 fn test_cli_scan_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("scan").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("scan"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("scan"));
 }
 
 #[test]
 fn test_cli_diff_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("diff").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("diff"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("diff"));
 }
 
 #[test]
 fn test_cli_validate_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("validate").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("validate"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("validate"));
 }
 
 #[test]
 fn test_cli_explain_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("explain").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("explain"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("explain"));
 }
 
 #[test]
 fn test_cli_map_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("map").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("map"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("map"));
 }
 
 #[test]
 fn test_cli_group_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("group").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("group"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("group"));
 }
 
 #[test]
 fn test_cli_escrow_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("escrow").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("escrow"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("escrow"));
 }
 
 #[test]
 fn test_cli_policy_lifecycle_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("policy-lifecycle").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("policy-lifecycle"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("policy-lifecycle"));
 }
 
 #[test]
 fn test_cli_autofix_patch_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("autofix-patch").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("autofix-patch"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("autofix-patch"));
 }
 
 #[test]
 fn test_cli_autofix_snippet_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("autofix-snippet").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("autofix-snippet"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("autofix-snippet"));
 }
 
 #[test]
 fn test_cli_slo_burn_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("slo-burn").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("slo-burn"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("slo-burn"));
 }
 
 #[test]
 fn test_cli_slo_check_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("slo-check").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("slo-check"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("slo-check"));
 }
 
 #[test]
 fn test_cli_performance_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("performance").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("performance"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("performance"));
 }
 
 #[test]
 fn test_cli_init_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("init").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("init"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("init"));
 }
 
 #[test]
 fn test_cli_heuristics_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("heuristics").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("heuristics"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("heuristics"));
 }
 
 #[test]
 fn test_cli_policy_dsl_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("policy-dsl").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("policy-dsl"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("policy-dsl"));
 }
 
 #[test]
 fn test_cli_audit_command() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("audit").arg("--help");
-    cmd.assert().success().stdout(predicate::str::contains("audit"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("audit"));
 }
 
 #[test]
 fn test_cli_scan_missing_file() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("scan").arg("nonexistent.json");
-    cmd.assert().failure().stderr(predicate::str::contains("terraform file not found"));
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("terraform file not found"));
 }
 
 #[test]
 fn test_cli_validate_missing_file() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("validate").arg("nonexistent.json");
-    cmd.assert().failure().stderr(predicate::str::contains("No such file"));
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("No such file"));
 }
 
 #[test]
 fn test_cli_diff_missing_before_file() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("diff").arg("nonexistent1.json").arg("nonexistent2.json");
-    cmd.assert().failure().stderr(predicate::str::contains("Diff requires CostPilot Premium"));
+    cmd.arg("diff")
+        .arg("nonexistent1.json")
+        .arg("nonexistent2.json");
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("Diff requires CostPilot Premium"));
 }
 
 #[test]
@@ -181,21 +229,27 @@ fn test_cli_init_creates_structure() {
 fn test_cli_heuristics_execute() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("heuristics").arg("execute");
-    cmd.assert().success().stdout(predicate::str::contains("Free heuristics"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Free heuristics"));
 }
 
 #[test]
 fn test_cli_performance_budgets() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("performance").arg("budgets");
-    cmd.assert().success().stdout(predicate::str::contains("Performance budgets"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Performance budgets"));
 }
 
 #[test]
 fn test_cli_usage_days_in_month() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("usage").arg("--days-in-month").arg("2024-01");
-    cmd.assert().success().stdout(predicate::str::contains("31"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("31"));
 }
 
 #[test]
@@ -215,7 +269,9 @@ fn test_cli_scan_with_valid_json() {
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("scan").arg(temp_file.path());
-    cmd.assert().success().stdout(predicate::str::contains("No resource changes detected"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("No resource changes detected"));
 }
 
 #[test]
@@ -234,7 +290,9 @@ fn test_cli_validate_with_valid_json() {
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("validate").arg(&temp_path);
-    cmd.assert().success().stdout(predicate::str::contains("Status: Valid"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Status: Valid"));
 }
 
 #[test]
@@ -255,15 +313,24 @@ fn test_cli_diff_with_identical_files() {
     fs::write(temp_file2.path(), json_content).unwrap();
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("diff").arg(temp_file1.path()).arg(temp_file2.path());
-    cmd.assert().failure().stderr(predicate::str::contains("Diff requires CostPilot Premium"));
+    cmd.arg("diff")
+        .arg(temp_file1.path())
+        .arg(temp_file2.path());
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("Diff requires CostPilot Premium"));
 }
 
 #[test]
 fn test_cli_explain_with_valid_resource() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("explain").arg("aws_instance").arg("--instance-type").arg("t3.micro");
-    cmd.assert().success().stdout(predicate::str::contains("Explanation"));
+    cmd.arg("explain")
+        .arg("aws_instance")
+        .arg("--instance-type")
+        .arg("t3.micro");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Explanation"));
 }
 
 #[test]
@@ -289,7 +356,9 @@ fn test_cli_map_with_valid_json() {
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("map").arg(temp_file.path());
-    cmd.assert().failure().stderr(predicate::str::contains("Deep mapping requires CostPilot Premium"));
+    cmd.assert().failure().stderr(predicate::str::contains(
+        "Deep mapping requires CostPilot Premium",
+    ));
 }
 
 #[test]
@@ -309,7 +378,9 @@ fn test_cli_group_by_service() {
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("group").arg("by-service").arg(temp_file.path());
-    cmd.assert().success().stdout(predicate::str::contains("Service Cost Summary"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Service Cost Summary"));
 }
 
 #[test]
@@ -329,7 +400,9 @@ fn test_cli_group_by_environment() {
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("group").arg("by-environment").arg(temp_file.path());
-    cmd.assert().success().stdout(predicate::str::contains("Environment Grouping Report"));
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Environment Grouping Report"));
 }
 
 #[test]
@@ -366,8 +439,14 @@ fn test_cli_slo_burn_with_valid_config() {
     create_test_snapshot(&snapshots_path, "2025-03-01", 140.0);
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("slo-burn").arg("--config").arg(&slo_path).arg("--snapshots-dir").arg(&snapshots_path);
-    cmd.assert().failure().stderr(predicate::str::contains("SLO features require premium license"));
+    cmd.arg("slo-burn")
+        .arg("--config")
+        .arg(&slo_path)
+        .arg("--snapshots-dir")
+        .arg(&snapshots_path);
+    cmd.assert().failure().stderr(predicate::str::contains(
+        "SLO features require premium license",
+    ));
 }
 
 // Helper function to create test snapshots
@@ -375,7 +454,8 @@ fn create_test_snapshot(snapshots_dir: &Path, date: &str, cost: f64) {
     let filename = format!("snapshot_{}.json", date.replace("-", ""));
     let snapshot_path = snapshots_dir.join(filename);
 
-    let snapshot_data = format!(r#"{{
+    let snapshot_data = format!(
+        r#"{{
         "id": "test_{}",
         "timestamp": "{}T00:00:00Z",
         "total_monthly_cost": {:.2},
@@ -394,7 +474,13 @@ fn create_test_snapshot(snapshots_dir: &Path, date: &str, cost: f64) {
         "services": {{}},
         "regressions": [],
         "slo_violations": []
-    }}"#, date.replace("-", ""), date, cost, cost * 0.7, cost * 0.3);
+    }}"#,
+        date.replace("-", ""),
+        date,
+        cost,
+        cost * 0.7,
+        cost * 0.3
+    );
 
     fs::write(snapshot_path, snapshot_data).unwrap();
 }
@@ -461,26 +547,29 @@ fn test_json_output_canonical_serialization() {
         .arg("test_golden_plan.json")
         .arg("--format")
         .arg("json");
-    
+
     let output1 = cmd.assert().success().get_output().clone();
     let stdout1 = String::from_utf8_lossy(&output1.stdout);
-    
+
     // Run the same command again
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("scan")
         .arg("test_golden_plan.json")
         .arg("--format")
         .arg("json");
-    
+
     let output2 = cmd.assert().success().get_output().clone();
     let stdout2 = String::from_utf8_lossy(&output2.stdout);
-    
+
     // Extract JSON part (skip the banner)
     let json1 = extract_json_from_output(&stdout1);
     let json2 = extract_json_from_output(&stdout2);
-    
+
     // JSON outputs should be byte-for-byte identical
-    assert_eq!(json1, json2, "JSON output should be deterministic and canonical");
+    assert_eq!(
+        json1, json2,
+        "JSON output should be deterministic and canonical"
+    );
 }
 
 fn extract_json_from_output(output: &str) -> &str {

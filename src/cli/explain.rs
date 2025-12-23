@@ -264,7 +264,7 @@ fn execute_explain_all(
         output.push('\n');
     }
 
-    output.push_str(&"\n💡 Use 'costpilot explain resource --resource <id>' for detailed reasoning\n".to_string());
+    output.push_str("\n💡 Use 'costpilot explain resource --resource <id>' for detailed reasoning\n");
 
     Ok(output)
 }
@@ -295,7 +295,7 @@ fn execute_explain_lite(plan_path: PathBuf) -> Result<String, String> {
         for pattern in patterns {
             output.push_str(&format!("{}\n", pattern));
         }
-        output.push_str(&"\n💎 Upgrade to Premium for full explanations with:\n".to_string());
+        output.push_str("\n💎 Upgrade to Premium for full explanations with:\n");
         output.push_str("   • Stepwise reasoning chains\n");
         output.push_str("   • Cost component breakdowns\n");
         output.push_str("   • Root cause analysis\n");

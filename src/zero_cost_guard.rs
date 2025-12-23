@@ -125,7 +125,7 @@ impl ZeroCostGuard {
         // Check if reqwest or other HTTP clients are loaded
         // This is a runtime check - in a real implementation, this would check
         // if the libraries are linked or if network syscalls are available
-        
+
         // For now, we'll do a basic check by looking for network-related environment variables
         // that might indicate network access is expected
         let network_env_vars = [

@@ -45,7 +45,12 @@ analyze_user_workflows() {
     local workflows_found=0
     local workflows_tested=0
 
-    # Look for main user workflows and use cases
+    # Count actual test functions in E2E test files
+    local test_count
+    test_count=$(grep -c "fn test_cli_" tests/e2e/test_cli.rs 2>/dev/null || echo "0")
+    workflows_tested=$test_count
+
+    # Look for main user workflows and use cases in source code
     local workflow_patterns=("main" "run" "execute" "process" "analyze" "scan" "audit" "baseline" "cost" "pricing")
 
     for pattern in "${workflow_patterns[@]}"; do
@@ -57,16 +62,9 @@ analyze_user_workflows() {
     # Remove duplicates (functions might match multiple patterns)
     ((workflows_found = workflows_found / 2))  # Rough deduplication
 
-    # Check for E2E tests that cover user workflows
-    local e2e_tests
-    e2e_tests=$(find tests -name "*e2e*" -o -name "*endtoend*" -o -name "*workflow*" 2>/dev/null | wc -l)
-    local workflow_tests=$((e2e_tests * 2))  # Estimate: each E2E test covers ~2 workflows
-
-    # Cap at reasonable maximum
-    if [ "$workflow_tests" -gt "$workflows_found" ]; then
+    # If we have more tests than workflows found, cap at workflows found
+    if [ "$workflows_tested" -gt "$workflows_found" ]; then
         workflows_tested=$workflows_found
-    else
-        workflows_tested=$workflow_tests
     fi
 
     USER_WORKFLOWS_TOTAL=$workflows_found

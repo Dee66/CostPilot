@@ -17,6 +17,9 @@ use sha2::Sha256;
 use std::fs;
 use std::path::Path;
 
+// Include auto-generated cryptographic keys
+include!(concat!(env!("OUT_DIR"), "/keys.rs"));
+
 /// Derives a 32-byte AES key using HKDF-SHA256
 pub fn hkdf_derive(key_material: &str, salt: &[u8], info: &[u8]) -> [u8; 32] {
     let hk = SimpleHkdf::<Sha256>::new(Some(salt), key_material.as_bytes());
@@ -145,36 +148,36 @@ pub fn decrypt_aes_gcm(ct: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
 /// Verify WASM signature using Ed25519
 #[cfg(not(target_arch = "wasm32"))]
 pub fn verify_wasm_signature(wasm: &[u8], sig: &[u8]) -> Result<(), String> {
-    // Hardcoded public key (in production, this would be embedded in binary)
-    const PUBLIC_KEY: &[u8] = &[
-        // Placeholder: 32-byte Ed25519 public key
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0,
-    ];
-
-    let public_key = signature::UnparsedPublicKey::new(&signature::ED25519, PUBLIC_KEY);
+    let public_key = signature::UnparsedPublicKey::new(&signature::ED25519, WASM_PUBLIC_KEY);
     public_key
         .verify(wasm, sig)
         .map_err(|_| "WASM signature verification failed".to_string())
 }
 
-/// Verify license signature
+/// Verify license signature with multiple issuer keys
 #[cfg(not(target_arch = "wasm32"))]
 pub fn verify_license_signature(lic: &super::license::License) -> Result<(), String> {
-    // Construct canonical signing message
-    let message = format!("{}|{}|{}", lic.email, lic.license_key, lic.expires);
+    // Construct canonical signing message (now includes issuer)
+    let message = format!("{}|{}|{}|{}", lic.email, lic.license_key, lic.expires, lic.issuer);
 
     // Decode signature from hex
     let sig_bytes = hex::decode(&lic.signature).map_err(|_| "Invalid signature format")?;
 
-    // Hardcoded public key
-    const PUBLIC_KEY: &[u8] = &[
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0,
-    ];
+    // Get the appropriate public key for this issuer
+    let public_key_bytes = get_license_public_key(&lic.issuer)?;
 
-    let public_key = signature::UnparsedPublicKey::new(&signature::ED25519, PUBLIC_KEY);
+    let public_key = signature::UnparsedPublicKey::new(&signature::ED25519, public_key_bytes);
     public_key
         .verify(message.as_bytes(), &sig_bytes)
         .map_err(|_| "License signature verification failed".to_string())
+}
+
+/// Get the public key for a license issuer
+#[cfg(not(target_arch = "wasm32"))]
+fn get_license_public_key(issuer: &str) -> Result<&'static [u8], String> {
+    match issuer {
+        "costpilot-v1" => Ok(LICENSE_PUBLIC_KEY),
+        // Add more issuers here for key rotation
+        _ => Err(format!("Unknown license issuer: {}", issuer)),
+    }
 }

@@ -32,10 +32,11 @@ fn test_severity_score_always_within_defined_bounds() {
 
     // Check that all severity scores are within 0-100 bounds
     for detection in &detections {
-        assert!(detection.severity_score <= 100,
-            "Severity score {} exceeds maximum bound of 100", detection.severity_score);
-        assert!(detection.severity_score >= 0,
-            "Severity score {} below minimum bound of 0", detection.severity_score);
+        assert!(
+            detection.severity_score <= 100,
+            "Severity score {} exceeds maximum bound of 100",
+            detection.severity_score
+        );
     }
 }
 
@@ -82,10 +83,16 @@ fn test_confidence_score_always_within_defined_bounds() {
 
     // Check that all confidence scores are within 0.0-1.0 bounds
     for estimate in &estimates {
-        assert!(estimate.confidence_score >= 0.0,
-            "Confidence score {:.3} below minimum bound of 0.0", estimate.confidence_score);
-        assert!(estimate.confidence_score <= 1.0,
-            "Confidence score {:.3} exceeds maximum bound of 1.0", estimate.confidence_score);
+        assert!(
+            estimate.confidence_score >= 0.0,
+            "Confidence score {:.3} below minimum bound of 0.0",
+            estimate.confidence_score
+        );
+        assert!(
+            estimate.confidence_score <= 1.0,
+            "Confidence score {:.3} exceeds maximum bound of 1.0",
+            estimate.confidence_score
+        );
     }
 }
 
@@ -131,12 +138,23 @@ fn test_severity_monotonically_increases_with_cost_delta() {
 
     // If both have detections, the large change should have higher or equal severity
     if !small_detections.is_empty() && !large_detections.is_empty() {
-        let max_small_severity = small_detections.iter().map(|d| d.severity_score).max().unwrap();
-        let max_large_severity = large_detections.iter().map(|d| d.severity_score).max().unwrap();
+        let max_small_severity = small_detections
+            .iter()
+            .map(|d| d.severity_score)
+            .max()
+            .unwrap();
+        let max_large_severity = large_detections
+            .iter()
+            .map(|d| d.severity_score)
+            .max()
+            .unwrap();
 
-        assert!(max_large_severity >= max_small_severity,
+        assert!(
+            max_large_severity >= max_small_severity,
             "Severity should monotonically increase with cost delta: small={}, large={}",
-            max_small_severity, max_large_severity);
+            max_small_severity,
+            max_large_severity
+        );
     }
 }
 
@@ -182,16 +200,25 @@ fn test_confidence_decreases_under_cold_start_assumptions() {
     let unknown_estimates = engine.predict(&vec![unknown_change]).unwrap();
 
     // Both should produce estimates
-    assert!(!known_estimates.is_empty(), "Known instance type should produce estimates");
-    assert!(!unknown_estimates.is_empty(), "Unknown instance type should produce estimates");
+    assert!(
+        !known_estimates.is_empty(),
+        "Known instance type should produce estimates"
+    );
+    assert!(
+        !unknown_estimates.is_empty(),
+        "Unknown instance type should produce estimates"
+    );
 
     let known_confidence = known_estimates[0].confidence_score;
     let unknown_confidence = unknown_estimates[0].confidence_score;
 
     // Confidence should be lower for cold-start inference
-    assert!(unknown_confidence <= known_confidence,
+    assert!(
+        unknown_confidence <= known_confidence,
         "Cold-start confidence ({:.3}) should be <= known confidence ({:.3})",
-        unknown_confidence, known_confidence);
+        unknown_confidence,
+        known_confidence
+    );
 }
 
 #[test]
@@ -219,11 +246,15 @@ fn test_incident_classification_consistent_with_severity_and_materiality() {
 
     // Check that high-severity detections are properly classified
     for detection in &detections {
-        if detection.severity_score >= 70 {  // High severity threshold
+        if detection.severity_score >= 70 {
+            // High severity threshold
             // Should be classified as High or Critical severity
-            assert!(matches!(detection.severity, Severity::High | Severity::Critical),
+            assert!(
+                matches!(detection.severity, Severity::High | Severity::Critical),
                 "High severity score {} should correspond to High or Critical severity, got {:?}",
-                detection.severity_score, detection.severity);
+                detection.severity_score,
+                detection.severity
+            );
         }
     }
 }

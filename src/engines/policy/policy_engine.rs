@@ -422,6 +422,7 @@ mod tests {
     fn test_budget_evaluation() {
         let config = PolicyConfig {
             version: "1.0.0".to_string(),
+            metadata: Default::default(),
             budgets: BudgetPolicies {
                 global: Some(BudgetLimit {
                     monthly_limit: 1000.0,
@@ -461,6 +462,7 @@ mod tests {
     fn test_nat_gateway_limit() {
         let config = PolicyConfig {
             version: "1.0.0".to_string(),
+            metadata: Default::default(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies {
                 nat_gateways: Some(NatGatewayPolicy {
@@ -514,6 +516,7 @@ mod tests {
     fn test_lambda_concurrency_required() {
         let config = PolicyConfig {
             version: "1.0.0".to_string(),
+            metadata: Default::default(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies {
                 lambda_functions: Some(LambdaPolicy {
@@ -562,6 +565,7 @@ mod tests {
     fn test_compute_savings_plan_suggestion() {
         let config = PolicyConfig {
             version: "1.0.0".to_string(),
+            metadata: Default::default(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies::default(),
             slos: vec![],
@@ -612,6 +616,7 @@ mod tests {
     fn test_compute_savings_plan_not_suggested_for_few_resources() {
         let config = PolicyConfig {
             version: "1.0.0".to_string(),
+            metadata: Default::default(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies::default(),
             slos: vec![],
@@ -650,6 +655,7 @@ mod tests {
 
         let config = PolicyConfig {
             version: "1.0.0".to_string(),
+            metadata: Default::default(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies {
                 nat_gateways: Some(NatGatewayPolicy { max_count: 1, require_justification: false }),

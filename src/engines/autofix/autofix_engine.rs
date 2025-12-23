@@ -312,8 +312,7 @@ mod tests {
         let result = AutofixEngine::generate_fixes(&[detection], &[change], &[], AutofixMode::Patch, &crate::edition::EditionContext::premium_for_test()).unwrap();
 
         assert_eq!(result.mode, "patch");
-        // Will have patches if anti-patterns are detected
-        assert!(result.patches.len() >= 0);
+        // Result should be generated successfully
     }
 
     #[test]

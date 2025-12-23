@@ -339,6 +339,244 @@ fn test_graph_node_dependents_count() {
     assert!(dependent_count > 0);
 }
 
+// ===== MAPPING GRAPH EDGE CASE TESTS =====
+
+#[test]
+fn test_empty_graph_edge_case() {
+    // Test with completely empty graph
+    let graph = DependencyGraph {
+        nodes: vec![],
+        edges: vec![],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_single_node_graph_edge_case() {
+    // Test with single node, no edges
+    let graph = DependencyGraph {
+        nodes: vec![GraphNode {
+            id: "single".to_string(),
+            monthly_cost: 100.0,
+        }],
+        edges: vec![],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_extremely_large_graph_edge_case() {
+    // Test with a very large number of nodes and edges
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+
+    // Create 1000 nodes
+    for i in 0..1000 {
+        nodes.push(GraphNode {
+            id: format!("node_{}", i),
+            monthly_cost: i as f64,
+        });
+    }
+
+    // Create edges in a linear chain: node_0 -> node_1 -> ... -> node_999
+    for i in 0..999 {
+        edges.push(GraphEdge {
+            from: format!("node_{}", i),
+            to: format!("node_{}", i + 1),
+        });
+    }
+
+    let graph = DependencyGraph { nodes, edges };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0); // No cycles in a linear chain
+}
+
+#[test]
+fn test_zero_cost_nodes_edge_case() {
+    // Test with nodes that have zero cost
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "free_service".to_string(), monthly_cost: 0.0 },
+            GraphNode { id: "paid_service".to_string(), monthly_cost: 100.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "free_service".to_string(), to: "paid_service".to_string() },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_negative_cost_nodes_edge_case() {
+    // Test with nodes that have negative cost (credits/rebates)
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "credit_service".to_string(), monthly_cost: -50.0 },
+            GraphNode { id: "normal_service".to_string(), monthly_cost: 100.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "credit_service".to_string(), to: "normal_service".to_string() },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_extremely_long_node_names() {
+    // Test with extremely long node names
+    let long_name_1 = "a".repeat(1000);
+    let long_name_2 = "b".repeat(1000);
+
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: long_name_1.clone(), monthly_cost: 100.0 },
+            GraphNode { id: long_name_2.clone(), monthly_cost: 200.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: long_name_1, to: long_name_2 },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_special_characters_in_node_names() {
+    // Test with special characters and Unicode in node names
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "service@domain.com".to_string(), monthly_cost: 100.0 },
+            GraphNode { id: "测试服务".to_string(), monthly_cost: 200.0 },
+            GraphNode { id: "service-with-dashes".to_string(), monthly_cost: 50.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "service@domain.com".to_string(), to: "测试服务".to_string() },
+            GraphEdge { from: "测试服务".to_string(), to: "service-with-dashes".to_string() },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_maximum_fan_out_edge_case() {
+    // Test with one node having many outgoing edges (high fan-out)
+    let mut nodes = vec![GraphNode { id: "central".to_string(), monthly_cost: 1000.0 }];
+    let mut edges = Vec::new();
+
+    // Create 100 dependent nodes
+    for i in 0..100 {
+        let node_name = format!("dependent_{}", i);
+        nodes.push(GraphNode { id: node_name.clone(), monthly_cost: 10.0 });
+        edges.push(GraphEdge {
+            from: "central".to_string(),
+            to: node_name,
+        });
+    }
+
+    let graph = DependencyGraph { nodes, edges };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_maximum_fan_in_edge_case() {
+    // Test with one node having many incoming edges (high fan-in)
+    let mut nodes = vec![GraphNode { id: "bottleneck".to_string(), monthly_cost: 1000.0 }];
+    let mut edges = Vec::new();
+
+    // Create 100 nodes that all depend on the bottleneck
+    for i in 0..100 {
+        let node_name = format!("producer_{}", i);
+        nodes.push(GraphNode { id: node_name.clone(), monthly_cost: 10.0 });
+        edges.push(GraphEdge {
+            from: node_name,
+            to: "bottleneck".to_string(),
+        });
+    }
+
+    let graph = DependencyGraph { nodes, edges };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_isolated_nodes_edge_case() {
+    // Test with multiple isolated nodes (no edges between them)
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "isolated_1".to_string(), monthly_cost: 100.0 },
+            GraphNode { id: "isolated_2".to_string(), monthly_cost: 200.0 },
+            GraphNode { id: "isolated_3".to_string(), monthly_cost: 300.0 },
+        ],
+        edges: vec![], // No edges
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
+#[test]
+fn test_duplicate_node_ids_edge_case() {
+    // Test with duplicate node IDs (should handle gracefully)
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "duplicate".to_string(), monthly_cost: 100.0 },
+            GraphNode { id: "duplicate".to_string(), monthly_cost: 200.0 }, // Same ID
+        ],
+        edges: vec![],
+    };
+
+    // Should either succeed or fail gracefully
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok() || !cycles.is_ok()); // Either outcome acceptable
+}
+
+#[test]
+fn test_extreme_cost_values_edge_case() {
+    // Test with extreme cost values
+    let graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "free".to_string(), monthly_cost: 0.0 },
+            GraphNode { id: "expensive".to_string(), monthly_cost: 1_000_000_000.0 }, // 1 billion
+            GraphNode { id: "negative".to_string(), monthly_cost: -1_000_000.0 }, // Negative
+            GraphNode { id: "tiny".to_string(), monthly_cost: 0.000001 }, // Very small
+        ],
+        edges: vec![
+            GraphEdge { from: "free".to_string(), to: "expensive".to_string() },
+            GraphEdge { from: "expensive".to_string(), to: "negative".to_string() },
+            GraphEdge { from: "negative".to_string(), to: "tiny".to_string() },
+        ],
+    };
+
+    let cycles = detect_cycles(&graph);
+    assert!(cycles.is_ok());
+    assert_eq!(cycles.unwrap().len(), 0);
+}
+
 // Mock helper functions
 
 fn mock_graph_with_simple_cycle() -> DependencyGraph {

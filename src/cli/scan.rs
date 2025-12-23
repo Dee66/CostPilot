@@ -192,7 +192,7 @@ impl ScanCommand {
             } else {
                 println!("   {} Total cost within baseline", "✅".green());
             }
-            println!("   Module comparisons: {} within baseline, {} violations, {} no baseline", 
+            println!("   Module comparisons: {} within baseline, {} violations, {} no baseline",
                 module_comparison.within_baseline_count,
                 module_comparison.violations.len(),
                 module_comparison.no_baseline_count);
@@ -248,7 +248,7 @@ impl ScanCommand {
         let json_value = serde_json::to_value(value).map_err(|e| {
             CostPilotError::new("OUTPUT_002", ErrorCategory::ValidationError, format!("Failed to convert to JSON value: {}", e))
         })?;
-        
+
         let canonical_value = Self::canonicalize_json_value(json_value);
         serde_json::to_string_pretty(&canonical_value).map_err(|e| {
             CostPilotError::new("OUTPUT_003", ErrorCategory::ValidationError, format!("Failed to serialize canonical JSON: {}", e))
@@ -322,7 +322,7 @@ impl ScanCommand {
     fn format_markdown_output(
         &self,
         changes: &[crate::engines::detection::ResourceChange],
-        estimates: &[CostEstimate],
+        _estimates: &[CostEstimate],
         policy_result: Option<&crate::engines::policy::PolicyResult>,
         _baselines_result: Option<&(Option<crate::engines::baselines::baseline_types::BaselineViolation>, crate::engines::baselines::BaselineComparisonResult)>,
         slo_result: Option<&SloResult>,
@@ -345,7 +345,7 @@ impl ScanCommand {
         if !changes.is_empty() {
             println!("## Resource Changes");
             for change in changes {
-                println!("- `{}` ({}) - {}", change.resource_id, change.resource_type, format!("{:?}", change.action));
+                println!("- `{}` ({}) - {:?}", change.resource_id, change.resource_type, change.action);
             }
             println!();
         }
@@ -395,7 +395,7 @@ impl ScanCommand {
             println!("| Resource | Type | Change |");
             println!("|----------|------|--------|");
             for change in changes.iter().take(10) { // Limit to first 10 for PR comments
-                println!("| `{}` | {} | {} |", change.resource_id, change.resource_type, format!("{:?}", change.action));
+                println!("| `{}` | {} | {:?} |", change.resource_id, change.resource_type, change.action);
             }
             if changes.len() > 10 {
                 println!("| ... | ... | ... | ({} more changes)", changes.len() - 10);
@@ -628,8 +628,8 @@ impl ScanCommand {
             match BaselinesManager::load_from_file(baselines_path) {
                 Ok(manager) => {
                     // Compare total cost against baseline
-                    let total_baseline_violation = manager.compare_total_cost(total_cost_estimate.monthly_cost);
-                    
+                    let total_baseline_violation = manager.compare_total_cost(total_cost_estimate.monthly_cost, Some(&changes));
+
                     // Compare module costs by grouping resources by module
                     let mut module_costs = HashMap::new();
                     for change in &changes {
@@ -637,8 +637,8 @@ impl ScanCommand {
                             *module_costs.entry(module_path.clone()).or_insert(0.0) += monthly_cost;
                         }
                     }
-                    let module_comparison = manager.compare_module_costs(&module_costs);
-                    
+                    let module_comparison = manager.compare_module_costs(&module_costs, Some(&changes));
+
                     Some((total_baseline_violation, module_comparison))
                 }
                 Err(e) => {
@@ -804,7 +804,7 @@ fn evaluate_slos(
     })?;
 
     // Parse SLO configuration
-    let slo_definitions: Vec<crate::engines::slo::slo_engine::SloDefinition> = 
+    let slo_definitions: Vec<crate::engines::slo::slo_engine::SloDefinition> =
         serde_json::from_str(&slo_config_content).map_err(|e| {
             CostPilotError::new(
                 "SLO_002",
@@ -815,7 +815,7 @@ fn evaluate_slos(
 
     // Create SLO engine and evaluate
     let slo_engine = crate::engines::slo::SloEngine::new(slo_definitions, edition);
-    
+
     // Convert CostEstimate to TotalCost for SLO evaluation
     let total_cost_struct = crate::engines::shared::models::TotalCost {
         monthly: total_cost.monthly_cost,

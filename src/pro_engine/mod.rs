@@ -3,6 +3,8 @@
 pub mod abi;
 pub mod api;
 pub mod crypto;
+#[cfg(test)]
+mod crypto_tests;
 pub mod error;
 pub mod errors;
 pub mod host_bridge;

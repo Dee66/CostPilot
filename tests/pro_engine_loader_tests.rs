@@ -89,10 +89,7 @@ fn test_parse_and_verify_signature_ok() {
     let bundle = costpilot::pro_engine::loader::parse_bundle(&bundle_bytes).unwrap();
 
     // Verify signature
-    let result = costpilot::pro_engine::loader::verify_signature(
-        &bundle,
-        verifying_key.as_bytes(),
-    );
+    let result = costpilot::pro_engine::loader::verify_signature(&bundle, verifying_key.as_bytes());
     assert!(result.is_ok());
 }
 
@@ -121,8 +118,8 @@ fn test_decrypt_with_correct_license_ok() {
     fs::write(&bundle_path, bundle_bytes).unwrap();
 
     // Load and decrypt
-    let decrypted = load_pro_engine_from_file(&bundle_path, &license, verifying_key.as_bytes())
-        .unwrap();
+    let decrypted =
+        load_pro_engine_from_file(&bundle_path, &license, verifying_key.as_bytes()).unwrap();
 
     // Verify WASM magic
     assert_eq!(&decrypted[0..4], b"\0asm");

@@ -98,8 +98,9 @@ pub enum RegressionType {
 }
 
 /// Severity level
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum Severity {
+    #[default]
     Low,
     Medium,
     High,
@@ -138,7 +139,7 @@ pub struct ScanResult {
 /// Metadata about the scan
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanMetadata {
-    pub timestamp: String,
+    pub timestamp: Option<String>,
     pub heuristics_version: String,
     pub policy_version: Option<String>,
     pub deterministic: bool,
@@ -253,6 +254,12 @@ impl CostEstimate {
     /// Builder pattern entry point
     pub fn builder() -> CostEstimateBuilder {
         CostEstimateBuilder::new()
+    }
+}
+
+impl Default for CostEstimateBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -390,6 +397,12 @@ impl ResourceChange {
     }
 }
 
+impl Default for ResourceChangeBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[allow(dead_code)]
 pub struct DetectionBuilder {
     rule_id: Option<String>,
@@ -514,6 +527,12 @@ impl Detection {
     }
 }
 
+impl Default for DetectionBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[allow(dead_code)]
 pub struct ScanResultBuilder {
     resource_changes: Vec<ResourceChange>,
@@ -560,8 +579,8 @@ impl ScanResultBuilder {
     }
 
     pub fn build(self) -> ScanResult {
-        let metadata = self.metadata.unwrap_or_else(|| ScanMetadata {
-            timestamp: chrono::Utc::now().to_rfc3339(),
+        let metadata = self.metadata.unwrap_or(ScanMetadata {
+            timestamp: None,
             heuristics_version: "1.0.0".to_string(),
             policy_version: None,
             deterministic: true,
@@ -577,6 +596,12 @@ impl ScanResultBuilder {
     }
 }
 
+impl Default for ScanResultBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScanResult {
     /// Builder pattern entry point
     pub fn builder() -> ScanResultBuilder {
@@ -584,8 +609,3 @@ impl ScanResult {
     }
 }
 
-impl Default for Severity {
-    fn default() -> Self {
-        Severity::Low
-    }
-}

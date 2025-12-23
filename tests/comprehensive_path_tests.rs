@@ -248,7 +248,10 @@ fn test_premium_features_happy_paths() {
     std::env::set_var("COSTPILOT_LICENSE", "premium-valid-license-key");
 
     // Verify license is set
-    assert_eq!(std::env::var("COSTPILOT_LICENSE").unwrap(), "premium-valid-license-key");
+    assert_eq!(
+        std::env::var("COSTPILOT_LICENSE").unwrap(),
+        "premium-valid-license-key"
+    );
 
     // In real implementation, this would test actual premium features
     // For testing, we verify the license environment is properly configured

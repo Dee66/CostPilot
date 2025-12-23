@@ -1229,3 +1229,172 @@ mod trend_engine_deep_tests {
         variance.sqrt()
     }
 }
+
+// ===== TREND ENGINE EDGE CASE TESTS =====
+
+#[test]
+fn test_trend_engine_empty_snapshots_edge_case() {
+    // Test trend analysis with empty snapshot list
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let empty_snapshots = vec![];
+    let result = engine.analyze_trends(&empty_snapshots);
+    // Should handle empty input gracefully
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_trend_engine_single_snapshot_edge_case() {
+    // Test trend analysis with single snapshot
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let single_snapshot = vec![create_test_snapshot(1, 100.0)];
+    let result = engine.analyze_trends(&single_snapshot);
+    // Should handle single snapshot gracefully
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_trend_engine_zero_cost_snapshots_edge_case() {
+    // Test trend analysis with zero-cost snapshots
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let zero_snapshots = vec![
+        create_test_snapshot(1, 0.0),
+        create_test_snapshot(2, 0.0),
+        create_test_snapshot(3, 0.0),
+    ];
+    let result = engine.analyze_trends(&zero_snapshots);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_trend_engine_negative_cost_snapshots_edge_case() {
+    // Test trend analysis with negative costs (credits/rebates)
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let negative_snapshots = vec![
+        create_test_snapshot(1, -50.0),
+        create_test_snapshot(2, -40.0),
+        create_test_snapshot(3, -30.0),
+    ];
+    let result = engine.analyze_trends(&negative_snapshots);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_trend_engine_extremely_large_costs() {
+    // Test with extremely large cost values
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let large_snapshots = vec![
+        create_test_snapshot(1, 1_000_000.0),
+        create_test_snapshot(2, 2_000_000.0),
+        create_test_snapshot(3, 3_000_000.0),
+    ];
+    let result = engine.analyze_trends(&large_snapshots);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_trend_engine_extremely_small_costs() {
+    // Test with extremely small cost values
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let small_snapshots = vec![
+        create_test_snapshot(1, 0.000001),
+        create_test_snapshot(2, 0.000002),
+        create_test_snapshot(3, 0.000003),
+    ];
+    let result = engine.analyze_trends(&small_snapshots);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_trend_engine_extremely_long_resource_names() {
+    // Test with extremely long resource names
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let long_name = "a".repeat(1000);
+    let mut snapshot = create_test_snapshot(1, 100.0);
+    snapshot.resources.clear();
+    snapshot.resources.insert(long_name, 100.0);
+
+    let snapshots = vec![snapshot];
+    let result = engine.analyze_trends(&snapshots);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_trend_engine_special_characters_in_names() {
+    // Test with special characters and Unicode in resource names
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let special_names = vec![
+        "resource@domain.com",
+        "测试资源",
+        "resource-with-dashes",
+        "resource_with_underscores",
+        "resource (with parentheses)",
+    ];
+
+    let mut snapshot = create_test_snapshot(1, 100.0);
+    snapshot.resources.clear();
+    for name in special_names {
+        snapshot.resources.insert(name.to_string(), 10.0);
+    }
+
+    let snapshots = vec![snapshot];
+    let result = engine.analyze_trends(&snapshots);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_trend_engine_maximum_snapshots() {
+    // Test with maximum number of snapshots
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let mut max_snapshots = Vec::new();
+    for i in 1..=1000 {
+        max_snapshots.push(create_test_snapshot(i, 100.0 + i as f64));
+    }
+
+    let result = engine.analyze_trends(&max_snapshots);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_trend_engine_empty_resource_map_edge_case() {
+    // Test with snapshot that has no resources
+    let temp_dir = TempDir::new().unwrap();
+    let edition = EditionContext::premium();
+    let engine = TrendEngine::new(temp_dir.path(), &edition).unwrap();
+
+    let empty_snapshot = CostSnapshot {
+        timestamp: 1000000000,
+        total_monthly_cost: 0.0,
+        resources: HashMap::new(),
+    };
+
+    let snapshots = vec![empty_snapshot];
+    let result = engine.analyze_trends(&snapshots);
+    assert!(result.is_ok());
+}

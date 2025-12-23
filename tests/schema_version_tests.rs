@@ -15,7 +15,8 @@ fn test_output_schema_version_compatibility() {
 
     // Create a mock output with schema version
     let output_file = temp_dir.path().join("costpilot_output.json");
-    let mock_output = format!(r#"
+    let mock_output = format!(
+        r#"
 {{
   "schema_version": "{}",
   "timestamp": "2024-01-01T00:00:00Z",
@@ -27,7 +28,9 @@ fn test_output_schema_version_compatibility() {
     }}
   ]
 }}
-"#, current_version);
+"#,
+        current_version
+    );
 
     fs::write(&output_file, mock_output).unwrap();
 
@@ -40,9 +43,11 @@ fn test_output_schema_version_compatibility() {
 
     // Validate that schema version matches current binary version
     // In a real implementation, this would check against a compatibility table
-    assert_eq!(output_schema_version, current_version,
+    assert_eq!(
+        output_schema_version, current_version,
         "Output schema version {} does not match binary version {}",
-        output_schema_version, current_version);
+        output_schema_version, current_version
+    );
 
     // Test compatibility table validation
     // Simulate a compatibility table (in real implementation this would be a data structure)
@@ -52,14 +57,20 @@ fn test_output_schema_version_compatibility() {
     ]);
 
     // Check that current version is in compatibility table
-    assert!(compatibility_table.contains_key(current_version),
-        "Binary version {} not found in compatibility table", current_version);
+    assert!(
+        compatibility_table.contains_key(current_version),
+        "Binary version {} not found in compatibility table",
+        current_version
+    );
 
     // Check that output schema version is compatible
     let compatible_versions = compatibility_table.get(current_version).unwrap();
-    assert!(compatible_versions.contains(&output_schema_version.to_string().as_str()),
+    assert!(
+        compatible_versions.contains(&output_schema_version.to_string().as_str()),
         "Schema version {} is not compatible with binary version {}",
-        output_schema_version, current_version);
+        output_schema_version,
+        current_version
+    );
 
     temp_dir.close().unwrap();
 }

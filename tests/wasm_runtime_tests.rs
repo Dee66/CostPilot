@@ -1,6 +1,6 @@
 // WASM runtime sandbox tests
 
-use costpilot::pro_engine::{WasmRuntime, WasmSandboxConfig, WasmError};
+use costpilot::pro_engine::{WasmError, WasmRuntime, WasmSandboxConfig};
 
 #[test]
 fn test_instantiate_simple_module_ok() {

@@ -209,7 +209,7 @@ impl TrendEngine {
         let mut violations = Vec::new();
 
         // Check global baseline
-        if let Some(global_violation) = baselines.compare_total_cost(snapshot.total_monthly_cost) {
+        if let Some(global_violation) = baselines.compare_total_cost(snapshot.total_monthly_cost, None) {
             violations.push(global_violation);
         }
 
@@ -220,7 +220,7 @@ impl TrendEngine {
         }
 
         // Check module baselines
-        let comparison = baselines.compare_module_costs(&module_costs);
+        let comparison = baselines.compare_module_costs(&module_costs, None);
         violations.extend(comparison.violations);
 
         violations

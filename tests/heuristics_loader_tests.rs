@@ -1,10 +1,10 @@
 use costpilot::engines::prediction::heuristics_loader::{HeuristicsLoader, HeuristicsStats};
 use costpilot::engines::prediction::prediction_engine::CostHeuristics;
 use costpilot::engines::shared::error_model::{CostPilotError, ErrorCategory};
+use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
-use std::io::Write;
-use std::fs;
 
 // ===== BASIC LOADER TESTS =====
 
@@ -40,11 +40,15 @@ fn test_default_search_paths_contains_expected_locations() {
     let paths = HeuristicsLoader::default_search_paths();
 
     // Should include current directory paths
-    assert!(paths.iter().any(|p| p.to_string_lossy().contains("cost_heuristics.json")));
+    assert!(paths
+        .iter()
+        .any(|p| p.to_string_lossy().contains("cost_heuristics.json")));
 
     // Should include system paths
     assert!(paths.iter().any(|p| p.to_string_lossy().contains("/etc/")));
-    assert!(paths.iter().any(|p| p.to_string_lossy().contains("/usr/local/")));
+    assert!(paths
+        .iter()
+        .any(|p| p.to_string_lossy().contains("/usr/local/")));
 }
 
 #[test]
@@ -53,7 +57,9 @@ fn test_default_search_paths_includes_home_directory() {
 
     if let Some(home) = std::env::var_os("HOME") {
         let home_str = home.to_string_lossy();
-        assert!(paths.iter().any(|p| p.to_string_lossy().contains(&*home_str)));
+        assert!(paths
+            .iter()
+            .any(|p| p.to_string_lossy().contains(&*home_str)));
     }
 }
 
@@ -194,7 +200,10 @@ fn test_load_from_file_valid_heuristics() {
     temp_file.flush().unwrap();
 
     let result = loader.load_from_file(temp_file.path());
-    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok());
+    if let Err(e) = &result {
+        println!("Error: {:?}", e);
+    }
+    assert!(result.is_ok());
 
     let heuristics = result.unwrap();
     assert_eq!(heuristics.version, "1.0.0");
@@ -215,7 +224,9 @@ fn test_load_no_files_found() {
 
     let error = result.unwrap_err();
     assert_eq!(error.category, ErrorCategory::FileSystemError);
-    assert!(error.message.contains("Could not find cost_heuristics.json"));
+    assert!(error
+        .message
+        .contains("Could not find cost_heuristics.json"));
 }
 
 #[test]
@@ -321,7 +332,10 @@ fn test_load_with_valid_file() {
     let loader = HeuristicsLoader::with_paths(custom_paths);
 
     let result = loader.load();
-    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok());
+    if let Err(e) = &result {
+        println!("Error: {:?}", e);
+    }
+    assert!(result.is_ok());
 
     let heuristics = result.unwrap();
     assert_eq!(heuristics.version, "1.0.0");
@@ -448,11 +462,15 @@ fn test_validate_empty_ec2_instances() {
 fn test_validate_invalid_ec2_hourly_cost() {
     let loader = HeuristicsLoader::new();
 
-    let mut compute = costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
-    compute.ec2.insert("t3.micro".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: -1.0, // Invalid negative cost
-        monthly: 7.488,
-    });
+    let mut compute =
+        costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
+    compute.ec2.insert(
+        "t3.micro".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: -1.0, // Invalid negative cost
+            monthly: 7.488,
+        },
+    );
 
     let invalid_heuristics = CostHeuristics {
         version: "1.0.0".to_string(),
@@ -477,11 +495,15 @@ fn test_validate_invalid_ec2_hourly_cost() {
 fn test_validate_invalid_lambda_price() {
     let loader = HeuristicsLoader::new();
 
-    let mut compute = costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
-    compute.ec2.insert("t3.micro".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: 0.0104,
-        monthly: 7.488,
-    });
+    let mut compute =
+        costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
+    compute.ec2.insert(
+        "t3.micro".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: 0.0104,
+            monthly: 7.488,
+        },
+    );
     compute.lambda.price_per_gb_second = -1.0; // Invalid negative price
 
     let invalid_heuristics = CostHeuristics {
@@ -507,11 +529,15 @@ fn test_validate_invalid_lambda_price() {
 fn test_validate_empty_rds_mysql() {
     let loader = HeuristicsLoader::new();
 
-    let mut compute = costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
-    compute.ec2.insert("t3.micro".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: 0.0104,
-        monthly: 7.488,
-    });
+    let mut compute =
+        costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
+    compute.ec2.insert(
+        "t3.micro".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: 0.0104,
+            monthly: 7.488,
+        },
+    );
     compute.lambda.price_per_gb_second = 0.0000166667; // Valid lambda price
 
     let invalid_heuristics = CostHeuristics {
@@ -530,7 +556,9 @@ fn test_validate_empty_rds_mysql() {
 
     let error = result.unwrap_err();
     assert_eq!(error.category, ErrorCategory::ValidationError);
-    assert!(error.message.contains("No RDS MySQL instance types defined"));
+    assert!(error
+        .message
+        .contains("No RDS MySQL instance types defined"));
 }
 
 // ===== VERSION COMPATIBILITY TESTS =====
@@ -600,30 +628,46 @@ fn test_check_version_compatibility_non_numeric() {
 fn test_get_statistics() {
     let loader = HeuristicsLoader::new();
 
-    let mut compute = costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
-    compute.ec2.insert("t3.micro".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: 0.0104,
-        monthly: 7.488,
-    });
-    compute.ec2.insert("t3.small".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: 0.0208,
-        monthly: 14.976,
-    });
+    let mut compute =
+        costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
+    compute.ec2.insert(
+        "t3.micro".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: 0.0104,
+            monthly: 7.488,
+        },
+    );
+    compute.ec2.insert(
+        "t3.small".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: 0.0208,
+            monthly: 14.976,
+        },
+    );
 
-    let mut database = costpilot::engines::prediction::prediction_engine::DatabaseHeuristics::default();
-    database.rds.mysql.insert("db.t3.micro".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: 0.017,
-        monthly: 12.41,
-    });
-    database.rds.postgres.insert("db.t3.micro".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: 0.018,
-        monthly: 13.14,
-    });
+    let mut database =
+        costpilot::engines::prediction::prediction_engine::DatabaseHeuristics::default();
+    database.rds.mysql.insert(
+        "db.t3.micro".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: 0.017,
+            monthly: 12.41,
+        },
+    );
+    database.rds.postgres.insert(
+        "db.t3.micro".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: 0.018,
+            monthly: 13.14,
+        },
+    );
 
-    let mut storage = costpilot::engines::prediction::prediction_engine::StorageHeuristics::default();
-    storage.ebs.insert("gp3".to_string(), costpilot::engines::prediction::prediction_engine::EbsCost {
-        per_gb: 0.08,
-    });
+    let mut storage =
+        costpilot::engines::prediction::prediction_engine::StorageHeuristics::default();
+    storage.ebs.insert(
+        "gp3".to_string(),
+        costpilot::engines::prediction::prediction_engine::EbsCost { per_gb: 0.08 },
+    );
 
     let heuristics = CostHeuristics {
         version: "1.2.3".to_string(),
@@ -778,7 +822,10 @@ fn test_load_from_file_with_validation() {
     temp_file.flush().unwrap();
 
     let result = loader.load_from_file(temp_file.path());
-    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok());
+    if let Err(e) = &result {
+        println!("Error: {:?}", e);
+    }
+    assert!(result.is_ok());
 
     let heuristics = result.unwrap();
     let stats = loader.get_statistics(&heuristics);
@@ -928,7 +975,10 @@ fn test_load_fallback_behavior() {
     let loader = HeuristicsLoader::with_paths(custom_paths);
 
     let result = loader.load();
-    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok()); // Should find the valid file
+    if let Err(e) = &result {
+        println!("Error: {:?}", e);
+    }
+    assert!(result.is_ok()); // Should find the valid file
 }
 
 // ===== EDGE CASE TESTS =====
@@ -937,11 +987,15 @@ fn test_load_fallback_behavior() {
 fn test_validate_extremely_high_cost() {
     let loader = HeuristicsLoader::new();
 
-    let mut compute = costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
-    compute.ec2.insert("t3.micro".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: 1000.1, // Above maximum allowed
-        monthly: 7.488,
-    });
+    let mut compute =
+        costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
+    compute.ec2.insert(
+        "t3.micro".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: 1000.1, // Above maximum allowed
+            monthly: 7.488,
+        },
+    );
 
     let invalid_heuristics = CostHeuristics {
         version: "1.0.0".to_string(),
@@ -966,11 +1020,15 @@ fn test_validate_extremely_high_cost() {
 fn test_validate_zero_cost() {
     let loader = HeuristicsLoader::new();
 
-    let mut compute = costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
-    compute.ec2.insert("t3.micro".to_string(), costpilot::engines::prediction::prediction_engine::InstanceCost {
-        hourly: 0.0, // Zero cost should be invalid
-        monthly: 7.488,
-    });
+    let mut compute =
+        costpilot::engines::prediction::prediction_engine::ComputeHeuristics::default();
+    compute.ec2.insert(
+        "t3.micro".to_string(),
+        costpilot::engines::prediction::prediction_engine::InstanceCost {
+            hourly: 0.0, // Zero cost should be invalid
+            monthly: 7.488,
+        },
+    );
 
     let invalid_heuristics = CostHeuristics {
         version: "1.0.0".to_string(),
@@ -1165,7 +1223,10 @@ fn test_validate_missing_required_fields() {
     temp_file.flush().unwrap();
 
     let result = loader.load_from_file(temp_file.path());
-    if let Err(e) = &result { println!("Error: {:?}", e); } assert!(result.is_ok());
+    if let Err(e) = &result {
+        println!("Error: {:?}", e);
+    }
+    assert!(result.is_ok());
 }
 
 #[test]
@@ -1220,19 +1281,24 @@ fn test_load_from_file_large_file() {
         "version": "1.0.0",
         "last_updated": "2024-01-01",
         "compute": {
-            "ec2": {"#.to_string();
+            "ec2": {"#
+        .to_string();
 
     // Add many EC2 instances to make it large
     for i in 0..1000 {
         let comma = if i < 999 { "," } else { "" };
-        large_content.push_str(&format!(r#"
+        large_content.push_str(&format!(
+            r#"
                 "instance{}": {{
                     "hourly": 0.01,
                     "monthly": 7.0
-                }}{}"#, i, comma));
+                }}{}"#,
+            i, comma
+        ));
     }
 
-    large_content.push_str(r#"
+    large_content.push_str(
+        r#"
             },
             "lambda": {
                 "price_per_gb_second": 0.0000166667,
@@ -1313,7 +1379,8 @@ fn test_load_from_file_large_file() {
         "prediction_intervals": {
             "range_factor": 0.5
         }
-    }"#);
+    }"#,
+    );
 
     let mut temp_file = NamedTempFile::new().unwrap();
     temp_file.write_all(large_content.as_bytes()).unwrap();

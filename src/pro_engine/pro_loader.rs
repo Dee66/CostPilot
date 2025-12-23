@@ -27,6 +27,9 @@ pub fn load_pro_engine(edition: &mut EditionContext) -> Result<(), String> {
     // 4. Verify license signature
     crypto::verify_license_signature(&lic)?;
 
+    // Store validated license in edition context
+    edition.license = Some(lic.clone());
+
     // 5. Derive AES-GCM key from license via HKDF
     let key = crypto::derive_key(&lic.license_key);
 

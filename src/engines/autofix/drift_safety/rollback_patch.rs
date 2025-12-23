@@ -133,8 +133,14 @@ impl RollbackPatchGenerator {
             beta: true, // Drift-safe autofix is still in beta
         }
     }
+
 }
 
+impl Default for RollbackPatchGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

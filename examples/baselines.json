@@ -2,18 +2,39 @@
   "version": "1.0",
   "global": {
     "name": "global",
-    "expected_monthly_cost": 5000.0,
-    "acceptable_variance_percent": 15.0,
-    "last_updated": "2024-01-15T10:00:00Z",
-    "justification": "Total monthly infrastructure budget for production environment. Includes VPC networking ($1000), compute resources ($2500), databases ($1000), and monitoring ($500).",
-    "owner": "platform-team@example.com",
-    "reference": "BUDGET-2024-Q1",
-    "tags": {
-      "environment": "production",
-      "category": "infrastructure"
-    }
+    "expected_monthly_cost": 2500.0,
+    "acceptable_variance_percent": 10.0,
+    "last_updated": "2025-12-22T06:38:52.265599785+00:00",
+    "justification": "Test deployment",
+    "owner": "test-team"
   },
   "modules": {
+    "module.compute": {
+      "name": "module.compute",
+      "expected_monthly_cost": 2500.0,
+      "acceptable_variance_percent": 20.0,
+      "last_updated": "2024-01-15T10:00:00Z",
+      "justification": "Auto-scaling EC2 fleet for web tier. Variance allows for traffic spikes and auto-scaling events. Includes 10x t3.large instances baseline.",
+      "owner": "platform-team@example.com",
+      "reference": "CAPACITY-2024",
+      "tags": {
+        "auto-scale": "true",
+        "service": "compute"
+      }
+    },
+    "module.database": {
+      "name": "module.database",
+      "expected_monthly_cost": 1000.0,
+      "acceptable_variance_percent": 5.0,
+      "last_updated": "2024-01-15T10:00:00Z",
+      "justification": "RDS PostgreSQL db.r5.xlarge with Multi-AZ. Storage costs fixed at 500GB. Low variance expected due to reserved capacity.",
+      "owner": "data-team@example.com",
+      "reference": "DB-SIZING-2024",
+      "tags": {
+        "reserved": "true",
+        "service": "database"
+      }
+    },
     "module.vpc": {
       "name": "module.vpc",
       "expected_monthly_cost": 1000.0,
@@ -27,32 +48,6 @@
         "criticality": "high"
       }
     },
-    "module.compute": {
-      "name": "module.compute",
-      "expected_monthly_cost": 2500.0,
-      "acceptable_variance_percent": 20.0,
-      "last_updated": "2024-01-15T10:00:00Z",
-      "justification": "Auto-scaling EC2 fleet for web tier. Variance allows for traffic spikes and auto-scaling events. Includes 10x t3.large instances baseline.",
-      "owner": "platform-team@example.com",
-      "reference": "CAPACITY-2024",
-      "tags": {
-        "service": "compute",
-        "auto-scale": "true"
-      }
-    },
-    "module.database": {
-      "name": "module.database",
-      "expected_monthly_cost": 1000.0,
-      "acceptable_variance_percent": 5.0,
-      "last_updated": "2024-01-15T10:00:00Z",
-      "justification": "RDS PostgreSQL db.r5.xlarge with Multi-AZ. Storage costs fixed at 500GB. Low variance expected due to reserved capacity.",
-      "owner": "data-team@example.com",
-      "reference": "DB-SIZING-2024",
-      "tags": {
-        "service": "database",
-        "reserved": "true"
-      }
-    },
     "module.monitoring": {
       "name": "module.monitoring",
       "expected_monthly_cost": 500.0,
@@ -61,20 +56,12 @@
       "justification": "CloudWatch metrics, logs, and alarms. Higher variance due to log volume fluctuation with traffic patterns.",
       "owner": "sre-team@example.com",
       "tags": {
-        "service": "observability",
-        "variable": "true"
+        "variable": "true",
+        "service": "observability"
       }
     }
   },
   "services": {
-    "NAT Gateway": {
-      "name": "NAT Gateway",
-      "expected_monthly_cost": 405.0,
-      "acceptable_variance_percent": 5.0,
-      "last_updated": "2024-01-15T10:00:00Z",
-      "justification": "3x NAT Gateways at $135/month each. Cost is fixed per gateway.",
-      "owner": "networking-team@example.com"
-    },
     "RDS": {
       "name": "RDS",
       "expected_monthly_cost": 1000.0,
@@ -82,6 +69,14 @@
       "last_updated": "2024-01-15T10:00:00Z",
       "justification": "Reserved instance pricing locked in for 12 months.",
       "owner": "data-team@example.com"
+    },
+    "NAT Gateway": {
+      "name": "NAT Gateway",
+      "expected_monthly_cost": 405.0,
+      "acceptable_variance_percent": 5.0,
+      "last_updated": "2024-01-15T10:00:00Z",
+      "justification": "3x NAT Gateways at $135/month each. Cost is fixed per gateway.",
+      "owner": "networking-team@example.com"
     }
   },
   "metadata": {

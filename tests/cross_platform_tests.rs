@@ -1,8 +1,8 @@
-use costpilot::engines::shared::models::{ResourceChange, ChangeAction};
 use costpilot::engines::detection::detection_engine::DetectionEngine;
 use costpilot::engines::prediction::prediction_engine::PredictionEngine;
-use std::path::Path;
+use costpilot::engines::shared::models::{ChangeAction, ResourceChange};
 use std::env;
+use std::path::Path;
 
 // Test file path handling across platforms
 #[test]

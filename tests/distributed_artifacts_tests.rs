@@ -10,7 +10,10 @@ fn test_distributed_artifacts_match_tested_artifacts() {
 
     // For now, just check that the target directory exists (indicating a build occurred)
     let target_dir = Path::new("target");
-    assert!(target_dir.exists(), "Target directory should exist from build");
+    assert!(
+        target_dir.exists(),
+        "Target directory should exist from build"
+    );
 
     // TODO: Compare hashes of:
     // - Built binaries vs distributed binaries
@@ -32,7 +35,10 @@ fn test_artifact_parity_across_distribution_channels() {
 
     // For now, just check that the target directory exists (indicating a build occurred)
     let target_dir = Path::new("target");
-    assert!(target_dir.exists(), "Target directory should exist from build");
+    assert!(
+        target_dir.exists(),
+        "Target directory should exist from build"
+    );
 
     // TODO: Compare hashes/checksums of artifacts from:
     // - GitHub releases
@@ -41,5 +47,8 @@ fn test_artifact_parity_across_distribution_channels() {
     // - Any other distribution channels
 
     // Placeholder assertion - always passes until implementation
-    assert!(true, "Placeholder test for artifact parity across distribution channels");
+    assert!(
+        true,
+        "Placeholder test for artifact parity across distribution channels"
+    );
 }

@@ -12925,3 +12925,233 @@ mod mapping_engine_deep_tests {
         }
     }
 }
+
+// ===== MAPPING ENGINE EDGE CASE TESTS =====
+
+#[test]
+fn test_mapping_engine_empty_graph_edge_case() {
+    // Test mapping with empty graph
+    let engine = MappingEngine::new();
+    let empty_graph = DependencyGraph {
+        nodes: vec![],
+        edges: vec![],
+    };
+
+    let result = engine.analyze_dependencies(&empty_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 0);
+    assert_eq!(analysis.edge_count, 0);
+}
+
+#[test]
+fn test_mapping_engine_single_node_graph_edge_case() {
+    // Test mapping with single node, no edges
+    let engine = MappingEngine::new();
+    let single_graph = DependencyGraph {
+        nodes: vec![GraphNode {
+            id: "single".to_string(),
+            monthly_cost: 100.0,
+        }],
+        edges: vec![],
+    };
+
+    let result = engine.analyze_dependencies(&single_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 1);
+    assert_eq!(analysis.edge_count, 0);
+}
+
+#[test]
+fn test_mapping_engine_extremely_large_graph() {
+    // Test with a very large number of nodes and edges
+    let engine = MappingEngine::new();
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+
+    // Create 1000 nodes
+    for i in 0..1000 {
+        nodes.push(GraphNode {
+            id: format!("node_{}", i),
+            monthly_cost: i as f64,
+        });
+    }
+
+    // Create edges in a linear chain
+    for i in 0..999 {
+        edges.push(GraphEdge {
+            from: format!("node_{}", i),
+            to: format!("node_{}", i + 1),
+        });
+    }
+
+    let large_graph = DependencyGraph { nodes, edges };
+
+    let result = engine.analyze_dependencies(&large_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 1000);
+    assert_eq!(analysis.edge_count, 999);
+}
+
+#[test]
+fn test_mapping_engine_zero_cost_nodes_edge_case() {
+    // Test with nodes that have zero cost
+    let engine = MappingEngine::new();
+    let zero_graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "free_service".to_string(), monthly_cost: 0.0 },
+            GraphNode { id: "paid_service".to_string(), monthly_cost: 100.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "free_service".to_string(), to: "paid_service".to_string() },
+        ],
+    };
+
+    let result = engine.analyze_dependencies(&zero_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 2);
+    assert_eq!(analysis.edge_count, 1);
+}
+
+#[test]
+fn test_mapping_engine_negative_cost_nodes_edge_case() {
+    // Test with nodes that have negative cost (credits/rebates)
+    let engine = MappingEngine::new();
+    let negative_graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "credit_service".to_string(), monthly_cost: -50.0 },
+            GraphNode { id: "normal_service".to_string(), monthly_cost: 100.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "credit_service".to_string(), to: "normal_service".to_string() },
+        ],
+    };
+
+    let result = engine.analyze_dependencies(&negative_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 2);
+    assert_eq!(analysis.edge_count, 1);
+}
+
+#[test]
+fn test_mapping_engine_extremely_long_node_names() {
+    // Test with extremely long node names
+    let engine = MappingEngine::new();
+    let long_name_1 = "a".repeat(1000);
+    let long_name_2 = "b".repeat(1000);
+
+    let long_graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: long_name_1.clone(), monthly_cost: 100.0 },
+            GraphNode { id: long_name_2.clone(), monthly_cost: 200.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: long_name_1, to: long_name_2 },
+        ],
+    };
+
+    let result = engine.analyze_dependencies(&long_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 2);
+    assert_eq!(analysis.edge_count, 1);
+}
+
+#[test]
+fn test_mapping_engine_special_characters_in_node_names() {
+    // Test with special characters and Unicode in node names
+    let engine = MappingEngine::new();
+    let special_graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "service@domain.com".to_string(), monthly_cost: 100.0 },
+            GraphNode { id: "测试服务".to_string(), monthly_cost: 200.0 },
+            GraphNode { id: "service-with-dashes".to_string(), monthly_cost: 50.0 },
+        ],
+        edges: vec![
+            GraphEdge { from: "service@domain.com".to_string(), to: "测试服务".to_string() },
+            GraphEdge { from: "测试服务".to_string(), to: "service-with-dashes".to_string() },
+        ],
+    };
+
+    let result = engine.analyze_dependencies(&special_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 3);
+    assert_eq!(analysis.edge_count, 2);
+}
+
+#[test]
+fn test_mapping_engine_maximum_fan_out_edge_case() {
+    // Test with one node having many outgoing edges (high fan-out)
+    let engine = MappingEngine::new();
+    let mut nodes = vec![GraphNode { id: "central".to_string(), monthly_cost: 1000.0 }];
+    let mut edges = Vec::new();
+
+    // Create 100 dependent nodes
+    for i in 0..100 {
+        let node_name = format!("dependent_{}", i);
+        nodes.push(GraphNode { id: node_name.clone(), monthly_cost: 10.0 });
+        edges.push(GraphEdge {
+            from: "central".to_string(),
+            to: node_name,
+        });
+    }
+
+    let fan_out_graph = DependencyGraph { nodes, edges };
+
+    let result = engine.analyze_dependencies(&fan_out_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 101);
+    assert_eq!(analysis.edge_count, 100);
+}
+
+#[test]
+fn test_mapping_engine_maximum_fan_in_edge_case() {
+    // Test with one node having many incoming edges (high fan-in)
+    let engine = MappingEngine::new();
+    let mut nodes = vec![GraphNode { id: "bottleneck".to_string(), monthly_cost: 1000.0 }];
+    let mut edges = Vec::new();
+
+    // Create 100 nodes that all depend on the bottleneck
+    for i in 0..100 {
+        let node_name = format!("producer_{}", i);
+        nodes.push(GraphNode { id: node_name.clone(), monthly_cost: 10.0 });
+        edges.push(GraphEdge {
+            from: node_name,
+            to: "bottleneck".to_string(),
+        });
+    }
+
+    let fan_in_graph = DependencyGraph { nodes, edges };
+
+    let result = engine.analyze_dependencies(&fan_in_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 101);
+    assert_eq!(analysis.edge_count, 100);
+}
+
+#[test]
+fn test_mapping_engine_isolated_nodes_edge_case() {
+    // Test with multiple isolated nodes (no edges between them)
+    let engine = MappingEngine::new();
+    let isolated_graph = DependencyGraph {
+        nodes: vec![
+            GraphNode { id: "isolated_1".to_string(), monthly_cost: 100.0 },
+            GraphNode { id: "isolated_2".to_string(), monthly_cost: 200.0 },
+            GraphNode { id: "isolated_3".to_string(), monthly_cost: 300.0 },
+        ],
+        edges: vec![], // No edges
+    };
+
+    let result = engine.analyze_dependencies(&isolated_graph);
+    assert!(result.is_ok());
+    let analysis = result.unwrap();
+    assert_eq!(analysis.node_count, 3);
+    assert_eq!(analysis.edge_count, 0);
+}

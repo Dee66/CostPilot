@@ -31,9 +31,16 @@ mod chaos_engineering_tests {
         assert!(result.is_err(), "Should fail when file doesn't exist");
 
         if let Err(e) = result {
-            assert_eq!(e.category, ErrorCategory::FileSystemError,
-                "Should result in FileSystemError for nonexistent file, got {:?}", e.category);
-            assert!(!e.message.is_empty(), "Error should have descriptive message");
+            assert_eq!(
+                e.category,
+                ErrorCategory::FileSystemError,
+                "Should result in FileSystemError for nonexistent file, got {:?}",
+                e.category
+            );
+            assert!(
+                !e.message.is_empty(),
+                "Error should have descriptive message"
+            );
         }
     }
 
@@ -45,7 +52,8 @@ mod chaos_engineering_tests {
         // In a real chaos engineering setup, we'd use external tools to simulate OOM
         // For now, we'll test with large but manageable inputs
 
-        let large_json = format!(r#"
+        let large_json = format!(
+            r#"
         {{
             "planned_values": {{
                 "root_module": {{
@@ -59,7 +67,9 @@ mod chaos_engineering_tests {
                     ]
                 }}
             }}
-        }}"#, "x".repeat(50_000_000)); // 50MB string
+        }}"#,
+            "x".repeat(50_000_000)
+        ); // 50MB string
 
         let result = engine.detect_from_terraform_json(&large_json);
 
@@ -71,9 +81,16 @@ mod chaos_engineering_tests {
             }
             Err(e) => {
                 // Memory-related errors are acceptable
-                assert!(matches!(e.category,
-                    ErrorCategory::ParseError | ErrorCategory::InvalidInput | ErrorCategory::ValidationError),
-                    "Error should be acceptable type, got {:?}", e.category);
+                assert!(
+                    matches!(
+                        e.category,
+                        ErrorCategory::ParseError
+                            | ErrorCategory::InvalidInput
+                            | ErrorCategory::ValidationError
+                    ),
+                    "Error should be acceptable type, got {:?}",
+                    e.category
+                );
                 assert!(!e.message.is_empty(), "Error should have message");
             }
         }
@@ -94,13 +111,23 @@ mod chaos_engineering_tests {
         match result {
             Ok(resources) => {
                 // Success indicates no network dependency
-                assert!(resources.is_empty(), "Should handle empty resources without network");
+                assert!(
+                    resources.is_empty(),
+                    "Should handle empty resources without network"
+                );
             }
             Err(e) => {
                 // If it fails, should be due to input validation, not network
-                assert!(matches!(e.category,
-                    ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
-                    "Error should be input-related, not network-related, got {:?}", e.category);
+                assert!(
+                    matches!(
+                        e.category,
+                        ErrorCategory::ParseError
+                            | ErrorCategory::ValidationError
+                            | ErrorCategory::InvalidInput
+                    ),
+                    "Error should be input-related, not network-related, got {:?}",
+                    e.category
+                );
             }
         }
     }
@@ -127,17 +154,31 @@ mod chaos_engineering_tests {
                 Ok(resources) => {
                     // If it succeeds, validate the resources are reasonable
                     for resource in &resources {
-                        assert!(!resource.resource_id.is_empty(),
-                            "Resource should have valid ID in corrupted input test {}", i);
+                        assert!(
+                            !resource.resource_id.is_empty(),
+                            "Resource should have valid ID in corrupted input test {}",
+                            i
+                        );
                     }
                 }
                 Err(e) => {
                     // Should be structured error
-                    assert!(!e.message.is_empty(),
-                        "Error should have message for corrupted input {}", i);
-                    assert!(matches!(e.category,
-                        ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
-                        "Error should be in expected categories for corrupted input {}, got {:?}", i, e.category);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for corrupted input {}",
+                        i
+                    );
+                    assert!(
+                        matches!(
+                            e.category,
+                            ErrorCategory::ParseError
+                                | ErrorCategory::ValidationError
+                                | ErrorCategory::InvalidInput
+                        ),
+                        "Error should be in expected categories for corrupted input {}, got {:?}",
+                        i,
+                        e.category
+                    );
                 }
             }
         }
@@ -150,39 +191,57 @@ mod chaos_engineering_tests {
         // Test that the engine can continue processing after encountering errors
         let mixed_inputs = vec![
             // Valid input (empty resources)
-            (r#"{
+            (
+                r#"{
                 "format_version": "1.1",
                 "terraform_version": "1.0.0",
                 "planned_values": {"root_module": {"resources": []}},
                 "resource_changes": []
-            }"#, true),
+            }"#,
+                true,
+            ),
             // Invalid input
-            (r#"{"planned_values": {"root_module": {"resources": [{"address": "", "values": }]}}"#, false),
+            (
+                r#"{"planned_values": {"root_module": {"resources": [{"address": "", "values": }]}}"#,
+                false,
+            ),
             // Another valid input
-            (r#"{
+            (
+                r#"{
                 "format_version": "1.1",
                 "terraform_version": "1.0.0",
                 "planned_values": {"root_module": {"resources": []}},
                 "resource_changes": []
-            }"#, true),
+            }"#,
+                true,
+            ),
         ];
 
         for (i, (input, should_succeed)) in mixed_inputs.iter().enumerate() {
             let result = engine.detect_from_terraform_json(input);
 
             if *should_succeed {
-                assert!(result.is_ok(),
-                    "Input {} should succeed, got error: {:?}", i, result.as_ref().err());
+                assert!(
+                    result.is_ok(),
+                    "Input {} should succeed, got error: {:?}",
+                    i,
+                    result.as_ref().err()
+                );
                 if let Ok(resources) = result {
-                    assert!(resources.is_empty(),
-                        "Valid empty input {} should return empty resources", i);
+                    assert!(
+                        resources.is_empty(),
+                        "Valid empty input {} should return empty resources",
+                        i
+                    );
                 }
             } else {
-                assert!(result.is_err(),
-                    "Input {} should fail", i);
+                assert!(result.is_err(), "Input {} should fail", i);
                 if let Err(e) = result {
-                    assert!(!e.message.is_empty(),
-                        "Error should have message for input {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for input {}",
+                        i
+                    );
                 }
             }
         }
@@ -195,15 +254,24 @@ mod chaos_engineering_tests {
         let engine = DetectionEngine::new();
 
         // Test with many small resources to simulate resource exhaustion
-        let mut many_resources = r#"{"planned_values": {"root_module": {"resources": ["#.to_string();
+        let mut many_resources =
+            r#"{"planned_values": {"root_module": {"resources": ["#.to_string();
 
         for i in 0..1000 {
-            if i > 0 { many_resources.push(','); }
-            many_resources.push_str(&format!(r#"{{"address": "test{}","values": {{"instance_type": "t2.micro"}}}}"#, i));
+            if i > 0 {
+                many_resources.push(',');
+            }
+            many_resources.push_str(&format!(
+                r#"{{"address": "test{}","values": {{"instance_type": "t2.micro"}}}}"#,
+                i
+            ));
         }
         many_resources.push_str(r#"]}}}"#);
 
-        println!("Testing 1000 resources, plan size: {} bytes", many_resources.len());
+        println!(
+            "Testing 1000 resources, plan size: {} bytes",
+            many_resources.len()
+        );
         let start = Instant::now();
         let result = engine.detect_from_terraform_json(&many_resources);
         let duration = start.elapsed();
@@ -214,8 +282,15 @@ mod chaos_engineering_tests {
         match result {
             Ok(resources) => {
                 assert_eq!(resources.len(), 1000, "Should process all 1000 resources");
-                println!("✅ Successfully processed {} resources in {:?}", resources.len(), duration);
-                println!("  Average time per resource: {:?}", duration / resources.len() as u32);
+                println!(
+                    "✅ Successfully processed {} resources in {:?}",
+                    resources.len(),
+                    duration
+                );
+                println!(
+                    "  Average time per resource: {:?}",
+                    duration / resources.len() as u32
+                );
 
                 // Extrapolate to realistic file sizes (not 300MB)
                 // Based on real-world Terraform plans: 1MB = ~10,000 resources
@@ -224,21 +299,34 @@ mod chaos_engineering_tests {
                 let estimated_time_1mb = duration.mul_f64(estimated_resources_1mb / 1000.0);
 
                 println!("\n📊 Extrapolation for realistic file sizes:");
-                println!("  1MB file (~10k resources): {:.0} resources, estimated time: {:?}",
-                    estimated_resources_1mb, estimated_time_1mb);
+                println!(
+                    "  1MB file (~10k resources): {:.0} resources, estimated time: {:?}",
+                    estimated_resources_1mb, estimated_time_1mb
+                );
                 println!("  Bytes per resource: {:.1}", bytes_per_resource);
 
                 // Verify they're all valid
                 for (i, resource) in resources.iter().enumerate() {
-                    assert_eq!(resource.resource_id, format!("test{}", i),
-                        "Resource {} should have correct ID", i);
+                    assert_eq!(
+                        resource.resource_id,
+                        format!("test{}", i),
+                        "Resource {} should have correct ID",
+                        i
+                    );
                 }
             }
             Err(e) => {
                 // Resource exhaustion errors are acceptable
-                assert!(matches!(e.category,
-                    ErrorCategory::ParseError | ErrorCategory::InvalidInput | ErrorCategory::ValidationError),
-                    "Error should be acceptable type, got {:?}", e.category);
+                assert!(
+                    matches!(
+                        e.category,
+                        ErrorCategory::ParseError
+                            | ErrorCategory::InvalidInput
+                            | ErrorCategory::ValidationError
+                    ),
+                    "Error should be acceptable type, got {:?}",
+                    e.category
+                );
                 assert!(!e.message.is_empty(), "Error should have message");
             }
         }
@@ -246,8 +334,8 @@ mod chaos_engineering_tests {
 
     #[test]
     fn test_concurrent_execution_stress() {
-        use std::thread;
         use std::sync::Arc;
+        use std::thread;
 
         let engine = Arc::new(DetectionEngine::new());
         let valid_plan = r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {}}]}}}"#;
@@ -275,13 +363,20 @@ mod chaos_engineering_tests {
             // Each thread should either succeed or fail gracefully
             match result {
                 Ok(resources) => {
-                    assert_eq!(resources.len(), 1,
-                        "Thread {} should find one resource", thread_id);
+                    assert_eq!(
+                        resources.len(),
+                        1,
+                        "Thread {} should find one resource",
+                        thread_id
+                    );
                 }
                 Err(e) => {
                     // Concurrent access errors are acceptable if handled gracefully
-                    assert!(!e.message.is_empty(),
-                        "Thread {} error should have message", thread_id);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Thread {} error should have message",
+                        thread_id
+                    );
                 }
             }
         }
@@ -311,17 +406,31 @@ mod chaos_engineering_tests {
                 Ok(resources) => {
                     // For valid inputs, should work
                     if !input.is_empty() && !input.trim().is_empty() && !input.contains("invalid") {
-                        assert!(resources.is_empty(),
-                            "Valid empty input {} should return empty resources", i);
+                        assert!(
+                            resources.is_empty(),
+                            "Valid empty input {} should return empty resources",
+                            i
+                        );
                     }
                 }
                 Err(e) => {
                     // Should have structured error
-                    assert!(!e.message.is_empty(),
-                        "Error should have message for input {}", i);
-                    assert!(matches!(e.category,
-                        ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
-                        "Error should be in expected categories for input {}, got {:?}", i, e.category);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for input {}",
+                        i
+                    );
+                    assert!(
+                        matches!(
+                            e.category,
+                            ErrorCategory::ParseError
+                                | ErrorCategory::ValidationError
+                                | ErrorCategory::InvalidInput
+                        ),
+                        "Error should be in expected categories for input {}, got {:?}",
+                        i,
+                        e.category
+                    );
                 }
             }
         }

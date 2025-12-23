@@ -23,7 +23,10 @@ mod adversarial_input_tests {
         // Create deeply nested JSON that could cause stack overflow
         let mut nested_json = r#"{"planned_values": {"root_module": {"resources": ["#.to_string();
         for i in 0..1000 {
-            nested_json.push_str(&format!(r#"{{"address": "test{}","values": {{"nested": "#, i));
+            nested_json.push_str(&format!(
+                r#"{{"address": "test{}","values": {{"nested": "#,
+                i
+            ));
         }
         nested_json.push_str(r#""deeply_nested_value""#);
         for _ in 0..1000 {
@@ -38,11 +41,21 @@ mod adversarial_input_tests {
 
         // Error should be structured and informative
         if let Err(e) = result {
-            assert!(!e.message.is_empty(), "Error should have a descriptive message");
+            assert!(
+                !e.message.is_empty(),
+                "Error should have a descriptive message"
+            );
             // Could be parsing error or recursion limit error
-            assert!(matches!(e.category,
-                ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
-                "Error should be in expected categories, got {:?}", e.category);
+            assert!(
+                matches!(
+                    e.category,
+                    ErrorCategory::ParseError
+                        | ErrorCategory::ValidationError
+                        | ErrorCategory::InvalidInput
+                ),
+                "Error should be in expected categories, got {:?}",
+                e.category
+            );
         }
     }
 
@@ -52,7 +65,8 @@ mod adversarial_input_tests {
 
         // Create a JSON with an extremely large string value
         let large_string = "x".repeat(10_000_000); // 10MB string
-        let json = format!(r#"
+        let json = format!(
+            r#"
         {{
             "planned_values": {{
                 "root_module": {{
@@ -66,7 +80,9 @@ mod adversarial_input_tests {
                     ]
                 }}
             }}
-        }}"#, large_string);
+        }}"#,
+            large_string
+        );
 
         // Should handle large strings without crashing
         let result = engine.detect_from_terraform_json(&json);
@@ -75,14 +91,27 @@ mod adversarial_input_tests {
         match result {
             Ok(resources) => {
                 // If it succeeds, should have processed the resource
-                assert!(!resources.is_empty(), "Should have found at least one resource");
+                assert!(
+                    !resources.is_empty(),
+                    "Should have found at least one resource"
+                );
             }
             Err(e) => {
                 // If it fails, should be a structured error
-                assert!(!e.message.is_empty(), "Error should have a descriptive message");
-                assert!(matches!(e.category,
-                    ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
-                    "Error should be in expected categories, got {:?}", e.category);
+                assert!(
+                    !e.message.is_empty(),
+                    "Error should have a descriptive message"
+                );
+                assert!(
+                    matches!(
+                        e.category,
+                        ErrorCategory::ParseError
+                            | ErrorCategory::ValidationError
+                            | ErrorCategory::InvalidInput
+                    ),
+                    "Error should be in expected categories, got {:?}",
+                    e.category
+                );
             }
         }
     }
@@ -92,23 +121,37 @@ mod adversarial_input_tests {
         let engine = DetectionEngine::new();
 
         let invalid_jsons = vec![
-            "",  // Empty string
-            "{", // Unclosed brace
-            r#"{"planned_values": "missing_brace""#, // Missing closing brace
+            "",                                                           // Empty string
+            "{",                                                          // Unclosed brace
+            r#"{"planned_values": "missing_brace""#,                      // Missing closing brace
             r#"{"planned_values": {"root_module": {"resources": [{}]}}"#, // Missing comma
-            r#"{"planned_values": null, "extra": "data""#, // Invalid structure
-            "not json at all", // Not JSON
+            r#"{"planned_values": null, "extra": "data""#,                // Invalid structure
+            "not json at all",                                            // Not JSON
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": null}]}}}"#, // Extra closing brace
         ];
 
         for (i, invalid_json) in invalid_jsons.iter().enumerate() {
             let result = engine.detect_from_terraform_json(invalid_json);
-            assert!(result.is_err(), "Invalid JSON {} should fail: {}", i, invalid_json);
+            assert!(
+                result.is_err(),
+                "Invalid JSON {} should fail: {}",
+                i,
+                invalid_json
+            );
 
             if let Err(e) = result {
-                assert!(!e.message.is_empty(), "Error should have descriptive message for case {}", i);
-                assert_eq!(e.category, ErrorCategory::ParseError,
-                    "Invalid JSON should result in ParseError, got {:?} for case {}", e.category, i);
+                assert!(
+                    !e.message.is_empty(),
+                    "Error should have descriptive message for case {}",
+                    i
+                );
+                assert_eq!(
+                    e.category,
+                    ErrorCategory::ParseError,
+                    "Invalid JSON should result in ParseError, got {:?} for case {}",
+                    e.category,
+                    i
+                );
             }
         }
     }
@@ -139,16 +182,34 @@ mod adversarial_input_tests {
                 Ok(resources) => {
                     // If it succeeds, resources should be valid
                     for resource in &resources {
-                        assert!(!resource.resource_id.is_empty(), "Resource ID should not be empty in case {}", i);
-                        assert!(!resource.resource_type.is_empty(), "Resource type should not be empty in case {}", i);
+                        assert!(
+                            !resource.resource_id.is_empty(),
+                            "Resource ID should not be empty in case {}",
+                            i
+                        );
+                        assert!(
+                            !resource.resource_type.is_empty(),
+                            "Resource type should not be empty in case {}",
+                            i
+                        );
                     }
                 }
                 Err(e) => {
                     // If it fails, should be structured error
-                    assert!(!e.message.is_empty(), "Error should have message for case {}", i);
-                    assert!(matches!(e.category,
-                        ErrorCategory::ParseError | ErrorCategory::ValidationError),
-                        "Error should be parse/validation error, got {:?} for case {}", e.category, i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for case {}",
+                        i
+                    );
+                    assert!(
+                        matches!(
+                            e.category,
+                            ErrorCategory::ParseError | ErrorCategory::ValidationError
+                        ),
+                        "Error should be parse/validation error, got {:?} for case {}",
+                        e.category,
+                        i
+                    );
                 }
             }
         }
@@ -160,10 +221,10 @@ mod adversarial_input_tests {
 
         // Test with binary data that could be interpreted as JSON
         let binary_data = vec![
-            vec![0x00, 0x01, 0x02, 0x03], // Null bytes
-            vec![0xFF, 0xFE, 0xFD, 0xFC], // High bytes
+            vec![0x00, 0x01, 0x02, 0x03],                 // Null bytes
+            vec![0xFF, 0xFE, 0xFD, 0xFC],                 // High bytes
             (0..1000).map(|i| (i % 256) as u8).collect(), // Pattern
-            vec![0x7B, 0x22, 0xFF, 0x22, 0x7D], // Invalid UTF-8 in JSON-like structure
+            vec![0x7B, 0x22, 0xFF, 0x22, 0x7D],           // Invalid UTF-8 in JSON-like structure
         ];
 
         for (i, data) in binary_data.iter().enumerate() {
@@ -174,9 +235,18 @@ mod adversarial_input_tests {
             assert!(result.is_err(), "Corrupted data {} should fail", i);
 
             if let Err(e) = result {
-                assert!(!e.message.is_empty(), "Error should have message for corrupted data {}", i);
-                assert_eq!(e.category, ErrorCategory::ParseError,
-                    "Corrupted data should result in ParseError, got {:?} for case {}", e.category, i);
+                assert!(
+                    !e.message.is_empty(),
+                    "Error should have message for corrupted data {}",
+                    i
+                );
+                assert_eq!(
+                    e.category,
+                    ErrorCategory::ParseError,
+                    "Corrupted data should result in ParseError, got {:?} for case {}",
+                    e.category,
+                    i
+                );
             }
         }
     }
@@ -188,8 +258,13 @@ mod adversarial_input_tests {
         // Test with extremely large arrays
         let mut large_array = r#"{"planned_values": {"root_module": {"resources": ["#.to_string();
         for i in 0..10000 {
-            if i > 0 { large_array.push(','); }
-            large_array.push_str(&format!(r#"{{"address": "test{}","values": {{"instance_type": "t2.micro"}}}}"#, i));
+            if i > 0 {
+                large_array.push(',');
+            }
+            large_array.push_str(&format!(
+                r#"{{"address": "test{}","values": {{"instance_type": "t2.micro"}}}}"#,
+                i
+            ));
         }
         large_array.push_str(r#"]}}}"#);
 
@@ -200,15 +275,27 @@ mod adversarial_input_tests {
             Ok(resources) => {
                 assert_eq!(resources.len(), 10000, "Should process all 10000 resources");
                 for (i, resource) in resources.iter().enumerate() {
-                    assert_eq!(resource.resource_id, format!("test{}", i), "Resource {} should have correct ID", i);
+                    assert_eq!(
+                        resource.resource_id,
+                        format!("test{}", i),
+                        "Resource {} should have correct ID",
+                        i
+                    );
                 }
             }
             Err(e) => {
                 // If it fails due to memory limits, that's acceptable
                 assert!(!e.message.is_empty(), "Error should have message");
-                assert!(matches!(e.category,
-                    ErrorCategory::ParseError | ErrorCategory::InvalidInput | ErrorCategory::ValidationError),
-                    "Error should be in expected categories, got {:?}", e.category);
+                assert!(
+                    matches!(
+                        e.category,
+                        ErrorCategory::ParseError
+                            | ErrorCategory::InvalidInput
+                            | ErrorCategory::ValidationError
+                    ),
+                    "Error should be in expected categories, got {:?}",
+                    e.category
+                );
             }
         }
     }
@@ -232,12 +319,25 @@ mod adversarial_input_tests {
             let result = engine.detect_from_terraform_plan(Path::new(path));
 
             // Should fail with file system error, not security issue
-            assert!(result.is_err(), "Path traversal attempt should fail: {}", path);
+            assert!(
+                result.is_err(),
+                "Path traversal attempt should fail: {}",
+                path
+            );
 
             if let Err(e) = result {
-                assert_eq!(e.category, ErrorCategory::FileSystemError,
-                    "Path traversal should result in FileSystemError, got {:?} for path {}", e.category, path);
-                assert!(!e.message.is_empty(), "Error should have message for path {}", path);
+                assert_eq!(
+                    e.category,
+                    ErrorCategory::FileSystemError,
+                    "Path traversal should result in FileSystemError, got {:?} for path {}",
+                    e.category,
+                    path
+                );
+                assert!(
+                    !e.message.is_empty(),
+                    "Error should have message for path {}",
+                    path
+                );
             }
         }
     }
@@ -259,7 +359,8 @@ mod adversarial_input_tests {
         }
 
         // Extract error messages
-        let error_messages: Vec<_> = results.iter()
+        let error_messages: Vec<_> = results
+            .iter()
             .map(|r| r.as_ref().unwrap_err().message.clone())
             .collect();
 
@@ -279,7 +380,8 @@ mod adversarial_input_tests {
         let sizes = vec![1000, 10000, 100000];
 
         for size in sizes {
-            let large_json = format!(r#"
+            let large_json = format!(
+                r#"
             {{
                 "planned_values": {{
                     "root_module": {{
@@ -293,20 +395,35 @@ mod adversarial_input_tests {
                         ]
                     }}
                 }}
-            }}"#, "x".repeat(size));
+            }}"#,
+                "x".repeat(size)
+            );
 
             let result = engine.detect_from_terraform_json(&large_json);
 
             // Should not crash regardless of size
             match result {
                 Ok(resources) => {
-                    assert_eq!(resources.len(), 1, "Should process one resource for size {}", size);
+                    assert_eq!(
+                        resources.len(),
+                        1,
+                        "Should process one resource for size {}",
+                        size
+                    );
                 }
                 Err(e) => {
                     // Memory or parsing errors are acceptable
-                    assert!(matches!(e.category,
-                        ErrorCategory::ParseError | ErrorCategory::InvalidInput | ErrorCategory::ValidationError),
-                        "Error should be acceptable type for size {}, got {:?}", size, e.category);
+                    assert!(
+                        matches!(
+                            e.category,
+                            ErrorCategory::ParseError
+                                | ErrorCategory::InvalidInput
+                                | ErrorCategory::ValidationError
+                        ),
+                        "Error should be acceptable type for size {}, got {:?}",
+                        size,
+                        e.category
+                    );
                 }
             }
         }

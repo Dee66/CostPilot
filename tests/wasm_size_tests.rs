@@ -2,10 +2,10 @@
 
 #[cfg(test)]
 mod tests {
+    use sha2::{Digest, Sha256};
+    use std::fs;
     use std::path::Path;
     use std::process::Command;
-    use std::fs;
-    use sha2::{Sha256, Digest};
 
     const WASM_FILE_PATH: &str = "target/wasm32-unknown-unknown/release/costpilot.wasm";
     const MAX_SIZE_BYTES: usize = 10 * 1024 * 1024; // 10 MB
@@ -250,7 +250,15 @@ mod tests {
     fn test_wasm_checksum_reproducible() {
         // Build first time
         let output1 = Command::new("cargo")
-            .args(&["build", "--target", "wasm32-wasip1", "--release", "--lib", "--features", "wasm"])
+            .args(&[
+                "build",
+                "--target",
+                "wasm32-wasip1",
+                "--release",
+                "--lib",
+                "--features",
+                "wasm",
+            ])
             .output()
             .expect("Failed to build WASM first time");
         assert!(output1.status.success());
@@ -265,7 +273,15 @@ mod tests {
 
         // Build second time
         let output2 = Command::new("cargo")
-            .args(&["build", "--target", "wasm32-wasip1", "--release", "--lib", "--features", "wasm"])
+            .args(&[
+                "build",
+                "--target",
+                "wasm32-wasip1",
+                "--release",
+                "--lib",
+                "--features",
+                "wasm",
+            ])
             .output()
             .expect("Failed to build WASM second time");
         assert!(output2.status.success());

@@ -42,11 +42,19 @@ mod input_validation_security_tests {
                 Ok(resources) => {
                     // If it succeeds, ensure no actual SQL execution occurred
                     // (This would be detected by the engine not crashing and returning valid resources)
-                    assert!(!resources.is_empty() || resources.is_empty(), "SQL injection test {} should not cause unexpected behavior", i);
+                    assert!(
+                        !resources.is_empty() || resources.is_empty(),
+                        "SQL injection test {} should not cause unexpected behavior",
+                        i
+                    );
                 }
                 Err(e) => {
                     // If it fails, should be a structured error about parsing/validation, not execution
-                    assert!(!e.message.is_empty(), "Error should have message for SQL injection test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for SQL injection test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "SQL injection should result in safe error categories, got {:?} for test {}", e.category, i);
@@ -80,14 +88,30 @@ mod input_validation_security_tests {
                 Ok(resources) => {
                     // If parsed successfully, the XSS should be treated as literal string data
                     // No actual script execution should occur
-                    assert!(!resources.is_empty() || resources.is_empty(), "XSS test {} should not cause script execution", i);
+                    assert!(
+                        !resources.is_empty() || resources.is_empty(),
+                        "XSS test {} should not cause script execution",
+                        i
+                    );
                 }
                 Err(e) => {
                     // If rejected, should be due to parsing/validation, not security execution
-                    assert!(!e.message.is_empty(), "Error should have message for XSS test {}", i);
-                    assert!(matches!(e.category,
-                        ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
-                        "XSS should result in safe error categories, got {:?} for test {}", e.category, i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for XSS test {}",
+                        i
+                    );
+                    assert!(
+                        matches!(
+                            e.category,
+                            ErrorCategory::ParseError
+                                | ErrorCategory::ValidationError
+                                | ErrorCategory::InvalidInput
+                        ),
+                        "XSS should result in safe error categories, got {:?} for test {}",
+                        e.category,
+                        i
+                    );
                 }
             }
         }
@@ -117,11 +141,19 @@ mod input_validation_security_tests {
             match result {
                 Ok(resources) => {
                     // If parsed, commands should be treated as data, not executed
-                    assert!(!resources.is_empty() || resources.is_empty(), "Command injection test {} should not execute commands", i);
+                    assert!(
+                        !resources.is_empty() || resources.is_empty(),
+                        "Command injection test {} should not execute commands",
+                        i
+                    );
                 }
                 Err(e) => {
                     // If rejected, should be parsing/validation error
-                    assert!(!e.message.is_empty(), "Error should have message for command injection test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for command injection test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "Command injection should result in safe error categories, got {:?} for test {}", e.category, i);
@@ -158,14 +190,27 @@ mod input_validation_security_tests {
                 Ok(resources) => {
                     // If parsed successfully, should have valid structure
                     for resource in &resources {
-                        assert!(!resource.resource_id.is_empty(), "Resource should have valid ID in malformed JSON test {}", i);
+                        assert!(
+                            !resource.resource_id.is_empty(),
+                            "Resource should have valid ID in malformed JSON test {}",
+                            i
+                        );
                     }
                 }
                 Err(e) => {
                     // Should fail with parsing error, not crash
-                    assert!(!e.message.is_empty(), "Error should have message for malformed JSON test {}", i);
-                    assert_eq!(e.category, ErrorCategory::ParseError,
-                        "Malformed JSON should result in ParseError, got {:?} for test {}", e.category, i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for malformed JSON test {}",
+                        i
+                    );
+                    assert_eq!(
+                        e.category,
+                        ErrorCategory::ParseError,
+                        "Malformed JSON should result in ParseError, got {:?} for test {}",
+                        e.category,
+                        i
+                    );
                 }
             }
         }
@@ -177,7 +222,9 @@ mod input_validation_security_tests {
 
         // Create very long string separately to avoid borrowing issues
         let very_long_string = {
-            let mut s = String::from(r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"data": ""#);
+            let mut s = String::from(
+                r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"data": ""#,
+            );
             s.push_str(&"x".repeat(1000));
             s.push_str(r#""}}]}}}"#);
             s
@@ -208,11 +255,19 @@ mod input_validation_security_tests {
             match result {
                 Ok(resources) => {
                     // Should parse successfully and handle edge values
-                    assert!(!resources.is_empty() || resources.is_empty(), "Boundary test {} should parse without issues", i);
+                    assert!(
+                        !resources.is_empty() || resources.is_empty(),
+                        "Boundary test {} should parse without issues",
+                        i
+                    );
                 }
                 Err(e) => {
                     // If it fails, should be due to validation, not parsing crash
-                    assert!(!e.message.is_empty(), "Error should have message for boundary test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for boundary test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "Boundary values should result in safe error categories, got {:?} for test {}", e.category, i);
@@ -252,15 +307,27 @@ mod input_validation_security_tests {
                     // No actual file system access should occur
                     for resource in &resources {
                         // Resource IDs should be sanitized or treated as literal
-                        assert!(!resource.resource_id.is_empty(), "Resource should have valid ID in path traversal test {}", i);
+                        assert!(
+                            !resource.resource_id.is_empty(),
+                            "Resource should have valid ID in path traversal test {}",
+                            i
+                        );
                         // Should not contain dangerous path patterns that could be executed
-                        assert!(!resource.resource_id.contains("../") && !resource.resource_id.contains("..\\"),
-                               "Path traversal should be sanitized in resource ID for test {}", i);
+                        assert!(
+                            !resource.resource_id.contains("../")
+                                && !resource.resource_id.contains("..\\"),
+                            "Path traversal should be sanitized in resource ID for test {}",
+                            i
+                        );
                     }
                 }
                 Err(e) => {
                     // If rejected, should be due to validation, not security execution
-                    assert!(!e.message.is_empty(), "Error should have message for path traversal test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for path traversal test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "Path traversal should result in safe error categories, got {:?} for test {}", e.category, i);
@@ -303,11 +370,19 @@ mod input_validation_security_tests {
             match result {
                 Ok(resources) => {
                     // Should parse successfully and handle extreme values
-                    assert!(!resources.is_empty() || resources.is_empty(), "Extreme boundary test {} should parse without resource exhaustion", i);
+                    assert!(
+                        !resources.is_empty() || resources.is_empty(),
+                        "Extreme boundary test {} should parse without resource exhaustion",
+                        i
+                    );
                 }
                 Err(e) => {
                     // If it fails, should be due to reasonable limits, not crash
-                    assert!(!e.message.is_empty(), "Error should have message for extreme boundary test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for extreme boundary test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "Extreme boundaries should result in safe error categories, got {:?} for test {}", e.category, i);
@@ -345,12 +420,20 @@ mod input_validation_security_tests {
                 Ok(resources) => {
                     // Should parse and handle Unicode safely
                     for resource in &resources {
-                        assert!(!resource.resource_id.is_empty(), "Resource should have valid ID in Unicode attack test {}", i);
+                        assert!(
+                            !resource.resource_id.is_empty(),
+                            "Resource should have valid ID in Unicode attack test {}",
+                            i
+                        );
                     }
                 }
                 Err(e) => {
                     // Should fail with parsing error, not crash or execute malicious code
-                    assert!(!e.message.is_empty(), "Error should have message for Unicode attack test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for Unicode attack test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "Unicode attacks should result in safe error categories, got {:?} for test {}", e.category, i);
@@ -367,19 +450,30 @@ mod input_validation_security_tests {
         let exhaustion_attacks = vec![
             // Many small resources (simplified)
             {
-                let mut many_resources = String::from(r#"{"planned_values": {"root_module": {"resources": ["#);
-                for i in 0..10 { // Reduced from 1000
-                    if i > 0 { many_resources.push_str(","); }
-                    many_resources.push_str(&format!(r#"{{"address": "test{}", "values": {{"data": "value{}"}}}}"#, i, i));
+                let mut many_resources =
+                    String::from(r#"{"planned_values": {"root_module": {"resources": ["#);
+                for i in 0..10 {
+                    // Reduced from 1000
+                    if i > 0 {
+                        many_resources.push_str(",");
+                    }
+                    many_resources.push_str(&format!(
+                        r#"{{"address": "test{}", "values": {{"data": "value{}"}}}}"#,
+                        i, i
+                    ));
                 }
                 many_resources.push_str(r#"]}}}"#);
                 many_resources
             },
             // Large arrays with repeated elements
             {
-                let mut large_array = String::from(r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"array": ["#);
+                let mut large_array = String::from(
+                    r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"array": ["#,
+                );
                 for i in 0..1000 {
-                    if i > 0 { large_array.push_str(","); }
+                    if i > 0 {
+                        large_array.push_str(",");
+                    }
                     large_array.push_str(&format!(r#""item{}""#, i));
                 }
                 large_array.push_str(r#"]}}]}}}"#);
@@ -387,7 +481,9 @@ mod input_validation_security_tests {
             },
             // Deeply nested arrays
             {
-                let mut nested = String::from(r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"nested": "#);
+                let mut nested = String::from(
+                    r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"nested": "#,
+                );
                 for _ in 0..20 {
                     nested.push_str(r#"["#);
                 }
@@ -407,11 +503,19 @@ mod input_validation_security_tests {
             match result {
                 Ok(resources) => {
                     // Should parse successfully without excessive resource use
-                    assert!(!resources.is_empty() || resources.is_empty(), "Resource exhaustion test {} should complete without hanging", i);
+                    assert!(
+                        !resources.is_empty() || resources.is_empty(),
+                        "Resource exhaustion test {} should complete without hanging",
+                        i
+                    );
                 }
                 Err(e) => {
                     // If it fails, should be due to reasonable limits
-                    assert!(!e.message.is_empty(), "Error should have message for resource exhaustion test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for resource exhaustion test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "Resource exhaustion should result in safe error categories, got {:?} for test {}", e.category, i);
@@ -445,12 +549,20 @@ mod input_validation_security_tests {
                 Ok(resources) => {
                     // Should parse as literal strings, not execute templates
                     for resource in &resources {
-                        assert!(!resource.resource_id.is_empty(), "Resource should have valid ID in format injection test {}", i);
+                        assert!(
+                            !resource.resource_id.is_empty(),
+                            "Resource should have valid ID in format injection test {}",
+                            i
+                        );
                     }
                 }
                 Err(e) => {
                     // Should fail with parsing/validation error, not format string execution
-                    assert!(!e.message.is_empty(), "Error should have message for format injection test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for format injection test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "Format injection should result in safe error categories, got {:?} for test {}", e.category, i);
@@ -467,23 +579,32 @@ mod input_validation_security_tests {
         let buffer_attacks = vec![
             // Very long resource names (simplified)
             {
-                let mut long_name = String::from(r#"{"planned_values": {"root_module": {"resources": [{"address": ""#);
+                let mut long_name = String::from(
+                    r#"{"planned_values": {"root_module": {"resources": [{"address": ""#,
+                );
                 long_name.push_str(&"a".repeat(1000));
                 long_name.push_str(r#"", "values": {}}]}}}"#);
                 long_name
             },
             // Long key names (simplified)
             {
-                let mut long_key = String::from(r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"#);
+                let mut long_key = String::from(
+                    r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"#,
+                );
                 long_key.push_str(&"k".repeat(100));
                 long_key.push_str(r#": "value"}}]}}}"#);
                 long_key
             },
             // Many keys in object (simplified)
             {
-                let mut many_keys = String::from(r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"#);
-                for i in 0..10 { // Reduced from 1000
-                    if i > 0 { many_keys.push_str(","); }
+                let mut many_keys = String::from(
+                    r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"#,
+                );
+                for i in 0..10 {
+                    // Reduced from 1000
+                    if i > 0 {
+                        many_keys.push_str(",");
+                    }
                     many_keys.push_str(&format!("\"key{}\": \"value{}\"", i, i));
                 }
                 many_keys.push_str(r#"}}]}}}"#);
@@ -491,7 +612,9 @@ mod input_validation_security_tests {
             },
             // Nested objects with long paths
             {
-                let mut nested_path = String::from(r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": "#);
+                let mut nested_path = String::from(
+                    r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": "#,
+                );
                 for i in 0..100 {
                     nested_path.push_str(&format!("{{\"level{}\": ", i));
                 }
@@ -511,11 +634,19 @@ mod input_validation_security_tests {
             match result {
                 Ok(resources) => {
                     // Should parse successfully without buffer overflow
-                    assert!(!resources.is_empty() || resources.is_empty(), "Buffer attack test {} should not cause memory corruption", i);
+                    assert!(
+                        !resources.is_empty() || resources.is_empty(),
+                        "Buffer attack test {} should not cause memory corruption",
+                        i
+                    );
                 }
                 Err(e) => {
                     // Should fail safely with appropriate error
-                    assert!(!e.message.is_empty(), "Error should have message for buffer attack test {}", i);
+                    assert!(
+                        !e.message.is_empty(),
+                        "Error should have message for buffer attack test {}",
+                        i
+                    );
                     assert!(matches!(e.category,
                         ErrorCategory::ParseError | ErrorCategory::ValidationError | ErrorCategory::InvalidInput),
                         "Buffer attacks should result in safe error categories, got {:?} for test {}", e.category, i);

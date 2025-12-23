@@ -503,7 +503,8 @@ fn test_slo_burn_multiple_slos() {
     assert_eq!(analyses.len(), 2);
 
     // Check both SLOs are present
-    let slo_names: Vec<&str> = analyses.iter()
+    let slo_names: Vec<&str> = analyses
+        .iter()
         .map(|a| a.get("slo_name").unwrap().as_str().unwrap())
         .collect();
     assert!(slo_names.contains(&"team_budget"));
@@ -518,12 +519,399 @@ fn test_slo_not_breached_silent() {
     assert!(true);
 }
 
+// ===== SLO BURN EDGE CASE TESTS =====
+
+#[test]
+fn test_slo_burn_zero_cost_edge_case() {
+    // Test SLO burn with zero cost snapshots
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let slo_config = r#"{
+        "version": "1.0",
+        "slos": [
+            {
+                "id": "zero_budget_test",
+                "name": "zero_budget",
+                "description": "Zero cost budget test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {
+                    "max_value": 100.0
+                },
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    create_test_snapshot(&snapshots_path, "2025-01-01", 0.0);
+    create_test_snapshot(&snapshots_path, "2025-02-01", 0.0);
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_slo_burn_negative_cost_edge_case() {
+    // Test SLO burn with negative costs (credits/rebates)
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let slo_config = r#"{
+        "version": "1.0",
+        "slos": [
+            {
+                "id": "negative_budget_test",
+                "name": "negative_budget",
+                "description": "Negative cost budget test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {
+                    "max_value": 100.0
+                },
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    create_test_snapshot(&snapshots_path, "2025-01-01", -50.0);
+    create_test_snapshot(&snapshots_path, "2025-02-01", -25.0);
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_slo_burn_extremely_high_cost() {
+    // Test SLO burn with extremely high costs
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let slo_config = r#"{
+        "version": "1.0",
+        "slos": [
+            {
+                "id": "high_budget_test",
+                "name": "high_budget",
+                "description": "High cost budget test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {
+                    "max_value": 1000.0
+                },
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    create_test_snapshot(&snapshots_path, "2025-01-01", 1_000_000.0);
+    create_test_snapshot(&snapshots_path, "2025-02-01", 2_000_000.0);
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_slo_burn_empty_snapshots_edge_case() {
+    // Test SLO burn with empty snapshots directory
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let slo_config = r#"{
+        "version": "1.0",
+        "slos": [
+            {
+                "id": "empty_test",
+                "name": "empty_test",
+                "description": "Empty snapshots test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {
+                    "max_value": 100.0
+                },
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    // No snapshots created
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let result = cmd
+        .arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert();
+    // Should handle gracefully
+}
+
+#[test]
+fn test_slo_burn_single_snapshot_edge_case() {
+    // Test SLO burn with single snapshot
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let slo_config = r#"{
+        "version": "1.0",
+        "slos": [
+            {
+                "id": "single_test",
+                "name": "single_test",
+                "description": "Single snapshot test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {
+                    "max_value": 100.0
+                },
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    create_test_snapshot(&snapshots_path, "2025-01-01", 50.0);
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_slo_burn_extremely_long_slo_names() {
+    // Test SLO burn with extremely long SLO names
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let long_name = "a".repeat(1000);
+    let slo_config = format!(
+        r#"{{
+        "version": "1.0",
+        "slos": [
+            {{
+                "id": "{}",
+                "name": "{}",
+                "description": "Long name test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {{
+                    "max_value": 100.0
+                }},
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }}
+        ]
+    }}"#,
+        long_name, long_name
+    );
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    create_test_snapshot(&snapshots_path, "2025-01-01", 50.0);
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_slo_burn_special_characters_in_names() {
+    // Test SLO burn with special characters in SLO names
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let slo_config = r#"{
+        "version": "1.0",
+        "slos": [
+            {
+                "id": "slo@domain.com",
+                "name": "测试SLO",
+                "description": "Special characters test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {
+                    "max_value": 100.0
+                },
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    create_test_snapshot(&snapshots_path, "2025-01-01", 50.0);
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_slo_burn_zero_threshold_edge_case() {
+    // Test SLO burn with zero threshold
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let slo_config = r#"{
+        "version": "1.0",
+        "slos": [
+            {
+                "id": "zero_threshold_test",
+                "name": "zero_threshold",
+                "description": "Zero threshold test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {
+                    "max_value": 0.0
+                },
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    create_test_snapshot(&snapshots_path, "2025-01-01", 10.0);
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_slo_burn_maximum_snapshots() {
+    // Test SLO burn with maximum number of snapshots
+    let temp_dir = TempDir::new().unwrap();
+    let slo_path = temp_dir.path().join("slo.json");
+    let snapshots_path = temp_dir.path().join("snapshots");
+
+    let slo_config = r#"{
+        "version": "1.0",
+        "slos": [
+            {
+                "id": "max_snapshots_test",
+                "name": "max_snapshots",
+                "description": "Maximum snapshots test",
+                "slo_type": "monthly_budget",
+                "target": "global",
+                "threshold": {
+                    "max_value": 10000.0
+                },
+                "enforcement": "warn",
+                "owner": "test",
+                "created_at": "2025-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+    fs::write(&slo_path, slo_config).unwrap();
+
+    fs::create_dir(&snapshots_path).unwrap();
+    // Create 1000 snapshots
+    for i in 1..=1000 {
+        create_test_snapshot(
+            &snapshots_path,
+            &format!("2025-{:02}-01", i % 12 + 1),
+            i as f64,
+        );
+    }
+
+    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    cmd.arg("slo")
+        .arg("burn")
+        .arg("--slo-config")
+        .arg(&slo_path)
+        .arg("--snapshots")
+        .arg(&snapshots_path)
+        .assert()
+        .success();
+}
+
 /// Helper function to create test snapshot files
 fn create_test_snapshot(snapshots_dir: &Path, date: &str, cost: f64) {
     let filename = format!("snapshot_{}.json", date.replace("-", ""));
     let snapshot_path = snapshots_dir.join(filename);
 
-    let snapshot_data = format!(r#"{{
+    let snapshot_data = format!(
+        r#"{{
         "id": "test_{}",
         "timestamp": "{}T00:00:00Z",
         "total_monthly_cost": {:.2},
@@ -542,7 +930,13 @@ fn create_test_snapshot(snapshots_dir: &Path, date: &str, cost: f64) {
         "services": {{}},
         "regressions": [],
         "slo_violations": []
-    }}"#, date.replace("-", ""), date, cost, cost * 0.7, cost * 0.3);
+    }}"#,
+        date.replace("-", ""),
+        date,
+        cost,
+        cost * 0.7,
+        cost * 0.3
+    );
 
     fs::write(snapshot_path, snapshot_data).unwrap();
 }

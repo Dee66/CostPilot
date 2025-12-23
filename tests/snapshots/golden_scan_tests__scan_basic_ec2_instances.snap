@@ -5,11 +5,10 @@ expression: stdout
 🔍 CostPilot Scan
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 Step 1: Detection
-   Format: Terraform plan
+📊 Detection
    Found 2 resource changes
 
-💰 Step 2: Cost Prediction
+💰 Cost Prediction
    Estimated monthly cost: $300.00
    (2 resources analyzed)
 

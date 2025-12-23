@@ -26,7 +26,7 @@
 ### Key Rotation
 
 Public keys for signature verification can be rotated via:
-- Embedded default key (compile-time)
+- Embedded public key (compile-time, public keys only - private keys never shipped)
 - Config override: `config/pro_engine_pubkey.pem`
 - Environment variable: `COSTPILOT_PRO_PUBKEY_PATH`
 

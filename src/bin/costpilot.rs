@@ -32,14 +32,16 @@ impl ExitCode {
     }
 
     /// Convert CostPilotError to appropriate exit code
-    fn from_costpilot_error(error: &costpilot::engines::shared::error_model::CostPilotError) -> Self {
+    fn from_costpilot_error(
+        error: &costpilot::engines::shared::error_model::CostPilotError,
+    ) -> Self {
         use costpilot::engines::shared::error_model::ErrorCategory;
         match error.category {
             ErrorCategory::PolicyViolation => ExitCode::PolicyBlock,
             ErrorCategory::SLOBreach => ExitCode::SloBurn,
-            ErrorCategory::InvalidInput | ErrorCategory::ParseError | ErrorCategory::ValidationError => {
-                ExitCode::InvalidInput
-            }
+            ErrorCategory::InvalidInput
+            | ErrorCategory::ParseError
+            | ErrorCategory::ValidationError => ExitCode::InvalidInput,
             _ => ExitCode::InternalError,
         }
     }
@@ -76,8 +78,20 @@ enum Commands {
     ///   costpilot scan tfplan.json --policy policy.yaml
     ///   costpilot scan tfplan.json --infra-format cdk
     ///   costpilot scan tfplan.json --format json
-    ///   costpilot scan tfplan.json --output-format pr-comment
+    ///   costpilot scan tfplan.json --format pr-comment
     Scan(costpilot::cli::scan::ScanCommand),
+
+    /// Manage cost baselines
+    ///
+    /// Record expected costs from successful deployments, update baselines,
+    /// and validate baseline configurations.
+    ///
+    /// Examples:
+    ///   costpilot baseline record tfplan.json --baselines baselines.json
+    ///   costpilot baseline update module.vpc --cost 1500.0
+    ///   costpilot baseline validate
+    ///   costpilot baseline status
+    Baseline(costpilot::cli::baseline::BaselineCommand),
 
     /// Compare cost between two Terraform plans
     ///
@@ -556,14 +570,15 @@ enum PerformanceCommands {
 
 fn main() {
     // Add panic recovery to prevent crashes
-    let result = std::panic::catch_unwind(|| {
-        main_inner()
-    });
+    let result = std::panic::catch_unwind(|| main_inner());
 
     match result {
         Ok(exit_code) => exit_code.exit(),
         Err(panic_info) => {
-            eprintln!("{} Fatal error: CostPilot encountered an unexpected panic", "💥".bright_red());
+            eprintln!(
+                "{} Fatal error: CostPilot encountered an unexpected panic",
+                "💥".bright_red()
+            );
             if let Some(location) = panic_info.downcast_ref::<&std::panic::Location>() {
                 eprintln!("  Location: {}:{}", location.file(), location.line());
             }
@@ -577,16 +592,19 @@ fn main() {
 fn main_inner() -> ExitCode {
     // Load edition context BEFORE parsing CLI
     // This allows us to gate premium commands early
-    let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
-        costpilot::edition::EditionContext::free()
-    });
+    let edition = costpilot::edition::detect_edition()
+        .unwrap_or_else(|_| costpilot::edition::EditionContext::free());
 
     // Intercept --version/-V to show edition
     let args: Vec<String> = std::env::args().collect();
     if args.len() >= 2 {
         let arg = &args[1];
         if arg == "--version" || arg == "-V" {
-            let edition_str = if edition.is_premium() { "Premium" } else { "Free" };
+            let edition_str = if edition.is_premium() {
+                "Premium"
+            } else {
+                "Free"
+            };
             println!("costpilot {} ({})", VERSION, edition_str);
             return ExitCode::Success;
         }
@@ -597,7 +615,8 @@ fn main_inner() -> ExitCode {
         Err(e) => {
             // Check if this is a help request - let Clap handle it
             if e.kind() == clap::error::ErrorKind::DisplayHelp
-                || e.kind() == clap::error::ErrorKind::DisplayVersion {
+                || e.kind() == clap::error::ErrorKind::DisplayVersion
+            {
                 e.print().ok();
                 return ExitCode::Success;
             }
@@ -646,16 +665,20 @@ fn main_inner() -> ExitCode {
             }
             // Enforce zero-cost policy before executing scan
             match ZeroCostGuard::new().enforce_zero_cost() {
-                Ok(()) => {
-                    scan_cmd
-                        .execute(&cli.format)
-                        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
-                }
+                Ok(()) => scan_cmd
+                    .execute(&cli.format)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>),
                 Err(e) => {
                     eprintln!("{} Zero-cost policy violation: {}", "🚫".bright_red(), e);
                     Err(Box::new(e) as Box<dyn std::error::Error>)
                 }
             }
+        }
+        Commands::Baseline(baseline_cmd) => {
+            if cli.debug {
+                eprintln!("🔍 Executing baseline command");
+            }
+            baseline_cmd.execute()
         }
         Commands::Diff { before, after } => {
             if cli.debug {
@@ -699,7 +722,9 @@ fn main_inner() -> ExitCode {
             }
             cmd_heuristics(command, &cli.format, cli.verbose)
         }
-        Commands::Explain(explain_args) => cmd_explain(explain_args, &cli.format, cli.verbose, &edition),
+        Commands::Explain(explain_args) => {
+            cmd_explain(explain_args, &cli.format, cli.verbose, &edition)
+        }
         Commands::PolicyDsl { command } => {
             costpilot::cli::policy_dsl::execute_policy_dsl_command(&command)
         }
@@ -719,18 +744,42 @@ fn main_inner() -> ExitCode {
             cmd_version(detailed, &edition);
             return ExitCode::Success;
         }
-        Commands::SloBurn { config, snapshots_dir, min_snapshots, min_r_squared } => cmd_slo_burn(config, snapshots_dir, min_snapshots, min_r_squared, &cli.format, cli.verbose, &edition),
+        Commands::SloBurn {
+            config,
+            snapshots_dir,
+            min_snapshots,
+            min_r_squared,
+        } => cmd_slo_burn(
+            config,
+            snapshots_dir,
+            min_snapshots,
+            min_r_squared,
+            &cli.format,
+            cli.verbose,
+            &edition,
+        ),
         Commands::SloCheck { config } => cmd_slo_check(config, &cli.format, cli.verbose, &edition),
         Commands::Slo { command } => cmd_slo(command, &cli.format, cli.verbose, &edition),
         Commands::Trend { command } => cmd_trend(command, &cli.format, cli.verbose, &edition),
-        Commands::Anomaly { plan, baseline, threshold, format } => cmd_anomaly(plan, baseline, threshold, &format, cli.verbose, &edition),
+        Commands::Anomaly {
+            plan,
+            baseline,
+            threshold,
+            format,
+        } => cmd_anomaly(plan, baseline, threshold, &format, cli.verbose, &edition),
         Commands::AutofixPatch => cmd_autofix_patch(&cli.format, cli.verbose),
         Commands::AutofixSnippet => cmd_autofix_snippet(&cli.format, cli.verbose),
-        Commands::AutofixDriftSafe { plan, output, verbose } => cmd_autofix_drift_safe(plan, output, &cli.format, verbose || cli.verbose),
+        Commands::AutofixDriftSafe {
+            plan,
+            output,
+            verbose,
+        } => cmd_autofix_drift_safe(plan, output, &cli.format, verbose || cli.verbose),
         Commands::Escrow => cmd_escrow(&cli.format, cli.verbose),
         Commands::Performance { command } => cmd_performance(command, &cli.format, cli.verbose),
         Commands::Usage { days_in_month } => cmd_usage(days_in_month, &cli.format, cli.verbose),
-        Commands::Feature(feature_args) => costpilot::cli::commands::feature::execute(&feature_args),
+        Commands::Feature(feature_args) => {
+            costpilot::cli::commands::feature::execute(&feature_args)
+        }
     };
 
     if let Err(e) = result {
@@ -739,7 +788,9 @@ fn main_inner() -> ExitCode {
         }
 
         // Try to downcast to CostPilotError for better exit code mapping
-        if let Some(cp_error) = e.downcast_ref::<costpilot::engines::shared::error_model::CostPilotError>() {
+        if let Some(cp_error) =
+            e.downcast_ref::<costpilot::engines::shared::error_model::CostPilotError>()
+        {
             eprintln!("{} {}", "Error:".bright_red().bold(), cp_error);
             if cli.verbose {
                 eprintln!("  Category: {:?}", cp_error.category);
@@ -826,10 +877,17 @@ fn cmd_autofix(
     }
 }
 
-fn cmd_init(no_ci: bool, path: Option<PathBuf>, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
+fn cmd_init(
+    no_ci: bool,
+    path: Option<PathBuf>,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     use costpilot::cli::init::init;
 
-    let target_path = path.as_ref().map(|p| p.to_string_lossy().to_string()).unwrap_or_else(|| ".".to_string());
+    let target_path = path
+        .as_ref()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|| ".".to_string());
     let default_path = PathBuf::from(".");
 
     let ci_provider = if no_ci {
@@ -1111,15 +1169,22 @@ fn cmd_trend(
         .map_err(|e| format!("Trend analysis requires premium license: {}", e))?;
 
     match command {
-        TrendCommands::Show { format: output_format, output, snapshots_dir } => {
-            cmd_trend_show(output_format, output, snapshots_dir, verbose)
-        }
-        TrendCommands::Snapshot { plan, commit, branch, snapshots_dir } => {
-            cmd_trend_snapshot(plan, commit, branch, snapshots_dir, verbose)
-        }
-        TrendCommands::Regressions { threshold, snapshots_dir, format: output_format } => {
-            cmd_trend_regressions(threshold, snapshots_dir, output_format, verbose)
-        }
+        TrendCommands::Show {
+            format: output_format,
+            output,
+            snapshots_dir,
+        } => cmd_trend_show(output_format, output, snapshots_dir, verbose),
+        TrendCommands::Snapshot {
+            plan,
+            commit,
+            branch,
+            snapshots_dir,
+        } => cmd_trend_snapshot(plan, commit, branch, snapshots_dir, verbose),
+        TrendCommands::Regressions {
+            threshold,
+            snapshots_dir,
+            format: output_format,
+        } => cmd_trend_regressions(threshold, snapshots_dir, output_format, verbose),
     }
 }
 
@@ -1177,10 +1242,9 @@ fn cmd_trend_show(
 
             println!("Found {} snapshots:", history.snapshots.len());
             for snapshot in &history.snapshots {
-                println!("  {}: ${:.2} ({})",
-                    snapshot.id,
-                    snapshot.total_monthly_cost,
-                    snapshot.timestamp
+                println!(
+                    "  {}: ${:.2} ({})",
+                    snapshot.id, snapshot.total_monthly_cost, snapshot.timestamp
                 );
             }
 
@@ -1194,8 +1258,13 @@ fn cmd_trend_show(
                     0.0
                 };
 
-                println!("\nLatest change: {} ${:.2} ({:.1}%)",
-                    if change >= 0.0 { "↗️ +".green() } else { "↘️ ".red() },
+                println!(
+                    "\nLatest change: {} ${:.2} ({:.1}%)",
+                    if change >= 0.0 {
+                        "↗️ +".green()
+                    } else {
+                        "↘️ ".red()
+                    },
                     change.abs(),
                     percent
                 );
@@ -1250,10 +1319,9 @@ fn cmd_trend_snapshot(
     // Calculate total resource count
     let resource_count: usize = snapshot.modules.values().map(|m| m.resource_count).sum();
 
-    println!("✅ Snapshot created: {} (${:.2}/month, {} resources)",
-        snapshot.id,
-        snapshot.total_monthly_cost,
-        resource_count
+    println!(
+        "✅ Snapshot created: {} (${:.2}/month, {} resources)",
+        snapshot.id, snapshot.total_monthly_cost, resource_count
     );
 
     if verbose {
@@ -1285,7 +1353,10 @@ fn cmd_trend_regressions(
     let history = trend_engine.load_history()?;
 
     if history.snapshots.len() < 2 {
-        println!("Need at least 2 snapshots to detect regressions. Currently have {}.", history.snapshots.len());
+        println!(
+            "Need at least 2 snapshots to detect regressions. Currently have {}.",
+            history.snapshots.len()
+        );
         return Ok(());
     }
 
@@ -1302,11 +1373,15 @@ fn cmd_trend_regressions(
         }
         _ => {
             if regressions.is_empty() {
-                println!("✅ No cost regressions detected (threshold: {:.1}%)", threshold);
+                println!(
+                    "✅ No cost regressions detected (threshold: {:.1}%)",
+                    threshold
+                );
             } else {
                 println!("⚠️  {} cost regression(s) detected:", regressions.len());
                 for regression in &regressions {
-                    println!("  {} {}: {:?} ${:.2} increase",
+                    println!(
+                        "  {} {}: {:?} ${:.2} increase",
                         "↗️".red(),
                         regression.affected,
                         regression.regression_type,
@@ -1350,14 +1425,10 @@ fn cmd_anomaly(
     Ok(())
 }
 
-fn cmd_autofix_patch(
-    format: &str,
-    verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn cmd_autofix_patch(format: &str, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
     // Load edition context
-    let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
-        costpilot::edition::EditionContext::free()
-    });
+    let edition = costpilot::edition::detect_edition()
+        .unwrap_or_else(|_| costpilot::edition::EditionContext::free());
 
     // Require Premium for autofix
     costpilot::edition::require_premium(&edition, "Autofix")
@@ -1376,14 +1447,10 @@ fn cmd_autofix_patch(
     Ok(())
 }
 
-fn cmd_autofix_snippet(
-    format: &str,
-    verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn cmd_autofix_snippet(format: &str, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
     // Load edition context
-    let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
-        costpilot::edition::EditionContext::free()
-    });
+    let edition = costpilot::edition::detect_edition()
+        .unwrap_or_else(|_| costpilot::edition::EditionContext::free());
 
     // Require Premium for autofix
     costpilot::edition::require_premium(&edition, "Autofix")
@@ -1409,9 +1476,8 @@ fn cmd_autofix_drift_safe(
     verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Load edition context
-    let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
-        costpilot::edition::EditionContext::free()
-    });
+    let edition = costpilot::edition::detect_edition()
+        .unwrap_or_else(|_| costpilot::edition::EditionContext::free());
 
     // Require Premium for drift-safe autofix
     costpilot::edition::require_premium(&edition, "Drift-safe autofix")
@@ -1419,7 +1485,9 @@ fn cmd_autofix_drift_safe(
 
     println!(
         "{}",
-        "🔧 CostPilot Autofix - Drift-Safe Mode (Beta)".bold().cyan()
+        "🔧 CostPilot Autofix - Drift-Safe Mode (Beta)"
+            .bold()
+            .cyan()
     );
     println!();
 
@@ -1448,7 +1516,8 @@ fn cmd_autofix_drift_safe(
 
     // Generate predictions for cost estimates
     println!("{}", "Estimating costs...".dimmed());
-    let mut prediction_engine = costpilot::engines::prediction::PredictionEngine::new_with_edition(&edition)?;
+    let mut prediction_engine =
+        costpilot::engines::prediction::PredictionEngine::new_with_edition(&edition)?;
     let cost_estimates = prediction_engine.predict(&changes)?;
     println!("   Generated {} cost estimates", cost_estimates.len());
     println!();
@@ -1467,7 +1536,10 @@ fn cmd_autofix_drift_safe(
     if autofix_result.patches.is_empty() {
         println!("   {} No drift-safe patches generated", "✓".green());
     } else {
-        println!("   Generated {} drift-safe patches", autofix_result.patches.len());
+        println!(
+            "   Generated {} drift-safe patches",
+            autofix_result.patches.len()
+        );
     }
 
     // Show warnings
@@ -1482,14 +1554,23 @@ fn cmd_autofix_drift_safe(
 
         for patch in &autofix_result.patches {
             println!("  📄 {}", patch.filename.bold());
-            println!("     Resource: {} ({})", patch.resource_id, patch.resource_type);
+            println!(
+                "     Resource: {} ({})",
+                patch.resource_id, patch.resource_type
+            );
             println!("     Changes: {} hunks", patch.hunks.len());
 
             if verbose {
                 println!("     Metadata:");
                 println!("       Cost before: ${:.2}", patch.metadata.cost_before);
-                println!("       Monthly savings: ${:.2}", patch.metadata.monthly_savings);
-                println!("       Confidence: {:.1}%", patch.metadata.confidence * 100.0);
+                println!(
+                    "       Monthly savings: ${:.2}",
+                    patch.metadata.monthly_savings
+                );
+                println!(
+                    "       Confidence: {:.1}%",
+                    patch.metadata.confidence * 100.0
+                );
                 println!("       Rationale: {}", patch.metadata.rationale);
             }
         }
@@ -1506,10 +1587,7 @@ fn cmd_autofix_drift_safe(
     Ok(())
 }
 
-fn cmd_escrow(
-    format: &str,
-    verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn cmd_escrow(format: &str, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
     if verbose {
         eprintln!("🔍 Managing escrow operations");
     }
@@ -1554,7 +1632,10 @@ fn cmd_performance(
                 _ => println!("Performance budgets"),
             }
         }
-        Some(PerformanceCommands::Report { format: report_format, output }) => {
+        Some(PerformanceCommands::Report {
+            format: report_format,
+            output,
+        }) => {
             if verbose {
                 eprintln!("  Subcommand: report");
                 eprintln!("  Format: {}", report_format);
@@ -1567,12 +1648,12 @@ fn cmd_performance(
                 _ => println!("Performance reporting not yet implemented"),
             }
         }
-        None => {
-            match format {
-                "json" => println!("{{\"performance_help\": \"Use subcommands: monitor, budget, report\"}}"),
-                _ => println!("Performance command requires a subcommand: monitor, budget, report"),
+        None => match format {
+            "json" => {
+                println!("{{\"performance_help\": \"Use subcommands: monitor, budget, report\"}}")
             }
-        }
+            _ => println!("Performance command requires a subcommand: monitor, budget, report"),
+        },
     }
 
     Ok(())

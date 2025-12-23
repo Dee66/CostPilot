@@ -1,7 +1,7 @@
 use costpilot::engines::detection::DetectionEngine;
-use costpilot::engines::prediction::{PredictionEngine, prediction_engine::CostHeuristics};
 use costpilot::engines::explain::PredictionExplainer;
-use costpilot::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate};
+use costpilot::engines::prediction::{prediction_engine::CostHeuristics, PredictionEngine};
+use costpilot::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
 use std::collections::HashMap;
 
 #[cfg(test)]
@@ -44,7 +44,10 @@ mod determinism_tests {
         let json1 = serde_json::to_string(&detections1).unwrap();
         let json2 = serde_json::to_string(&detections2).unwrap();
 
-        assert_eq!(json1, json2, "Detect outputs should be byte-for-byte identical for identical inputs");
+        assert_eq!(
+            json1, json2,
+            "Detect outputs should be byte-for-byte identical for identical inputs"
+        );
     }
 
     #[test]
@@ -61,7 +64,10 @@ mod determinism_tests {
         let json1 = serde_json::to_string(&estimates1).unwrap();
         let json2 = serde_json::to_string(&estimates2).unwrap();
 
-        assert_eq!(json1, json2, "Predict outputs should be byte-for-byte identical for identical inputs");
+        assert_eq!(
+            json1, json2,
+            "Predict outputs should be byte-for-byte identical for identical inputs"
+        );
     }
 
     #[test]
@@ -84,12 +90,15 @@ mod determinism_tests {
         let json1 = serde_json::to_string(&explanations1).unwrap();
         let json2 = serde_json::to_string(&explanations2).unwrap();
 
-        assert_eq!(json1, json2, "Explain outputs should be byte-for-byte identical for identical inputs");
+        assert_eq!(
+            json1, json2,
+            "Explain outputs should be byte-for-byte identical for identical inputs"
+        );
     }
 
     #[test]
     fn test_output_hashes_stable_across_repeated_runs() {
-        use sha2::{Sha256, Digest};
+        use sha2::{Digest, Sha256};
 
         let engine = DetectionEngine::new();
         let change = create_test_resource_change();
@@ -106,7 +115,10 @@ mod determinism_tests {
         // All hashes should be identical
         let first_hash = &hashes[0];
         for hash in hashes.iter().skip(1) {
-            assert_eq!(first_hash, hash, "Output hashes should be stable across repeated runs");
+            assert_eq!(
+                first_hash, hash,
+                "Output hashes should be stable across repeated runs"
+            );
         }
     }
 
@@ -225,7 +237,10 @@ mod determinism_tests {
         // When timestamps are added, they must end with 'Z' or '+00:00'
 
         let mut cmd = assert_cmd::Command::cargo_bin("costpilot").unwrap();
-        cmd.arg("explain").arg("aws_instance").arg("--instance-type").arg("t3.micro");
+        cmd.arg("explain")
+            .arg("aws_instance")
+            .arg("--instance-type")
+            .arg("t3.micro");
 
         let output = cmd.output().unwrap();
         let stdout = String::from_utf8(output.stdout).unwrap();
@@ -239,7 +254,10 @@ mod determinism_tests {
         // In the future, this test will validate UTC format
 
         // If no timestamps found, test passes (placeholder behavior)
-        assert!(!stdout.contains("timestamp"), "No timestamps should be present in current output");
+        assert!(
+            !stdout.contains("timestamp"),
+            "No timestamps should be present in current output"
+        );
     }
 
     #[test]
@@ -258,7 +276,10 @@ mod determinism_tests {
 
             // For placeholder, just ensure the operation completes and is deterministic
             // In production, this would compare against known good values
-            assert!(rounded.is_finite(), "Float rounding should produce finite result");
+            assert!(
+                rounded.is_finite(),
+                "Float rounding should produce finite result"
+            );
         }
 
         // TODO: Implement cross-platform validation
@@ -269,7 +290,7 @@ mod determinism_tests {
 
     #[test]
     fn test_repeated_cli_runs_produce_identical_hashes() {
-        use sha2::{Sha256, Digest};
+        use sha2::{Digest, Sha256};
         use std::fs;
         use tempfile::NamedTempFile;
 
@@ -317,7 +338,10 @@ mod determinism_tests {
         // All hashes should be identical
         let first_hash = &hashes[0];
         for hash in hashes.iter().skip(1) {
-            assert_eq!(first_hash, hash, "CLI output hashes should be identical across repeated runs");
+            assert_eq!(
+                first_hash, hash,
+                "CLI output hashes should be identical across repeated runs"
+            );
         }
     }
 
@@ -328,7 +352,7 @@ mod determinism_tests {
         // This test ensures that the same inputs produce identical outputs on both architectures
         // Currently implemented as a placeholder that runs on supported architectures
 
-        use sha2::{Sha256, Digest};
+        use sha2::{Digest, Sha256};
         use std::fs;
         use tempfile::NamedTempFile;
 
@@ -339,7 +363,11 @@ mod determinism_tests {
         let arch = "aarch64";
 
         // Ensure we're on Linux
-        assert_eq!(std::env::consts::OS, "linux", "This test is only valid on Linux");
+        assert_eq!(
+            std::env::consts::OS,
+            "linux",
+            "This test is only valid on Linux"
+        );
 
         // Create a temporary terraform plan file for consistent input
         let plan_content = r#"
@@ -385,7 +413,11 @@ mod determinism_tests {
         // All hashes should be identical (determinism check)
         let first_hash = &hashes[0];
         for hash in hashes.iter().skip(1) {
-            assert_eq!(first_hash, hash, "CLI output hashes should be identical across repeated runs on {}", arch);
+            assert_eq!(
+                first_hash, hash,
+                "CLI output hashes should be identical across repeated runs on {}",
+                arch
+            );
         }
 
         // TODO: Implement actual cross-platform comparison

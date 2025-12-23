@@ -1,6 +1,6 @@
-use std::path::Path;
 use std::fs;
 use std::io::Write;
+use std::path::Path;
 use std::process::Command;
 
 // Test basic archive creation and extraction
@@ -27,7 +27,13 @@ fn test_archive_creation_extraction() {
     // Test tar.gz creation (if tar command is available)
     let archive_path = temp_dir.join("test.tar.gz");
     let tar_result = Command::new("tar")
-        .args(&["-czf", &archive_path.to_string_lossy(), "-C", &temp_dir.to_string_lossy(), "."])
+        .args(&[
+            "-czf",
+            &archive_path.to_string_lossy(),
+            "-C",
+            &temp_dir.to_string_lossy(),
+            ".",
+        ])
         .output()
         .ok();
 
@@ -39,7 +45,12 @@ fn test_archive_creation_extraction() {
         fs::create_dir_all(&extract_dir).ok();
 
         let extract_result = Command::new("tar")
-            .args(&["-xzf", &archive_path.to_string_lossy(), "-C", &extract_dir.to_string_lossy()])
+            .args(&[
+                "-xzf",
+                &archive_path.to_string_lossy(),
+                "-C",
+                &extract_dir.to_string_lossy(),
+            ])
             .output()
             .ok();
 
@@ -48,7 +59,11 @@ fn test_archive_creation_extraction() {
             for file_path in &test_files {
                 let relative_path = file_path.strip_prefix(&temp_dir).unwrap();
                 let extracted_path = extract_dir.join(relative_path);
-                assert!(extracted_path.exists(), "Extracted file should exist: {}", extracted_path.display());
+                assert!(
+                    extracted_path.exists(),
+                    "Extracted file should exist: {}",
+                    extracted_path.display()
+                );
             }
         }
     }
@@ -68,10 +83,7 @@ fn test_checksum_validation() {
     fs::write(&test_file, content).expect("Failed to write test file");
 
     // Calculate SHA256 checksum
-    let sha256_result = Command::new("sha256sum")
-        .arg(&test_file)
-        .output()
-        .ok();
+    let sha256_result = Command::new("sha256sum").arg(&test_file).output().ok();
 
     if let Some(output) = sha256_result {
         if output.status.success() {
@@ -80,16 +92,19 @@ fn test_checksum_validation() {
 
             // Verify checksum is valid hex
             let checksum_part = stdout.split_whitespace().next().unwrap_or("");
-            assert!(checksum_part.len() == 64, "SHA256 checksum should be 64 characters");
-            assert!(checksum_part.chars().all(|c| c.is_ascii_hexdigit()), "Checksum should be valid hex");
+            assert!(
+                checksum_part.len() == 64,
+                "SHA256 checksum should be 64 characters"
+            );
+            assert!(
+                checksum_part.chars().all(|c| c.is_ascii_hexdigit()),
+                "Checksum should be valid hex"
+            );
         }
     }
 
     // Test MD5 checksum as well
-    let md5_result = Command::new("md5sum")
-        .arg(&test_file)
-        .output()
-        .ok();
+    let md5_result = Command::new("md5sum").arg(&test_file).output().ok();
 
     if let Some(output) = md5_result {
         if output.status.success() {
@@ -97,8 +112,14 @@ fn test_checksum_validation() {
             assert!(!stdout.is_empty(), "MD5 checksum should not be empty");
 
             let checksum_part = stdout.split_whitespace().next().unwrap_or("");
-            assert!(checksum_part.len() == 32, "MD5 checksum should be 32 characters");
-            assert!(checksum_part.chars().all(|c| c.is_ascii_hexdigit()), "MD5 checksum should be valid hex");
+            assert!(
+                checksum_part.len() == 32,
+                "MD5 checksum should be 32 characters"
+            );
+            assert!(
+                checksum_part.chars().all(|c| c.is_ascii_hexdigit()),
+                "MD5 checksum should be valid hex"
+            );
         }
     }
 
@@ -120,15 +141,22 @@ fn test_corrupted_archive_detection() {
     fs::create_dir_all(&extract_dir).ok();
 
     let extract_result = Command::new("tar")
-        .args(&["-xzf", &corrupt_archive.to_string_lossy(), "-C", &extract_dir.to_string_lossy()])
+        .args(&[
+            "-xzf",
+            &corrupt_archive.to_string_lossy(),
+            "-C",
+            &extract_dir.to_string_lossy(),
+        ])
         .output()
         .ok();
 
     // Should fail or produce warnings
     if let Some(output) = extract_result {
         // Either the command fails or produces stderr output indicating corruption
-        assert!(!output.status.success() || !output.stderr.is_empty(),
-                "Corrupted archive should either fail or produce warnings");
+        assert!(
+            !output.status.success() || !output.stderr.is_empty(),
+            "Corrupted archive should either fail or produce warnings"
+        );
     }
 
     fs::remove_dir_all(&temp_dir).ok();
@@ -147,7 +175,11 @@ fn test_archive_size_limits() {
     // Create archive
     let archive_path = temp_dir.join("small.tar.gz");
     let _ = Command::new("tar")
-        .args(&["-czf", &archive_path.to_string_lossy(), &small_file.to_string_lossy()])
+        .args(&[
+            "-czf",
+            &archive_path.to_string_lossy(),
+            &small_file.to_string_lossy(),
+        ])
         .output()
         .ok();
 
@@ -156,7 +188,11 @@ fn test_archive_size_limits() {
         if let Some(meta) = metadata {
             let size = meta.len();
             // Archive should be reasonably small (less than 1MB)
-            assert!(size < 1024 * 1024, "Archive size should be reasonable: {} bytes", size);
+            assert!(
+                size < 1024 * 1024,
+                "Archive size should be reasonable: {} bytes",
+                size
+            );
             // But not empty
             assert!(size > 0, "Archive should not be empty");
         }
@@ -181,9 +217,12 @@ fn test_nested_archive_structures() {
 
     // Test that tar can handle multiple files
     let result = Command::new("tar")
-        .args(&["-czf", &archive_path.to_string_lossy(),
-               &file1.to_string_lossy(),
-               &file2.to_string_lossy()])
+        .args(&[
+            "-czf",
+            &archive_path.to_string_lossy(),
+            &file1.to_string_lossy(),
+            &file2.to_string_lossy(),
+        ])
         .output()
         .ok();
 
@@ -198,8 +237,10 @@ fn test_nested_archive_structures() {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 // Should contain both files
-                assert!(stdout.contains("file1.txt") || stdout.contains("file2.txt"),
-                       "Archive should contain the files");
+                assert!(
+                    stdout.contains("file1.txt") || stdout.contains("file2.txt"),
+                    "Archive should contain the files"
+                );
             }
         }
     }
@@ -234,7 +275,13 @@ fn test_archive_content_validation() {
     // Create archive
     let archive_path = temp_dir.join("content.tar.gz");
     let _ = Command::new("tar")
-        .args(&["-czf", &archive_path.to_string_lossy(), "-C", &temp_dir.to_string_lossy(), "."])
+        .args(&[
+            "-czf",
+            &archive_path.to_string_lossy(),
+            "-C",
+            &temp_dir.to_string_lossy(),
+            ".",
+        ])
         .output()
         .ok();
 
@@ -249,8 +296,11 @@ fn test_archive_content_validation() {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 for expected_file in &expected_files {
-                    assert!(stdout.contains(expected_file),
-                           "Archive should contain expected file: {}", expected_file);
+                    assert!(
+                        stdout.contains(expected_file),
+                        "Archive should contain expected file: {}",
+                        expected_file
+                    );
                 }
             }
         }
@@ -271,13 +321,18 @@ fn test_partial_archive_handling() {
 
     let complete_archive = temp_dir.join("complete.tar.gz");
     let _ = Command::new("tar")
-        .args(&["-czf", &complete_archive.to_string_lossy(), &test_file.to_string_lossy()])
+        .args(&[
+            "-czf",
+            &complete_archive.to_string_lossy(),
+            &test_file.to_string_lossy(),
+        ])
         .output()
         .ok();
 
     if complete_archive.exists() {
         // Create a partial/truncated version
-        let complete_content = fs::read(&complete_archive).expect("Failed to read complete archive");
+        let complete_content =
+            fs::read(&complete_archive).expect("Failed to read complete archive");
         let partial_content = &complete_content[..complete_content.len() / 2];
         let partial_archive = temp_dir.join("partial.tar.gz");
         fs::write(&partial_archive, partial_content).ok();
@@ -287,15 +342,22 @@ fn test_partial_archive_handling() {
         fs::create_dir_all(&extract_dir).ok();
 
         let extract_result = Command::new("tar")
-            .args(&["-xzf", &partial_archive.to_string_lossy(), "-C", &extract_dir.to_string_lossy()])
+            .args(&[
+                "-xzf",
+                &partial_archive.to_string_lossy(),
+                "-C",
+                &extract_dir.to_string_lossy(),
+            ])
             .output()
             .ok();
 
         // Should fail gracefully
         if let Some(output) = extract_result {
             // Either fails or produces error output
-            assert!(!output.status.success() || !output.stderr.is_empty(),
-                   "Partial archive extraction should indicate problems");
+            assert!(
+                !output.status.success() || !output.stderr.is_empty(),
+                "Partial archive extraction should indicate problems"
+            );
         }
     }
 
@@ -319,7 +381,10 @@ fn test_archive_signature_validation() {
 
     if sig_result.is_some() {
         let sig_file = format!("{}.asc", test_file.display());
-        assert!(Path::new(&sig_file).exists(), "Signature file should be created");
+        assert!(
+            Path::new(&sig_file).exists(),
+            "Signature file should be created"
+        );
 
         // Test signature verification
         let verify_result = Command::new("gpg")
@@ -328,7 +393,10 @@ fn test_archive_signature_validation() {
             .ok();
 
         // Verification might fail due to key issues, but command should run
-        assert!(verify_result.is_some(), "Signature verification should be attempted");
+        assert!(
+            verify_result.is_some(),
+            "Signature verification should be attempted"
+        );
     }
 
     fs::remove_dir_all(&temp_dir).ok();

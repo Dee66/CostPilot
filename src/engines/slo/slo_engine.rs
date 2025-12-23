@@ -139,18 +139,18 @@ impl SloEngine {
         use crate::engines::trend::SnapshotManager;
 
         // Try to load historical snapshots
-        let snapshot_manager = SnapshotManager::new(&std::path::PathBuf::from(".costpilot/snapshots"));
-        
+        let snapshot_manager = SnapshotManager::new(std::path::PathBuf::from(".costpilot/snapshots"));
+
         match snapshot_manager.load_history() {
             Ok(history) => {
                 if history.snapshots.len() >= 3 {
                     // Create calculator and analyze burn rates
                     let calculator = BurnRateCalculator::new();
                     let mut all_snapshots = history.snapshots.clone();
-                    
+
                     // Add current snapshot for projection
                     all_snapshots.push(current_snapshot.clone());
-                    
+
                     calculator.analyze_all(&self.manager.config().slos, &all_snapshots)
                         .analyses
                 } else {

@@ -1725,3 +1725,270 @@ mod autofix_engine_deep_tests {
         }
     }
 }
+
+// ===== AUTOFIX ENGINE EDGE CASE TESTS =====
+
+#[test]
+fn test_autofix_engine_empty_patch_generation_edge_case() {
+    // Test autofix with empty patch generation
+    let engine = AutofixEngine::new();
+    let empty_changes: Vec<ResourceChange> = vec![];
+
+    let result = engine.generate_patches(&empty_changes);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().len(), 0);
+}
+
+#[test]
+fn test_autofix_engine_extreme_patch_sizes() {
+    // Test with extremely large patch sizes
+    let engine = AutofixEngine::new();
+    let large_change = ResourceChange {
+        resource_type: "aws_instance".to_string(),
+        address: "test.large".to_string(),
+        action: ChangeAction::Create,
+        before: None,
+        after: Some(json!({
+            "instance_type": "p4d.24xlarge",
+            "count": 10000,  // Very large count
+            "tags": {
+                "large_tag": "a".repeat(10000)  // Very large tag value
+            }
+        })),
+    };
+
+    let result = engine.generate_patches(&vec![large_change]);
+    assert!(result.is_ok());
+    // Should handle large patches without panicking
+}
+
+#[test]
+fn test_autofix_engine_zero_cost_changes_edge_case() {
+    // Test with changes that result in zero cost
+    let engine = AutofixEngine::new();
+    let zero_change = ResourceChange {
+        resource_type: "aws_instance".to_string(),
+        address: "test.zero".to_string(),
+        action: ChangeAction::Create,
+        before: None,
+        after: Some(json!({
+            "instance_type": "t2.micro",
+            "count": 0  // Zero count
+        })),
+    };
+
+    let result = engine.generate_patches(&vec![zero_change]);
+    assert!(result.is_ok());
+    let patches = result.unwrap();
+    assert_eq!(patches.len(), 1);
+    // Should generate patches even for zero-cost changes
+}
+
+#[test]
+fn test_autofix_engine_extremely_long_resource_names() {
+    // Test with extremely long resource names
+    let engine = AutofixEngine::new();
+    let long_name = "a".repeat(1000);
+    let long_change = ResourceChange {
+        resource_type: "aws_instance".to_string(),
+        address: long_name.clone(),
+        action: ChangeAction::Create,
+        before: None,
+        after: Some(json!({
+            "instance_type": "t3.micro",
+            "tags": {
+                long_name: "test_value"
+            }
+        })),
+    };
+
+    let result = engine.generate_patches(&vec![long_change]);
+    assert!(result.is_ok());
+    let patches = result.unwrap();
+    assert_eq!(patches.len(), 1);
+}
+
+#[test]
+fn test_autofix_engine_special_characters_in_names() {
+    // Test with special characters and Unicode in resource names
+    let engine = AutofixEngine::new();
+    let special_change = ResourceChange {
+        resource_type: "aws_instance".to_string(),
+        address: "test@domain.com#special$chars🚀".to_string(),
+        action: ChangeAction::Create,
+        before: None,
+        after: Some(json!({
+            "instance_type": "t3.micro",
+            "tags": {
+                "测试标签": "unicode_value",
+                "special/key": "special@value"
+            }
+        })),
+    };
+
+    let result = engine.generate_patches(&vec![special_change]);
+    assert!(result.is_ok());
+    let patches = result.unwrap();
+    assert_eq!(patches.len(), 1);
+}
+
+#[test]
+fn test_autofix_engine_maximum_concurrent_patches() {
+    // Test with a very large number of concurrent patches
+    let engine = AutofixEngine::new();
+    let mut changes = Vec::new();
+
+    for i in 0..1000 {
+        changes.push(ResourceChange {
+            resource_type: "aws_instance".to_string(),
+            address: format!("test.concurrent.{}", i),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!({
+                "instance_type": "t3.micro",
+                "count": 1
+            })),
+        });
+    }
+
+    let result = engine.generate_patches(&changes);
+    assert!(result.is_ok());
+    let patches = result.unwrap();
+    assert_eq!(patches.len(), 1000);
+}
+
+#[test]
+fn test_autofix_engine_nested_json_structures() {
+    // Test with extremely nested JSON structures
+    let engine = AutofixEngine::new();
+    let nested_change = ResourceChange {
+        resource_type: "aws_instance".to_string(),
+        address: "test.nested".to_string(),
+        action: ChangeAction::Create,
+        before: None,
+        after: Some(json!({
+            "instance_type": "t3.micro",
+            "nested": {
+                "level1": {
+                    "level2": {
+                        "level3": {
+                            "level4": {
+                                "level5": {
+                                    "deep_value": "test",
+                                    "deep_number": 42,
+                                    "deep_array": [1, 2, 3],
+                                    "deep_object": {
+                                        "another": "level"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })),
+    };
+
+    let result = engine.generate_patches(&vec![nested_change]);
+    assert!(result.is_ok());
+    let patches = result.unwrap();
+    assert_eq!(patches.len(), 1);
+}
+
+#[test]
+fn test_autofix_engine_empty_json_values_edge_case() {
+    // Test with empty or minimal JSON values
+    let engine = AutofixEngine::new();
+    let empty_changes = vec![
+        ResourceChange {
+            resource_type: "aws_instance".to_string(),
+            address: "test.empty".to_string(),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!({})),  // Empty object
+        },
+        ResourceChange {
+            resource_type: "aws_instance".to_string(),
+            address: "test.null".to_string(),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!(null)),  // Null value
+        },
+    ];
+
+    let result = engine.generate_patches(&empty_changes);
+    assert!(result.is_ok());
+    let patches = result.unwrap();
+    assert_eq!(patches.len(), 2);
+    // Should handle empty/minimal JSON gracefully
+}
+
+#[test]
+fn test_autofix_engine_mixed_resource_types_edge_case() {
+    // Test with mixed resource types including unknown ones
+    let engine = AutofixEngine::new();
+    let mixed_changes = vec![
+        ResourceChange {
+            resource_type: "aws_instance".to_string(),
+            address: "test.ec2".to_string(),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!({"instance_type": "t3.micro"})),
+        },
+        ResourceChange {
+            resource_type: "unknown_resource_type".to_string(),
+            address: "test.unknown".to_string(),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!({"custom_field": "value"})),
+        },
+        ResourceChange {
+            resource_type: "aws_s3_bucket".to_string(),
+            address: "test.s3".to_string(),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!({"storage_class": "STANDARD"})),
+        },
+    ];
+
+    let result = engine.generate_patches(&mixed_changes);
+    assert!(result.is_ok());
+    let patches = result.unwrap();
+    assert_eq!(patches.len(), 3);
+    // Should handle unknown resource types gracefully
+}
+
+#[test]
+fn test_autofix_engine_extreme_cost_values() {
+    // Test with extreme cost values
+    let engine = AutofixEngine::new();
+    let extreme_changes = vec![
+        ResourceChange {
+            resource_type: "aws_instance".to_string(),
+            address: "test.free".to_string(),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!({"instance_type": "t2.micro", "cost": 0.0})),
+        },
+        ResourceChange {
+            resource_type: "aws_instance".to_string(),
+            address: "test.expensive".to_string(),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!({"instance_type": "p4d.24xlarge", "cost": 1_000_000_000.0})),
+        },
+        ResourceChange {
+            resource_type: "aws_instance".to_string(),
+            address: "test.negative".to_string(),
+            action: ChangeAction::Create,
+            before: None,
+            after: Some(json!({"instance_type": "t3.micro", "cost": -1000.0})),
+        },
+    ];
+
+    let result = engine.generate_patches(&extreme_changes);
+    assert!(result.is_ok());
+    let patches = result.unwrap();
+    assert_eq!(patches.len(), 3);
+    // Should handle extreme cost values
+}

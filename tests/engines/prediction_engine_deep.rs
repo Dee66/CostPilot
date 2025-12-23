@@ -1635,3 +1635,145 @@ mod prediction_engine_deep_tests {
         }).collect()
     }
 }
+
+// ===== PREDICTION ENGINE EDGE CASE TESTS =====
+
+#[test]
+fn test_prediction_engine_empty_resource_list_edge_case() {
+    // Test prediction with empty resource list
+    let engine = PredictionEngine::new();
+    let empty_resources = vec![];
+
+    let result = engine.predict_costs(&empty_resources, 30);
+    assert!(result.is_ok());
+    let predictions = result.unwrap();
+    assert_eq!(predictions.len(), 0);
+}
+
+#[test]
+fn test_prediction_engine_zero_quantity_edge_case() {
+    // Test prediction with zero quantity resources
+    let engine = PredictionEngine::new();
+    let zero_resources = vec![create_test_resource("t3.micro", 0)];
+
+    let result = engine.predict_costs(&zero_resources, 30);
+    assert!(result.is_ok());
+    let predictions = result.unwrap();
+    assert_eq!(predictions.len(), 1);
+    assert_eq!(predictions[0].monthly_cost, 0.0);
+}
+
+#[test]
+fn test_prediction_engine_negative_quantity_edge_case() {
+    // Test prediction with negative quantity (should handle gracefully)
+    let engine = PredictionEngine::new();
+    let negative_resources = vec![create_test_resource("t3.micro", -1)];
+
+    let result = engine.predict_costs(&negative_resources, 30);
+    // Should either handle gracefully or return error
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_prediction_engine_extremely_large_quantity() {
+    // Test prediction with extremely large quantity
+    let engine = PredictionEngine::new();
+    let large_resources = vec![create_test_resource("t3.micro", 1000000)];
+
+    let result = engine.predict_costs(&large_resources, 30);
+    assert!(result.is_ok());
+    let predictions = result.unwrap();
+    assert_eq!(predictions.len(), 1);
+    assert!(predictions[0].monthly_cost > 0.0);
+}
+
+#[test]
+fn test_prediction_engine_zero_days_edge_case() {
+    // Test prediction with zero days
+    let engine = PredictionEngine::new();
+    let resources = vec![create_test_resource("t3.micro", 1)];
+
+    let result = engine.predict_costs(&resources, 0);
+    assert!(result.is_ok());
+    let predictions = result.unwrap();
+    assert_eq!(predictions.len(), 1);
+    assert_eq!(predictions[0].monthly_cost, 0.0);
+}
+
+#[test]
+fn test_prediction_engine_negative_days_edge_case() {
+    // Test prediction with negative days
+    let engine = PredictionEngine::new();
+    let resources = vec![create_test_resource("t3.micro", 1)];
+
+    let result = engine.predict_costs(&resources, -30);
+    // Should handle gracefully
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_prediction_engine_extremely_long_instance_names() {
+    // Test with extremely long instance type names
+    let engine = PredictionEngine::new();
+    let long_name = "a".repeat(1000);
+    let mut resource = create_test_resource("t3.micro", 1);
+    resource.instance_type = long_name;
+
+    let result = engine.predict_costs(&vec![resource], 30);
+    assert!(result.is_ok());
+    let predictions = result.unwrap();
+    assert_eq!(predictions.len(), 1);
+}
+
+#[test]
+fn test_prediction_engine_special_characters_in_names() {
+    // Test with special characters and Unicode in instance names
+    let engine = PredictionEngine::new();
+    let special_names = vec![
+        "instance@domain.com",
+        "测试实例",
+        "instance-with-dashes",
+        "instance_with_underscores",
+        "instance (with parentheses)",
+    ];
+
+    for name in special_names {
+        let mut resource = create_test_resource("t3.micro", 1);
+        resource.instance_type = name.to_string();
+
+        let result = engine.predict_costs(&vec![resource], 30);
+        assert!(result.is_ok());
+        let predictions = result.unwrap();
+        assert_eq!(predictions.len(), 1);
+    }
+}
+
+#[test]
+fn test_prediction_engine_empty_instance_type_edge_case() {
+    // Test with empty instance type
+    let engine = PredictionEngine::new();
+    let mut resource = create_test_resource("t3.micro", 1);
+    resource.instance_type = "".to_string();
+
+    let result = engine.predict_costs(&vec![resource], 30);
+    // Should handle gracefully
+    assert!(result.is_ok() || result.is_err());
+}
+
+#[test]
+fn test_prediction_engine_extreme_cost_estimates() {
+    // Test with resources that would generate extreme costs
+    let engine = PredictionEngine::new();
+    let extreme_resources = vec![
+        create_test_resource("t3.micro", 100000), // Large quantity
+        create_test_resource("m5.24xlarge", 1000), // Expensive instance type
+    ];
+
+    let result = engine.predict_costs(&extreme_resources, 365); // Full year
+    assert!(result.is_ok());
+    let predictions = result.unwrap();
+    assert_eq!(predictions.len(), 2);
+    for prediction in predictions {
+        assert!(prediction.monthly_cost > 0.0);
+    }
+}

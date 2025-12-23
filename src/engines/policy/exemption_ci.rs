@@ -51,7 +51,7 @@ impl CIExemptionCheck {
     pub fn summary(&self) -> String {
         let mut output = String::new();
 
-        output.push_str(&"Exemption Check Summary:\n".to_string());
+        output.push_str("Exemption Check Summary:\n");
         output.push_str(&format!("  Total exemptions: {}\n", self.total_exemptions));
         output.push_str(&format!("  Active: {}\n", self.active_exemptions));
         output.push_str(&format!("  Expiring soon: {}\n", self.expiring_soon));

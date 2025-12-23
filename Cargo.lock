@@ -484,6 +484,7 @@ dependencies = [
  "regex",
  "ring",
  "rstest",
+ "semver",
  "serde",
  "serde_json",
  "serde_yaml",

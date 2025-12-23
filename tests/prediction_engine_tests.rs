@@ -1,14 +1,14 @@
+use costpilot::edition::EditionContext;
+use costpilot::engines::performance::budgets::PerformanceBudgets;
 use costpilot::engines::prediction::PredictionEngine;
 use costpilot::engines::shared::models::{ChangeAction, ResourceChange};
-use costpilot::engines::performance::budgets::PerformanceBudgets;
-use costpilot::edition::EditionContext;
-use serde_json::json;
 #[cfg(test)]
 use proptest::prelude::*;
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 #[cfg(test)]
 use quickcheck_macros::quickcheck;
+use serde_json::json;
 
 #[test]
 fn test_prediction_engine_new() {
@@ -27,7 +27,8 @@ fn test_prediction_engine_new_with_edition_free() {
 
 #[test]
 fn test_prediction_engine_with_heuristics() {
-    let heuristics = costpilot::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
+    let heuristics =
+        costpilot::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
     let engine = PredictionEngine::with_heuristics(heuristics.clone());
     // Just test that it creates successfully
     assert!(true);
@@ -43,7 +44,9 @@ fn test_prediction_engine_with_verbose() {
 #[test]
 fn test_prediction_engine_with_performance_tracking() {
     let budgets = PerformanceBudgets::default();
-    let engine = PredictionEngine::new().unwrap().with_performance_tracking(budgets);
+    let engine = PredictionEngine::new()
+        .unwrap()
+        .with_performance_tracking(budgets);
     // Just test that it creates successfully
     assert!(true);
 }
@@ -1128,15 +1131,17 @@ fn test_predict_large_scale_deployment() {
 
     // Create 50 EC2 instances
     for i in 0..50 {
-        changes.push(ResourceChange::builder()
-            .resource_type("aws_instance".to_string())
-            .resource_id(format!("test-instance-{}", i))
-            .action(ChangeAction::Create)
-            .new_config(json!({
-                "instance_type": "t3.micro",
-                "region": "us-east-1"
-            }))
-            .build());
+        changes.push(
+            ResourceChange::builder()
+                .resource_type("aws_instance".to_string())
+                .resource_id(format!("test-instance-{}", i))
+                .action(ChangeAction::Create)
+                .new_config(json!({
+                    "instance_type": "t3.micro",
+                    "region": "us-east-1"
+                }))
+                .build(),
+        );
     }
 
     let result = engine.predict_total_cost(&changes);
@@ -1922,17 +1927,15 @@ fn test_predict_fargate() {
 #[test]
 fn test_predict_total_cost() {
     let mut engine = PredictionEngine::new().unwrap();
-    let changes = vec![
-        ResourceChange::builder()
-            .resource_type("aws_instance".to_string())
-            .resource_id("test-instance".to_string())
-            .action(ChangeAction::Create)
-            .new_config(json!({
-                "instance_type": "t3.micro",
-                "region": "us-east-1"
-            }))
-            .build(),
-    ];
+    let changes = vec![ResourceChange::builder()
+        .resource_type("aws_instance".to_string())
+        .resource_id("test-instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(json!({
+            "instance_type": "t3.micro",
+            "region": "us-east-1"
+        }))
+        .build()];
 
     let result = engine.predict_total_cost(&changes);
     assert!(result.is_ok());
@@ -2145,13 +2148,15 @@ impl Arbitrary for ArbResourceChange {
         let resource_type: String = Arbitrary::arbitrary(g);
         let monthly_cost: Option<f64> = Arbitrary::arbitrary(g);
 
-        ArbResourceChange(ResourceChange::builder()
-            .resource_id(resource_id)
-            .resource_type(resource_type)
-            .action(ChangeAction::Create)
-            .new_config(json!({}))
-            .monthly_cost(monthly_cost.map(|c| c.abs()).unwrap_or(0.0))
-            .build())
+        ArbResourceChange(
+            ResourceChange::builder()
+                .resource_id(resource_id)
+                .resource_type(resource_type)
+                .action(ChangeAction::Create)
+                .new_config(json!({}))
+                .monthly_cost(monthly_cost.map(|c| c.abs()).unwrap_or(0.0))
+                .build(),
+        )
     }
 }
 
@@ -2160,9 +2165,9 @@ fn quickcheck_cost_non_negative(ArbResourceChange(change): ArbResourceChange) ->
     let engine = PredictionEngine::new().unwrap();
     let result = engine.predict_resource_cost(&change);
     if let Ok(estimate) = result {
-        estimate.monthly_cost >= 0.0 &&
-        estimate.prediction_interval_low >= 0.0 &&
-        estimate.prediction_interval_high >= 0.0
+        estimate.monthly_cost >= 0.0
+            && estimate.prediction_interval_low >= 0.0
+            && estimate.prediction_interval_high >= 0.0
     } else {
         true // Errors are acceptable
     }

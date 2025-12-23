@@ -5,7 +5,8 @@ use serde_json::json;
 
 #[test]
 fn test_prediction_explainer_new() {
-    let heuristics = costpilot::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
+    let heuristics =
+        costpilot::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
     let explainer = PredictionExplainer::new(&heuristics);
     // Just test that it creates successfully
     assert!(true);
@@ -32,8 +33,7 @@ fn test_prediction_explainer_explain_ec2() {
             "instance_type": "t3.micro",
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-ec2".to_string(),
@@ -69,8 +69,7 @@ fn test_prediction_explainer_explain_rds() {
             "allocated_storage": 20,
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-rds".to_string(),
@@ -106,8 +105,7 @@ fn test_prediction_explainer_explain_lambda() {
             "timeout": 30,
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-lambda".to_string(),
@@ -142,8 +140,7 @@ fn test_prediction_explainer_explain_dynamodb() {
             "billing_mode": "PAY_PER_REQUEST",
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-dynamodb".to_string(),
@@ -177,8 +174,7 @@ fn test_prediction_explainer_explain_nat_gateway() {
         .new_config(json!({
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-nat".to_string(),
@@ -213,8 +209,7 @@ fn test_prediction_explainer_explain_load_balancer() {
             "load_balancer_type": "application",
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-alb".to_string(),
@@ -249,8 +244,7 @@ fn test_prediction_explainer_explain_s3() {
             "storage_class": "STANDARD",
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-s3".to_string(),
@@ -284,8 +278,7 @@ fn test_prediction_explainer_explain_generic() {
         .new_config(json!({
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-generic".to_string(),
@@ -320,8 +313,7 @@ fn test_prediction_explainer_explain_with_cold_start() {
             "instance_type": "unknown-type",
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-cold-start".to_string(),
@@ -338,7 +330,10 @@ fn test_prediction_explainer_explain_with_cold_start() {
     };
 
     let reasoning = explainer.explain(&change, &estimate);
-    assert!(reasoning.steps.iter().any(|step| step.description.contains("cold-start")));
+    assert!(reasoning
+        .steps
+        .iter()
+        .any(|step| step.description.contains("cold-start")));
 }
 
 #[test]
@@ -354,8 +349,7 @@ fn test_prediction_explainer_explain_with_high_confidence() {
             "instance_type": "t3.micro",
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-high-confidence".to_string(),
@@ -373,9 +367,11 @@ fn test_prediction_explainer_explain_with_high_confidence() {
 
     let reasoning = explainer.explain(&change, &estimate);
     assert!(reasoning.overall_confidence >= 0.9);
-    assert!(reasoning.steps.iter().any(|step|
-        step.output_value.as_ref().map_or(false, |ov| ov.name == "confidence_score" && ov.value == "95%")
-    ));
+    assert!(reasoning.steps.iter().any(|step| step
+        .output_value
+        .as_ref()
+        .map_or(false, |ov| ov.name == "confidence_score"
+            && ov.value == "95%")));
 }
 
 #[test]
@@ -391,8 +387,7 @@ fn test_prediction_explainer_explain_with_low_confidence() {
             "instance_type": "t3.micro",
             "region": "us-east-1"
         }))
-        .build()
-        ;
+        .build();
 
     let estimate = CostEstimate {
         resource_id: "test-low-confidence".to_string(),
@@ -410,11 +405,216 @@ fn test_prediction_explainer_explain_with_low_confidence() {
 
     let reasoning = explainer.explain(&change, &estimate);
     assert!(reasoning.overall_confidence < 0.5);
-    assert!(reasoning.steps.iter().any(|step|
-        step.output_value.as_ref().map_or(false, |ov| ov.name == "confidence_score" && ov.value == "30%")
-    ));
+    assert!(reasoning.steps.iter().any(|step| step
+        .output_value
+        .as_ref()
+        .map_or(false, |ov| ov.name == "confidence_score"
+            && ov.value == "30%")));
     // Check for wide interval
-    assert!(reasoning.steps.iter().any(|step|
-        step.output_value.as_ref().map_or(false, |ov| ov.name == "interval" && ov.value == "$5.00 - $20.00")
-    ));
+    assert!(reasoning.steps.iter().any(|step| step
+        .output_value
+        .as_ref()
+        .map_or(false, |ov| ov.name == "interval"
+            && ov.value == "$5.00 - $20.00")));
+}
+
+// ===== PREDICTION EXPLAINER EDGE CASE TESTS =====
+
+#[test]
+fn test_prediction_explainer_zero_cost_edge_case() {
+    let engine = PredictionEngine::new().unwrap();
+    let explainer = PredictionExplainer::from_engine(&engine);
+
+    let change = ResourceChange::builder()
+        .resource_id("test-zero".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(json!({
+            "instance_type": "t3.micro",
+            "region": "us-east-1"
+        }))
+        .build();
+
+    let estimate = CostEstimate {
+        resource_id: "test-zero".to_string(),
+        monthly_cost: 0.0,
+        prediction_interval_low: 0.0,
+        prediction_interval_high: 0.0,
+        confidence_score: 1.0,
+        heuristic_reference: Some("test".to_string()),
+        cold_start_inference: false,
+        one_time: None,
+        breakdown: None,
+        hourly: None,
+        daily: None,
+    };
+
+    let reasoning = explainer.explain(&change, &estimate);
+    assert!(reasoning.overall_confidence >= 0.0);
+}
+
+#[test]
+fn test_prediction_explainer_negative_cost_edge_case() {
+    let engine = PredictionEngine::new().unwrap();
+    let explainer = PredictionExplainer::from_engine(&engine);
+
+    let change = ResourceChange::builder()
+        .resource_id("test-negative".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(json!({
+            "instance_type": "t3.micro",
+            "region": "us-east-1"
+        }))
+        .build();
+
+    let estimate = CostEstimate {
+        resource_id: "test-negative".to_string(),
+        monthly_cost: -50.0,
+        prediction_interval_low: -60.0,
+        prediction_interval_high: -40.0,
+        confidence_score: 0.8,
+        heuristic_reference: Some("test".to_string()),
+        cold_start_inference: false,
+        one_time: None,
+        breakdown: None,
+        hourly: None,
+        daily: None,
+    };
+
+    let reasoning = explainer.explain(&change, &estimate);
+    assert!(reasoning.overall_confidence >= 0.0);
+}
+
+#[test]
+fn test_prediction_explainer_extremely_high_cost() {
+    let engine = PredictionEngine::new().unwrap();
+    let explainer = PredictionExplainer::from_engine(&engine);
+
+    let change = ResourceChange::builder()
+        .resource_id("test-high".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(json!({
+            "instance_type": "p4d.24xlarge",
+            "region": "us-east-1"
+        }))
+        .build();
+
+    let estimate = CostEstimate {
+        resource_id: "test-high".to_string(),
+        monthly_cost: 100000.0,
+        prediction_interval_low: 90000.0,
+        prediction_interval_high: 110000.0,
+        confidence_score: 0.9,
+        heuristic_reference: Some("test".to_string()),
+        cold_start_inference: false,
+        one_time: None,
+        breakdown: None,
+        hourly: None,
+        daily: None,
+    };
+
+    let reasoning = explainer.explain(&change, &estimate);
+    assert!(reasoning.overall_confidence >= 0.0);
+}
+
+#[test]
+fn test_prediction_explainer_empty_resource_id_edge_case() {
+    let engine = PredictionEngine::new().unwrap();
+    let explainer = PredictionExplainer::from_engine(&engine);
+
+    let change = ResourceChange::builder()
+        .resource_id("".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(json!({
+            "instance_type": "t3.micro",
+            "region": "us-east-1"
+        }))
+        .build();
+
+    let estimate = CostEstimate {
+        resource_id: "".to_string(),
+        monthly_cost: 10.0,
+        prediction_interval_low: 8.0,
+        prediction_interval_high: 12.0,
+        confidence_score: 0.8,
+        heuristic_reference: Some("test".to_string()),
+        cold_start_inference: false,
+        one_time: None,
+        breakdown: None,
+        hourly: None,
+        daily: None,
+    };
+
+    let reasoning = explainer.explain(&change, &estimate);
+    assert!(reasoning.overall_confidence >= 0.0);
+}
+
+#[test]
+fn test_prediction_explainer_extremely_long_resource_names() {
+    let engine = PredictionEngine::new().unwrap();
+    let explainer = PredictionExplainer::from_engine(&engine);
+
+    let long_name = "a".repeat(1000);
+    let change = ResourceChange::builder()
+        .resource_id(long_name.clone())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(json!({
+            "instance_type": "t3.micro",
+            "region": "us-east-1"
+        }))
+        .build();
+
+    let estimate = CostEstimate {
+        resource_id: long_name,
+        monthly_cost: 10.0,
+        prediction_interval_low: 8.0,
+        prediction_interval_high: 12.0,
+        confidence_score: 0.8,
+        heuristic_reference: Some("test".to_string()),
+        cold_start_inference: false,
+        one_time: None,
+        breakdown: None,
+        hourly: None,
+        daily: None,
+    };
+
+    let reasoning = explainer.explain(&change, &estimate);
+    assert!(reasoning.overall_confidence >= 0.0);
+}
+
+#[test]
+fn test_prediction_explainer_zero_confidence_edge_case() {
+    let engine = PredictionEngine::new().unwrap();
+    let explainer = PredictionExplainer::from_engine(&engine);
+
+    let change = ResourceChange::builder()
+        .resource_id("test-zero-confidence".to_string())
+        .resource_type("aws_instance".to_string())
+        .action(ChangeAction::Create)
+        .new_config(json!({
+            "instance_type": "t3.micro",
+            "region": "us-east-1"
+        }))
+        .build();
+
+    let estimate = CostEstimate {
+        resource_id: "test-zero-confidence".to_string(),
+        monthly_cost: 10.0,
+        prediction_interval_low: 0.0,
+        prediction_interval_high: 100.0,
+        confidence_score: 0.0,
+        heuristic_reference: Some("test".to_string()),
+        cold_start_inference: false,
+        one_time: None,
+        breakdown: None,
+        hourly: None,
+        daily: None,
+    };
+
+    let reasoning = explainer.explain(&change, &estimate);
+    assert!(reasoning.overall_confidence >= 0.0);
 }

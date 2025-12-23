@@ -1,20 +1,21 @@
+use std::fs;
 use std::path::Path;
 use std::process::Command;
-use std::fs;
 
 // Test installer script validation
 #[test]
 fn test_installer_script_structure() {
     // Test that installer scripts exist and have basic structure
-    let scripts = vec![
-        "packaging/postinstall.js",
-        "packaging/install.sh",
-    ];
+    let scripts = vec!["packaging/postinstall.js", "packaging/install.sh"];
 
     for script_path in scripts {
         if Path::new(script_path).exists() {
             let content = fs::read_to_string(script_path).unwrap_or_default();
-            assert!(!content.is_empty(), "Script {} should not be empty", script_path);
+            assert!(
+                !content.is_empty(),
+                "Script {} should not be empty",
+                script_path
+            );
         }
     }
 }
@@ -138,13 +139,7 @@ fn test_installation_directory_validation() {
 #[test]
 fn test_dependency_checking() {
     // Test checking for common dependencies
-    let dependencies = vec![
-        "curl",
-        "wget",
-        "tar",
-        "gzip",
-        "unzip",
-    ];
+    let dependencies = vec!["curl", "wget", "tar", "gzip", "unzip"];
 
     for dep in dependencies {
         // Test that we can check if commands exist
@@ -157,17 +152,14 @@ fn test_dependency_checking() {
 #[test]
 fn test_version_compatibility_checking() {
     // Test version string parsing and comparison
-    let versions = vec![
-        "1.0.0",
-        "1.2.3",
-        "2.0.0-alpha",
-        "1.0.0-beta.1",
-    ];
+    let versions = vec!["1.0.0", "1.2.3", "2.0.0-alpha", "1.0.0-beta.1"];
 
     for version in versions {
         // Test basic version string validation
         assert!(version.contains('.'));
-        assert!(version.chars().all(|c| c.is_alphanumeric() || c == '.' || c == '-'));
+        assert!(version
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '.' || c == '-'));
     }
 }
 
@@ -227,10 +219,18 @@ fn test_binary_installs_linux_architectures() {
         .args(&["build", "--release", "--target", "x86_64-unknown-linux-gnu"])
         .output()
         .expect("Failed to run cargo build for x86_64");
-    assert!(output.status.success(), "Build failed for x86_64: {:?}", output);
+    assert!(
+        output.status.success(),
+        "Build failed for x86_64: {:?}",
+        output
+    );
 
     let binary_path = "target/x86_64-unknown-linux-gnu/release/costpilot";
-    assert!(Path::new(binary_path).exists(), "Binary not found at {}", binary_path);
+    assert!(
+        Path::new(binary_path).exists(),
+        "Binary not found at {}",
+        binary_path
+    );
 
     // Test that it runs --version
     let version_output = Command::new(binary_path)
@@ -239,7 +239,11 @@ fn test_binary_installs_linux_architectures() {
         .expect("Failed to run --version");
     assert!(version_output.status.success());
     let version_str = String::from_utf8_lossy(&version_output.stdout);
-    assert!(version_str.contains("costpilot"), "Version output invalid: {}", version_str);
+    assert!(
+        version_str.contains("costpilot"),
+        "Version output invalid: {}",
+        version_str
+    );
 
     // For ARM64, check if target is installed
     let target_check = Command::new("rustup")
@@ -249,12 +253,25 @@ fn test_binary_installs_linux_architectures() {
     let targets = String::from_utf8_lossy(&target_check.stdout);
     if targets.contains("aarch64-unknown-linux-gnu") {
         let arm_output = Command::new("cargo")
-            .args(&["build", "--release", "--target", "aarch64-unknown-linux-gnu"])
+            .args(&[
+                "build",
+                "--release",
+                "--target",
+                "aarch64-unknown-linux-gnu",
+            ])
             .output()
             .expect("Failed to run cargo build for aarch64");
-        assert!(arm_output.status.success(), "Build failed for aarch64: {:?}", arm_output);
+        assert!(
+            arm_output.status.success(),
+            "Build failed for aarch64: {:?}",
+            arm_output
+        );
         let arm_binary = "target/aarch64-unknown-linux-gnu/release/costpilot";
-        assert!(Path::new(arm_binary).exists(), "ARM64 binary not found at {}", arm_binary);
+        assert!(
+            Path::new(arm_binary).exists(),
+            "ARM64 binary not found at {}",
+            arm_binary
+        );
     } else {
         // Skip ARM64 test if target not installed
         println!("ARM64 target not installed, skipping ARM64 build test");

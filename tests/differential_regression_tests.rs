@@ -1,9 +1,9 @@
 use costpilot::engines::detection::DetectionEngine;
-use costpilot::engines::prediction::{PredictionEngine, prediction_engine::CostHeuristics};
 use costpilot::engines::explain::PredictionExplainer;
-use costpilot::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate};
-use std::collections::HashMap;
+use costpilot::engines::prediction::{prediction_engine::CostHeuristics, PredictionEngine};
+use costpilot::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
@@ -66,10 +66,12 @@ mod differential_regression_tests {
         if let Some(previous_output) = load_snapshot(test_name) {
             // Compare outputs - in a real regression test, you'd want more sophisticated
             // comparison that allows for expected changes
-            assert_eq!(current_output, previous_output,
+            assert_eq!(
+                current_output, previous_output,
                 "Detect output has changed! This indicates a potential regression. \
                  If this change is expected, update the snapshot by deleting the snapshot file \
-                 and re-running the test.");
+                 and re-running the test."
+            );
         } else {
             // First run - save snapshot
             save_snapshot(test_name, &current_output);
@@ -86,10 +88,12 @@ mod differential_regression_tests {
 
         let test_name = "predict_output_regression";
         if let Some(previous_output) = load_snapshot(test_name) {
-            assert_eq!(current_output, previous_output,
+            assert_eq!(
+                current_output, previous_output,
                 "Predict output has changed! This indicates a potential regression. \
                  If this change is expected, update the snapshot by deleting the snapshot file \
-                 and re-running the test.");
+                 and re-running the test."
+            );
         } else {
             save_snapshot(test_name, &current_output);
         }
@@ -109,10 +113,12 @@ mod differential_regression_tests {
 
         let test_name = "explain_output_regression";
         if let Some(previous_output) = load_snapshot(test_name) {
-            assert_eq!(current_output, previous_output,
+            assert_eq!(
+                current_output, previous_output,
                 "Explain output has changed! This indicates a potential regression. \
                  If this change is expected, update the snapshot by deleting the snapshot file \
-                 and re-running the test.");
+                 and re-running the test."
+            );
         } else {
             save_snapshot(test_name, &current_output);
         }
@@ -128,10 +134,16 @@ mod differential_regression_tests {
 
         // Verify that all detections have required fields
         for detection in &detections {
-            assert!(!detection.resource_id.is_empty(), "Detection missing resource_id");
+            assert!(
+                !detection.resource_id.is_empty(),
+                "Detection missing resource_id"
+            );
             assert!(!detection.message.is_empty(), "Detection missing message");
-            assert!(detection.severity_score >= 0 && detection.severity_score <= 100,
-                "Detection severity_score out of valid range: {}", detection.severity_score);
+            assert!(
+                detection.severity_score >= 0 && detection.severity_score <= 100,
+                "Detection severity_score out of valid range: {}",
+                detection.severity_score
+            );
             // Severity is an enum, so we just check it's one of the valid values
             // The enum itself ensures validity
         }
@@ -146,17 +158,28 @@ mod differential_regression_tests {
         let estimates1 = engine.predict(&[change.clone()]).unwrap();
         let estimates2 = engine.predict(&[change]).unwrap();
 
-        assert_eq!(estimates1.len(), estimates2.len(),
-            "Number of estimates changed between runs");
+        assert_eq!(
+            estimates1.len(),
+            estimates2.len(),
+            "Number of estimates changed between runs"
+        );
 
         for (e1, e2) in estimates1.iter().zip(estimates2.iter()) {
-            assert_eq!(e1.resource_id, e2.resource_id,
-                "Resource ID changed between runs for {}", e1.resource_id);
-            assert_eq!(e1.monthly_cost, e2.monthly_cost,
+            assert_eq!(
+                e1.resource_id, e2.resource_id,
+                "Resource ID changed between runs for {}",
+                e1.resource_id
+            );
+            assert_eq!(
+                e1.monthly_cost, e2.monthly_cost,
                 "Monthly cost changed between runs for {}: {} vs {}",
-                e1.resource_id, e1.monthly_cost, e2.monthly_cost);
-            assert_eq!(e1.confidence_score, e2.confidence_score,
-                "Confidence score changed between runs for {}", e1.resource_id);
+                e1.resource_id, e1.monthly_cost, e2.monthly_cost
+            );
+            assert_eq!(
+                e1.confidence_score, e2.confidence_score,
+                "Confidence score changed between runs for {}",
+                e1.resource_id
+            );
         }
     }
 
@@ -194,13 +217,22 @@ mod differential_regression_tests {
 
         for change in boundary_cases {
             let estimates = engine.predict(&[change]).unwrap();
-            assert!(!estimates.is_empty(), "No estimates returned for boundary case");
+            assert!(
+                !estimates.is_empty(),
+                "No estimates returned for boundary case"
+            );
 
             let estimate = &estimates[0];
-            assert!(estimate.monthly_cost >= 0.0,
-                "Negative cost for boundary case: {}", estimate.monthly_cost);
-            assert!(estimate.confidence_score >= 0.0 && estimate.confidence_score <= 1.0,
-                "Invalid confidence for boundary case: {}", estimate.confidence_score);
+            assert!(
+                estimate.monthly_cost >= 0.0,
+                "Negative cost for boundary case: {}",
+                estimate.monthly_cost
+            );
+            assert!(
+                estimate.confidence_score >= 0.0 && estimate.confidence_score <= 1.0,
+                "Invalid confidence for boundary case: {}",
+                estimate.confidence_score
+            );
         }
     }
 }

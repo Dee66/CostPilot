@@ -26,10 +26,7 @@ fn test_version_detailed_command() {
 fn test_init_command() {
     let temp_dir = TempDir::new().unwrap();
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("init")
-        .current_dir(&temp_dir)
-        .assert()
-        .success();
+    cmd.arg("init").current_dir(&temp_dir).assert().success();
 
     // Check if .costpilot directory was created
     assert!(temp_dir.path().join(".costpilot").exists());
@@ -125,10 +122,7 @@ rules:
     fs::write(&file_path, yaml_content).unwrap();
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("validate")
-        .arg(&file_path)
-        .assert()
-        .success();
+    cmd.arg("validate").arg(&file_path).assert().success();
 }
 
 #[test]

@@ -1,6 +1,6 @@
 use costpilot::artifact::*;
-use std::collections::HashMap;
 use serde_json::{json, Value};
+use std::collections::HashMap;
 
 // Artifact Normalizer Unit Tests (70 tests)
 
@@ -107,7 +107,10 @@ fn test_normalize_cdk_format() {
     assert_eq!(normalized.source_format, ArtifactFormat::Cdk);
     assert_eq!(normalized.resource_changes.len(), 1);
     let change = &normalized.resource_changes[0];
-    assert_eq!(change.address, "aws-cdk-lib.aws_ec2.Instance.mystack_myinstance");
+    assert_eq!(
+        change.address,
+        "aws-cdk-lib.aws_ec2.Instance.mystack_myinstance"
+    );
 }
 
 #[test]
@@ -161,9 +164,18 @@ fn test_normalize_metadata_preservation() {
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
     assert_eq!(normalized.source_metadata.source, "test.json");
-    assert_eq!(normalized.source_metadata.version, Some("2010-09-09".to_string()));
-    assert_eq!(normalized.source_metadata.stack_name, Some("TestStack".to_string()));
-    assert_eq!(normalized.source_metadata.region, Some("us-east-1".to_string()));
+    assert_eq!(
+        normalized.source_metadata.version,
+        Some("2010-09-09".to_string())
+    );
+    assert_eq!(
+        normalized.source_metadata.stack_name,
+        Some("TestStack".to_string())
+    );
+    assert_eq!(
+        normalized.source_metadata.region,
+        Some("us-east-1".to_string())
+    );
     assert_eq!(normalized.source_metadata.tags["Environment"], "test");
     assert_eq!(normalized.source_metadata.tags["Project"], "costpilot");
 }
@@ -200,10 +212,14 @@ fn test_normalize_multiple_resources() {
     let normalized = ArtifactNormalizer::normalize(&artifact);
     assert_eq!(normalized.resource_changes.len(), 2);
 
-    let addresses: Vec<String> = normalized.resource_changes.iter()
+    let addresses: Vec<String> = normalized
+        .resource_changes
+        .iter()
         .map(|c| c.address.clone())
         .collect();
-    assert!(addresses.iter().any(|addr| addr == "aws_instance.instance1"));
+    assert!(addresses
+        .iter()
+        .any(|addr| addr == "aws_instance.instance1"));
     assert!(addresses.iter().any(|addr| addr == "aws_s3_bucket.bucket1"));
 }
 
@@ -240,10 +256,14 @@ fn test_normalize_depends_on() {
     assert_eq!(normalized.resource_changes.len(), 2);
 
     // Check that both resources are present
-    let addresses: Vec<String> = normalized.resource_changes.iter()
+    let addresses: Vec<String> = normalized
+        .resource_changes
+        .iter()
         .map(|c| c.address.clone())
         .collect();
-    assert!(addresses.iter().any(|addr| addr == "aws_instance.instance1"));
+    assert!(addresses
+        .iter()
+        .any(|addr| addr == "aws_instance.instance1"));
     assert!(addresses.iter().any(|addr| addr == "aws_s3_bucket.bucket1"));
 }
 
@@ -268,13 +288,16 @@ fn test_normalize_format_version() {
 
 #[test]
 fn test_address_cdk_ec2() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyInstance".to_string(),
@@ -285,18 +308,24 @@ fn test_address_cdk_ec2() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].address, "aws_instance.myinstance");
+    assert_eq!(
+        normalized.resource_changes[0].address,
+        "aws_instance.myinstance"
+    );
 }
 
 #[test]
 fn test_address_cdk_s3() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyBucket".to_string(),
@@ -307,18 +336,24 @@ fn test_address_cdk_s3() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].address, "aws_s3_bucket.mybucket");
+    assert_eq!(
+        normalized.resource_changes[0].address,
+        "aws_s3_bucket.mybucket"
+    );
 }
 
 #[test]
 fn test_address_cdk_rds() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyDB".to_string(),
@@ -329,18 +364,24 @@ fn test_address_cdk_rds() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].address, "aws_db_instance.mydb");
+    assert_eq!(
+        normalized.resource_changes[0].address,
+        "aws_db_instance.mydb"
+    );
 }
 
 #[test]
 fn test_address_terraform_passthrough() {
-    let mut artifact = Artifact::new(ArtifactFormat::Terraform, ArtifactMetadata {
-        source: "main.tf".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Terraform,
+        ArtifactMetadata {
+            source: "main.tf".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "example".to_string(),
@@ -351,18 +392,24 @@ fn test_address_terraform_passthrough() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].address, "aws_instance.example");
+    assert_eq!(
+        normalized.resource_changes[0].address,
+        "aws_instance.example"
+    );
 }
 
 #[test]
 fn test_address_cdk_with_path() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "app.ts".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "app.ts".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyStack/MyBucket/Resource".to_string(),
@@ -373,18 +420,24 @@ fn test_address_cdk_with_path() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].address, "aws-cdk-lib.aws_s3.Bucket.mystack_mybucket_resource");
+    assert_eq!(
+        normalized.resource_changes[0].address,
+        "aws-cdk-lib.aws_s3.Bucket.mystack_mybucket_resource"
+    );
 }
 
 #[test]
 fn test_address_special_characters() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "My-Bucket_123".to_string(),
@@ -395,18 +448,24 @@ fn test_address_special_characters() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].address, "aws_s3_bucket.my-bucket_123");
+    assert_eq!(
+        normalized.resource_changes[0].address,
+        "aws_s3_bucket.my-bucket_123"
+    );
 }
 
 #[test]
 fn test_address_case_sensitivity() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MYBUCKET".to_string(),
@@ -417,18 +476,24 @@ fn test_address_case_sensitivity() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].address, "aws_s3_bucket.mybucket");
+    assert_eq!(
+        normalized.resource_changes[0].address,
+        "aws_s3_bucket.mybucket"
+    );
 }
 
 #[test]
 fn test_address_empty_id() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "".to_string(),
@@ -444,13 +509,16 @@ fn test_address_empty_id() {
 
 #[test]
 fn test_address_long_id() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let long_id = "A".repeat(100);
     artifact.add_resource(ArtifactResource {
@@ -462,20 +530,25 @@ fn test_address_long_id() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert!(normalized.resource_changes[0].address.starts_with("aws_s3_bucket."));
+    assert!(normalized.resource_changes[0]
+        .address
+        .starts_with("aws_s3_bucket."));
 }
 
 // 21-35: Property key normalization tests
 
 #[test]
 fn test_property_key_pascal_to_snake() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("InstanceType".to_string(), json!("t2.micro"));
@@ -499,17 +572,23 @@ fn test_property_key_pascal_to_snake() {
 
 #[test]
 fn test_property_key_s3_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("BucketName".to_string(), json!("my-bucket"));
-    properties.insert("VersioningConfiguration".to_string(), json!({"Status": "Enabled"}));
+    properties.insert(
+        "VersioningConfiguration".to_string(),
+        json!({"Status": "Enabled"}),
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyBucket".to_string(),
@@ -522,18 +601,24 @@ fn test_property_key_s3_mappings() {
     let normalized = ArtifactNormalizer::normalize(&artifact);
     let config = &normalized.resource_changes[0].change.after;
     assert_eq!(config["bucket"], json!("my-bucket"));
-    assert_eq!(config["versioning_configuration"]["Status"], json!("Enabled"));
+    assert_eq!(
+        config["versioning_configuration"]["Status"],
+        json!("Enabled")
+    );
 }
 
 #[test]
 fn test_property_key_rds_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("DBInstanceClass".to_string(), json!("db.t2.micro"));
@@ -557,13 +642,16 @@ fn test_property_key_rds_mappings() {
 
 #[test]
 fn test_property_key_asg_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("AutoScalingGroupName".to_string(), json!("my-asg"));
@@ -587,13 +675,16 @@ fn test_property_key_asg_mappings() {
 
 #[test]
 fn test_property_key_elb_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("LoadBalancerName".to_string(), json!("my-elb"));
@@ -615,13 +706,16 @@ fn test_property_key_elb_mappings() {
 
 #[test]
 fn test_property_key_already_snake_case() {
-    let mut artifact = Artifact::new(ArtifactFormat::Terraform, ArtifactMetadata {
-        source: "main.tf".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Terraform,
+        ArtifactMetadata {
+            source: "main.tf".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("instance_type".to_string(), json!("t2.micro"));
@@ -643,13 +737,16 @@ fn test_property_key_already_snake_case() {
 
 #[test]
 fn test_property_key_mixed_case() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("instanceType_Name".to_string(), json!("test"));
@@ -669,13 +766,16 @@ fn test_property_key_mixed_case() {
 
 #[test]
 fn test_property_key_empty_and_single() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("".to_string(), json!("empty"));
@@ -697,13 +797,16 @@ fn test_property_key_empty_and_single() {
 
 #[test]
 fn test_property_key_uppercase() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("INSTANCETYPE".to_string(), json!("t2.micro"));
@@ -723,13 +826,16 @@ fn test_property_key_uppercase() {
 
 #[test]
 fn test_property_key_special_mappings() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("ImageId".to_string(), json!("ami-12345"));
@@ -755,13 +861,16 @@ fn test_property_key_special_mappings() {
 
 #[test]
 fn test_property_key_unknown_resource_type() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("SomeProperty".to_string(), json!("value"));
@@ -781,13 +890,16 @@ fn test_property_key_unknown_resource_type() {
 
 #[test]
 fn test_property_key_case_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("instanceType_Name".to_string(), json!("TestValue"));
@@ -809,13 +921,16 @@ fn test_property_key_case_preservation() {
 
 #[test]
 fn test_property_value_string_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("InstanceType".to_string(), json!("t2.micro"));
@@ -829,18 +944,24 @@ fn test_property_value_string_preservation() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["instance_type"], json!("t2.micro"));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["instance_type"],
+        json!("t2.micro")
+    );
 }
 
 #[test]
 fn test_property_value_number_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("Port".to_string(), json!(3306));
@@ -854,18 +975,24 @@ fn test_property_value_number_preservation() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["port"], json!(3306));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["port"],
+        json!(3306)
+    );
 }
 
 #[test]
 fn test_property_value_boolean_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("Enabled".to_string(), json!(true));
@@ -879,18 +1006,24 @@ fn test_property_value_boolean_preservation() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["enabled"], json!(true));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["enabled"],
+        json!(true)
+    );
 }
 
 #[test]
 fn test_property_value_array_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("SecurityGroups".to_string(), json!(["sg-1", "sg-2"]));
@@ -904,21 +1037,30 @@ fn test_property_value_array_preservation() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["security_groups"], json!(["sg-1", "sg-2"]));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["security_groups"],
+        json!(["sg-1", "sg-2"])
+    );
 }
 
 #[test]
 fn test_property_value_object_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
-    properties.insert("Tags".to_string(), json!({"Environment": "test", "Project": "costpilot"}));
+    properties.insert(
+        "Tags".to_string(),
+        json!({"Environment": "test", "Project": "costpilot"}),
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyInstance".to_string(),
@@ -936,13 +1078,16 @@ fn test_property_value_object_preservation() {
 
 #[test]
 fn test_property_value_null_handling() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("OptionalField".to_string(), json!(null));
@@ -956,24 +1101,39 @@ fn test_property_value_null_handling() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["optional_field"], json!(null));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["optional_field"],
+        json!(null)
+    );
 }
 
 #[test]
 fn test_property_value_intrinsic_functions() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("Ref".to_string(), json!({"Ref": "MyParameter"}));
-    properties.insert("GetAtt".to_string(), json!({"Fn::GetAtt": ["MyInstance", "PublicIp"]}));
-    properties.insert("Join".to_string(), json!({"Fn::Join": [",", ["a", "b", "c"]]}));
-    properties.insert("Sub".to_string(), json!({"Fn::Sub": "${AWS::StackName}-suffix"}));
+    properties.insert(
+        "GetAtt".to_string(),
+        json!({"Fn::GetAtt": ["MyInstance", "PublicIp"]}),
+    );
+    properties.insert(
+        "Join".to_string(),
+        json!({"Fn::Join": [",", ["a", "b", "c"]]}),
+    );
+    properties.insert(
+        "Sub".to_string(),
+        json!({"Fn::Sub": "${AWS::StackName}-suffix"}),
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyResource".to_string(),
@@ -994,23 +1154,29 @@ fn test_property_value_intrinsic_functions() {
 
 #[test]
 fn test_property_value_complex_nested() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
-    properties.insert("Complex".to_string(), json!({
-        "nested": {
-            "array": [1, 2, {"nested": "value"}],
-            "boolean": true,
-            "null": null,
-            "string": "test"
-        }
-    }));
+    properties.insert(
+        "Complex".to_string(),
+        json!({
+            "nested": {
+                "array": [1, 2, {"nested": "value"}],
+                "boolean": true,
+                "null": null,
+                "string": "test"
+            }
+        }),
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyResource".to_string(),
@@ -1032,13 +1198,16 @@ fn test_property_value_complex_nested() {
 
 #[test]
 fn test_property_value_empty_object() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("Empty".to_string(), json!({}));
@@ -1052,18 +1221,24 @@ fn test_property_value_empty_object() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["empty"], json!({}));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["empty"],
+        json!({})
+    );
 }
 
 #[test]
 fn test_property_value_empty_array() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("EmptyArray".to_string(), json!([]));
@@ -1077,18 +1252,24 @@ fn test_property_value_empty_array() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["empty_array"], json!([]));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["empty_array"],
+        json!([])
+    );
 }
 
 #[test]
 fn test_property_value_large_numbers() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("LargeNumber".to_string(), json!(999999999999999i64));
@@ -1102,18 +1283,24 @@ fn test_property_value_large_numbers() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["large_number"], json!(999999999999999i64));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["large_number"],
+        json!(999999999999999i64)
+    );
 }
 
 #[test]
 fn test_property_value_unicode_strings() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("Unicode".to_string(), json!("测试字符串 🚀"));
@@ -1127,20 +1314,26 @@ fn test_property_value_unicode_strings() {
     });
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
-    assert_eq!(normalized.resource_changes[0].change.after["unicode"], json!("测试字符串 🚀"));
+    assert_eq!(
+        normalized.resource_changes[0].change.after["unicode"],
+        json!("测试字符串 🚀")
+    );
 }
 
 // 51-70: Plan operations and edge cases
 
 #[test]
 fn test_plan_operations_create() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyInstance".to_string(),
@@ -1159,13 +1352,16 @@ fn test_plan_operations_create() {
 
 #[test]
 fn test_plan_operations_no_changes() {
-    let artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let normalized = ArtifactNormalizer::normalize(&artifact);
     assert_eq!(normalized.resource_changes.len(), 0);
@@ -1173,13 +1369,16 @@ fn test_plan_operations_no_changes() {
 
 #[test]
 fn test_plan_operations_mixed_resources() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     // Add different types of resources
     artifact.add_resource(ArtifactResource {
@@ -1209,7 +1408,9 @@ fn test_plan_operations_mixed_resources() {
     let normalized = ArtifactNormalizer::normalize(&artifact);
     assert_eq!(normalized.resource_changes.len(), 3);
 
-    let resource_types: Vec<String> = normalized.resource_changes.iter()
+    let resource_types: Vec<String> = normalized
+        .resource_changes
+        .iter()
         .map(|c| c.resource_type.clone())
         .collect();
     assert!(resource_types.iter().any(|rt| rt == "aws_instance"));
@@ -1219,13 +1420,16 @@ fn test_plan_operations_mixed_resources() {
 
 #[test]
 fn test_plan_operations_depends_on_resolution() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "VPC1".to_string(),
@@ -1255,23 +1459,30 @@ fn test_plan_operations_depends_on_resolution() {
     assert_eq!(normalized.resource_changes.len(), 3);
 
     // Check that all resources are present with correct addresses
-    let addresses: Vec<String> = normalized.resource_changes.iter()
+    let addresses: Vec<String> = normalized
+        .resource_changes
+        .iter()
         .map(|c| c.address.clone())
         .collect();
-    assert!(addresses.iter().any(|addr| addr == "aws_instance.instance1"));
+    assert!(addresses
+        .iter()
+        .any(|addr| addr == "aws_instance.instance1"));
     assert!(addresses.iter().any(|addr| addr == "aws_subnet.subnet1"));
     assert!(addresses.iter().any(|addr| addr == "aws_vpc.vpc1"));
 }
 
 #[test]
 fn test_plan_operations_metadata_preservation() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut metadata = HashMap::new();
     metadata.insert("custom_field".to_string(), "custom_value".to_string());
@@ -1291,13 +1502,16 @@ fn test_plan_operations_metadata_preservation() {
 
 #[test]
 fn test_plan_operations_large_artifact() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     // Add many resources
     for i in 0..100 {
@@ -1316,13 +1530,16 @@ fn test_plan_operations_large_artifact() {
 
 #[test]
 fn test_plan_operations_empty_properties() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyInstance".to_string(),
@@ -1339,17 +1556,23 @@ fn test_plan_operations_empty_properties() {
 
 #[test]
 fn test_plan_operations_special_characters_in_properties() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("Name".to_string(), json!("Test@Instance#123"));
-    properties.insert("Description".to_string(), json!("Test with spaces and symbols: !@#$%^&*()"));
+    properties.insert(
+        "Description".to_string(),
+        json!("Test with spaces and symbols: !@#$%^&*()"),
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyInstance".to_string(),
@@ -1362,22 +1585,31 @@ fn test_plan_operations_special_characters_in_properties() {
     let normalized = ArtifactNormalizer::normalize(&artifact);
     let config = &normalized.resource_changes[0].change.after;
     assert_eq!(config["name"], json!("Test@Instance#123"));
-    assert_eq!(config["description"], json!("Test with spaces and symbols: !@#$%^&*()"));
+    assert_eq!(
+        config["description"],
+        json!("Test with spaces and symbols: !@#$%^&*()")
+    );
 }
 
 #[test]
 fn test_plan_operations_unicode_in_properties() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("Name".to_string(), json!("测试实例 🚀"));
-    properties.insert("Tags".to_string(), json!({"项目": "CostPilot", "环境": "测试"}));
+    properties.insert(
+        "Tags".to_string(),
+        json!({"项目": "CostPilot", "环境": "测试"}),
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyInstance".to_string(),
@@ -1397,13 +1629,16 @@ fn test_plan_operations_unicode_in_properties() {
 
 #[test]
 fn test_plan_operations_null_values() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("OptionalField1".to_string(), json!(null));
@@ -1425,26 +1660,32 @@ fn test_plan_operations_null_values() {
 
 #[test]
 fn test_plan_operations_deeply_nested_structures() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
-    properties.insert("ComplexConfig".to_string(), json!({
-        "level1": {
-            "level2": {
-                "level3": {
-                    "array": [1, 2, {"nested": "value"}],
-                    "boolean": true,
-                    "string": "deep"
+    properties.insert(
+        "ComplexConfig".to_string(),
+        json!({
+            "level1": {
+                "level2": {
+                    "level3": {
+                        "array": [1, 2, {"nested": "value"}],
+                        "boolean": true,
+                        "string": "deep"
+                    }
                 }
             }
-        }
-    }));
+        }),
+    );
 
     artifact.add_resource(ArtifactResource {
         id: "MyResource".to_string(),
@@ -1459,20 +1700,32 @@ fn test_plan_operations_deeply_nested_structures() {
     let complex = &config["complex_config"];
     assert_eq!(complex["level1"]["level2"]["level3"]["array"][0], json!(1));
     assert_eq!(complex["level1"]["level2"]["level3"]["array"][1], json!(2));
-    assert_eq!(complex["level1"]["level2"]["level3"]["array"][2]["nested"], json!("value"));
-    assert_eq!(complex["level1"]["level2"]["level3"]["boolean"], json!(true));
-    assert_eq!(complex["level1"]["level2"]["level3"]["string"], json!("deep"));
+    assert_eq!(
+        complex["level1"]["level2"]["level3"]["array"][2]["nested"],
+        json!("value")
+    );
+    assert_eq!(
+        complex["level1"]["level2"]["level3"]["boolean"],
+        json!(true)
+    );
+    assert_eq!(
+        complex["level1"]["level2"]["level3"]["string"],
+        json!("deep")
+    );
 }
 
 #[test]
 fn test_plan_operations_mixed_data_types() {
-    let mut artifact = Artifact::new(ArtifactFormat::Cdk, ArtifactMetadata {
-        source: "test.json".to_string(),
-        version: None,
-        stack_name: None,
-        region: None,
-        tags: HashMap::new(),
-    });
+    let mut artifact = Artifact::new(
+        ArtifactFormat::Cdk,
+        ArtifactMetadata {
+            source: "test.json".to_string(),
+            version: None,
+            stack_name: None,
+            region: None,
+            tags: HashMap::new(),
+        },
+    );
 
     let mut properties = HashMap::new();
     properties.insert("StringField".to_string(), json!("string"));

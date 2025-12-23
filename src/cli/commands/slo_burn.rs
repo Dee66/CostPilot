@@ -300,7 +300,8 @@ fn output_markdown(report: &BurnReport) -> Result<(), Box<dyn std::error::Error>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::slo::burn_rate::{BurnAnalysis, BurnRisk};
+    use crate::engines::slo::burn_rate::BurnAnalysis;
+    use crate::engines::slo::slo_types::BurnRisk;
     use chrono::Utc;
 
     fn create_test_report() -> BurnReport {

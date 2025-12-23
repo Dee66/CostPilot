@@ -4,7 +4,9 @@
 use assert_cmd::Command;
 use costpilot::edition::EditionContext;
 use costpilot::engines::autofix::{AutofixEngine, AutofixMode};
-use costpilot::engines::shared::models::{Detection, ResourceChange, ChangeAction, CostEstimate, RegressionType, Severity};
+use costpilot::engines::shared::models::{
+    ChangeAction, CostEstimate, Detection, RegressionType, ResourceChange, Severity,
+};
 use predicates::prelude::*;
 use std::fs;
 use tempfile::TempDir;
@@ -62,8 +64,7 @@ fn test_scan_uses_static_prediction_in_free_mode() {
     fs::write(&plan_path, plan_content).unwrap();
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("scan")
-        .arg(&plan_path);
+    cmd.arg("scan").arg(&plan_path);
 
     // Should succeed and show cost estimate (free tier provides basic estimates)
     let output = cmd.assert().success().get_output().clone();
@@ -119,16 +120,17 @@ budgets:
     let stdout = String::from_utf8(output.stdout).unwrap();
 
     // In free mode, violations should be converted to warnings
-    assert!(stdout.contains("Free edition: Policy enforcement disabled") || stdout.contains("Free edition"));
+    assert!(
+        stdout.contains("Free edition: Policy enforcement disabled")
+            || stdout.contains("Free edition")
+    );
 }
 
 /// Test that explain command with verbose flag works in free tier
 #[test]
 fn test_explain_verbose_works_in_free_tier() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("explain")
-        .arg("aws_instance")
-        .arg("--verbose");
+    cmd.arg("explain").arg("aws_instance").arg("--verbose");
 
     // Should succeed in free tier
     cmd.assert().success();
@@ -162,9 +164,7 @@ fn test_anomaly_detection_requires_premium() {
     fs::write(&plan_path, plan_content).unwrap();
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("anomaly")
-        .arg("--plan")
-        .arg(&plan_path);
+    cmd.arg("anomaly").arg("--plan").arg(&plan_path);
 
     cmd.assert()
         .failure()
@@ -212,10 +212,7 @@ fn test_deep_mapping_requires_premium() {
     fs::write(&plan_path, plan_content).unwrap();
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("map")
-        .arg(&plan_path)
-        .arg("--max-depth")
-        .arg("5"); // Deep mapping
+    cmd.arg("map").arg(&plan_path).arg("--max-depth").arg("5"); // Deep mapping
 
     // Should fail with premium requirement
     cmd.assert()
@@ -332,8 +329,7 @@ fn test_scan_prediction_modes_differ_by_edition() {
     fs::write(&plan_path, plan_content).unwrap();
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("scan")
-        .arg(&plan_path);
+    cmd.arg("scan").arg(&plan_path);
 
     let output = cmd.assert().success().get_output().clone();
     let stdout = String::from_utf8(output.stdout).unwrap();
