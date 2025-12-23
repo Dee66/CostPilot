@@ -310,7 +310,7 @@ enum SloCommands {
         slo: Option<PathBuf>,
 
         /// Path to snapshots directory
-        #[arg(short = 'd', long)]
+        #[arg(short = 'n', long)]
         snapshots: Option<PathBuf>,
 
         /// Minimum number of snapshots required
@@ -570,7 +570,7 @@ enum PerformanceCommands {
 
 fn main() {
     // Add panic recovery to prevent crashes
-    let result = std::panic::catch_unwind(|| main_inner());
+    let result = std::panic::catch_unwind(main_inner);
 
     match result {
         Ok(exit_code) => exit_code.exit(),
@@ -1668,7 +1668,7 @@ fn calculate_days_in_month(month_str: &str) -> Option<u32> {
     let year: i32 = parts[0].parse().ok()?;
     let month: u32 = parts[1].parse().ok()?;
 
-    if month < 1 || month > 12 {
+    if !(1..=12).contains(&month) {
         return None;
     }
 

@@ -4,6 +4,18 @@ use crate::engines::policy::PolicyEngine;
 use crate::engines::slo::SloManager;
 use std::collections::HashMap;
 
+/// Parameters for creating a drift-safe operation
+#[derive(Debug)]
+pub struct OperationParams<'a> {
+    pub resource_id: String,
+    pub resource_type: String,
+    pub fix_description: String,
+    pub current_change: &'a ResourceChange,
+    pub proposed_fix: &'a ResourceChange,
+    pub current_cost: f64,
+    pub proposed_cost: f64,
+}
+
 /// Drift-safe autofix engine with safety checks and rollback
 pub struct DriftSafeEngine {
     /// Policy engine for validation
@@ -45,39 +57,30 @@ impl DriftSafeEngine {
     }
 
     /// Create drift-safe operation
-    pub fn create_operation(
-        &self,
-        resource_id: String,
-        resource_type: String,
-        fix_description: String,
-        current_change: &ResourceChange,
-        proposed_fix: &ResourceChange,
-        current_cost: f64,
-        proposed_cost: f64,
-    ) -> DriftSafeOperation {
+    pub fn create_operation(&self, params: OperationParams) -> DriftSafeOperation {
         // Convert Option<Value> to HashMap
-        let current_config = current_change
+        let current_config = params.current_change
             .new_config
             .as_ref()
             .and_then(|v| v.as_object())
             .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
             .unwrap_or_default();
 
-        let proposed_config = proposed_fix
+        let proposed_config = params.proposed_fix
             .new_config
             .as_ref()
             .and_then(|v| v.as_object())
             .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
             .unwrap_or_default();
 
-        let original_state = ResourceState::new(current_config, current_cost);
+        let original_state = ResourceState::new(current_config, params.current_cost);
 
-        let target_state = ResourceState::new(proposed_config, proposed_cost);
+        let target_state = ResourceState::new(proposed_config, params.proposed_cost);
 
         let mut operation = DriftSafeOperation::new(
-            resource_id,
-            resource_type,
-            fix_description,
+            params.resource_id,
+            params.resource_type,
+            params.fix_description,
             original_state,
             target_state,
         );
@@ -86,7 +89,7 @@ impl DriftSafeEngine {
         self.add_default_safety_checks(&mut operation);
 
         // Generate rollback plan
-        self.generate_rollback_plan(&mut operation, current_change);
+        self.generate_rollback_plan(&mut operation, params.current_change);
 
         operation
     }
@@ -459,7 +462,7 @@ impl Default for DriftSafeEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ResourceChange, ChangeAction};
+    use crate::engines::shared::models::{ChangeAction, ResourceChange};
 
     fn create_test_change(monthly_cost: f64) -> ResourceChange {
         ResourceChange::builder()
@@ -484,15 +487,17 @@ mod tests {
         let current = create_test_change(100.0);
         let proposed = create_test_change(50.0);
 
-        let operation = engine.create_operation(
-            "aws_instance.web".to_string(),
-            "aws_instance".to_string(),
-            "Downsize to t3.medium".to_string(),
-            &current,
-            &proposed,
-            100.0,
-            50.0,
-        );
+        let params = OperationParams {
+            resource_id: "aws_instance.web".to_string(),
+            resource_type: "aws_instance".to_string(),
+            fix_description: "Downsize to t3.medium".to_string(),
+            current_change: &current,
+            proposed_fix: &proposed,
+            current_cost: 100.0,
+            proposed_cost: 50.0,
+        };
+
+        let operation = engine.create_operation(params);
 
         assert_eq!(operation.resource_id, "aws_instance.web");
         assert!(!operation.safety_checks.is_empty());
@@ -531,15 +536,17 @@ mod tests {
         let current = create_test_change(100.0);
         let proposed = create_test_change(50.0);
 
-        let mut operation = engine.create_operation(
-            "aws_instance.web".to_string(),
-            "aws_instance".to_string(),
-            "Downsize".to_string(),
-            &current,
-            &proposed,
-            100.0,
-            50.0,
-        );
+        let params = OperationParams {
+            resource_id: "aws_instance.web".to_string(),
+            resource_type: "aws_instance".to_string(),
+            fix_description: "Downsize".to_string(),
+            current_change: &current,
+            proposed_fix: &proposed,
+            current_cost: 100.0,
+            proposed_cost: 50.0,
+        };
+
+        let mut operation = engine.create_operation(params);
 
         let result = engine.run_safety_checks(&mut operation);
         assert!(result.is_ok());
@@ -552,15 +559,17 @@ mod tests {
         let current = create_test_change(100.0);
         let proposed = create_test_change(50.0);
 
-        let mut operation = engine.create_operation(
-            "aws_instance.web".to_string(),
-            "aws_instance".to_string(),
-            "Downsize".to_string(),
-            &current,
-            &proposed,
-            100.0,
-            50.0,
-        );
+        let params = OperationParams {
+            resource_id: "aws_instance.web".to_string(),
+            resource_type: "aws_instance".to_string(),
+            fix_description: "Downsize".to_string(),
+            current_change: &current,
+            proposed_fix: &proposed,
+            current_cost: 100.0,
+            proposed_cost: 50.0,
+        };
+
+        let mut operation = engine.create_operation(params);
 
         // Run safety checks first
         engine.run_safety_checks(&mut operation).unwrap();
@@ -577,15 +586,17 @@ mod tests {
         let current = create_test_change(100.0);
         let proposed = create_test_change(50.0);
 
-        let mut operation = engine.create_operation(
-            "aws_instance.web".to_string(),
-            "aws_instance".to_string(),
-            "Downsize".to_string(),
-            &current,
-            &proposed,
-            100.0,
-            50.0,
-        );
+        let params = OperationParams {
+            resource_id: "aws_instance.web".to_string(),
+            resource_type: "aws_instance".to_string(),
+            fix_description: "Downsize".to_string(),
+            current_change: &current,
+            proposed_fix: &proposed,
+            current_cost: 100.0,
+            proposed_cost: 50.0,
+        };
+
+        let mut operation = engine.create_operation(params);
 
         // Simulate failure
         operation.mark_failed("Test failure".to_string());

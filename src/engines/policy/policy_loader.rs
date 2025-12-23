@@ -38,7 +38,10 @@ impl PolicyLoader {
     }
 
     /// Load policy and check if it has changed compared to existing version
-    pub fn load_with_version_check(path: &Path, existing_policy: Option<&PolicyConfig>) -> Result<(PolicyConfig, bool), CostPilotError> {
+    pub fn load_with_version_check(
+        path: &Path,
+        existing_policy: Option<&PolicyConfig>,
+    ) -> Result<(PolicyConfig, bool), CostPilotError> {
         let new_policy = Self::load_from_file(path)?;
 
         let has_changed = if let Some(existing) = existing_policy {
@@ -101,7 +104,12 @@ impl PolicyLoader {
     }
 
     /// Save policy configuration to file with version increment if content changed
-    pub fn save_to_file(path: &Path, mut policy: PolicyConfig, user: Option<String>, increment_version: bool) -> Result<(), CostPilotError> {
+    pub fn save_to_file(
+        path: &Path,
+        mut policy: PolicyConfig,
+        user: Option<String>,
+        increment_version: bool,
+    ) -> Result<(), CostPilotError> {
         // Increment version if requested and content has changed
         if increment_version {
             policy.increment_version(user);

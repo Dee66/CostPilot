@@ -78,7 +78,8 @@ impl PolicyEngine {
 
     /// Check if a violation is exempted
     fn is_violation_exempted(&self, policy_name: &str, resource_id: &str) -> bool {
-        self.check_violation_exempted(policy_name, resource_id).is_some()
+        self.check_violation_exempted(policy_name, resource_id)
+            .is_some()
     }
 
     /// Check if a violation is exempted, returning the exemption ID if found
@@ -107,7 +108,8 @@ impl PolicyEngine {
             // Check if exceeds limit
             if monthly_cost > global.monthly_limit {
                 // Check for exemption
-                if let Some(exemption_id) = self.check_violation_exempted("global_budget", "global") {
+                if let Some(exemption_id) = self.check_violation_exempted("global_budget", "global")
+                {
                     result.add_applied_exemption(exemption_id);
                 } else {
                     result.add_violation(PolicyViolation {
@@ -156,19 +158,20 @@ impl PolicyEngine {
         // Check NAT gateway policy
         if let Some(nat_policy) = &self.config.resources.nat_gateways {
             if nat_gateway_count > nat_policy.max_count
-                && !self.is_violation_exempted("nat_gateway_limit", "nat_gateways") {
-                    result.add_violation(PolicyViolation {
-                        policy_name: "nat_gateway_limit".to_string(),
-                        severity: "HIGH".to_string(),
-                        resource_id: "nat_gateways".to_string(),
-                        message: format!(
-                            "NAT gateway count {} exceeds limit {}",
-                            nat_gateway_count, nat_policy.max_count
-                        ),
-                        actual_value: nat_gateway_count.to_string(),
-                        expected_value: format!("<= {}", nat_policy.max_count),
-                    });
-                }
+                && !self.is_violation_exempted("nat_gateway_limit", "nat_gateways")
+            {
+                result.add_violation(PolicyViolation {
+                    policy_name: "nat_gateway_limit".to_string(),
+                    severity: "HIGH".to_string(),
+                    resource_id: "nat_gateways".to_string(),
+                    message: format!(
+                        "NAT gateway count {} exceeds limit {}",
+                        nat_gateway_count, nat_policy.max_count
+                    ),
+                    actual_value: nat_gateway_count.to_string(),
+                    expected_value: format!("<= {}", nat_policy.max_count),
+                });
+            }
         }
 
         // Check compute savings plan eligibility
@@ -190,22 +193,23 @@ impl PolicyEngine {
                                 && !self.is_violation_exempted(
                                     "ec2_allowed_families",
                                     &change.resource_id,
-                                ) {
-                                    result.add_violation(PolicyViolation {
-                                        policy_name: "ec2_allowed_families".to_string(),
-                                        severity: "MEDIUM".to_string(),
-                                        resource_id: change.resource_id.clone(),
-                                        message: format!(
-                                            "EC2 instance family '{}' not in allowed list",
-                                            family
-                                        ),
-                                        actual_value: family.to_string(),
-                                        expected_value: format!(
-                                            "One of: {:?}",
-                                            ec2_policy.allowed_families
-                                        ),
-                                    });
-                                }
+                                )
+                            {
+                                result.add_violation(PolicyViolation {
+                                    policy_name: "ec2_allowed_families".to_string(),
+                                    severity: "MEDIUM".to_string(),
+                                    resource_id: change.resource_id.clone(),
+                                    message: format!(
+                                        "EC2 instance family '{}' not in allowed list",
+                                        family
+                                    ),
+                                    actual_value: family.to_string(),
+                                    expected_value: format!(
+                                        "One of: {:?}",
+                                        ec2_policy.allowed_families
+                                    ),
+                                });
+                            }
 
                             // Check instance size
                             if let Some(max_size) = &ec2_policy.max_size {
@@ -213,19 +217,19 @@ impl PolicyEngine {
                                 if self.exceeds_size_limit(size, max_size)
                                     && !self
                                         .is_violation_exempted("ec2_max_size", &change.resource_id)
-                                    {
-                                        result.add_violation(PolicyViolation {
-                                            policy_name: "ec2_max_size".to_string(),
-                                            severity: "MEDIUM".to_string(),
-                                            resource_id: change.resource_id.clone(),
-                                            message: format!(
-                                                "EC2 instance size '{}' exceeds limit '{}'",
-                                                size, max_size
-                                            ),
-                                            actual_value: size.to_string(),
-                                            expected_value: format!("<= {}", max_size),
-                                        });
-                                    }
+                                {
+                                    result.add_violation(PolicyViolation {
+                                        policy_name: "ec2_max_size".to_string(),
+                                        severity: "MEDIUM".to_string(),
+                                        resource_id: change.resource_id.clone(),
+                                        message: format!(
+                                            "EC2 instance size '{}' exceeds limit '{}'",
+                                            size, max_size
+                                        ),
+                                        actual_value: size.to_string(),
+                                        expected_value: format!("<= {}", max_size),
+                                    });
+                                }
                             }
                         }
                     }
@@ -249,16 +253,16 @@ impl PolicyEngine {
                         if !has_lifecycle
                             && !self
                                 .is_violation_exempted("s3_lifecycle_required", &change.resource_id)
-                            {
-                                result.add_violation(PolicyViolation {
-                                    policy_name: "s3_lifecycle_required".to_string(),
-                                    severity: "MEDIUM".to_string(),
-                                    resource_id: change.resource_id.clone(),
-                                    message: "S3 bucket missing lifecycle rules".to_string(),
-                                    actual_value: "no lifecycle rules".to_string(),
-                                    expected_value: "lifecycle_rule configured".to_string(),
-                                });
-                            }
+                        {
+                            result.add_violation(PolicyViolation {
+                                policy_name: "s3_lifecycle_required".to_string(),
+                                severity: "MEDIUM".to_string(),
+                                resource_id: change.resource_id.clone(),
+                                message: "S3 bucket missing lifecycle rules".to_string(),
+                                actual_value: "no lifecycle rules".to_string(),
+                                expected_value: "lifecycle_rule configured".to_string(),
+                            });
+                        }
                     }
                 }
             }
@@ -281,18 +285,18 @@ impl PolicyEngine {
                             && !self.is_violation_exempted(
                                 "lambda_concurrency_required",
                                 &change.resource_id,
-                            ) {
-                                result.add_violation(PolicyViolation {
-                                    policy_name: "lambda_concurrency_required".to_string(),
-                                    severity: "HIGH".to_string(),
-                                    resource_id: change.resource_id.clone(),
-                                    message: "Lambda function missing concurrency limit"
-                                        .to_string(),
-                                    actual_value: "no concurrency limit".to_string(),
-                                    expected_value: "reserved_concurrent_executions configured"
-                                        .to_string(),
-                                });
-                            }
+                            )
+                        {
+                            result.add_violation(PolicyViolation {
+                                policy_name: "lambda_concurrency_required".to_string(),
+                                severity: "HIGH".to_string(),
+                                resource_id: change.resource_id.clone(),
+                                message: "Lambda function missing concurrency limit".to_string(),
+                                actual_value: "no concurrency limit".to_string(),
+                                expected_value: "reserved_concurrent_executions configured"
+                                    .to_string(),
+                            });
+                        }
                     }
                 }
             }
@@ -315,17 +319,18 @@ impl PolicyEngine {
                                 && !self.is_violation_exempted(
                                     "dynamodb_prefer_provisioned",
                                     &change.resource_id,
-                                ) {
-                                    result.add_violation(PolicyViolation {
-                                        policy_name: "dynamodb_prefer_provisioned".to_string(),
-                                        severity: "MEDIUM".to_string(),
-                                        resource_id: change.resource_id.clone(),
-                                        message: "DynamoDB table using PAY_PER_REQUEST billing"
-                                            .to_string(),
-                                        actual_value: "PAY_PER_REQUEST".to_string(),
-                                        expected_value: "PROVISIONED".to_string(),
-                                    });
-                                }
+                                )
+                            {
+                                result.add_violation(PolicyViolation {
+                                    policy_name: "dynamodb_prefer_provisioned".to_string(),
+                                    severity: "MEDIUM".to_string(),
+                                    resource_id: change.resource_id.clone(),
+                                    message: "DynamoDB table using PAY_PER_REQUEST billing"
+                                        .to_string(),
+                                    actual_value: "PAY_PER_REQUEST".to_string(),
+                                    expected_value: "PROVISIONED".to_string(),
+                                });
+                            }
                         }
                     }
                 }
@@ -415,8 +420,8 @@ impl PolicyEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
     use serde_json::json;
-    use crate::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate};
 
     #[test]
     fn test_budget_evaluation() {
@@ -658,7 +663,10 @@ mod tests {
             metadata: Default::default(),
             budgets: BudgetPolicies::default(),
             resources: ResourcePolicies {
-                nat_gateways: Some(NatGatewayPolicy { max_count: 1, require_justification: false }),
+                nat_gateways: Some(NatGatewayPolicy {
+                    max_count: 1,
+                    require_justification: false,
+                }),
                 ..Default::default()
             },
             slos: vec![],

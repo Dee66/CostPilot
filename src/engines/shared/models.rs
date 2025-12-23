@@ -209,11 +209,9 @@ impl CostEstimateBuilder {
         // Priority: explicit canonical > defaults
         let monthly_cost = self.monthly_cost.unwrap_or(0.0);
 
-        let prediction_interval_low = self.prediction_interval_low
-            .unwrap_or(monthly_cost * 0.8);
+        let prediction_interval_low = self.prediction_interval_low.unwrap_or(monthly_cost * 0.8);
 
-        let prediction_interval_high = self.prediction_interval_high
-            .unwrap_or(monthly_cost * 1.2);
+        let prediction_interval_high = self.prediction_interval_high.unwrap_or(monthly_cost * 1.2);
 
         let confidence_score = self.confidence_score.unwrap_or(0.85);
 
@@ -372,11 +370,7 @@ impl ResourceChangeBuilder {
 
 impl ResourceChange {
     /// Create new resource change (canonical API)
-    pub fn new(
-        resource_id: String,
-        resource_type: String,
-        action: ChangeAction,
-    ) -> Self {
+    pub fn new(resource_id: String, resource_type: String, action: ChangeAction) -> Self {
         Self {
             resource_id,
             resource_type,
@@ -471,10 +465,10 @@ impl DetectionBuilder {
 
     pub fn build(self) -> Detection {
         let severity = self.severity.unwrap_or(Severity::Low);
-        let message = self.message.unwrap_or_else(|| "".to_string());
+        let message = self.message.unwrap_or_default();
         let estimated_cost = self.estimated_cost;
 
-        let severity_score = self.severity_score.unwrap_or_else(|| match severity {
+        let severity_score = self.severity_score.unwrap_or(match severity {
             Severity::Critical => 90,
             Severity::High => 70,
             Severity::Medium => 50,
@@ -485,7 +479,9 @@ impl DetectionBuilder {
             rule_id: self.rule_id.unwrap_or_else(|| "unknown".to_string()),
             severity,
             resource_id: self.resource_id.unwrap_or_else(|| "unknown".to_string()),
-            regression_type: self.regression_type.unwrap_or(RegressionType::Configuration),
+            regression_type: self
+                .regression_type
+                .unwrap_or(RegressionType::Configuration),
             severity_score,
             message,
             fix_snippet: self.fix_snippet,
@@ -496,12 +492,7 @@ impl DetectionBuilder {
 
 impl Detection {
     /// Create new detection (canonical API)
-    pub fn new(
-        rule_id: String,
-        severity: Severity,
-        resource_id: String,
-        message: String,
-    ) -> Self {
+    pub fn new(rule_id: String, severity: Severity, resource_id: String, message: String) -> Self {
         let severity_score = match severity {
             Severity::Critical => 90,
             Severity::High => 70,
@@ -608,4 +599,3 @@ impl ScanResult {
         ScanResultBuilder::new()
     }
 }
-

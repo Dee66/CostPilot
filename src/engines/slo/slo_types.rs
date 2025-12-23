@@ -2,6 +2,19 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Parameters for creating a new SLO
+#[derive(Debug)]
+pub struct SloParams {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub slo_type: SloType,
+    pub target: String,
+    pub threshold: SloThreshold,
+    pub enforcement: EnforcementLevel,
+    pub owner: String,
+}
+
 /// Burn risk classification (forward declaration for slo_types)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -282,25 +295,16 @@ pub struct SloSummary {
 
 impl Slo {
     /// Create a new SLO
-    pub fn new(
-        id: String,
-        name: String,
-        description: String,
-        slo_type: SloType,
-        target: String,
-        threshold: SloThreshold,
-        enforcement: EnforcementLevel,
-        owner: String,
-    ) -> Self {
+    pub fn new(params: SloParams) -> Self {
         Self {
-            id,
-            name,
-            description,
-            slo_type,
-            target,
-            threshold,
-            enforcement,
-            owner,
+            id: params.id,
+            name: params.name,
+            description: params.description,
+            slo_type: params.slo_type,
+            target: params.target,
+            threshold: params.threshold,
+            enforcement: params.enforcement,
+            owner: params.owner,
             created_at: Utc::now().to_rfc3339(),
             updated_at: None,
             tags: HashMap::new(),
@@ -552,13 +556,13 @@ mod tests {
 
     #[test]
     fn test_slo_creation() {
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Global Budget".to_string(),
-            "Monthly budget limit".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Global Budget".to_string(),
+            description: "Monthly budget limit".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -566,9 +570,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Block,
-            "finance@example.com".to_string(),
-        );
+            enforcement: EnforcementLevel::Block,
+            owner: "finance@example.com".to_string(),
+        });
 
         assert_eq!(slo.id, "slo-1");
         assert_eq!(slo.slo_type, SloType::MonthlyBudget);
@@ -577,13 +581,13 @@ mod tests {
 
     #[test]
     fn test_warning_threshold() {
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Test".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Test".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -591,9 +595,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Warn,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Warn,
+            owner: "owner".to_string(),
+        });
 
         assert_eq!(slo.warning_threshold(), 8000.0);
         assert!(slo.is_warning(8500.0));
@@ -603,13 +607,13 @@ mod tests {
 
     #[test]
     fn test_violation_check() {
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Test".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Test".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -617,9 +621,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Block,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Block,
+            owner: "owner".to_string(),
+        });
 
         assert!(!slo.is_violation(9000.0));
         assert!(slo.is_violation(11000.0));
@@ -627,13 +631,13 @@ mod tests {
 
     #[test]
     fn test_evaluate_pass() {
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Test SLO".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Test SLO".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -641,9 +645,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Warn,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Warn,
+            owner: "owner".to_string(),
+        });
 
         let eval = slo.evaluate(5000.0);
         assert_eq!(eval.status, SloStatus::Pass);
@@ -653,13 +657,13 @@ mod tests {
 
     #[test]
     fn test_evaluate_warning() {
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Test SLO".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Test SLO".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -667,9 +671,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Warn,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Warn,
+            owner: "owner".to_string(),
+        });
 
         let eval = slo.evaluate(9000.0);
         assert_eq!(eval.status, SloStatus::Warning);
@@ -678,13 +682,13 @@ mod tests {
 
     #[test]
     fn test_evaluate_violation() {
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Test SLO".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Test SLO".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -692,9 +696,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Block,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Block,
+            owner: "owner".to_string(),
+        });
 
         let eval = slo.evaluate(12000.0);
         assert_eq!(eval.status, SloStatus::Violation);
@@ -705,13 +709,13 @@ mod tests {
     fn test_slo_config() {
         let mut config = SloConfig::new();
 
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Global Budget".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Global Budget".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -719,9 +723,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Block,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Block,
+            owner: "owner".to_string(),
+        });
 
         config.add_slo(slo);
 
@@ -732,13 +736,13 @@ mod tests {
 
     #[test]
     fn test_enforcement_levels() {
-        let observe_slo = Slo::new(
-            "slo-1".to_string(),
-            "Test".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let observe_slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Test".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -746,20 +750,20 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Observe,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Observe,
+            owner: "owner".to_string(),
+        });
 
         assert!(!observe_slo.should_block());
         assert!(!observe_slo.requires_strict_approval());
 
-        let block_slo = Slo::new(
-            "slo-2".to_string(),
-            "Test".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let block_slo = Slo::new(SloParams {
+            id: "slo-2".to_string(),
+            name: "Test".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -767,9 +771,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::StrictBlock,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::StrictBlock,
+            owner: "owner".to_string(),
+        });
 
         assert!(block_slo.should_block());
         assert!(block_slo.requires_strict_approval());
@@ -777,13 +781,13 @@ mod tests {
 
     #[test]
     fn test_slo_report() {
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Test SLO".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let slo = Slo::new(SloParams {
+            id: "slo-1".to_string(),
+            name: "Test SLO".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -791,9 +795,9 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Block,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Block,
+            owner: "owner".to_string(),
+        });
 
         let eval1 = slo.evaluate(5000.0);
         let eval2 = slo.evaluate(12000.0);
@@ -809,13 +813,13 @@ mod tests {
 
     #[test]
     fn test_report_formatting() {
-        let slo = Slo::new(
-            "slo-1".to_string(),
-            "Test SLO".to_string(),
-            "Test".to_string(),
-            SloType::MonthlyBudget,
-            "global".to_string(),
-            SloThreshold {
+        let params = SloParams {
+            id: "slo-1".to_string(),
+            name: "Test SLO".to_string(),
+            description: "Test".to_string(),
+            slo_type: SloType::MonthlyBudget,
+            target: "global".to_string(),
+            threshold: SloThreshold {
                 max_value: 10000.0,
                 min_value: None,
                 warning_threshold_percent: 80.0,
@@ -823,9 +827,11 @@ mod tests {
                 use_baseline: false,
                 baseline_multiplier: None,
             },
-            EnforcementLevel::Warn,
-            "owner".to_string(),
-        );
+            enforcement: EnforcementLevel::Warn,
+            owner: "owner".to_string(),
+        };
+
+        let slo = Slo::new(params);
 
         let eval = slo.evaluate(5000.0);
         let report = SloReport::new(vec![eval]);

@@ -1,7 +1,7 @@
 use super::artifact_types::*;
 use serde_json::Value;
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 
 /// CDK diff structure (output from `cdk diff --json`)
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -68,9 +68,8 @@ struct CdkPropertyChange {
 
 /// Parse CDK diff JSON
 fn parse_cdk_diff(json_content: &str) -> ArtifactResult<CdkDiff> {
-    serde_json::from_str(json_content).map_err(|e| {
-        ArtifactError::ParseError(format!("Failed to parse CDK diff JSON: {}", e))
-    })
+    serde_json::from_str(json_content)
+        .map_err(|e| ArtifactError::ParseError(format!("Failed to parse CDK diff JSON: {}", e)))
 }
 
 /// CloudFormation template structure (subset needed for CDK)
@@ -154,7 +153,14 @@ fn map_cloudformation_resource_type(cf_type: &str) -> String {
         // Add more mappings as needed
         _ => {
             // For unknown types, create a generic mapping
-            format!("aws_{}", cf_type.split("::").last().unwrap_or("unknown").to_lowercase())
+            format!(
+                "aws_{}",
+                cf_type
+                    .split("::")
+                    .last()
+                    .unwrap_or("unknown")
+                    .to_lowercase()
+            )
         }
     }
 }
@@ -173,7 +179,8 @@ impl CdkParser {
             for change in &stack.changes {
                 // Only include resources with new values (created/updated)
                 if let Some(new_values) = &change.new_values {
-                    let properties = new_values.as_object()
+                    let properties = new_values
+                        .as_object()
                         .map(|m| m.clone().into_iter().collect())
                         .unwrap_or_default();
 
@@ -219,7 +226,9 @@ impl CdkParser {
         let mut resources = Vec::new();
         for (logical_id, resource) in &template.resources {
             let _resource_type = resource.resource_type.clone();
-            let properties = resource.properties.as_ref()
+            let properties = resource
+                .properties
+                .as_ref()
                 .and_then(|p| p.as_object())
                 .map(|m| m.clone().into_iter().collect())
                 .unwrap_or_default();
@@ -242,7 +251,7 @@ impl CdkParser {
                         for tag in tags_array {
                             if let (Some(key), Some(value)) = (
                                 tag.get("Key").and_then(|k| k.as_str()),
-                                tag.get("Value").and_then(|v| v.as_str())
+                                tag.get("Value").and_then(|v| v.as_str()),
                             ) {
                                 metadata.insert(format!("tag:{}", key), value.to_string());
                             }
@@ -257,7 +266,8 @@ impl CdkParser {
                 properties,
                 depends_on: if let Some(depends_value) = &resource.depends_on {
                     if let Some(depends_array) = depends_value.as_array() {
-                        depends_array.iter()
+                        depends_array
+                            .iter()
                             .filter_map(|v| v.as_str())
                             .map(|s| s.to_string())
                             .collect()
@@ -447,7 +457,9 @@ impl ArtifactParser for CdkParser {
         let mut resources = Vec::new();
         for (logical_id, resource) in &template.resources {
             let _resource_type = resource.resource_type.clone();
-            let properties = resource.properties.as_ref()
+            let properties = resource
+                .properties
+                .as_ref()
                 .and_then(|p| p.as_object())
                 .map(|m| m.clone().into_iter().collect())
                 .unwrap_or_default();
@@ -470,7 +482,7 @@ impl ArtifactParser for CdkParser {
                         for tag in tags_array {
                             if let (Some(key), Some(value)) = (
                                 tag.get("Key").and_then(|k| k.as_str()),
-                                tag.get("Value").and_then(|v| v.as_str())
+                                tag.get("Value").and_then(|v| v.as_str()),
                             ) {
                                 metadata.insert(format!("tag:{}", key), value.to_string());
                             }
@@ -485,7 +497,8 @@ impl ArtifactParser for CdkParser {
                 properties,
                 depends_on: if let Some(depends_value) = &resource.depends_on {
                     if let Some(depends_array) = depends_value.as_array() {
-                        depends_array.iter()
+                        depends_array
+                            .iter()
                             .filter_map(|v| v.as_str())
                             .map(|s| s.to_string())
                             .collect()

@@ -24,6 +24,13 @@ fi
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BINARY_PATH="${PROJECT_ROOT}/target/release/costpilot"
 
+# Detect platform for binary naming
+PLATFORM_TYPE=$(uname -s)
+BINARY_NAME="costpilot"
+if [[ "$PLATFORM_TYPE" == "MINGW"* ]] || [[ "$PLATFORM_TYPE" == "MSYS"* ]] || [[ "$PLATFORM_TYPE" == "CYGWIN"* ]]; then
+  BINARY_NAME="costpilot.exe"
+fi
+
 if [[ ! -f "$BINARY_PATH" ]]; then
   echo "ERROR: Binary not found: $BINARY_PATH" >&2
   exit 1
@@ -40,8 +47,8 @@ STAGE_DIR="${TMPDIR}/${BUNDLE_NAME}"
 mkdir -p "$STAGE_DIR/bin"
 
 # Copy binary
-cp "$BINARY_PATH" "$STAGE_DIR/bin/costpilot"
-chmod 755 "$STAGE_DIR/bin/costpilot"
+cp "$BINARY_PATH" "$STAGE_DIR/bin/$BINARY_NAME"
+chmod 755 "$STAGE_DIR/bin/$BINARY_NAME"
 
 # Copy documentation
 [[ -f "${PROJECT_ROOT}/README.md" ]] && cp "${PROJECT_ROOT}/README.md" "$STAGE_DIR/"
@@ -103,7 +110,7 @@ with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zf:
             zinfo = zipfile.ZipInfo(arcname)
             zinfo.date_time = (1980, 1, 1, 0, 0, 0)
             zinfo.external_attr = 0o644 << 16
-            if file_path.name == 'costpilot':
+            if 'costpilot' in file_path.name:
                 zinfo.external_attr = 0o755 << 16
             with open(file_path, 'rb') as f:
                 zf.writestr(zinfo, f.read(), compress_type=zipfile.ZIP_DEFLATED)

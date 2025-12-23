@@ -1,4 +1,4 @@
-use super::policy_metadata::{PolicyMetadata, PolicyCategory, Severity, PolicyWithMetadata};
+use super::policy_metadata::{PolicyCategory, PolicyMetadata, PolicyWithMetadata, Severity};
 use super::policy_repository::*;
 use super::policy_types::*;
 use super::zero_network::*;
@@ -462,8 +462,8 @@ pub struct MetadataPolicyViolation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::CostEstimate;
     use crate::engines::policy::policy_metadata::PolicyStatus;
+    use crate::engines::shared::models::CostEstimate;
 
     #[test]
     fn test_metadata_engine_new() {

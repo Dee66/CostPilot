@@ -1,6 +1,8 @@
 // Drift detector implementation
 
-use crate::engines::autofix::drift_safety::drift_checksum::{DriftChecksum, DriftDetector as ChecksumDriftDetector};
+use crate::engines::autofix::drift_safety::drift_checksum::{
+    DriftChecksum, DriftDetector as ChecksumDriftDetector,
+};
 use crate::engines::shared::models::ResourceChange;
 
 /// Infrastructure drift detector that combines checksum verification with cloud provider queries
@@ -46,7 +48,9 @@ impl DriftDetector {
     }
 
     /// Convert Option<serde_json::Value> to HashMap
-    fn config_to_hashmap(config: &Option<serde_json::Value>) -> std::collections::HashMap<String, serde_json::Value> {
+    fn config_to_hashmap(
+        config: &Option<serde_json::Value>,
+    ) -> std::collections::HashMap<String, serde_json::Value> {
         if let Some(serde_json::Value::Object(map)) = config {
             map.iter().map(|(k, v)| (k.clone(), v.clone())).collect()
         } else {

@@ -68,8 +68,12 @@ impl ZeroCostGuard {
                 return Err(CostPilotError::new(
                     "ZERO_COST_002",
                     ErrorCategory::SecurityViolation,
-                    format!("Cloud credentials detected: {} - CostPilot must run without permissions", var)
-                ).with_hint("Unset cloud provider credentials for zero-IAM operation"));
+                    format!(
+                        "Cloud credentials detected: {} - CostPilot must run without permissions",
+                        var
+                    ),
+                )
+                .with_hint("Unset cloud provider credentials for zero-IAM operation"));
             }
         }
 
@@ -96,15 +100,25 @@ impl ZeroCostGuard {
 
     /// Check for terraform state files that suggest real deployments
     fn check_terraform_state(&self) -> Result<(), CostPilotError> {
-        let state_files = ["terraform.tfstate", ".terraform.tfstate", "terraform.tfstate.backup"];
+        let state_files = [
+            "terraform.tfstate",
+            ".terraform.tfstate",
+            "terraform.tfstate.backup",
+        ];
 
         for state_file in &state_files {
             if std::path::Path::new(state_file).exists() {
                 return Err(CostPilotError::new(
                     "ZERO_COST_004",
                     ErrorCategory::SecurityViolation,
-                    format!("Terraform state file detected: {} - suggests real infrastructure", state_file)
-                ).with_hint("CostPilot analyzes plans only - remove state files or run in clean directory"));
+                    format!(
+                        "Terraform state file detected: {} - suggests real infrastructure",
+                        state_file
+                    ),
+                )
+                .with_hint(
+                    "CostPilot analyzes plans only - remove state files or run in clean directory",
+                ));
             }
         }
 
@@ -113,8 +127,11 @@ impl ZeroCostGuard {
             return Err(CostPilotError::new(
                 "ZERO_COST_005",
                 ErrorCategory::SecurityViolation,
-                ".terraform directory detected - suggests terraform init has been run"
-            ).with_hint("CostPilot analyzes static plans - avoid terraform init in analysis directory"));
+                ".terraform directory detected - suggests terraform init has been run",
+            )
+            .with_hint(
+                "CostPilot analyzes static plans - avoid terraform init in analysis directory",
+            ));
         }
 
         Ok(())
@@ -129,8 +146,14 @@ impl ZeroCostGuard {
         // For now, we'll do a basic check by looking for network-related environment variables
         // that might indicate network access is expected
         let network_env_vars = [
-            "http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY",
-            "no_proxy", "NO_PROXY", "all_proxy", "ALL_PROXY"
+            "http_proxy",
+            "https_proxy",
+            "HTTP_PROXY",
+            "HTTPS_PROXY",
+            "no_proxy",
+            "NO_PROXY",
+            "all_proxy",
+            "ALL_PROXY",
         ];
 
         for var in &network_env_vars {
@@ -138,8 +161,12 @@ impl ZeroCostGuard {
                 return Err(CostPilotError::new(
                     "ZERO_COST_006",
                     ErrorCategory::SecurityViolation,
-                    format!("Network proxy detected: {} - CostPilot must run without network access", var)
-                ).with_hint("Unset proxy environment variables for offline operation"));
+                    format!(
+                        "Network proxy detected: {} - CostPilot must run without network access",
+                        var
+                    ),
+                )
+                .with_hint("Unset proxy environment variables for offline operation"));
             }
         }
 
@@ -163,8 +190,14 @@ impl ZeroCostGuard {
 
         // Check for cloud SDK calls
         let cloud_sdk_patterns = [
-            "aws s3", "aws ec2", "aws lambda", "aws dynamodb",
-            "gcloud ", "az ", "kubectl apply", "kubectl create"
+            "aws s3",
+            "aws ec2",
+            "aws lambda",
+            "aws dynamodb",
+            "gcloud ",
+            "az ",
+            "kubectl apply",
+            "kubectl create",
         ];
 
         for pattern in &cloud_sdk_patterns {
@@ -192,8 +225,15 @@ impl ZeroCostGuard {
 
         // Check for cloud SDK imports/calls
         let sdk_patterns = [
-            "boto3", "aws-sdk", "@aws-sdk", "google-cloud", "@azure",
-            "aws_s3", "aws_ec2", "rusoto", "kube"
+            "boto3",
+            "aws-sdk",
+            "@aws-sdk",
+            "google-cloud",
+            "@azure",
+            "aws_s3",
+            "aws_ec2",
+            "rusoto",
+            "kube",
         ];
 
         for pattern in &sdk_patterns {
@@ -204,7 +244,9 @@ impl ZeroCostGuard {
 
         // Check for network calls
         if content_lower.contains("http") || content_lower.contains("requests") {
-            return Err(ZeroCostViolation::NetworkCallDetected("network client usage".to_string()));
+            return Err(ZeroCostViolation::NetworkCallDetected(
+                "network client usage".to_string(),
+            ));
         }
 
         Ok(())
@@ -242,7 +284,9 @@ mod tests {
         let guard = ZeroCostGuard::new();
         assert_eq!(
             guard.validate_command("aws s3 ls"),
-            Err(ZeroCostViolation::CloudSdkCallDetected("aws s3".to_string()))
+            Err(ZeroCostViolation::CloudSdkCallDetected(
+                "aws s3".to_string()
+            ))
         );
     }
 }

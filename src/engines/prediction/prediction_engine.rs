@@ -367,19 +367,22 @@ impl PredictionEngine {
     fn predict_resource(&self, change: &ResourceChange) -> Result<Option<CostEstimate>> {
         // Free edition static costs for ground truth testing
         let monthly_cost = match change.resource_type.as_str() {
-            "aws_instance" => 150.0, // Free edition static cost for EC2 instances
-            "aws_db_instance" => 0.0, // Free edition static cost for RDS instances
-            "aws_dynamodb_table" => 20.0, // dummy for DynamoDB
-            "aws_nat_gateway" => 30.0, // dummy for NAT Gateway
-            "aws_lb" | "aws_alb" => 25.0, // dummy for Load Balancer
-            "aws_s3_bucket" => 5.0, // dummy for S3
+            "aws_instance" => 150.0,       // Free edition static cost for EC2 instances
+            "aws_db_instance" => 0.0,      // Free edition static cost for RDS instances
+            "aws_dynamodb_table" => 20.0,  // dummy for DynamoDB
+            "aws_nat_gateway" => 30.0,     // dummy for NAT Gateway
+            "aws_lb" | "aws_alb" => 25.0,  // dummy for Load Balancer
+            "aws_s3_bucket" => 5.0,        // dummy for S3
             "aws_lambda_function" => 10.0, // dummy for Lambda
-            "aws_eks_cluster" => 70.0, // dummy for EKS
+            "aws_eks_cluster" => 70.0,     // dummy for EKS
             "aws_elasticache_cluster" => 40.0, // dummy for ElastiCache
             "aws_cloudfront_distribution" => 15.0, // dummy for CloudFront
             _ => {
                 if self.verbose {
-                    println!("Unknown resource type: {}, using default cost", change.resource_type);
+                    println!(
+                        "Unknown resource type: {}, using default cost",
+                        change.resource_type
+                    );
                 }
                 10.0 // Default cost for unknown resource types
             }
@@ -389,10 +392,21 @@ impl PredictionEngine {
             ChangeAction::Delete => 0.0, // Delete operations result in zero ongoing cost
             _ => monthly_cost,
         };
-        let cold_start_used = !matches!(change.resource_type.as_str(),
-            "aws_instance" | "aws_db_instance" | "aws_dynamodb_table" | "aws_nat_gateway" |
-            "aws_lb" | "aws_alb" | "aws_s3_bucket" | "aws_lambda_function" |
-            "aws_eks_cluster" | "aws_elasticache_cluster" | "aws_cloudfront_distribution" | "aws_ecs_service");
+        let cold_start_used = !matches!(
+            change.resource_type.as_str(),
+            "aws_instance"
+                | "aws_db_instance"
+                | "aws_dynamodb_table"
+                | "aws_nat_gateway"
+                | "aws_lb"
+                | "aws_alb"
+                | "aws_s3_bucket"
+                | "aws_lambda_function"
+                | "aws_eks_cluster"
+                | "aws_elasticache_cluster"
+                | "aws_cloudfront_distribution"
+                | "aws_ecs_service"
+        );
         let confidence = calculate_confidence(change, cold_start_used, &change.resource_type);
 
         let range_factor = self.heuristics.prediction_intervals.range_factor;
@@ -462,8 +476,14 @@ impl PredictionEngine {
         let total_monthly: f64 = changes.iter().map(|c| c.monthly_cost.unwrap_or(0.0)).sum();
 
         // Calculate prediction intervals (simple approach: sum individual intervals)
-        let total_low: f64 = changes.iter().map(|c| c.monthly_cost.unwrap_or(0.0) * 0.9).sum();
-        let total_high: f64 = changes.iter().map(|c| c.monthly_cost.unwrap_or(0.0) * 1.1).sum();
+        let total_low: f64 = changes
+            .iter()
+            .map(|c| c.monthly_cost.unwrap_or(0.0) * 0.9)
+            .sum();
+        let total_high: f64 = changes
+            .iter()
+            .map(|c| c.monthly_cost.unwrap_or(0.0) * 1.1)
+            .sum();
 
         Ok(crate::engines::shared::models::TotalCost {
             monthly: total_monthly,

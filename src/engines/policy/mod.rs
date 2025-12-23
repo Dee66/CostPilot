@@ -28,54 +28,48 @@ pub use exemption_types::*;
 pub use exemption_validator::*;
 
 // Zero-network exports
-pub use zero_network::{ZeroNetworkToken, ZeroNetworkViolation, ZeroNetworkValidator};
+pub use zero_network::{ZeroNetworkToken, ZeroNetworkValidator, ZeroNetworkViolation};
 
 // Lifecycle exports - PolicyLifecycle from lifecycle module (state machine)
 pub use lifecycle::{
-    PolicyState, StateTransition, ApprovalConfig, ApprovalRequest,
-    ApprovalStatus, LifecycleSummary, LifecycleError,
-    PolicyLifecycle as LifecycleStateMachine
+    ApprovalConfig, ApprovalRequest, ApprovalStatus, LifecycleError, LifecycleSummary,
+    PolicyLifecycle as LifecycleStateMachine, PolicyState, StateTransition,
 };
 
 // Metadata engine exports - PolicyRule from metadata_engine
 pub use metadata_engine::{
-    MetadataPolicyEngine, PolicyRule as MetadataPolicyRule,
-    MetadataPolicyResult, MetadataPolicyViolation
+    MetadataPolicyEngine, MetadataPolicyResult, MetadataPolicyViolation,
+    PolicyRule as MetadataPolicyRule,
 };
 
 // Parser DSL exports - PolicyRule from parser
 pub use parser::{
-    PolicyRule as DslPolicyRule, RuleSeverity, Condition, ConditionType,
-    Operator, ConditionValue, RuleAction, DslParser, ParseError,
-    RuleEvaluator, EvaluationContext, EvaluationResult, RuleMatch,
-    PolicyRuleLoader, RuleStatistics, LoadError
+    Condition, ConditionType, ConditionValue, DslParser, EvaluationContext, EvaluationResult,
+    LoadError, Operator, ParseError, PolicyRule as DslPolicyRule, PolicyRuleLoader, RuleAction,
+    RuleEvaluator, RuleMatch, RuleSeverity, RuleStatistics,
 };
 
 pub use policy_engine::*;
 
 // Policy history exports - PolicyVersion from policy_history
 pub use policy_history::{
-    PolicyVersion as HistoryPolicyVersion, PolicyContent,
-    VersionMetadata as HistoryVersionMetadata, PolicyHistory,
-    VersionDiff, HistoryError
+    HistoryError, PolicyContent, PolicyHistory, PolicyVersion as HistoryPolicyVersion, VersionDiff,
+    VersionMetadata as HistoryVersionMetadata,
 };
 
 pub use policy_loader::*;
 
 // Policy metadata exports - PolicyLifecycle from policy_metadata (metadata struct)
 pub use policy_metadata::{
-    PolicyMetadata, PolicyCategory, Severity, PolicyStatus,
-    PolicyOwnership, PolicyLifecycle as MetadataLifecycle,
-    DeprecationInfo, PolicyRevision, PolicyLinks, PolicyMetrics,
-    PolicyWithMetadata
+    DeprecationInfo, PolicyCategory, PolicyLifecycle as MetadataLifecycle, PolicyLinks,
+    PolicyMetadata, PolicyMetrics, PolicyOwnership, PolicyRevision, PolicyStatus,
+    PolicyWithMetadata, Severity,
 };
 
 pub use policy_repository::*;
 pub use policy_types::*;
 
 // Policy version exports - PolicyVersion from policy_version (version metadata)
-pub use policy_version::{
-    PolicyVersion as VersionInfo, PolicyVersionManager
-};
+pub use policy_version::{PolicyVersion as VersionInfo, PolicyVersionManager};
 
 pub use zero_network::*;

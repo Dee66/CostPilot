@@ -235,13 +235,15 @@ impl PolicyLifecycle {
         }
 
         // Check approval requirements for certain transitions
-        if target_state == PolicyState::Approved && self.current_state == PolicyState::Review
-            && !self.has_sufficient_approvals() {
-                return Err(LifecycleError::InsufficientApprovals {
-                    required: self.approval_config.min_approvals,
-                    received: self.count_approvals(),
-                });
-            }
+        if target_state == PolicyState::Approved
+            && self.current_state == PolicyState::Review
+            && !self.has_sufficient_approvals()
+        {
+            return Err(LifecycleError::InsufficientApprovals {
+                required: self.approval_config.min_approvals,
+                received: self.count_approvals(),
+            });
+        }
 
         // Record transition
         let transition = StateTransition {

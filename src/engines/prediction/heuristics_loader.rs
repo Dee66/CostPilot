@@ -2,6 +2,7 @@
 
 use super::prediction_engine::CostHeuristics;
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
+use dirs;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -49,17 +50,26 @@ impl HeuristicsLoader {
         }
 
         // 3. User config directory
-        if let Some(home) = std::env::var_os("HOME") {
-            let home_path = PathBuf::from(home);
-            paths.push(home_path.join(".costpilot/cost_heuristics.json"));
-            paths.push(home_path.join(".config/costpilot/cost_heuristics.json"));
+        if let Some(home) = dirs::home_dir() {
+            paths.push(home.join(".costpilot/cost_heuristics.json"));
+            #[cfg(unix)]
+            paths.push(home.join(".config/costpilot/cost_heuristics.json"));
         }
 
         // 4. System-wide config
-        paths.push(PathBuf::from("/etc/costpilot/cost_heuristics.json"));
-        paths.push(PathBuf::from(
-            "/usr/local/share/costpilot/cost_heuristics.json",
-        ));
+        #[cfg(unix)]
+        {
+            paths.push(PathBuf::from("/etc/costpilot/cost_heuristics.json"));
+            paths.push(PathBuf::from(
+                "/usr/local/share/costpilot/cost_heuristics.json",
+            ));
+        }
+        #[cfg(windows)]
+        {
+            if let Some(program_data) = std::env::var_os("ProgramData") {
+                paths.push(PathBuf::from(program_data).join("CostPilot\\cost_heuristics.json"));
+            }
+        }
 
         paths
     }

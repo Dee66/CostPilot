@@ -1,7 +1,9 @@
 // Rollback patch generator for drift-safe autofix
 
-use crate::engines::autofix::patch_generator::{PatchFile, PatchHunk, PatchLine, PatchLineType, PatchMetadata};
 use crate::engines::autofix::drift_safety::drift_checksum::DriftChecksum;
+use crate::engines::autofix::patch_generator::{
+    PatchFile, PatchHunk, PatchLine, PatchLineType, PatchMetadata,
+};
 use crate::engines::shared::models::{Detection, ResourceChange};
 
 /// Rollback patch generator for reverting infrastructure drift
@@ -39,14 +41,20 @@ impl RollbackPatchGenerator {
             "aws_instance" => format!("{}.tf", Self::resource_name_from_id(&change.resource_id)),
             "aws_s3_bucket" => format!("{}.tf", Self::resource_name_from_id(&change.resource_id)),
             "aws_db_instance" => format!("{}.tf", Self::resource_name_from_id(&change.resource_id)),
-            "aws_lambda_function" => format!("{}.tf", Self::resource_name_from_id(&change.resource_id)),
+            "aws_lambda_function" => {
+                format!("{}.tf", Self::resource_name_from_id(&change.resource_id))
+            }
             _ => format!("{}.tf", Self::resource_name_from_id(&change.resource_id)),
         }
     }
 
     /// Extract resource name from resource ID (e.g., "aws_instance.web" -> "web")
     fn resource_name_from_id(resource_id: &str) -> String {
-        resource_id.split('.').next_back().unwrap_or("resource").to_string()
+        resource_id
+            .split('.')
+            .next_back()
+            .unwrap_or("resource")
+            .to_string()
     }
 
     /// Generate rollback hunks to revert drifted attributes
@@ -75,21 +83,37 @@ impl RollbackPatchGenerator {
         let resource_name = Self::resource_name_from_id(&change.resource_id);
 
         // Generate Terraform resource block
-        let old_lines = self.generate_resource_block(&change.resource_type, &resource_name, &drifted_attr.actual_value, &drifted_attr.path);
-        let new_lines = self.generate_resource_block(&change.resource_type, &resource_name, &drifted_attr.expected_value, &drifted_attr.path);
+        let old_lines = self.generate_resource_block(
+            &change.resource_type,
+            &resource_name,
+            &drifted_attr.actual_value,
+            &drifted_attr.path,
+        );
+        let new_lines = self.generate_resource_block(
+            &change.resource_type,
+            &resource_name,
+            &drifted_attr.expected_value,
+            &drifted_attr.path,
+        );
 
         // Convert to patch lines
-        let old_patch_lines = old_lines.into_iter().map(|line| PatchLine {
-            line_type: PatchLineType::Deletion,
-            content: line,
-            indent_level: 0,
-        }).collect::<Vec<_>>();
+        let old_patch_lines = old_lines
+            .into_iter()
+            .map(|line| PatchLine {
+                line_type: PatchLineType::Deletion,
+                content: line,
+                indent_level: 0,
+            })
+            .collect::<Vec<_>>();
 
-        let new_patch_lines = new_lines.into_iter().map(|line| PatchLine {
-            line_type: PatchLineType::Addition,
-            content: line,
-            indent_level: 0,
-        }).collect::<Vec<_>>();
+        let new_patch_lines = new_lines
+            .into_iter()
+            .map(|line| PatchLine {
+                line_type: PatchLineType::Addition,
+                content: line,
+                indent_level: 0,
+            })
+            .collect::<Vec<_>>();
 
         Ok(PatchHunk {
             old_start: 1,
@@ -103,7 +127,13 @@ impl RollbackPatchGenerator {
     }
 
     /// Generate Terraform resource block with specific attribute value
-    fn generate_resource_block(&self, resource_type: &str, resource_name: &str, attr_value: &str, attr_path: &str) -> Vec<String> {
+    fn generate_resource_block(
+        &self,
+        resource_type: &str,
+        resource_name: &str,
+        attr_value: &str,
+        attr_path: &str,
+    ) -> Vec<String> {
         vec![
             format!("resource \"{}\" \"{}\" {{", resource_type, resource_name),
             format!("  {} = {}", attr_path, attr_value),
@@ -133,7 +163,6 @@ impl RollbackPatchGenerator {
             beta: true, // Drift-safe autofix is still in beta
         }
     }
-
 }
 
 impl Default for RollbackPatchGenerator {
@@ -144,7 +173,9 @@ impl Default for RollbackPatchGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::autofix::drift_safety::drift_checksum::{DriftChecksum, DriftedAttribute, DriftSeverity};
+    use crate::engines::autofix::drift_safety::drift_checksum::{
+        DriftChecksum, DriftSeverity, DriftedAttribute,
+    };
     use crate::engines::shared::models::{ChangeAction, RegressionType, Severity};
 
     #[test]

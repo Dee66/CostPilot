@@ -18,6 +18,7 @@ impl ProEngineHandle {
     }
 
     pub fn call_method(&mut self, method: &str, payload: &[u8]) -> Result<Vec<u8>, WasmError> {
-        self.instance.call_export(method, payload, self.config.time_budget_ms)
+        self.instance
+            .call_export(method, payload, self.config.time_budget_ms)
     }
 }

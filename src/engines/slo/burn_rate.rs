@@ -16,7 +16,7 @@
 ///
 /// All burn rate calculations are deterministic and require no network access.
 /// Historical data comes from local snapshot files only.
-use super::slo_types::{Slo, SloType, BurnRisk};
+use super::slo_types::{BurnRisk, Slo, SloType};
 use crate::engines::trend::snapshot_types::CostSnapshot;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

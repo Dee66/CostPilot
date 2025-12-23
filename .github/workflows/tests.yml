@@ -36,6 +36,28 @@ jobs:
       - name: Run doc tests
         run: cargo test --doc
 
+  # Unit tests (Windows)
+  unit-tests-windows:
+    name: Unit Tests (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run unit tests
+        run: cargo test --lib --all-features
+
+      - name: Run doc tests
+        run: cargo test --doc
+
   # Integration tests
   integration-tests:
     name: Integration Tests
@@ -53,11 +75,48 @@ jobs:
       - name: Run integration tests
         run: cargo test --test 'test_*' --all-features
 
+  # Integration tests (Windows)
+  integration-tests-windows:
+    name: Integration Tests (Windows)
+    runs-on: windows-latest
+    needs: unit-tests-windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run integration tests
+        run: cargo test --test 'test_*' --all-features
+
   # E2E tests
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: unit-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build binary
+        run: cargo build --release
+
+      - name: Run E2E tests
+        run: cargo test --test 'e2e_*' --all-features
+
+  # E2E tests (Windows)
+  e2e-tests-windows:
+    name: E2E Tests (Windows)
+    runs-on: windows-latest
+    needs: unit-tests-windows
     steps:
       - uses: actions/checkout@v4
 
@@ -273,6 +332,27 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: benchmark-results
+          path: target/criterion/
+
+  performance-tests-windows:
+    name: Performance Tests (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run benchmarks
+        run: cargo bench --no-fail-fast
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results-windows
           path: target/criterion/
 
   # Lint and format

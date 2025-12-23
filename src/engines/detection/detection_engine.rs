@@ -110,14 +110,21 @@ impl DetectionEngine {
     }
 
     /// Detect cost issues from CDK synthesized template directory
-    pub fn detect_from_cdk_synthesized(&self, cdk_out_path: &Path, stack_name: &str) -> Result<Vec<ResourceChange>> {
+    pub fn detect_from_cdk_synthesized(
+        &self,
+        cdk_out_path: &Path,
+        stack_name: &str,
+    ) -> Result<Vec<ResourceChange>> {
         let template_path = cdk_out_path.join(format!("{}.template.json", stack_name));
 
         if !template_path.exists() {
             return Err(CostPilotError::new(
                 "DETECT_005",
                 ErrorCategory::FileSystemError,
-                format!("CDK synthesized template not found: {}", template_path.display()),
+                format!(
+                    "CDK synthesized template not found: {}",
+                    template_path.display()
+                ),
             )
             .with_hint(format!(
                 "Run 'cdk synth' first to generate synthesized templates in {}",
@@ -138,7 +145,11 @@ impl DetectionEngine {
     }
 
     /// Detect cost issues from CDK synthesized template JSON string
-    pub fn detect_from_cdk_template_json(&self, json_content: &str, stack_name: &str) -> Result<Vec<ResourceChange>> {
+    pub fn detect_from_cdk_template_json(
+        &self,
+        json_content: &str,
+        stack_name: &str,
+    ) -> Result<Vec<ResourceChange>> {
         if self.verbose {
             println!("Parsing CDK synthesized template JSON...");
         }
@@ -152,7 +163,9 @@ impl DetectionEngine {
         }
 
         // Convert to canonical format
-        let changes = crate::engines::detection::cdk::parser::cdk_template_to_resource_changes(&template, stack_name);
+        let changes = crate::engines::detection::cdk::parser::cdk_template_to_resource_changes(
+            &template, stack_name,
+        );
 
         if self.verbose {
             println!("Detected {} resource changes", changes.len());

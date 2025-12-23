@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 /// Usage metering CLI commands
 #[derive(Debug)]
@@ -54,8 +55,10 @@ pub enum ExportFormat {
     Csv,
 }
 
-impl OutputFormat {
-    pub fn from_str(s: &str) -> Result<Self, String> {
+impl FromStr for OutputFormat {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "text" | "txt" => Ok(Self::Text),
             "json" => Ok(Self::Json),
@@ -65,8 +68,10 @@ impl OutputFormat {
     }
 }
 
-impl ExportFormat {
-    pub fn from_str(s: &str) -> Result<Self, String> {
+impl FromStr for ExportFormat {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "json" => Ok(Self::Json),
             "csv" => Ok(Self::Csv),

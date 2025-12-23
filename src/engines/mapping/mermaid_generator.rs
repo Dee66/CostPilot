@@ -214,10 +214,7 @@ impl MermaidGenerator {
             std::collections::HashMap::new();
 
         for node in &graph.nodes {
-            groups
-                .entry(node.module.clone())
-                .or_default()
-                .push(node);
+            groups.entry(node.module.clone()).or_default().push(node);
         }
 
         groups.into_iter().collect()

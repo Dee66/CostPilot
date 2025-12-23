@@ -76,7 +76,9 @@ pub fn convert_to_resource_changes(plan: &TerraformPlan) -> Result<Vec<ResourceC
             let tags = extract_tags(&tf_change.change.after);
 
             // Extract module path from address if not provided
-            let module_path = tf_change.module_address.clone()
+            let module_path = tf_change
+                .module_address
+                .clone()
                 .or_else(|| extract_module_path_from_address(&tf_change.address));
 
             changes.push(ResourceChange {
@@ -214,9 +216,18 @@ mod tests {
 
     #[test]
     fn test_action_determination() {
-        assert_eq!(determine_action(&["create".to_string()]).unwrap(), ChangeAction::Create);
-        assert_eq!(determine_action(&["delete".to_string()]).unwrap(), ChangeAction::Delete);
-        assert_eq!(determine_action(&["update".to_string()]).unwrap(), ChangeAction::Update);
+        assert_eq!(
+            determine_action(&["create".to_string()]).unwrap(),
+            ChangeAction::Create
+        );
+        assert_eq!(
+            determine_action(&["delete".to_string()]).unwrap(),
+            ChangeAction::Delete
+        );
+        assert_eq!(
+            determine_action(&["update".to_string()]).unwrap(),
+            ChangeAction::Update
+        );
         assert_eq!(
             determine_action(&["delete".to_string(), "create".to_string()]).unwrap(),
             ChangeAction::Replace

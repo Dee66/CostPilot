@@ -1,11 +1,11 @@
 // SLO engine implementation
 
-use super::slo_manager::SloManager;
-use super::slo_types::{Slo, SloConfig, SloEvaluation, SloReport, SloType, EnforcementLevel};
 use super::burn_rate::BurnAnalysis;
+use super::slo_manager::SloManager;
+use super::slo_types::{EnforcementLevel, Slo, SloConfig, SloEvaluation, SloReport, SloType};
+use crate::edition::EditionContext;
 use crate::engines::shared::models::{CostEstimate, TotalCost};
 use crate::engines::trend::snapshot_types::CostSnapshot;
-use crate::edition::EditionContext;
 use serde::{Deserialize, Serialize};
 
 /// Result of SLO evaluation
@@ -65,13 +65,20 @@ impl SloEngine {
         let should_block = self.manager.should_block_deployment(&report);
 
         // Merge burn risk data into evaluations (clone to avoid moving)
-        let evaluations = report.evaluations.clone().into_iter().map(|mut eval| {
-            if let Some(burn_analysis) = burn_analyses.iter().find(|ba| ba.slo_id == eval.slo_id) {
-                eval.burn_risk = Some(burn_analysis.risk.clone());
-                eval.projected_cost_after_merge = Some(burn_analysis.projected_cost);
-            }
-            eval
-        }).collect();
+        let evaluations = report
+            .evaluations
+            .clone()
+            .into_iter()
+            .map(|mut eval| {
+                if let Some(burn_analysis) =
+                    burn_analyses.iter().find(|ba| ba.slo_id == eval.slo_id)
+                {
+                    eval.burn_risk = Some(burn_analysis.risk.clone());
+                    eval.projected_cost_after_merge = Some(burn_analysis.projected_cost);
+                }
+                eval
+            })
+            .collect();
 
         SloResult {
             passed: !has_violations,
@@ -83,25 +90,29 @@ impl SloEngine {
 
     /// Convert API contract SloDefinitions to internal SloConfig
     fn convert_definitions_to_config(definitions: Vec<SloDefinition>) -> SloConfig {
-        let slos = definitions.into_iter().map(|def| {
-            Slo::new(
-                def.id,
-                def.name,
-                def.description,
-                def.slo_type,
-                def.target,
-                super::slo_types::SloThreshold {
-                    max_value: def.threshold,
-                    min_value: None,
-                    warning_threshold_percent: 80.0,
-                    time_window: "30d".to_string(),
-                    use_baseline: false,
-                    baseline_multiplier: None,
-                },
-                def.enforcement,
-                "system".to_string(),
-            )
-        }).collect();
+        let slos = definitions
+            .into_iter()
+            .map(|def| {
+                let params = super::slo_types::SloParams {
+                    id: def.id,
+                    name: def.name,
+                    description: def.description,
+                    slo_type: def.slo_type,
+                    target: def.target,
+                    threshold: super::slo_types::SloThreshold {
+                        max_value: def.threshold,
+                        min_value: None,
+                        warning_threshold_percent: 80.0,
+                        time_window: "30d".to_string(),
+                        use_baseline: false,
+                        baseline_multiplier: None,
+                    },
+                    enforcement: def.enforcement,
+                    owner: "system".to_string(),
+                };
+                Slo::new(params)
+            })
+            .collect();
 
         SloConfig {
             version: "1.0".to_string(),
@@ -111,7 +122,10 @@ impl SloEngine {
     }
 
     /// Create a cost snapshot from TotalCost and CostEstimate array
-    fn create_snapshot_from_costs(total_cost: &TotalCost, estimates: &[CostEstimate]) -> crate::engines::trend::CostSnapshot {
+    fn create_snapshot_from_costs(
+        total_cost: &TotalCost,
+        estimates: &[CostEstimate],
+    ) -> crate::engines::trend::CostSnapshot {
         use crate::engines::trend::CostSnapshot;
 
         let mut snapshot = CostSnapshot::new("slo_check".to_string(), total_cost.monthly);
@@ -139,7 +153,8 @@ impl SloEngine {
         use crate::engines::trend::SnapshotManager;
 
         // Try to load historical snapshots
-        let snapshot_manager = SnapshotManager::new(std::path::PathBuf::from(".costpilot/snapshots"));
+        let snapshot_manager =
+            SnapshotManager::new(std::path::PathBuf::from(".costpilot/snapshots"));
 
         match snapshot_manager.load_history() {
             Ok(history) => {
@@ -151,7 +166,8 @@ impl SloEngine {
                     // Add current snapshot for projection
                     all_snapshots.push(current_snapshot.clone());
 
-                    calculator.analyze_all(&self.manager.config().slos, &all_snapshots)
+                    calculator
+                        .analyze_all(&self.manager.config().slos, &all_snapshots)
                         .analyses
                 } else {
                     // Not enough historical data, return empty burn analyses
@@ -170,8 +186,7 @@ impl SloEngine {
         if report.has_violations() {
             format!(
                 "SLO violations detected: {} violations, {} warnings",
-                report.summary.violation_count,
-                report.summary.warning_count
+                report.summary.violation_count, report.summary.warning_count
             )
         } else if report.summary.warning_count > 0 {
             format!(
@@ -221,21 +236,19 @@ mod tests {
             resource_count: 2,
         };
 
-        let estimates = vec![
-            CostEstimate {
-                resource_id: "test".to_string(),
-                monthly_cost: 2500.0,
-                prediction_interval_low: 2250.0,
-                prediction_interval_high: 2750.0,
-                confidence_score: 0.85,
-                heuristic_reference: None,
-                cold_start_inference: false,
-                one_time: None,
-                breakdown: None,
-                hourly: None,
-                daily: None,
-            },
-        ];
+        let estimates = vec![CostEstimate {
+            resource_id: "test".to_string(),
+            monthly_cost: 2500.0,
+            prediction_interval_low: 2250.0,
+            prediction_interval_high: 2750.0,
+            confidence_score: 0.85,
+            heuristic_reference: None,
+            cold_start_inference: false,
+            one_time: None,
+            breakdown: None,
+            hourly: None,
+            daily: None,
+        }];
 
         (total_cost, estimates)
     }

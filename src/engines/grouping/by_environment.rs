@@ -3,6 +3,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Type alias for resource tuple: (address, type, service, tags, cost)
+pub type ResourceTuple = (String, String, String, HashMap<String, String>, f64);
+
 /// A group of resources organized by environment
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnvironmentGroup {
@@ -67,9 +70,7 @@ impl EnvironmentGroup {
 }
 
 /// Group resources by environment extracted from tags or resource names
-pub fn group_by_environment(
-    resources: &[(String, String, String, HashMap<String, String>, f64)], // (address, type, service, tags, cost)
-) -> Vec<EnvironmentGroup> {
+pub fn group_by_environment(resources: &[ResourceTuple]) -> Vec<EnvironmentGroup> {
     let mut groups: HashMap<String, EnvironmentGroup> = HashMap::new();
 
     for (address, resource_type, service, tags, cost) in resources {

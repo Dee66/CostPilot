@@ -173,7 +173,10 @@ impl EditionContext {
     pub fn derive_nonce(&self) -> anyhow::Result<Vec<u8>> {
         if let Some(ref license) = self.license {
             // Derive nonce using HKDF with different salt/info
-            let hk = SimpleHkdf::<Sha256>::new(Some(b"costpilot-nonce-v1"), license.license_key.as_bytes());
+            let hk = SimpleHkdf::<Sha256>::new(
+                Some(b"costpilot-nonce-v1"),
+                license.license_key.as_bytes(),
+            );
             let mut nonce = [0u8; 12];
             hk.expand(b"nonce", &mut nonce)
                 .map_err(|_| anyhow::anyhow!("HKDF expand failed"))?;

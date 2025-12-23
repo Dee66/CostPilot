@@ -311,9 +311,11 @@ mod tests {
         assert!(result.is_err());
         let err_msg = result.unwrap_err();
         println!("Actual error: {}", err_msg);
-        assert!(err_msg.contains("Not in a git repository") ||
-                err_msg.contains("Failed to run git") ||
-                err_msg.contains("Package verification failed"));
+        assert!(
+            err_msg.contains("Not in a git repository")
+                || err_msg.contains("Failed to run git")
+                || err_msg.contains("Package verification failed")
+        );
     }
 
     #[test]
@@ -329,7 +331,10 @@ mod tests {
         assert!(result.is_err());
         let err_msg = result.unwrap_err();
         println!("Verify error: {}", err_msg);
-        assert!(err_msg.contains("Failed to load escrow package") || err_msg.contains("No such file or directory"));
+        assert!(
+            err_msg.contains("Failed to load escrow package")
+                || err_msg.contains("No such file or directory")
+        );
     }
 
     #[test]
@@ -346,7 +351,10 @@ mod tests {
         assert!(result.is_err());
         let err_msg = result.unwrap_err();
         println!("Playbook error: {}", err_msg);
-        assert!(err_msg.contains("Failed to load escrow package") || err_msg.contains("No such file or directory"));
+        assert!(
+            err_msg.contains("Failed to load escrow package")
+                || err_msg.contains("No such file or directory")
+        );
     }
 
     #[test]
@@ -364,7 +372,10 @@ mod tests {
         assert!(result.is_err());
         let err_msg = result.unwrap_err();
         println!("Recover error: {}", err_msg);
-        assert!(err_msg.contains("Failed to load escrow package") || err_msg.contains("No such file or directory"));
+        assert!(
+            err_msg.contains("Failed to load escrow package")
+                || err_msg.contains("No such file or directory")
+        );
     }
 
     #[test]
@@ -422,7 +433,9 @@ mod tests {
         assert!(result.is_ok());
         let output = result.unwrap();
         // Should handle non-existent default directory gracefully
-        assert!(output.contains("No escrow packages found") || output.contains("📦 Escrow Packages"));
+        assert!(
+            output.contains("No escrow packages found") || output.contains("📦 Escrow Packages")
+        );
     }
 
     #[test]

@@ -1,6 +1,6 @@
+use chrono;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use chrono;
 
 /// A node in the dependency graph representing a resource or service
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

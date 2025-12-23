@@ -6,6 +6,9 @@ use clap::{Args, Subcommand};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+/// Type alias for resource tuple: (address, type, service, tags, cost)
+pub type ResourceTuple = (String, String, String, HashMap<String, String>, f64);
+
 #[derive(Debug, Args)]
 pub struct GroupCommand {
     #[command(subcommand)]
@@ -109,22 +112,70 @@ pub fn execute_group_command(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Extract plan path and subcommand
     let (plan, subcommand) = match cmd.command {
-        GroupSubcommand::Module { plan, tree, min_cost, max_groups } =>
-            (plan, GroupExecution::Module { tree, min_cost, max_groups }),
-        GroupSubcommand::Service { plan, by_category, min_cost, max_groups } =>
-            (plan, GroupExecution::Service { by_category, min_cost, max_groups }),
-        GroupSubcommand::Environment { plan, detailed, detect_anomalies, min_cost } => {
+        GroupSubcommand::Module {
+            plan,
+            tree,
+            min_cost,
+            max_groups,
+        } => (
+            plan,
+            GroupExecution::Module {
+                tree,
+                min_cost,
+                max_groups,
+            },
+        ),
+        GroupSubcommand::Service {
+            plan,
+            by_category,
+            min_cost,
+            max_groups,
+        } => (
+            plan,
+            GroupExecution::Service {
+                by_category,
+                min_cost,
+                max_groups,
+            },
+        ),
+        GroupSubcommand::Environment {
+            plan,
+            detailed,
+            detect_anomalies,
+            min_cost,
+        } => {
             // Gate anomaly detection behind premium license
             if detect_anomalies {
                 crate::edition::require_premium(edition, "Cost anomaly detection")
                     .map_err(|e| format!("Anomaly detection requires premium license: {}", e))?;
             }
-            (plan, GroupExecution::Environment { detailed, detect_anomalies, min_cost })
+            (
+                plan,
+                GroupExecution::Environment {
+                    detailed,
+                    detect_anomalies,
+                    min_cost,
+                },
+            )
         }
-        GroupSubcommand::Attribution { plan, format, output, top_n } =>
-            (plan, GroupExecution::Attribution { format, output, top_n }),
-        GroupSubcommand::All { plan, format, output } =>
-            (plan, GroupExecution::All { format, output }),
+        GroupSubcommand::Attribution {
+            plan,
+            format,
+            output,
+            top_n,
+        } => (
+            plan,
+            GroupExecution::Attribution {
+                format,
+                output,
+                top_n,
+            },
+        ),
+        GroupSubcommand::All {
+            plan,
+            format,
+            output,
+        } => (plan, GroupExecution::All { format, output }),
     };
 
     // Load and parse the plan using detection engine
@@ -135,16 +186,32 @@ pub fn execute_group_command(
     let engine = GroupingEngine::new();
 
     match subcommand {
-        GroupExecution::Module { tree, min_cost, max_groups } => {
+        GroupExecution::Module {
+            tree,
+            min_cost,
+            max_groups,
+        } => {
             execute_group_module(&engine, &resources, tree, min_cost, max_groups)?;
         }
-        GroupExecution::Service { by_category, min_cost, max_groups } => {
+        GroupExecution::Service {
+            by_category,
+            min_cost,
+            max_groups,
+        } => {
             execute_group_service(&engine, &resources, by_category, min_cost, max_groups)?;
         }
-        GroupExecution::Environment { detailed, detect_anomalies, min_cost } => {
+        GroupExecution::Environment {
+            detailed,
+            detect_anomalies,
+            min_cost,
+        } => {
             execute_group_environment(&engine, &resources, detailed, detect_anomalies, min_cost)?;
         }
-        GroupExecution::Attribution { format, output, top_n } => {
+        GroupExecution::Attribution {
+            format,
+            output,
+            top_n,
+        } => {
             execute_attribution(&engine, &resources, &format, output, top_n)?;
         }
         GroupExecution::All { format, output } => {
@@ -157,11 +224,30 @@ pub fn execute_group_command(
 
 #[derive(Debug)]
 enum GroupExecution {
-    Module { tree: bool, min_cost: f64, max_groups: Option<usize> },
-    Service { by_category: bool, min_cost: f64, max_groups: Option<usize> },
-    Environment { detailed: bool, detect_anomalies: bool, min_cost: f64 },
-    Attribution { format: String, output: Option<PathBuf>, top_n: usize },
-    All { format: String, output: Option<PathBuf> },
+    Module {
+        tree: bool,
+        min_cost: f64,
+        max_groups: Option<usize>,
+    },
+    Service {
+        by_category: bool,
+        min_cost: f64,
+        max_groups: Option<usize>,
+    },
+    Environment {
+        detailed: bool,
+        detect_anomalies: bool,
+        min_cost: f64,
+    },
+    Attribution {
+        format: String,
+        output: Option<PathBuf>,
+        top_n: usize,
+    },
+    All {
+        format: String,
+        output: Option<PathBuf>,
+    },
 }
 
 fn execute_group_module(
@@ -287,7 +373,7 @@ fn execute_group_environment(
     detect_anomalies: bool,
     min_cost: f64,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let env_resources: Vec<(String, String, String, HashMap<String, String>, f64)> = resources
+    let env_resources: Vec<ResourceTuple> = resources
         .iter()
         .filter_map(|r| {
             if let Some(cost) = r.monthly_cost {

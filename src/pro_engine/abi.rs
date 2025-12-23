@@ -18,8 +18,8 @@ pub enum ProEngineRequest {
     },
     Explain {
         detection: Detection,
-        change: ResourceChange,
-        estimate: Option<CostEstimate>,
+        change: Box<ResourceChange>,
+        estimate: Box<Option<CostEstimate>>,
     },
     Map {
         resources: Vec<ResourceChange>,

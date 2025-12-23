@@ -146,6 +146,15 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Run ProEngine loader tests
+        run: cargo test --test pro_engine_loader_unit_tests
+
+      - name: Run WASM runtime tests
+        run: cargo test --test wasm_runtime_tests
+
+      - name: Run Pro Engine loader tests
+        run: cargo test --test pro_engine_loader_tests
+
       - name: Build release
         run: cargo build --release
 

@@ -149,7 +149,7 @@ pub fn classify_regression(change: &ResourceChange) -> RegressionType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ResourceChange, ChangeAction};
+    use crate::engines::shared::models::{ChangeAction, ResourceChange};
     use serde_json::json;
 
     #[test]

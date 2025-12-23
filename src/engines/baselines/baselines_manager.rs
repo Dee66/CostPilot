@@ -117,7 +117,10 @@ impl BaselinesManager {
         }
 
         // Check for provisioning (new resources)
-        if module_changes.iter().any(|change| change.action == crate::engines::shared::models::ChangeAction::Create) {
+        if module_changes
+            .iter()
+            .any(|change| change.action == crate::engines::shared::models::ChangeAction::Create)
+        {
             return RegressionType::Provisioning;
         }
 
@@ -146,7 +149,12 @@ impl BaselinesManager {
         // Scaling typically involves instance count, capacity, etc.
         if let (Some(old_config), Some(new_config)) = (&change.old_config, &change.new_config) {
             // Check for common scaling attributes
-            let scaling_attrs = ["instance_count", "desired_capacity", "replicas", "node_count"];
+            let scaling_attrs = [
+                "instance_count",
+                "desired_capacity",
+                "replicas",
+                "node_count",
+            ];
             for attr in &scaling_attrs {
                 if Self::field_changed(old_config, new_config, attr) {
                     return true;
@@ -160,7 +168,12 @@ impl BaselinesManager {
     fn is_configuration_change(change: &crate::engines::detection::ResourceChange) -> bool {
         if let (Some(old_config), Some(new_config)) = (&change.old_config, &change.new_config) {
             // Check for configuration-type changes
-            let config_attrs = ["billing_mode", "instance_type", "engine_version", "storage_type"];
+            let config_attrs = [
+                "billing_mode",
+                "instance_type",
+                "engine_version",
+                "storage_type",
+            ];
             for attr in &config_attrs {
                 if Self::field_changed(old_config, new_config, attr) {
                     return true;
@@ -171,20 +184,30 @@ impl BaselinesManager {
     }
 
     /// Check if a field changed between old and new config
-    fn field_changed(old_config: &serde_json::Value, new_config: &serde_json::Value, field: &str) -> bool {
+    fn field_changed(
+        old_config: &serde_json::Value,
+        new_config: &serde_json::Value,
+        field: &str,
+    ) -> bool {
         let old_val = old_config.get(field);
         let new_val = new_config.get(field);
         old_val != new_val
     }
 
     /// Classify regression type for global baseline based on all resource changes
-    fn classify_global_regression(&self, changes: &[crate::engines::detection::ResourceChange]) -> RegressionType {
+    fn classify_global_regression(
+        &self,
+        changes: &[crate::engines::detection::ResourceChange],
+    ) -> RegressionType {
         if changes.is_empty() {
             return RegressionType::IndirectCost;
         }
 
         // Check for provisioning (new resources)
-        if changes.iter().any(|change| change.action == crate::engines::shared::models::ChangeAction::Create) {
+        if changes
+            .iter()
+            .any(|change| change.action == crate::engines::shared::models::ChangeAction::Create)
+        {
             return RegressionType::Provisioning;
         }
 
@@ -237,7 +260,9 @@ impl BaselinesManager {
                             variance_percent,
                             acceptable_variance: baseline.acceptable_variance_percent,
                             severity: calculate_severity(variance_percent),
-                            regression_type: changes.map_or(RegressionType::IndirectCost, |c| self.classify_module_regression(module_name, c)),
+                            regression_type: changes.map_or(RegressionType::IndirectCost, |c| {
+                                self.classify_module_regression(module_name, c)
+                            }),
                             owner: baseline.owner.clone(),
                             justification: baseline.justification.clone(),
                         });
@@ -256,7 +281,9 @@ impl BaselinesManager {
                             variance_percent,
                             acceptable_variance: baseline.acceptable_variance_percent,
                             severity: "Info".to_string(),
-                            regression_type: changes.map_or(RegressionType::IndirectCost, |c| self.classify_module_regression(module_name, c)),
+                            regression_type: changes.map_or(RegressionType::IndirectCost, |c| {
+                                self.classify_module_regression(module_name, c)
+                            }),
                             owner: baseline.owner.clone(),
                             justification: baseline.justification.clone(),
                         });
@@ -279,7 +306,11 @@ impl BaselinesManager {
     }
 
     /// Compare total cost against global baseline
-    pub fn compare_total_cost(&self, total_cost: f64, changes: Option<&[crate::engines::detection::ResourceChange]>) -> Option<BaselineViolation> {
+    pub fn compare_total_cost(
+        &self,
+        total_cost: f64,
+        changes: Option<&[crate::engines::detection::ResourceChange]>,
+    ) -> Option<BaselineViolation> {
         let global = self.config.global.as_ref()?;
 
         match global.check_variance(total_cost) {
@@ -295,7 +326,9 @@ impl BaselinesManager {
                 variance_percent,
                 acceptable_variance: global.acceptable_variance_percent,
                 severity: calculate_severity(variance_percent),
-                regression_type: changes.map_or(RegressionType::IndirectCost, |c| self.classify_global_regression(c)),
+                regression_type: changes.map_or(RegressionType::IndirectCost, |c| {
+                    self.classify_global_regression(c)
+                }),
                 owner: global.owner.clone(),
                 justification: global.justification.clone(),
             }),
@@ -311,7 +344,9 @@ impl BaselinesManager {
                 variance_percent,
                 acceptable_variance: global.acceptable_variance_percent,
                 severity: "Info".to_string(),
-                regression_type: changes.map_or(RegressionType::IndirectCost, |c| self.classify_global_regression(c)),
+                regression_type: changes.map_or(RegressionType::IndirectCost, |c| {
+                    self.classify_global_regression(c)
+                }),
                 owner: global.owner.clone(),
                 justification: global.justification.clone(),
             }),

@@ -48,10 +48,7 @@ impl ArtifactFormat {
 
     /// Check if format is supported
     pub fn is_supported(&self) -> bool {
-        matches!(
-            self,
-            ArtifactFormat::Terraform | ArtifactFormat::Cdk
-        )
+        matches!(self, ArtifactFormat::Terraform | ArtifactFormat::Cdk)
     }
 }
 
@@ -114,7 +111,9 @@ impl ArtifactResource {
                     ("EC2", "Subnet") => return "aws_subnet".to_string(),
                     ("RDS", "DBInstance") => return "aws_db_instance".to_string(),
                     ("S3", "Bucket") => return "aws_s3_bucket".to_string(),
-                    ("AutoScaling", "AutoScalingGroup") => return "aws_autoscaling_group".to_string(),
+                    ("AutoScaling", "AutoScalingGroup") => {
+                        return "aws_autoscaling_group".to_string()
+                    }
                     _ => {
                         // Default: aws_service_resource
                         let service_lower = service.to_lowercase();
