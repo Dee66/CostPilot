@@ -1,5 +1,5 @@
 /// Baseline test helpers for deterministic comparison
-/// 
+///
 /// Provides consistent module weight calculation and violation formatting.
 
 use std::collections::HashMap;

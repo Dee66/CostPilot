@@ -1,6 +1,6 @@
 // PR-based billing tracker for measuring CostPilot usage in CI/CD
 
-use crate::engines::metering::usage_meter::{Attribution, UsageContext, UsageEvent, UsageEventType};
+use crate::engines::metering::usage_meter::{Attribution, UsageEvent, UsageEventType};
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -391,6 +391,7 @@ impl PrUsageReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::engines::metering::usage_meter::UsageContext;
     use std::collections::HashMap;
 
     fn create_test_event(resources: u32, cost_impact: f64) -> UsageEvent {

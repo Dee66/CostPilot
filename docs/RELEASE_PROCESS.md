@@ -148,25 +148,25 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact: costpilot-macos-aarch64
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: ${{ matrix.target }}
-      
+
       - name: Build Release Binary
         run: cargo build --release --target ${{ matrix.target }}
-      
+
       - name: Strip Binary (Linux/macOS)
         if: runner.os != 'Windows'
         run: strip target/${{ matrix.target }}/release/costpilot
-      
+
       - name: Package Binary
         run: |
           mkdir -p artifacts
@@ -174,32 +174,32 @@ jobs:
           cd artifacts
           tar -czf ${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
           sha256sum ${{ matrix.artifact }}.tar.gz > ${{ matrix.artifact }}.tar.gz.sha256
-      
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact }}
           path: artifacts/${{ matrix.artifact }}.tar.gz*
-  
+
   release:
     needs: build
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download All Artifacts
         uses: actions/download-artifact@v3
-      
+
       - name: Extract Version
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      
+
       - name: Generate Release Notes
         run: |
           # Extract changelog for this version
           sed -n '/## \[${{ steps.version.outputs.VERSION }}\]/,/## \[/p' CHANGELOG.md | head -n -1 > release_notes.md
-      
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -356,7 +356,7 @@ Create announcement post at https://github.com/Dee66/CostPilot/discussions
 🚀 CostPilot v1.1.0 is out!
 
 ✨ Azure support
-🤖 ML-powered anomaly detection  
+🤖 ML-powered anomaly detection
 💬 Slack notifications
 
 Install: curl -fsSL https://costpilot.dev/install.sh | bash
@@ -534,13 +534,13 @@ jobs:
         run: cargo clippy -- -D warnings
       - name: Check Coverage
         run: cargo tarpaulin --out Xml --all-features
-        
+
   build-and-release:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Build Cross-Platform Binaries
         uses: rust-build/rust-build.action@v1.4.4
         with:
@@ -552,10 +552,10 @@ jobs:
           UPLOAD_MODE: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Generate Changelog
         run: ./scripts/generate_changelog.sh ${{ github.ref_name }}
-      
+
       - name: Update Homebrew Formula
         run: ./scripts/update_homebrew.sh ${{ github.ref_name }}
 ```

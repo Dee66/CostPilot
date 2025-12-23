@@ -1,0 +1,13 @@
+{
+  "explainability_score": 0.85,
+  "audit_trail_score": 0.90,
+  "traceability_score": 0.80,
+  "transparency_threshold": 0.85,
+  "overall_transparency_score": .850,
+  "audit_depth": 3,
+  "recommendations": [
+    "Enhance cost prediction explanations",
+    "Implement comprehensive audit logging",
+    "Add decision traceability metadata"
+  ]
+}

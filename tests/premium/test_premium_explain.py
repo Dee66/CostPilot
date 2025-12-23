@@ -12,7 +12,7 @@ def test_explain_full_mode():
     """Test full explain mode exists in Premium."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -23,17 +23,17 @@ def test_explain_full_mode():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "explain", "all", "--plan", str(template_path), "--mode", "full"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should succeed
         # In Free, should reject --mode full
         if result.returncode == 0:
@@ -44,7 +44,7 @@ def test_explain_references_bundle():
     """Test explain references heuristics bundle."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -56,17 +56,17 @@ def test_explain_references_bundle():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "explain", "all", "--plan", str(template_path), "--verbose"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, might reference heuristics
         if result.returncode == 0:
             output = result.stdout.lower()
@@ -77,7 +77,7 @@ def test_explain_detailed_mode():
     """Test detailed explain mode."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -90,17 +90,17 @@ def test_explain_detailed_mode():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "explain", "all", "--plan", str(template_path), "--detailed"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Premium should provide detailed explanations
         if result.returncode == 0:
             output_len = len(result.stdout)
@@ -113,7 +113,7 @@ def test_explain_with_bundle_path():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         bundle_path = Path(tmpdir) / "premium.bundle"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -124,22 +124,22 @@ def test_explain_with_bundle_path():
                 }
             }
         }
-        
+
         # Create dummy bundle
         with open(bundle_path, 'wb') as f:
             f.write(b"BUNDLE:VERSION:1.0.0\n")
             f.write(b"ENCRYPTED_HEURISTICS_DATA")
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "explain", "all", "--plan", str(template_path), "--bundle", str(bundle_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should attempt to use bundle
 
 
@@ -147,7 +147,7 @@ def test_explain_advanced_analysis():
     """Test explain advanced analysis features."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -165,17 +165,17 @@ def test_explain_advanced_analysis():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "explain", "all", "--plan", str(template_path), "--advanced"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Premium should provide advanced analysis
         if result.returncode == 0:
             assert len(result.stdout) > 0, "Advanced explain should produce output"
@@ -186,7 +186,7 @@ def test_explain_output_format():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         output_path = Path(tmpdir) / "explanation.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -197,17 +197,17 @@ def test_explain_output_format():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "explain", "all", "--plan", str(template_path), "--output", str(output_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should create output file
         if result.returncode == 0 and output_path.exists():
             with open(output_path) as f:

@@ -1,0 +1,110 @@
+Metadata-Version: 2.4
+Name: costpilot
+Version: 1.0.0
+Summary: Cost analysis and prediction for infrastructure as code
+Home-page: https://github.com/Dee66/CostPilot
+Author: GuardSuite
+Author-email: GuardSuite <info@guardsuite.com>
+License: MIT
+Project-URL: Homepage, https://costpilot.dev
+Project-URL: Repository, https://github.com/Dee66/CostPilot
+Project-URL: Issues, https://github.com/Dee66/CostPilot/issues
+Project-URL: Documentation, https://docs.costpilot.dev
+Keywords: cost,infrastructure,terraform,aws,finops,iac,cloud
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: System :: Systems Administration
+Classifier: Topic :: Utilities
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
+# CostPilot
+
+Cost analysis and prediction for infrastructure as code.
+
+## Features
+
+- **Multi-IaC Support**: Terraform, CDK, CloudFormation
+- **Cost Prediction**: Forecast infrastructure costs
+- **Autofix**: Generate cost optimization patches
+- **Policy Enforcement**: Custom cost policies
+- **Dependency Mapping**: Visualize resource dependencies
+- **SLO Tracking**: Cost service level objectives
+- **Trend Analysis**: Track cost changes over time
+
+## Installation
+
+### Option 1: Cargo (Recommended)
+
+```bash
+cargo install costpilot
+```
+
+### Option 2: npm
+
+```bash
+npm install -g costpilot
+```
+
+### Option 3: pip
+
+```bash
+pip install costpilot
+```
+
+### Option 4: Homebrew (macOS)
+
+```bash
+brew install costpilot
+```
+
+### Option 5: Docker
+
+```bash
+docker run --rm -v $(pwd):/workspace costpilot scan --plan terraform.plan.json
+```
+
+### Option 6: Binary Download
+
+Download the latest release from [GitHub Releases](https://github.com/Dee66/CostPilot/releases) and add to your PATH.
+
+## Quick Start
+
+```bash
+# Scan your infrastructure
+costpilot scan --plan terraform.plan.json
+
+# Generate cost map
+costpilot map --output diagram.mmd
+
+# Check SLOs
+costpilot slo-check --config slo.yml
+```
+
+## Documentation
+
+- [Quickstart Guide](docs/quickstart.md)
+- [CLI Reference](docs/cli_reference.md)
+- [Architecture](docs/architecture.md)
+- [Policies Guide](docs/policies_guide.md)
+
+## Contributing
+
+Contributions welcome! Please read our contributing guidelines.
+
+## License
+
+MIT License - see LICENSE file for details.

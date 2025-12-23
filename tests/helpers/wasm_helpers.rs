@@ -22,11 +22,11 @@ pub fn make_test_resource_change(resource_type: &str, monthly_cost: Option<f64>)
         .resource_id(format!("test_{}", resource_type))
         .action(ChangeAction::Create)
         .new_config(json!({"type": resource_type}));
-    
+
     if let Some(cost) = monthly_cost {
         builder = builder.monthly_cost(cost);
     }
-    
+
     builder.build()
 }
 

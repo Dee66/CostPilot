@@ -255,7 +255,7 @@ fn detect_dynamodb_pay_per_request_default(change: &ResourceChange) -> Option<An
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate};
+    use crate::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
     use serde_json::json;
 
     #[test]
@@ -269,10 +269,10 @@ mod tests {
 
         let estimate = CostEstimate::builder()
             .resource_id("test")
-            .estimate(32.85)
-            .lower(24.64)
-            .upper(41.06)
-            .confidence(0.95)
+            .monthly_cost(32.85)
+            .prediction_interval_low(24.64)
+            .prediction_interval_high(41.06)
+            .confidence_score(0.95)
             .build();
 
         let patterns = detect_anti_patterns(&change, Some(&estimate));

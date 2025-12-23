@@ -1,7 +1,7 @@
 # Regression Justification Contract
 
-**Version:** 1.0.0  
-**Status:** Enforced  
+**Version:** 1.0.0
+**Status:** Enforced
 **Last Updated:** 2025-12-06
 
 ---
@@ -32,25 +32,25 @@ Every detected cost regression must have a **complete, professional justificatio
 pub struct RegressionJustification {
     // MANDATORY: What changed
     pub regression_type: RegressionType,
-    
+
     // MANDATORY: Primary driver of change
     pub driver: RegressionDriver,
-    
+
     // MANDATORY: Quantified impact
     pub delta: CostDelta,
-    
+
     // MANDATORY: Confidence in analysis
     pub confidence: f64,  // 0.0 - 1.0
-    
+
     // MANDATORY: Dependency context
     pub dependencies: DependencyContext,
-    
+
     // MANDATORY: Root cause explanation
     pub root_cause: RootCause,
-    
+
     // OPTIONAL: Additional details
     pub details: Option<String>,
-    
+
     // OPTIONAL: Recommendations
     pub recommendations: Vec<Recommendation>,
 }
@@ -84,7 +84,7 @@ impl RegressionType {
             RegressionType::ConfigurationChange => "⚙️",
         }
     }
-    
+
     pub fn severity(&self) -> Severity {
         match self {
             RegressionType::CostIncrease => Severity::Medium,
@@ -115,7 +115,7 @@ pub enum RegressionDriver {
         from: usize,
         to: usize,
     },
-    
+
     // Storage changes
     StorageSizeChange {
         from: u64,  // GB
@@ -125,7 +125,7 @@ pub enum RegressionDriver {
         from: String,
         to: String,
     },
-    
+
     // Network changes
     NATGatewayAdded {
         count: usize,
@@ -133,7 +133,7 @@ pub enum RegressionDriver {
     LoadBalancerAdded {
         lb_type: String,
     },
-    
+
     // Database changes
     DatabaseInstanceChange {
         from: String,
@@ -143,26 +143,26 @@ pub enum RegressionDriver {
         from: u64,
         to: u64,
     },
-    
+
     // New resources
     NewResourceAdded {
         resource_type: String,
         count: usize,
     },
-    
+
     // Deleted resources
     ResourceDeleted {
         resource_type: String,
         count: usize,
     },
-    
+
     // Configuration
     ConfigurationUpdate {
         field: String,
         from: String,
         to: String,
     },
-    
+
     // Multiple drivers
     MultipleDrivers {
         drivers: Vec<Box<RegressionDriver>>,
@@ -212,7 +212,7 @@ impl CostDelta {
         } else {
             0.0
         };
-        
+
         Self {
             old_cost,
             new_cost,
@@ -221,7 +221,7 @@ impl CostDelta {
             interval,
         }
     }
-    
+
     pub fn format(&self) -> String {
         let sign = if self.delta >= 0.0 { "+" } else { "" };
         format!(
@@ -233,10 +233,10 @@ impl CostDelta {
             self.percentage
         )
     }
-    
+
     pub fn severity(&self) -> Severity {
         let abs_percentage = self.percentage.abs();
-        
+
         if abs_percentage >= 50.0 {
             Severity::High
         } else if abs_percentage >= 20.0 {
@@ -259,13 +259,13 @@ impl CostDelta {
 pub struct DependencyContext {
     // Direct dependencies affected
     pub direct_dependencies: Vec<String>,
-    
+
     // Downstream impact
     pub downstream_count: usize,
-    
+
     // Modules affected
     pub modules_affected: Vec<String>,
-    
+
     // Critical path impact
     pub on_critical_path: bool,
 }
@@ -296,10 +296,10 @@ impl DependencyContext {
 pub struct RootCause {
     // What triggered the change
     pub trigger: RootCauseTrigger,
-    
+
     // Explanation
     pub explanation: String,
-    
+
     // Provenance (heuristic/baseline used)
     pub provenance: Option<HeuristicProvenance>,
 }
@@ -372,11 +372,11 @@ pub enum EffortLevel {
 impl Recommendation {
     pub fn format(&self) -> String {
         let mut parts = vec![self.action.clone()];
-        
+
         if let Some(impact) = &self.impact {
             parts.push(format!("(saves {})", impact.format()));
         }
-        
+
         parts.join(" ")
     }
 }
@@ -439,13 +439,13 @@ fn format_recommendations(recommendations: &[Recommendation]) -> String {
     if recommendations.is_empty() {
         return String::new();
     }
-    
+
     let mut output = String::from("### 💡 Recommendations\n");
-    
+
     for (i, rec) in recommendations.iter().enumerate() {
         output.push_str(&format!("{}. {}\n", i + 1, rec.format()));
     }
-    
+
     output
 }
 ```
@@ -509,7 +509,7 @@ New NAT Gateways added for multi-AZ high availability. Each NAT Gateway costs $3
 impl RegressionJustification {
     pub fn validate(&self) -> Result<(), Vec<String>> {
         let mut errors = Vec::new();
-        
+
         // Confidence must be in range
         if self.confidence < 0.0 || self.confidence > 1.0 {
             errors.push(format!(
@@ -517,7 +517,7 @@ impl RegressionJustification {
                 self.confidence
             ));
         }
-        
+
         // Delta must be consistent
         let expected_delta = self.delta.new_cost - self.delta.old_cost;
         if (self.delta.delta - expected_delta).abs() > 0.01 {
@@ -527,17 +527,17 @@ impl RegressionJustification {
                 expected_delta
             ));
         }
-        
+
         // Root cause must have explanation
         if self.root_cause.explanation.trim().is_empty() {
             errors.push("Root cause explanation is empty".to_string());
         }
-        
+
         // Must have at least one driver
         if matches!(self.driver, RegressionDriver::MultipleDrivers { drivers } if drivers.is_empty()) {
             errors.push("MultipleDrivers must have at least one driver".to_string());
         }
-        
+
         if errors.is_empty() {
             Ok(())
         } else {
@@ -598,10 +598,10 @@ fn test_regression_justification_complete() {
             },
         ],
     };
-    
+
     // Must pass validation
     assert!(justification.validate().is_ok());
-    
+
     // Must be PR-ready
     assert!(is_pr_ready(&justification));
 }
@@ -609,9 +609,9 @@ fn test_regression_justification_complete() {
 #[test]
 fn test_pr_comment_format() {
     let justification = sample_justification();
-    
+
     let pr_comment = format_pr_comment(&justification);
-    
+
     // Must include all mandatory sections
     assert!(pr_comment.contains("## 📈 Cost Regression Detected"));
     assert!(pr_comment.contains("**Type:**"));
@@ -621,7 +621,7 @@ fn test_pr_comment_format() {
     assert!(pr_comment.contains("### 📊 Cost Breakdown"));
     assert!(pr_comment.contains("### 🔗 Dependencies"));
     assert!(pr_comment.contains("### 🎯 Root Cause"));
-    
+
     // Must be under 15 lines (before <details>)
     let lines_before_details = pr_comment
         .split("<details>")
@@ -629,7 +629,7 @@ fn test_pr_comment_format() {
         .unwrap()
         .lines()
         .count();
-    
+
     assert!(
         lines_before_details <= 15,
         "PR comment too long: {} lines",
@@ -647,15 +647,15 @@ fn test_pr_comment_format() {
 pub fn generate_pr_comment(plan_path: &Path) -> CostPilotResult<String> {
     let plan = parse_terraform_plan(plan_path)?;
     let regressions = detect_regressions(&plan)?;
-    
+
     let mut comments = Vec::new();
-    
+
     for regression in regressions {
         let justification = analyze_regression(&regression)?;
         let comment = format_pr_comment(&justification);
         comments.push(comment);
     }
-    
+
     Ok(comments.join("\n\n---\n\n"))
 }
 

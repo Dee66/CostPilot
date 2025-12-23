@@ -1,0 +1,1164 @@
+[
+  {
+    "case_id": "africa-1",
+    "infrastructure_cost": 2799,
+    "region": "africa",
+    "expected_cost_prediction": 1244,
+    "predicted_cost": 419.938
+  },
+  {
+    "case_id": "africa-2",
+    "infrastructure_cost": 2363,
+    "region": "africa",
+    "expected_cost_prediction": 1232,
+    "predicted_cost": 354.538
+  },
+  {
+    "case_id": "africa-3",
+    "infrastructure_cost": 3111,
+    "region": "africa",
+    "expected_cost_prediction": 1049,
+    "predicted_cost": 466.738
+  },
+  {
+    "case_id": "africa-4",
+    "infrastructure_cost": 4706,
+    "region": "africa",
+    "expected_cost_prediction": 1257,
+    "predicted_cost": 705.9879999999999
+  },
+  {
+    "case_id": "africa-5",
+    "infrastructure_cost": 3626,
+    "region": "africa",
+    "expected_cost_prediction": 834,
+    "predicted_cost": 543.9879999999999
+  },
+  {
+    "case_id": "africa-6",
+    "infrastructure_cost": 3297,
+    "region": "africa",
+    "expected_cost_prediction": 1168,
+    "predicted_cost": 494.638
+  },
+  {
+    "case_id": "africa-7",
+    "infrastructure_cost": 2825,
+    "region": "africa",
+    "expected_cost_prediction": 1358,
+    "predicted_cost": 423.838
+  },
+  {
+    "case_id": "africa-8",
+    "infrastructure_cost": 2618,
+    "region": "africa",
+    "expected_cost_prediction": 1075,
+    "predicted_cost": 392.788
+  },
+  {
+    "case_id": "africa-9",
+    "infrastructure_cost": 4316,
+    "region": "africa",
+    "expected_cost_prediction": 1223,
+    "predicted_cost": 647.4879999999999
+  },
+  {
+    "case_id": "africa-10",
+    "infrastructure_cost": 3130,
+    "region": "africa",
+    "expected_cost_prediction": 800,
+    "predicted_cost": 469.588
+  },
+  {
+    "case_id": "africa-11",
+    "infrastructure_cost": 3367,
+    "region": "africa",
+    "expected_cost_prediction": 1283,
+    "predicted_cost": 505.138
+  },
+  {
+    "case_id": "africa-12",
+    "infrastructure_cost": 2774,
+    "region": "africa",
+    "expected_cost_prediction": 1272,
+    "predicted_cost": 416.188
+  },
+  {
+    "case_id": "africa-13",
+    "infrastructure_cost": 3342,
+    "region": "africa",
+    "expected_cost_prediction": 1273,
+    "predicted_cost": 501.388
+  },
+  {
+    "case_id": "africa-14",
+    "infrastructure_cost": 2688,
+    "region": "africa",
+    "expected_cost_prediction": 985,
+    "predicted_cost": 403.288
+  },
+  {
+    "case_id": "africa-15",
+    "infrastructure_cost": 1789,
+    "region": "africa",
+    "expected_cost_prediction": 1060,
+    "predicted_cost": 268.438
+  },
+  {
+    "case_id": "africa-16",
+    "infrastructure_cost": 3033,
+    "region": "africa",
+    "expected_cost_prediction": 1284,
+    "predicted_cost": 455.038
+  },
+  {
+    "case_id": "africa-17",
+    "infrastructure_cost": 2444,
+    "region": "africa",
+    "expected_cost_prediction": 1408,
+    "predicted_cost": 366.688
+  },
+  {
+    "case_id": "africa-18",
+    "infrastructure_cost": 5190,
+    "region": "africa",
+    "expected_cost_prediction": 699,
+    "predicted_cost": 778.588
+  },
+  {
+    "case_id": "africa-19",
+    "infrastructure_cost": 3744,
+    "region": "africa",
+    "expected_cost_prediction": 1380,
+    "predicted_cost": 561.688
+  },
+  {
+    "case_id": "africa-20",
+    "infrastructure_cost": 4096,
+    "region": "africa",
+    "expected_cost_prediction": 1209,
+    "predicted_cost": 614.4879999999999
+  },
+  {
+    "case_id": "africa-21",
+    "infrastructure_cost": 4013,
+    "region": "africa",
+    "expected_cost_prediction": 510,
+    "predicted_cost": 602.0379999999999
+  },
+  {
+    "case_id": "africa-22",
+    "infrastructure_cost": 1699,
+    "region": "africa",
+    "expected_cost_prediction": 1023,
+    "predicted_cost": 254.938
+  },
+  {
+    "case_id": "africa-23",
+    "infrastructure_cost": 2991,
+    "region": "africa",
+    "expected_cost_prediction": 520,
+    "predicted_cost": 448.738
+  },
+  {
+    "case_id": "africa-24",
+    "infrastructure_cost": 5432,
+    "region": "africa",
+    "expected_cost_prediction": 984,
+    "predicted_cost": 814.8879999999999
+  },
+  {
+    "case_id": "africa-25",
+    "infrastructure_cost": 2297,
+    "region": "africa",
+    "expected_cost_prediction": 1038,
+    "predicted_cost": 344.63800000000003
+  },
+  {
+    "case_id": "africa-26",
+    "infrastructure_cost": 4173,
+    "region": "africa",
+    "expected_cost_prediction": 1182,
+    "predicted_cost": 626.0379999999999
+  },
+  {
+    "case_id": "africa-27",
+    "infrastructure_cost": 1008,
+    "region": "africa",
+    "expected_cost_prediction": 1027,
+    "predicted_cost": 151.28799999999998
+  },
+  {
+    "case_id": "africa-28",
+    "infrastructure_cost": 4592,
+    "region": "africa",
+    "expected_cost_prediction": 1361,
+    "predicted_cost": 688.8879999999999
+  },
+  {
+    "case_id": "africa-29",
+    "infrastructure_cost": 5291,
+    "region": "africa",
+    "expected_cost_prediction": 721,
+    "predicted_cost": 793.7379999999999
+  },
+  {
+    "case_id": "africa-30",
+    "infrastructure_cost": 4644,
+    "region": "africa",
+    "expected_cost_prediction": 1119,
+    "predicted_cost": 696.688
+  },
+  {
+    "case_id": "africa-31",
+    "infrastructure_cost": 5344,
+    "region": "africa",
+    "expected_cost_prediction": 912,
+    "predicted_cost": 801.688
+  },
+  {
+    "case_id": "africa-32",
+    "infrastructure_cost": 4141,
+    "region": "africa",
+    "expected_cost_prediction": 1061,
+    "predicted_cost": 621.2379999999999
+  },
+  {
+    "case_id": "africa-33",
+    "infrastructure_cost": 5493,
+    "region": "africa",
+    "expected_cost_prediction": 715,
+    "predicted_cost": 824.0379999999999
+  },
+  {
+    "case_id": "africa-34",
+    "infrastructure_cost": 1487,
+    "region": "africa",
+    "expected_cost_prediction": 1391,
+    "predicted_cost": 223.13799999999998
+  },
+  {
+    "case_id": "africa-35",
+    "infrastructure_cost": 2741,
+    "region": "africa",
+    "expected_cost_prediction": 1224,
+    "predicted_cost": 411.238
+  },
+  {
+    "case_id": "africa-36",
+    "infrastructure_cost": 5544,
+    "region": "africa",
+    "expected_cost_prediction": 1470,
+    "predicted_cost": 831.688
+  },
+  {
+    "case_id": "africa-37",
+    "infrastructure_cost": 1417,
+    "region": "africa",
+    "expected_cost_prediction": 1024,
+    "predicted_cost": 212.63799999999998
+  },
+  {
+    "case_id": "africa-38",
+    "infrastructure_cost": 3719,
+    "region": "africa",
+    "expected_cost_prediction": 1348,
+    "predicted_cost": 557.938
+  },
+  {
+    "case_id": "africa-39",
+    "infrastructure_cost": 2953,
+    "region": "africa",
+    "expected_cost_prediction": 1196,
+    "predicted_cost": 443.038
+  },
+  {
+    "case_id": "africa-40",
+    "infrastructure_cost": 2807,
+    "region": "africa",
+    "expected_cost_prediction": 1215,
+    "predicted_cost": 421.13800000000003
+  },
+  {
+    "case_id": "africa-41",
+    "infrastructure_cost": 4850,
+    "region": "africa",
+    "expected_cost_prediction": 1407,
+    "predicted_cost": 727.588
+  },
+  {
+    "case_id": "africa-42",
+    "infrastructure_cost": 3904,
+    "region": "africa",
+    "expected_cost_prediction": 841,
+    "predicted_cost": 585.688
+  },
+  {
+    "case_id": "africa-43",
+    "infrastructure_cost": 5538,
+    "region": "africa",
+    "expected_cost_prediction": 544,
+    "predicted_cost": 830.7879999999999
+  },
+  {
+    "case_id": "africa-44",
+    "infrastructure_cost": 5136,
+    "region": "africa",
+    "expected_cost_prediction": 519,
+    "predicted_cost": 770.4879999999999
+  },
+  {
+    "case_id": "africa-45",
+    "infrastructure_cost": 3452,
+    "region": "africa",
+    "expected_cost_prediction": 1418,
+    "predicted_cost": 517.8879999999999
+  },
+  {
+    "case_id": "africa-46",
+    "infrastructure_cost": 2755,
+    "region": "africa",
+    "expected_cost_prediction": 569,
+    "predicted_cost": 413.338
+  },
+  {
+    "case_id": "africa-47",
+    "infrastructure_cost": 2721,
+    "region": "africa",
+    "expected_cost_prediction": 960,
+    "predicted_cost": 408.238
+  },
+  {
+    "case_id": "africa-48",
+    "infrastructure_cost": 4477,
+    "region": "africa",
+    "expected_cost_prediction": 1454,
+    "predicted_cost": 671.6379999999999
+  },
+  {
+    "case_id": "africa-49",
+    "infrastructure_cost": 3183,
+    "region": "africa",
+    "expected_cost_prediction": 938,
+    "predicted_cost": 477.538
+  },
+  {
+    "case_id": "africa-50",
+    "infrastructure_cost": 2992,
+    "region": "africa",
+    "expected_cost_prediction": 920,
+    "predicted_cost": 448.88800000000003
+  },
+  {
+    "case_id": "africa-51",
+    "infrastructure_cost": 3918,
+    "region": "africa",
+    "expected_cost_prediction": 826,
+    "predicted_cost": 587.7879999999999
+  },
+  {
+    "case_id": "africa-52",
+    "infrastructure_cost": 1555,
+    "region": "africa",
+    "expected_cost_prediction": 1202,
+    "predicted_cost": 233.338
+  },
+  {
+    "case_id": "africa-53",
+    "infrastructure_cost": 2649,
+    "region": "africa",
+    "expected_cost_prediction": 567,
+    "predicted_cost": 397.438
+  },
+  {
+    "case_id": "africa-54",
+    "infrastructure_cost": 2304,
+    "region": "africa",
+    "expected_cost_prediction": 716,
+    "predicted_cost": 345.688
+  },
+  {
+    "case_id": "africa-55",
+    "infrastructure_cost": 2668,
+    "region": "africa",
+    "expected_cost_prediction": 634,
+    "predicted_cost": 400.288
+  },
+  {
+    "case_id": "africa-56",
+    "infrastructure_cost": 1627,
+    "region": "africa",
+    "expected_cost_prediction": 840,
+    "predicted_cost": 244.13799999999998
+  },
+  {
+    "case_id": "africa-57",
+    "infrastructure_cost": 2862,
+    "region": "africa",
+    "expected_cost_prediction": 1007,
+    "predicted_cost": 429.38800000000003
+  },
+  {
+    "case_id": "africa-58",
+    "infrastructure_cost": 2543,
+    "region": "africa",
+    "expected_cost_prediction": 638,
+    "predicted_cost": 381.538
+  },
+  {
+    "case_id": "africa-59",
+    "infrastructure_cost": 3020,
+    "region": "africa",
+    "expected_cost_prediction": 998,
+    "predicted_cost": 453.088
+  },
+  {
+    "case_id": "africa-60",
+    "infrastructure_cost": 3828,
+    "region": "africa",
+    "expected_cost_prediction": 1468,
+    "predicted_cost": 574.2879999999999
+  },
+  {
+    "case_id": "africa-61",
+    "infrastructure_cost": 1301,
+    "region": "africa",
+    "expected_cost_prediction": 1040,
+    "predicted_cost": 195.238
+  },
+  {
+    "case_id": "africa-62",
+    "infrastructure_cost": 3398,
+    "region": "africa",
+    "expected_cost_prediction": 905,
+    "predicted_cost": 509.788
+  },
+  {
+    "case_id": "africa-63",
+    "infrastructure_cost": 1559,
+    "region": "africa",
+    "expected_cost_prediction": 1189,
+    "predicted_cost": 233.938
+  },
+  {
+    "case_id": "africa-64",
+    "infrastructure_cost": 2008,
+    "region": "africa",
+    "expected_cost_prediction": 784,
+    "predicted_cost": 301.288
+  },
+  {
+    "case_id": "africa-65",
+    "infrastructure_cost": 3840,
+    "region": "africa",
+    "expected_cost_prediction": 811,
+    "predicted_cost": 576.088
+  },
+  {
+    "case_id": "africa-66",
+    "infrastructure_cost": 1605,
+    "region": "africa",
+    "expected_cost_prediction": 1086,
+    "predicted_cost": 240.838
+  },
+  {
+    "case_id": "africa-67",
+    "infrastructure_cost": 2278,
+    "region": "africa",
+    "expected_cost_prediction": 935,
+    "predicted_cost": 341.788
+  },
+  {
+    "case_id": "africa-68",
+    "infrastructure_cost": 3733,
+    "region": "africa",
+    "expected_cost_prediction": 551,
+    "predicted_cost": 560.0379999999999
+  },
+  {
+    "case_id": "africa-69",
+    "infrastructure_cost": 5027,
+    "region": "africa",
+    "expected_cost_prediction": 1184,
+    "predicted_cost": 754.1379999999999
+  },
+  {
+    "case_id": "africa-70",
+    "infrastructure_cost": 2195,
+    "region": "africa",
+    "expected_cost_prediction": 903,
+    "predicted_cost": 329.338
+  },
+  {
+    "case_id": "africa-71",
+    "infrastructure_cost": 2691,
+    "region": "africa",
+    "expected_cost_prediction": 1142,
+    "predicted_cost": 403.738
+  },
+  {
+    "case_id": "africa-72",
+    "infrastructure_cost": 4244,
+    "region": "africa",
+    "expected_cost_prediction": 1114,
+    "predicted_cost": 636.688
+  },
+  {
+    "case_id": "africa-73",
+    "infrastructure_cost": 3131,
+    "region": "africa",
+    "expected_cost_prediction": 732,
+    "predicted_cost": 469.738
+  },
+  {
+    "case_id": "africa-74",
+    "infrastructure_cost": 3369,
+    "region": "africa",
+    "expected_cost_prediction": 1337,
+    "predicted_cost": 505.438
+  },
+  {
+    "case_id": "africa-75",
+    "infrastructure_cost": 1283,
+    "region": "africa",
+    "expected_cost_prediction": 907,
+    "predicted_cost": 192.53799999999998
+  },
+  {
+    "case_id": "africa-76",
+    "infrastructure_cost": 5192,
+    "region": "africa",
+    "expected_cost_prediction": 613,
+    "predicted_cost": 778.8879999999999
+  },
+  {
+    "case_id": "africa-77",
+    "infrastructure_cost": 1926,
+    "region": "africa",
+    "expected_cost_prediction": 1143,
+    "predicted_cost": 288.988
+  },
+  {
+    "case_id": "africa-78",
+    "infrastructure_cost": 1241,
+    "region": "africa",
+    "expected_cost_prediction": 1348,
+    "predicted_cost": 186.238
+  },
+  {
+    "case_id": "africa-79",
+    "infrastructure_cost": 3248,
+    "region": "africa",
+    "expected_cost_prediction": 672,
+    "predicted_cost": 487.288
+  },
+  {
+    "case_id": "africa-80",
+    "infrastructure_cost": 1731,
+    "region": "africa",
+    "expected_cost_prediction": 701,
+    "predicted_cost": 259.738
+  },
+  {
+    "case_id": "africa-81",
+    "infrastructure_cost": 1322,
+    "region": "africa",
+    "expected_cost_prediction": 1109,
+    "predicted_cost": 198.38799999999998
+  },
+  {
+    "case_id": "africa-82",
+    "infrastructure_cost": 5793,
+    "region": "africa",
+    "expected_cost_prediction": 1406,
+    "predicted_cost": 869.0379999999999
+  },
+  {
+    "case_id": "africa-83",
+    "infrastructure_cost": 3404,
+    "region": "africa",
+    "expected_cost_prediction": 780,
+    "predicted_cost": 510.688
+  },
+  {
+    "case_id": "africa-84",
+    "infrastructure_cost": 1308,
+    "region": "africa",
+    "expected_cost_prediction": 921,
+    "predicted_cost": 196.28799999999998
+  },
+  {
+    "case_id": "africa-85",
+    "infrastructure_cost": 4302,
+    "region": "africa",
+    "expected_cost_prediction": 583,
+    "predicted_cost": 645.3879999999999
+  },
+  {
+    "case_id": "africa-86",
+    "infrastructure_cost": 2257,
+    "region": "africa",
+    "expected_cost_prediction": 1005,
+    "predicted_cost": 338.63800000000003
+  },
+  {
+    "case_id": "africa-87",
+    "infrastructure_cost": 5615,
+    "region": "africa",
+    "expected_cost_prediction": 500,
+    "predicted_cost": 842.338
+  },
+  {
+    "case_id": "africa-88",
+    "infrastructure_cost": 3195,
+    "region": "africa",
+    "expected_cost_prediction": 1014,
+    "predicted_cost": 479.338
+  },
+  {
+    "case_id": "africa-89",
+    "infrastructure_cost": 4460,
+    "region": "africa",
+    "expected_cost_prediction": 1486,
+    "predicted_cost": 669.088
+  },
+  {
+    "case_id": "africa-90",
+    "infrastructure_cost": 2515,
+    "region": "africa",
+    "expected_cost_prediction": 1047,
+    "predicted_cost": 377.338
+  },
+  {
+    "case_id": "africa-91",
+    "infrastructure_cost": 5564,
+    "region": "africa",
+    "expected_cost_prediction": 864,
+    "predicted_cost": 834.688
+  },
+  {
+    "case_id": "africa-92",
+    "infrastructure_cost": 5139,
+    "region": "africa",
+    "expected_cost_prediction": 1068,
+    "predicted_cost": 770.938
+  },
+  {
+    "case_id": "africa-93",
+    "infrastructure_cost": 4859,
+    "region": "africa",
+    "expected_cost_prediction": 984,
+    "predicted_cost": 728.938
+  },
+  {
+    "case_id": "africa-94",
+    "infrastructure_cost": 4476,
+    "region": "africa",
+    "expected_cost_prediction": 960,
+    "predicted_cost": 671.4879999999999
+  },
+  {
+    "case_id": "africa-95",
+    "infrastructure_cost": 5868,
+    "region": "africa",
+    "expected_cost_prediction": 620,
+    "predicted_cost": 880.2879999999999
+  },
+  {
+    "case_id": "africa-96",
+    "infrastructure_cost": 4641,
+    "region": "africa",
+    "expected_cost_prediction": 1169,
+    "predicted_cost": 696.2379999999999
+  },
+  {
+    "case_id": "africa-97",
+    "infrastructure_cost": 1064,
+    "region": "africa",
+    "expected_cost_prediction": 1216,
+    "predicted_cost": 159.688
+  },
+  {
+    "case_id": "africa-98",
+    "infrastructure_cost": 1269,
+    "region": "africa",
+    "expected_cost_prediction": 924,
+    "predicted_cost": 190.438
+  },
+  {
+    "case_id": "africa-99",
+    "infrastructure_cost": 3319,
+    "region": "africa",
+    "expected_cost_prediction": 1097,
+    "predicted_cost": 497.938
+  },
+  {
+    "case_id": "africa-100",
+    "infrastructure_cost": 3140,
+    "region": "africa",
+    "expected_cost_prediction": 1003,
+    "predicted_cost": 471.088
+  },
+  {
+    "case_id": "africa-101",
+    "infrastructure_cost": 4118,
+    "region": "africa",
+    "expected_cost_prediction": 665,
+    "predicted_cost": 617.7879999999999
+  },
+  {
+    "case_id": "africa-102",
+    "infrastructure_cost": 4306,
+    "region": "africa",
+    "expected_cost_prediction": 1112,
+    "predicted_cost": 645.9879999999999
+  },
+  {
+    "case_id": "africa-103",
+    "infrastructure_cost": 5139,
+    "region": "africa",
+    "expected_cost_prediction": 1291,
+    "predicted_cost": 770.938
+  },
+  {
+    "case_id": "africa-104",
+    "infrastructure_cost": 2988,
+    "region": "africa",
+    "expected_cost_prediction": 996,
+    "predicted_cost": 448.288
+  },
+  {
+    "case_id": "africa-105",
+    "infrastructure_cost": 1325,
+    "region": "africa",
+    "expected_cost_prediction": 1028,
+    "predicted_cost": 198.838
+  },
+  {
+    "case_id": "africa-106",
+    "infrastructure_cost": 4659,
+    "region": "africa",
+    "expected_cost_prediction": 949,
+    "predicted_cost": 698.938
+  },
+  {
+    "case_id": "africa-107",
+    "infrastructure_cost": 1784,
+    "region": "africa",
+    "expected_cost_prediction": 1109,
+    "predicted_cost": 267.688
+  },
+  {
+    "case_id": "africa-108",
+    "infrastructure_cost": 4975,
+    "region": "africa",
+    "expected_cost_prediction": 1457,
+    "predicted_cost": 746.338
+  },
+  {
+    "case_id": "africa-109",
+    "infrastructure_cost": 4789,
+    "region": "africa",
+    "expected_cost_prediction": 913,
+    "predicted_cost": 718.438
+  },
+  {
+    "case_id": "africa-110",
+    "infrastructure_cost": 3145,
+    "region": "africa",
+    "expected_cost_prediction": 1146,
+    "predicted_cost": 471.838
+  },
+  {
+    "case_id": "africa-111",
+    "infrastructure_cost": 3461,
+    "region": "africa",
+    "expected_cost_prediction": 839,
+    "predicted_cost": 519.2379999999999
+  },
+  {
+    "case_id": "africa-112",
+    "infrastructure_cost": 2620,
+    "region": "africa",
+    "expected_cost_prediction": 1337,
+    "predicted_cost": 393.088
+  },
+  {
+    "case_id": "africa-113",
+    "infrastructure_cost": 4374,
+    "region": "africa",
+    "expected_cost_prediction": 1299,
+    "predicted_cost": 656.188
+  },
+  {
+    "case_id": "africa-114",
+    "infrastructure_cost": 3735,
+    "region": "africa",
+    "expected_cost_prediction": 744,
+    "predicted_cost": 560.338
+  },
+  {
+    "case_id": "africa-115",
+    "infrastructure_cost": 2606,
+    "region": "africa",
+    "expected_cost_prediction": 578,
+    "predicted_cost": 390.988
+  },
+  {
+    "case_id": "africa-116",
+    "infrastructure_cost": 2726,
+    "region": "africa",
+    "expected_cost_prediction": 555,
+    "predicted_cost": 408.988
+  },
+  {
+    "case_id": "africa-117",
+    "infrastructure_cost": 1063,
+    "region": "africa",
+    "expected_cost_prediction": 566,
+    "predicted_cost": 159.53799999999998
+  },
+  {
+    "case_id": "africa-118",
+    "infrastructure_cost": 4969,
+    "region": "africa",
+    "expected_cost_prediction": 645,
+    "predicted_cost": 745.438
+  },
+  {
+    "case_id": "africa-119",
+    "infrastructure_cost": 3444,
+    "region": "africa",
+    "expected_cost_prediction": 1349,
+    "predicted_cost": 516.688
+  },
+  {
+    "case_id": "africa-120",
+    "infrastructure_cost": 1622,
+    "region": "africa",
+    "expected_cost_prediction": 1136,
+    "predicted_cost": 243.38799999999998
+  },
+  {
+    "case_id": "africa-121",
+    "infrastructure_cost": 1776,
+    "region": "africa",
+    "expected_cost_prediction": 1143,
+    "predicted_cost": 266.488
+  },
+  {
+    "case_id": "africa-122",
+    "infrastructure_cost": 4509,
+    "region": "africa",
+    "expected_cost_prediction": 950,
+    "predicted_cost": 676.438
+  },
+  {
+    "case_id": "africa-123",
+    "infrastructure_cost": 1710,
+    "region": "africa",
+    "expected_cost_prediction": 1170,
+    "predicted_cost": 256.588
+  },
+  {
+    "case_id": "africa-124",
+    "infrastructure_cost": 4587,
+    "region": "africa",
+    "expected_cost_prediction": 958,
+    "predicted_cost": 688.1379999999999
+  },
+  {
+    "case_id": "africa-125",
+    "infrastructure_cost": 2481,
+    "region": "africa",
+    "expected_cost_prediction": 581,
+    "predicted_cost": 372.238
+  },
+  {
+    "case_id": "africa-126",
+    "infrastructure_cost": 1549,
+    "region": "africa",
+    "expected_cost_prediction": 1410,
+    "predicted_cost": 232.438
+  },
+  {
+    "case_id": "africa-127",
+    "infrastructure_cost": 2716,
+    "region": "africa",
+    "expected_cost_prediction": 679,
+    "predicted_cost": 407.488
+  },
+  {
+    "case_id": "africa-128",
+    "infrastructure_cost": 2212,
+    "region": "africa",
+    "expected_cost_prediction": 502,
+    "predicted_cost": 331.88800000000003
+  },
+  {
+    "case_id": "africa-129",
+    "infrastructure_cost": 3361,
+    "region": "africa",
+    "expected_cost_prediction": 675,
+    "predicted_cost": 504.238
+  },
+  {
+    "case_id": "africa-130",
+    "infrastructure_cost": 2297,
+    "region": "africa",
+    "expected_cost_prediction": 815,
+    "predicted_cost": 344.63800000000003
+  },
+  {
+    "case_id": "africa-131",
+    "infrastructure_cost": 1491,
+    "region": "africa",
+    "expected_cost_prediction": 1412,
+    "predicted_cost": 223.738
+  },
+  {
+    "case_id": "africa-132",
+    "infrastructure_cost": 3981,
+    "region": "africa",
+    "expected_cost_prediction": 1078,
+    "predicted_cost": 597.2379999999999
+  },
+  {
+    "case_id": "africa-133",
+    "infrastructure_cost": 5198,
+    "region": "africa",
+    "expected_cost_prediction": 558,
+    "predicted_cost": 779.7879999999999
+  },
+  {
+    "case_id": "africa-134",
+    "infrastructure_cost": 4424,
+    "region": "africa",
+    "expected_cost_prediction": 1469,
+    "predicted_cost": 663.688
+  },
+  {
+    "case_id": "africa-135",
+    "infrastructure_cost": 3395,
+    "region": "africa",
+    "expected_cost_prediction": 551,
+    "predicted_cost": 509.338
+  },
+  {
+    "case_id": "africa-136",
+    "infrastructure_cost": 1740,
+    "region": "africa",
+    "expected_cost_prediction": 1438,
+    "predicted_cost": 261.088
+  },
+  {
+    "case_id": "africa-137",
+    "infrastructure_cost": 2325,
+    "region": "africa",
+    "expected_cost_prediction": 525,
+    "predicted_cost": 348.838
+  },
+  {
+    "case_id": "africa-138",
+    "infrastructure_cost": 1012,
+    "region": "africa",
+    "expected_cost_prediction": 613,
+    "predicted_cost": 151.88799999999998
+  },
+  {
+    "case_id": "africa-139",
+    "infrastructure_cost": 5813,
+    "region": "africa",
+    "expected_cost_prediction": 509,
+    "predicted_cost": 872.0379999999999
+  },
+  {
+    "case_id": "africa-140",
+    "infrastructure_cost": 4653,
+    "region": "africa",
+    "expected_cost_prediction": 678,
+    "predicted_cost": 698.0379999999999
+  },
+  {
+    "case_id": "africa-141",
+    "infrastructure_cost": 1153,
+    "region": "africa",
+    "expected_cost_prediction": 880,
+    "predicted_cost": 173.03799999999998
+  },
+  {
+    "case_id": "africa-142",
+    "infrastructure_cost": 1320,
+    "region": "africa",
+    "expected_cost_prediction": 1243,
+    "predicted_cost": 198.088
+  },
+  {
+    "case_id": "africa-143",
+    "infrastructure_cost": 1247,
+    "region": "africa",
+    "expected_cost_prediction": 790,
+    "predicted_cost": 187.13799999999998
+  },
+  {
+    "case_id": "africa-144",
+    "infrastructure_cost": 5018,
+    "region": "africa",
+    "expected_cost_prediction": 942,
+    "predicted_cost": 752.7879999999999
+  },
+  {
+    "case_id": "africa-145",
+    "infrastructure_cost": 4468,
+    "region": "africa",
+    "expected_cost_prediction": 572,
+    "predicted_cost": 670.2879999999999
+  },
+  {
+    "case_id": "africa-146",
+    "infrastructure_cost": 2362,
+    "region": "africa",
+    "expected_cost_prediction": 1106,
+    "predicted_cost": 354.38800000000003
+  },
+  {
+    "case_id": "africa-147",
+    "infrastructure_cost": 4773,
+    "region": "africa",
+    "expected_cost_prediction": 1489,
+    "predicted_cost": 716.0379999999999
+  },
+  {
+    "case_id": "africa-148",
+    "infrastructure_cost": 5272,
+    "region": "africa",
+    "expected_cost_prediction": 915,
+    "predicted_cost": 790.8879999999999
+  },
+  {
+    "case_id": "africa-149",
+    "infrastructure_cost": 1149,
+    "region": "africa",
+    "expected_cost_prediction": 516,
+    "predicted_cost": 172.438
+  },
+  {
+    "case_id": "africa-150",
+    "infrastructure_cost": 3465,
+    "region": "africa",
+    "expected_cost_prediction": 911,
+    "predicted_cost": 519.838
+  },
+  {
+    "case_id": "africa-151",
+    "infrastructure_cost": 2778,
+    "region": "africa",
+    "expected_cost_prediction": 1424,
+    "predicted_cost": 416.788
+  },
+  {
+    "case_id": "africa-152",
+    "infrastructure_cost": 1342,
+    "region": "africa",
+    "expected_cost_prediction": 1078,
+    "predicted_cost": 201.38799999999998
+  },
+  {
+    "case_id": "africa-153",
+    "infrastructure_cost": 2298,
+    "region": "africa",
+    "expected_cost_prediction": 1158,
+    "predicted_cost": 344.788
+  },
+  {
+    "case_id": "africa-154",
+    "infrastructure_cost": 3682,
+    "region": "africa",
+    "expected_cost_prediction": 751,
+    "predicted_cost": 552.3879999999999
+  },
+  {
+    "case_id": "africa-155",
+    "infrastructure_cost": 4541,
+    "region": "africa",
+    "expected_cost_prediction": 846,
+    "predicted_cost": 681.2379999999999
+  },
+  {
+    "case_id": "africa-156",
+    "infrastructure_cost": 1085,
+    "region": "africa",
+    "expected_cost_prediction": 771,
+    "predicted_cost": 162.838
+  },
+  {
+    "case_id": "africa-157",
+    "infrastructure_cost": 3736,
+    "region": "africa",
+    "expected_cost_prediction": 1310,
+    "predicted_cost": 560.4879999999999
+  },
+  {
+    "case_id": "africa-158",
+    "infrastructure_cost": 2815,
+    "region": "africa",
+    "expected_cost_prediction": 630,
+    "predicted_cost": 422.338
+  },
+  {
+    "case_id": "africa-159",
+    "infrastructure_cost": 3918,
+    "region": "africa",
+    "expected_cost_prediction": 1255,
+    "predicted_cost": 587.7879999999999
+  },
+  {
+    "case_id": "africa-160",
+    "infrastructure_cost": 1447,
+    "region": "africa",
+    "expected_cost_prediction": 510,
+    "predicted_cost": 217.13799999999998
+  },
+  {
+    "case_id": "africa-161",
+    "infrastructure_cost": 2842,
+    "region": "africa",
+    "expected_cost_prediction": 832,
+    "predicted_cost": 426.38800000000003
+  },
+  {
+    "case_id": "africa-162",
+    "infrastructure_cost": 5458,
+    "region": "africa",
+    "expected_cost_prediction": 867,
+    "predicted_cost": 818.7879999999999
+  },
+  {
+    "case_id": "africa-163",
+    "infrastructure_cost": 3168,
+    "region": "africa",
+    "expected_cost_prediction": 1056,
+    "predicted_cost": 475.288
+  },
+  {
+    "case_id": "africa-164",
+    "infrastructure_cost": 3965,
+    "region": "africa",
+    "expected_cost_prediction": 1230,
+    "predicted_cost": 594.838
+  },
+  {
+    "case_id": "africa-165",
+    "infrastructure_cost": 1705,
+    "region": "africa",
+    "expected_cost_prediction": 869,
+    "predicted_cost": 255.838
+  },
+  {
+    "case_id": "africa-166",
+    "infrastructure_cost": 5217,
+    "region": "africa",
+    "expected_cost_prediction": 784,
+    "predicted_cost": 782.6379999999999
+  }
+]

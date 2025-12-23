@@ -15,7 +15,9 @@ from helpers.py_compat import edition_context_free
 @pytest.fixture
 def free_cli():
     """CLI command for Free edition mode."""
-    return ["costpilot"]
+    import os
+    costpilot_path = os.path.join(os.path.dirname(__file__), '..', 'target', 'debug', 'costpilot')
+    return [costpilot_path]
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 # Self-Consistency Tests Contract
 
-**Version:** 1.0.0  
-**Status:** Enforced  
+**Version:** 1.0.0
+**Status:** Enforced
 **Last Updated:** 2025-12-06
 
 ---
@@ -34,25 +34,25 @@ Examples:
 #[test]
 fn test_detection_prediction_consistency() {
     let plan = sample_terraform_plan();
-    
+
     // Run detection
     let detected_resources = detect_resources(&plan).unwrap();
-    
+
     // Run prediction
     let predictions = predict_costs(&plan).unwrap();
-    
+
     // Every detected resource must have a prediction
     for resource in detected_resources {
         let prediction = predictions
             .iter()
             .find(|p| p.resource_id == resource.id);
-        
+
         assert!(
             prediction.is_some(),
             "Resource {} detected but no prediction found",
             resource.id
         );
-        
+
         // Prediction cost must be > 0 for detected resources
         if let Some(pred) = prediction {
             assert!(
@@ -72,27 +72,27 @@ fn test_detection_prediction_consistency() {
 fn test_detection_cost_change_matches_prediction_delta() {
     let baseline = sample_baseline();
     let plan = sample_modified_plan();
-    
+
     // Detection detects cost change
     let cost_changes = detect_cost_changes(&baseline, &plan).unwrap();
-    
+
     // Prediction predicts delta
     let predictions = predict_costs(&plan).unwrap();
     let baseline_predictions = predict_costs(&baseline).unwrap();
-    
+
     for change in cost_changes {
         let new_pred = predictions
             .iter()
             .find(|p| p.resource_id == change.resource_id)
             .unwrap();
-        
+
         let old_pred = baseline_predictions
             .iter()
             .find(|p| p.resource_id == change.resource_id)
             .unwrap();
-        
+
         let predicted_delta = new_pred.p50 - old_pred.p50;
-        
+
         // Deltas must match within 5%
         let tolerance = predicted_delta.abs() * 0.05;
         assert!(
@@ -115,13 +115,13 @@ fn test_detection_cost_change_matches_prediction_delta() {
 #[test]
 fn test_prediction_confidence_matches_explain_evidence() {
     let resource = sample_ec2_resource();
-    
+
     // Prediction
     let prediction = predict_cost(&resource).unwrap();
-    
+
     // Explanation
     let explanation = explain_prediction(&resource, &prediction).unwrap();
-    
+
     if prediction.confidence >= 0.9 {
         // High confidence must have:
         // - At least 3 reasoning steps
@@ -131,7 +131,7 @@ fn test_prediction_confidence_matches_explain_evidence() {
             prediction.confidence,
             explanation.reasoning.len()
         );
-        
+
         // - Heuristic provenance (not cold-start)
         assert!(
             matches!(
@@ -140,7 +140,7 @@ fn test_prediction_confidence_matches_explain_evidence() {
             ),
             "High confidence but using cold-start inference"
         );
-        
+
         // - No fallback reason
         assert!(
             explanation.provenance.fallback_reason.is_none(),
@@ -156,10 +156,10 @@ fn test_prediction_confidence_matches_explain_evidence() {
 #[test]
 fn test_low_confidence_has_fallback_reason() {
     let resource = sample_unsupported_resource();
-    
+
     let prediction = predict_cost(&resource).unwrap();
     let explanation = explain_prediction(&resource, &prediction).unwrap();
-    
+
     if prediction.confidence < 0.5 {
         // Low confidence must have fallback reason
         assert!(
@@ -167,7 +167,7 @@ fn test_low_confidence_has_fallback_reason() {
             "Low confidence ({}) but no fallback reason",
             prediction.confidence
         );
-        
+
         // Must use cold-start
         assert!(
             matches!(
@@ -190,23 +190,23 @@ fn test_low_confidence_has_fallback_reason() {
 #[test]
 fn test_grouping_respects_dependencies() {
     let plan = sample_terraform_plan();
-    
+
     // Build dependency graph
     let graph = build_dependency_graph(&plan).unwrap();
-    
+
     // Group resources
     let groups = group_resources(&plan, GroupBy::Module).unwrap();
-    
+
     // Check: if A depends on B, they must be in topologically sorted order
     for edge in &graph.edges {
         let from_group = find_group_for_resource(&groups, &edge.from).unwrap();
         let to_group = find_group_for_resource(&groups, &edge.to).unwrap();
-        
+
         // If different groups, check topological order
         if from_group.id != to_group.id {
             let from_index = groups.iter().position(|g| g.id == from_group.id).unwrap();
             let to_index = groups.iter().position(|g| g.id == to_group.id).unwrap();
-            
+
             assert!(
                 from_index >= to_index,
                 "Resource {} (group {}) depends on {} (group {}), but order is wrong",
@@ -226,16 +226,16 @@ fn test_grouping_respects_dependencies() {
 #[test]
 fn test_cycle_detection_consistent() {
     let plan = sample_terraform_plan_with_cycle();
-    
+
     // Build graph
     let graph = build_dependency_graph(&plan).unwrap();
-    
+
     // Check for cycles (mapping engine)
     let has_cycle = graph.has_cycle();
-    
+
     // Grouping must detect same cycles
     let grouping_result = group_resources(&plan, GroupBy::Dependencies);
-    
+
     if has_cycle {
         // Grouping should fail or warn
         assert!(
@@ -262,13 +262,13 @@ fn test_severity_matches_cost_delta() {
         (3000.0, Severity::High),     // 50-100%
         (7000.0, Severity::Critical), // >100%
     ];
-    
+
     let baseline_cost = 3000.0;
-    
+
     for (new_cost, expected_severity) in deltas {
         let delta = CostDelta::new(baseline_cost, new_cost, Interval::Month);
         let computed_severity = delta.severity();
-        
+
         assert_eq!(
             computed_severity,
             expected_severity,
@@ -287,25 +287,25 @@ fn test_severity_matches_cost_delta() {
 #[test]
 fn test_policy_violation_severity_consistent() {
     let plan = sample_terraform_plan();
-    
+
     // Evaluate policy
     let policy_result = evaluate_policy(&plan, &sample_policy()).unwrap();
-    
+
     // Check predictions
     let predictions = predict_costs(&plan).unwrap();
-    
+
     for violation in &policy_result.violations {
         // Find affected resource
         let resource = plan.resources
             .iter()
             .find(|r| r.id == violation.resource_id)
             .unwrap();
-        
+
         let prediction = predictions
             .iter()
             .find(|p| p.resource_id == resource.id)
             .unwrap();
-        
+
         // Severity should correlate with cost
         match violation.severity {
             Severity::Critical => {
@@ -338,27 +338,27 @@ fn test_policy_violation_severity_consistent() {
 #[test]
 fn test_stale_heuristics_reduce_confidence() {
     use chrono::{Utc, Duration};
-    
+
     let fresh_heuristic = Heuristic {
         updated_at: Utc::now(),
         ..sample_heuristic()
     };
-    
+
     let stale_heuristic = Heuristic {
         updated_at: Utc::now() - Duration::days(180),  // 6 months old
         ..sample_heuristic()
     };
-    
+
     let resource = sample_ec2_resource();
-    
+
     let fresh_prediction = predict_with_heuristic(&resource, &fresh_heuristic).unwrap();
     let stale_prediction = predict_with_heuristic(&resource, &stale_heuristic).unwrap();
-    
+
     assert!(
         stale_prediction.confidence < fresh_prediction.confidence,
         "Stale heuristic should have lower confidence"
     );
-    
+
     // Explanation must mention staleness
     let explanation = explain_prediction(&resource, &stale_prediction).unwrap();
     assert!(
@@ -381,9 +381,9 @@ fn test_missing_heuristic_uses_cold_start() {
         instance_type: "t3.xlarge".to_string(),
         ..sample_ec2_resource()
     };
-    
+
     let prediction = predict_cost(&resource).unwrap();
-    
+
     // Must use cold-start
     let explanation = explain_prediction(&resource, &prediction).unwrap();
     assert!(
@@ -393,7 +393,7 @@ fn test_missing_heuristic_uses_cold_start() {
         ),
         "Missing heuristic must use cold-start"
     );
-    
+
     // Must have fallback reason
     assert!(
         matches!(
@@ -402,7 +402,7 @@ fn test_missing_heuristic_uses_cold_start() {
         ),
         "Missing heuristic must have fallback reason"
     );
-    
+
     // Confidence should be lower
     assert!(
         prediction.confidence < 0.7,
@@ -422,15 +422,15 @@ fn test_missing_heuristic_uses_cold_start() {
 fn test_regression_classifier_matches_delta_sign() {
     let baseline = sample_baseline();
     let plan = sample_modified_plan();
-    
+
     // Classify regression
     let regression = classify_regression(&baseline, &plan).unwrap();
-    
+
     // Compute delta
     let baseline_cost = predict_total_cost(&baseline).unwrap();
     let plan_cost = predict_total_cost(&plan).unwrap();
     let delta = plan_cost - baseline_cost;
-    
+
     // Check consistency
     match regression.regression_type {
         RegressionType::CostIncrease => {
@@ -469,10 +469,10 @@ fn test_regression_classifier_matches_delta_sign() {
 #[test]
 fn test_prediction_intervals_ordered() {
     let resources = sample_resources(100);
-    
+
     for resource in resources {
         let prediction = predict_cost(&resource).unwrap();
-        
+
         // p10 ≤ p50 ≤ p90 ≤ p99
         assert!(
             prediction.p10 <= prediction.p50,
@@ -480,14 +480,14 @@ fn test_prediction_intervals_ordered() {
             prediction.p10,
             prediction.p50
         );
-        
+
         assert!(
             prediction.p50 <= prediction.p90,
             "p50 ({}) > p90 ({})",
             prediction.p50,
             prediction.p90
         );
-        
+
         assert!(
             prediction.p90 <= prediction.p99,
             "p90 ({}) > p99 ({})",
@@ -504,15 +504,15 @@ fn test_prediction_intervals_ordered() {
 #[test]
 fn test_cost_deltas_sum_correctly() {
     let plan = sample_terraform_plan();
-    
+
     let predictions = predict_costs(&plan).unwrap();
-    
+
     // Sum individual predictions
     let sum_individual: f64 = predictions.iter().map(|p| p.p50).sum();
-    
+
     // Total cost prediction
     let total = predict_total_cost(&plan).unwrap();
-    
+
     // Must match within floating-point tolerance
     let tolerance = 0.01;  // 1 cent
     assert!(
@@ -540,16 +540,16 @@ fn test_all_json_has_schema_version() {
         generate_map_output(&sample_plan()).unwrap(),
         generate_group_output(&sample_plan()).unwrap(),
     ];
-    
+
     for output in outputs {
         let json: Value = serde_json::from_str(&output).unwrap();
-        
+
         assert!(
             json.get("schema_version").is_some(),
             "JSON output missing schema_version: {}",
             output
         );
-        
+
         let version = json["schema_version"].as_str().unwrap();
         assert!(
             version.starts_with("1."),
@@ -567,27 +567,27 @@ fn test_all_json_has_schema_version() {
 fn test_json_keys_alphabetical() {
     let output = generate_scan_output(&sample_plan()).unwrap();
     let json: Value = serde_json::from_str(&output).unwrap();
-    
+
     fn check_keys_sorted(value: &Value, path: &str) {
         if let Some(obj) = value.as_object() {
             let keys: Vec<_> = obj.keys().collect();
             let mut sorted_keys = keys.clone();
             sorted_keys.sort();
-            
+
             assert_eq!(
                 keys,
                 sorted_keys,
                 "Keys not sorted at path: {}",
                 path
             );
-            
+
             // Recursively check nested objects
             for (key, nested_value) in obj {
                 check_keys_sorted(nested_value, &format!("{}.{}", path, key));
             }
         }
     }
-    
+
     check_keys_sorted(&json, "root");
 }
 ```
@@ -602,10 +602,10 @@ fn test_json_keys_alphabetical() {
 #[test]
 fn test_error_code_categories_consistent() {
     use strum::IntoEnumIterator;
-    
+
     for code in ErrorCode::iter() {
         let computed_category = code.category();
-        
+
         let code_num = code.as_str()[1..].parse::<u32>().unwrap();
         let expected_category = match code_num {
             1..=99 => ErrorCategory::Parse,
@@ -616,7 +616,7 @@ fn test_error_code_categories_consistent() {
             500..=599 => ErrorCategory::Internal,
             _ => ErrorCategory::Unknown,
         };
-        
+
         assert_eq!(
             computed_category,
             expected_category,
@@ -644,13 +644,13 @@ fn test_cli_exit_codes_consistent() {
         (ErrorCategory::Configuration, 14),
         (ErrorCategory::Internal, 15),
     ];
-    
+
     for (category, expected_code) in test_cases {
         let error = ErrorSignature {
             category,
             ..sample_error()
         };
-        
+
         assert_eq!(
             error.exit_code(),
             expected_code,
@@ -673,34 +673,34 @@ fn run_all_self_consistency_tests() {
     // Detection ↔ Prediction
     test_detection_prediction_consistency();
     test_detection_cost_change_matches_prediction_delta();
-    
+
     // Prediction ↔ Explain
     test_prediction_confidence_matches_explain_evidence();
     test_low_confidence_has_fallback_reason();
-    
+
     // Mapping ↔ Grouping
     test_grouping_respects_dependencies();
     test_cycle_detection_consistent();
-    
+
     // Policy ↔ Severity
     test_severity_matches_cost_delta();
     test_policy_violation_severity_consistent();
-    
+
     // Heuristic ↔ Confidence
     test_stale_heuristics_reduce_confidence();
     test_missing_heuristic_uses_cold_start();
-    
+
     // Regression ↔ Delta
     test_regression_classifier_matches_delta_sign();
-    
+
     // Float Math
     test_prediction_intervals_ordered();
     test_cost_deltas_sum_correctly();
-    
+
     // JSON Schema
     test_all_json_has_schema_version();
     test_json_keys_alphabetical();
-    
+
     // Error Codes
     test_error_code_categories_consistent();
     test_cli_exit_codes_consistent();
@@ -725,10 +725,10 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      
+
       - name: Run self-consistency tests
         run: cargo test --test self_consistency
-      
+
       - name: Check for consistency violations
         run: |
           cargo test --test self_consistency -- --nocapture | \
@@ -749,7 +749,7 @@ proptest! {
     ) {
         let detected = detect_resources(&plan).unwrap();
         let predicted = predict_costs(&plan).unwrap();
-        
+
         // Every detected resource must have prediction
         for resource in detected {
             prop_assert!(
@@ -759,13 +759,13 @@ proptest! {
             );
         }
     }
-    
+
     #[test]
     fn test_prediction_intervals_ordered_fuzz(
         resource in arb_resource()
     ) {
         let prediction = predict_cost(&resource).unwrap();
-        
+
         prop_assert!(prediction.p10 <= prediction.p50);
         prop_assert!(prediction.p50 <= prediction.p90);
         prop_assert!(prediction.p90 <= prediction.p99);

@@ -1,0 +1,25 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "UsersTable": {
+      "ChangeType": "Update",
+      "Properties": {
+        "BillingMode": {
+          "New": "PAY_PER_REQUEST",
+          "Old": "PROVISIONED"
+        },
+        "ProvisionedThroughput": {
+          "New": null,
+          "Old": {
+            "ReadCapacityUnits": 5,
+            "WriteCapacityUnits": 5
+          }
+        }
+      },
+      "Type": "AWS::DynamoDB::Table"
+    }
+  }
+}

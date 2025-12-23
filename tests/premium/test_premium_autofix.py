@@ -15,7 +15,7 @@ def test_autofix_command_exists():
         text=True,
         timeout=10
     )
-    
+
     # In Premium, should succeed (exit 0)
     # In Free, should fail (command not found)
     # This test documents expected Premium behavior
@@ -32,7 +32,7 @@ def test_autofix_with_policy():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -43,7 +43,7 @@ def test_autofix_with_policy():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -58,20 +58,20 @@ def test_autofix_with_policy():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should succeed and apply fix
         # In Free, command doesn't exist
         if result.returncode == 0:
@@ -84,7 +84,7 @@ def test_autofix_with_apply_flag():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         output_path = Path(tmpdir) / "fixed.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -95,18 +95,18 @@ def test_autofix_with_apply_flag():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "autofix", "--plan", str(template_path), 
+            ["costpilot", "autofix", "--plan", str(template_path),
              "--output", str(output_path), "--apply"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should apply fixes
         if result.returncode == 0:
             # Check output file was created
@@ -120,7 +120,7 @@ def test_autofix_dry_run():
     """Test autofix dry-run mode."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -131,17 +131,17 @@ def test_autofix_dry_run():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--dry-run"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should show what would be fixed
         if result.returncode == 0:
             # Should have output describing fixes
@@ -152,7 +152,7 @@ def test_autofix_multiple_resources():
     """Test autofix with multiple resources."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 f"Lambda{i}": {
@@ -164,17 +164,17 @@ def test_autofix_multiple_resources():
                 for i in range(10)
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should handle multiple resources
         if result.returncode == 0:
             assert len(result.stdout) > 0, "Should have output for multiple resources"
@@ -184,7 +184,7 @@ def test_autofix_validation():
     """Test autofix validates fixes."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -196,17 +196,17 @@ def test_autofix_validation():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--validate"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should validate after fixing
         # Exit code should indicate success or validation failure
 

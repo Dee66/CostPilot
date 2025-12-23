@@ -1,8 +1,10 @@
 // Autofix engine - orchestrates fix generation
 
+use crate::edition::EditionContext;
 use crate::engines::autofix::patch_generator::{PatchFile, PatchGenerator};
 use crate::engines::autofix::snippet_generator::{FixSnippet, SnippetGenerator};
 use crate::engines::explain::anti_patterns::detect_anti_patterns;
+use crate::engines::shared::error_model::CostPilotError;
 use crate::engines::shared::models::{CostEstimate, Detection, ResourceChange};
 use serde::{Deserialize, Serialize};
 
@@ -47,19 +49,25 @@ impl AutofixEngine {
         changes: &[ResourceChange],
         estimates: &[CostEstimate],
         mode: AutofixMode,
-    ) -> AutofixResult {
+        edition: &EditionContext,
+    ) -> Result<AutofixResult, CostPilotError> {
         match mode {
-            AutofixMode::Snippet => Self::generate_snippets(detections, changes, estimates),
-            AutofixMode::Patch => Self::generate_patches(detections, changes, estimates),
-            AutofixMode::DriftSafe => {
-                // Beta feature - not implemented in MVP
-                AutofixResult {
-                    mode: "drift-safe".to_string(),
-                    fixes_generated: 0,
-                    fixes: vec![],
-                    patches: vec![],
-                    warnings: vec!["Drift-safe mode is in Beta (V1)".to_string()],
+            AutofixMode::Snippet => Ok(Self::generate_snippets(detections, changes, estimates)),
+            AutofixMode::Patch => {
+                if !edition.is_premium() {
+                    return Err(CostPilotError::upgrade_required(
+                        "Patch mode requires CostPilot Premium",
+                    ));
                 }
+                Ok(Self::generate_patches(detections, changes, estimates))
+            }
+            AutofixMode::DriftSafe => {
+                if !edition.is_premium() {
+                    return Err(CostPilotError::upgrade_required(
+                        "Drift-safe mode requires CostPilot Premium",
+                    ));
+                }
+                Ok(Self::generate_drift_safe(detections, changes, estimates))
             }
         }
     }
@@ -132,6 +140,87 @@ impl AutofixEngine {
         }
     }
 
+    /// Generate drift-safe fixes
+    fn generate_drift_safe(
+        detections: &[Detection],
+        changes: &[ResourceChange],
+        _estimates: &[CostEstimate],
+    ) -> AutofixResult {
+        use crate::engines::autofix::drift_safety::drift_detector::DriftDetector;
+
+        let mut warnings = Vec::new();
+        let mut patches = Vec::new();
+
+        // Create drift detector
+        let drift_detector = DriftDetector::new();
+
+        for detection in detections {
+            // Find corresponding resource change
+            let change = changes
+                .iter()
+                .find(|c| c.resource_id == detection.resource_id);
+
+            if let Some(change) = change {
+                // For drift-safe autofix, we need to verify infrastructure state
+                // and generate rollback patches if drift is detected
+
+                match Self::generate_drift_safe_patch(&drift_detector, detection, change) {
+                    Ok(Some(patch)) => {
+                        patches.push(patch);
+                    }
+                    Ok(None) => {
+                        // No drift detected or no rollback needed
+                        warnings.push(format!(
+                            "No infrastructure drift detected for {} ({})",
+                            detection.resource_id, change.resource_type
+                        ));
+                    }
+                    Err(e) => {
+                        warnings.push(format!(
+                            "Failed to generate drift-safe patch for {}: {}",
+                            detection.resource_id, e
+                        ));
+                    }
+                }
+            } else {
+                warnings.push(format!(
+                    "Resource change not found for detection: {}",
+                    detection.resource_id
+                ));
+            }
+        }
+
+        AutofixResult {
+            mode: "drift-safe".to_string(),
+            fixes_generated: patches.len(),
+            fixes: vec![],
+            patches,
+            warnings,
+        }
+    }
+
+    /// Generate a drift-safe patch for a single resource
+    fn generate_drift_safe_patch(
+        drift_detector: &crate::engines::autofix::drift_safety::drift_detector::DriftDetector,
+        detection: &Detection,
+        change: &ResourceChange,
+    ) -> Result<Option<PatchFile>, Box<dyn std::error::Error>> {
+        use crate::engines::autofix::drift_safety::rollback_patch::RollbackPatchGenerator;
+
+        // Detect infrastructure drift
+        let drift_result = drift_detector.detect_infrastructure_drift(change)?;
+
+        if !drift_result.drift_detected {
+            return Ok(None); // No drift, no rollback needed
+        }
+
+        // Generate rollback patch to revert to expected state
+        let rollback_generator = RollbackPatchGenerator::new();
+        let patch = rollback_generator.generate_rollback_patch(detection, change, &drift_result)?;
+
+        Ok(Some(patch))
+    }
+
     /// Validate fix is deterministic and idempotent
     pub fn validate_fix(snippet: &FixSnippet) -> Result<(), String> {
         if !snippet.deterministic {
@@ -172,10 +261,6 @@ mod tests {
             message: "High cost instance detected".to_string(),
             estimated_cost: Some(560.0),
             fix_snippet: None,
-            resource_type: Some("aws_instance".to_string()),
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         };
 
         let change = ResourceChange::builder()
@@ -191,7 +276,14 @@ mod tests {
             .monthly_cost(560.0)
             .build();
 
-        let result = AutofixEngine::generate_fixes(&[detection], &[change], &[estimate], AutofixMode::Snippet);
+        let result = AutofixEngine::generate_fixes(
+            &[detection],
+            &[change],
+            &[estimate],
+            AutofixMode::Snippet,
+            &crate::edition::EditionContext::free(),
+        )
+        .unwrap();
 
         assert_eq!(result.mode, "snippet");
         assert_eq!(result.fixes_generated, 1);
@@ -210,10 +302,6 @@ mod tests {
             message: "High cost instance detected".to_string(),
             estimated_cost: Some(560.0),
             fix_snippet: None,
-            resource_type: None,
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         };
 
         let change = ResourceChange::builder()
@@ -224,11 +312,17 @@ mod tests {
             .new_config(serde_json::Value::Null)
             .build();
 
-        let result = AutofixEngine::generate_fixes(&[detection], &[change], &[], AutofixMode::Patch);
+        let result = AutofixEngine::generate_fixes(
+            &[detection],
+            &[change],
+            &[],
+            AutofixMode::Patch,
+            &crate::edition::EditionContext::premium_for_test(),
+        )
+        .unwrap();
 
         assert_eq!(result.mode, "patch");
-        // Will have patches if anti-patterns are detected
-        assert!(result.patches.len() >= 0);
+        // Result should be generated successfully
     }
 
     #[test]

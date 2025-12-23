@@ -97,11 +97,11 @@ fi
 {
   # Keep the header
   sed -n '1,/^$/p' "$CHANGELOG_FILE"
-  
+
   # Add new entry
   echo "$NEW_ENTRY"
   echo ""
-  
+
   # Keep rest of changelog (skip header)
   sed '1,/^$/d' "$CHANGELOG_FILE"
 } > "$TEMP_FILE"

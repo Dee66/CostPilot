@@ -13,7 +13,7 @@ fn test_exemption_creation_requires_all_fields() {
         .resource_pattern("aws_instance.*")
         // Missing: expires_at, reason, approved_by, approval_reference
         .build();
-    
+
     assert!(incomplete_exemption.is_err());
     assert!(incomplete_exemption.unwrap_err().to_string().contains("required fields"));
 }
@@ -28,7 +28,7 @@ fn test_exemption_with_valid_reference() {
         .approved_by("tech-lead@company.com")
         .approval_reference("JIRA-12345")
         .build();
-    
+
     assert!(exemption.is_ok());
     let ex = exemption.unwrap();
     assert_eq!(ex.approval_reference, "JIRA-12345");
@@ -41,7 +41,7 @@ fn test_exemption_reference_validation_formats() {
     let github_ref = validate_reference("GH-ISSUE-456");
     let url_ref = validate_reference("https://tickets.company.com/ticket/789");
     let slack_ref = validate_reference("SLACK-THREAD-2024-01-15");
-    
+
     assert!(jira_ref.is_ok());
     assert!(github_ref.is_ok());
     assert!(url_ref.is_ok());
@@ -53,7 +53,7 @@ fn test_exemption_reference_validation_rejects_invalid() {
     let empty_ref = validate_reference("");
     let short_ref = validate_reference("AB");
     let spaces_only = validate_reference("   ");
-    
+
     assert!(empty_ref.is_err());
     assert!(short_ref.is_err());
     assert!(spaces_only.is_err());
@@ -63,10 +63,10 @@ fn test_exemption_reference_validation_rejects_invalid() {
 fn test_exemption_expiration_exact_date() {
     let expires_tomorrow = Utc::now() + Duration::days(1);
     let expires_yesterday = Utc::now() - Duration::days(1);
-    
+
     let active_exemption = mock_exemption_expiring_at(expires_tomorrow);
     let expired_exemption = mock_exemption_expiring_at(expires_yesterday);
-    
+
     assert!(!is_expired(&active_exemption));
     assert!(is_expired(&expired_exemption));
 }
@@ -75,10 +75,10 @@ fn test_exemption_expiration_exact_date() {
 fn test_exemption_expiring_soon_warning() {
     let expires_in_5_days = Utc::now() + Duration::days(5);
     let expires_in_15_days = Utc::now() + Duration::days(15);
-    
+
     let soon_exemption = mock_exemption_expiring_at(expires_in_5_days);
     let later_exemption = mock_exemption_expiring_at(expires_in_15_days);
-    
+
     assert!(is_expiring_soon(&soon_exemption, 7)); // Within 7 days
     assert!(!is_expiring_soon(&later_exemption, 7));
 }
@@ -86,7 +86,7 @@ fn test_exemption_expiring_soon_warning() {
 #[test]
 fn test_exemption_pattern_matching_exact() {
     let exemption = mock_exemption_with_pattern("aws_instance.web");
-    
+
     assert!(matches_pattern(&exemption, "aws_instance.web"));
     assert!(!matches_pattern(&exemption, "aws_instance.api"));
 }
@@ -94,7 +94,7 @@ fn test_exemption_pattern_matching_exact() {
 #[test]
 fn test_exemption_pattern_matching_wildcard() {
     let exemption = mock_exemption_with_pattern("aws_instance.*");
-    
+
     assert!(matches_pattern(&exemption, "aws_instance.web"));
     assert!(matches_pattern(&exemption, "aws_instance.api"));
     assert!(matches_pattern(&exemption, "aws_instance.worker"));
@@ -104,7 +104,7 @@ fn test_exemption_pattern_matching_wildcard() {
 #[test]
 fn test_exemption_pattern_matching_regex() {
     let exemption = mock_exemption_with_pattern(r"aws_instance\.(prod|staging)-.*");
-    
+
     assert!(matches_pattern(&exemption, "aws_instance.prod-web-01"));
     assert!(matches_pattern(&exemption, "aws_instance.staging-api-02"));
     assert!(!matches_pattern(&exemption, "aws_instance.dev-test-01"));
@@ -116,7 +116,7 @@ fn test_exemption_applies_to_violation() {
     let matching_violation = mock_violation("budget-limit", "aws_instance.web");
     let different_rule_violation = mock_violation("tagging-required", "aws_instance.web");
     let different_resource_violation = mock_violation("budget-limit", "aws_instance.api");
-    
+
     assert!(exemption_applies(&exemption, &matching_violation));
     assert!(!exemption_applies(&exemption, &different_rule_violation));
     assert!(!exemption_applies(&exemption, &different_resource_violation));
@@ -126,9 +126,9 @@ fn test_exemption_applies_to_violation() {
 fn test_exemption_approval_workflow_single_approver() {
     let exemption_request = mock_exemption_request();
     let approval = mock_approval("tech-lead@company.com", "JIRA-123");
-    
+
     let result = process_approval(&exemption_request, &approval);
-    
+
     assert!(result.is_ok());
     assert_eq!(result.unwrap().status, "approved");
 }
@@ -138,11 +138,11 @@ fn test_exemption_approval_workflow_multiple_approvers() {
     let exemption_request = mock_exemption_request_requiring_n_approvals(2);
     let approval1 = mock_approval("tech-lead@company.com", "JIRA-123");
     let approval2 = mock_approval("eng-manager@company.com", "JIRA-123");
-    
+
     let after_first = process_approval(&exemption_request, &approval1);
     assert!(after_first.is_ok());
     assert_eq!(after_first.as_ref().unwrap().status, "pending"); // Still needs 1 more
-    
+
     let after_second = process_approval(&after_first.unwrap(), &approval2);
     assert!(after_second.is_ok());
     assert_eq!(after_second.unwrap().status, "approved");
@@ -153,10 +153,10 @@ fn test_exemption_approval_requires_reference_match() {
     let exemption_request = mock_exemption_request_with_reference("JIRA-123");
     let matching_approval = mock_approval("tech-lead@company.com", "JIRA-123");
     let mismatched_approval = mock_approval("tech-lead@company.com", "JIRA-456");
-    
+
     let match_result = process_approval(&exemption_request, &matching_approval);
     let mismatch_result = process_approval(&exemption_request, &mismatched_approval);
-    
+
     assert!(match_result.is_ok());
     assert!(mismatch_result.is_err());
     assert!(mismatch_result.unwrap_err().to_string().contains("reference mismatch"));
@@ -166,9 +166,9 @@ fn test_exemption_approval_requires_reference_match() {
 fn test_exemption_renewal_extends_expiration() {
     let original_exemption = mock_exemption_expiring_at(Utc::now() + Duration::days(5));
     let renewal_days = 30;
-    
+
     let renewed = renew_exemption(&original_exemption, renewal_days);
-    
+
     assert!(renewed.is_ok());
     let renewed_ex = renewed.unwrap();
     assert!(renewed_ex.expires_at > original_exemption.expires_at);
@@ -182,9 +182,9 @@ fn test_exemption_renewal_extends_expiration() {
 fn test_exemption_revocation() {
     let active_exemption = mock_active_exemption();
     let revocation_reason = "Policy changed - exemption no longer needed";
-    
+
     let revoked = revoke_exemption(&active_exemption, revocation_reason);
-    
+
     assert!(revoked.is_ok());
     let revoked_ex = revoked.unwrap();
     assert_eq!(revoked_ex.status, "revoked");
@@ -195,9 +195,9 @@ fn test_exemption_revocation() {
 #[test]
 fn test_exemption_audit_log_created() {
     let exemption = mock_exemption();
-    
+
     let audit_log = get_exemption_audit_log(&exemption);
-    
+
     assert!(audit_log.is_ok());
     let log = audit_log.unwrap();
     assert!(!log.events.is_empty());
@@ -207,12 +207,12 @@ fn test_exemption_audit_log_created() {
 #[test]
 fn test_exemption_audit_log_tracks_changes() {
     let mut exemption = mock_exemption();
-    
+
     exemption = renew_exemption(&exemption, 30).unwrap();
     exemption = revoke_exemption(&exemption, "Test").unwrap();
-    
+
     let audit_log = get_exemption_audit_log(&exemption);
-    
+
     assert!(audit_log.is_ok());
     let log = audit_log.unwrap();
     assert!(log.events.iter().any(|e| e.event_type == "exemption_renewed"));
@@ -226,9 +226,9 @@ fn test_exemption_ci_check_passes_all_active() {
         mock_exemption_expiring_at(Utc::now() + Duration::days(15)),
         mock_exemption_expiring_at(Utc::now() + Duration::days(60)),
     ];
-    
+
     let ci_result = run_exemption_ci_check(&exemptions);
-    
+
     assert!(ci_result.passed);
     assert_eq!(ci_result.expired_count, 0);
     assert_eq!(ci_result.exit_code, 0);
@@ -241,9 +241,9 @@ fn test_exemption_ci_check_fails_with_expired() {
         mock_exemption_expiring_at(Utc::now() - Duration::days(1)), // Expired
         mock_exemption_expiring_at(Utc::now() - Duration::days(5)), // Expired
     ];
-    
+
     let ci_result = run_exemption_ci_check(&exemptions);
-    
+
     assert!(!ci_result.passed);
     assert_eq!(ci_result.expired_count, 2);
     assert_eq!(ci_result.exit_code, 1);
@@ -255,9 +255,9 @@ fn test_exemption_ci_check_warns_expiring_soon() {
         mock_exemption_expiring_at(Utc::now() + Duration::days(3)), // Expiring soon
         mock_exemption_expiring_at(Utc::now() + Duration::days(30)),
     ];
-    
+
     let ci_result = run_exemption_ci_check(&exemptions);
-    
+
     assert!(ci_result.passed); // Doesn't fail, but warns
     assert_eq!(ci_result.expiring_soon_count, 1);
     assert!(!ci_result.warnings.is_empty());
@@ -266,10 +266,10 @@ fn test_exemption_ci_check_warns_expiring_soon() {
 #[test]
 fn test_exemption_serialization_roundtrip() {
     let original = mock_exemption();
-    
+
     let json = serde_json::to_string(&original).unwrap();
     let deserialized: Exemption = serde_json::from_str(&json).unwrap();
-    
+
     assert_eq!(original.rule_id, deserialized.rule_id);
     assert_eq!(original.resource_pattern, deserialized.resource_pattern);
     assert_eq!(original.approval_reference, deserialized.approval_reference);
@@ -292,9 +292,9 @@ exemptions:
     approved_by: manager
     approval_reference: JIRA-456
 "#;
-    
+
     let import_result = import_exemptions_from_yaml(exemptions_yaml);
-    
+
     assert!(import_result.is_ok());
     let exemptions = import_result.unwrap();
     assert_eq!(exemptions.len(), 2);
@@ -308,9 +308,9 @@ exemptions:
     resource_pattern: aws_instance.web
     # Missing required fields
 "#;
-    
+
     let import_result = import_exemptions_from_yaml(invalid_yaml);
-    
+
     assert!(import_result.is_err());
 }
 
@@ -416,7 +416,7 @@ fn matches_pattern(exemption: &Exemption, resource: &str) -> bool {
 }
 
 fn exemption_applies(exemption: &Exemption, violation: &Violation) -> bool {
-    exemption.rule_id == violation.rule_id 
+    exemption.rule_id == violation.rule_id
         && matches_pattern(exemption, &violation.resource_address)
 }
 
@@ -424,14 +424,14 @@ fn process_approval(request: &ExemptionRequest, approval: &Approval) -> Result<E
     if request.approval_reference != approval.reference {
         return Err("Approval reference mismatch".to_string());
     }
-    
+
     let mut updated = request.clone();
     updated.approvals.push(approval.clone());
-    
+
     if updated.approvals.len() >= updated.required_approvals {
         updated.status = "approved".to_string();
     }
-    
+
     Ok(updated)
 }
 
@@ -460,7 +460,7 @@ fn get_exemption_audit_log(_exemption: &Exemption) -> Result<AuditLog, String> {
 fn run_exemption_ci_check(exemptions: &[Exemption]) -> CICheckResult {
     let expired: Vec<_> = exemptions.iter().filter(|e| is_expired(e)).collect();
     let expiring_soon: Vec<_> = exemptions.iter().filter(|e| is_expiring_soon(e, 7)).collect();
-    
+
     CICheckResult {
         passed: expired.is_empty(),
         expired_count: expired.len(),
@@ -511,37 +511,37 @@ impl ExemptionBuilder {
             approval_reference: None,
         }
     }
-    
+
     fn rule_id(mut self, rule_id: &str) -> Self {
         self.rule_id = Some(rule_id.to_string());
         self
     }
-    
+
     fn resource_pattern(mut self, pattern: &str) -> Self {
         self.resource_pattern = Some(pattern.to_string());
         self
     }
-    
+
     fn expires_at(mut self, expires_at: chrono::DateTime<chrono::Utc>) -> Self {
         self.expires_at = Some(expires_at);
         self
     }
-    
+
     fn reason(mut self, reason: &str) -> Self {
         self.reason = Some(reason.to_string());
         self
     }
-    
+
     fn approved_by(mut self, approved_by: &str) -> Self {
         self.approved_by = Some(approved_by.to_string());
         self
     }
-    
+
     fn approval_reference(mut self, reference: &str) -> Self {
         self.approval_reference = Some(reference.to_string());
         self
     }
-    
+
     fn build(self) -> Result<Exemption, String> {
         Ok(Exemption {
             rule_id: self.rule_id.ok_or("rule_id required")?,

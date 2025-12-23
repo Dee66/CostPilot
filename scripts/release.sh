@@ -49,6 +49,19 @@ if [ -f "package.json" ]; then
   rm -f package.json.bak
 fi
 
+# Update Python packaging files
+if [ -f "setup.py" ]; then
+  echo "📝 Updating version in setup.py..."
+  sed -i.bak "s/version=\".*\"/version=\"$VERSION_NUM\"/" setup.py
+  rm -f setup.py.bak
+fi
+
+if [ -f "pyproject.toml" ]; then
+  echo "📝 Updating version in pyproject.toml..."
+  sed -i.bak "s/version = \".*\"/version = \"$VERSION_NUM\"/" pyproject.toml
+  rm -f pyproject.toml.bak
+fi
+
 # Run tests
 echo "🧪 Running tests..."
 cargo test --all-features
@@ -71,7 +84,7 @@ echo "📋 Generating changelog..."
 
 # Commit version changes
 echo "💾 Committing version changes..."
-git add Cargo.toml package.json CHANGELOG.md 2>/dev/null || git add Cargo.toml CHANGELOG.md
+git add Cargo.toml package.json setup.py pyproject.toml CHANGELOG.md 2>/dev/null || git add Cargo.toml CHANGELOG.md
 git commit -m "chore: bump version to $VERSION"
 
 # Push changes
@@ -87,10 +100,10 @@ git push origin "$VERSION"
 if [[ ! "$VERSION" =~ - ]]; then
   MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
   echo "🏷️  Updating major version tag $MAJOR_VERSION..."
-  
+
   git tag -d "$MAJOR_VERSION" 2>/dev/null || true
   git push origin ":refs/tags/$MAJOR_VERSION" 2>/dev/null || true
-  
+
   git tag "$MAJOR_VERSION"
   git push origin "$MAJOR_VERSION"
 fi
@@ -102,6 +115,10 @@ echo "Next steps:"
 echo "  1. Monitor GitHub Actions: https://github.com/Dee66/CostPilot/actions"
 echo "  2. CI will build binaries and create GitHub release"
 echo "  3. Verify release: https://github.com/Dee66/CostPilot/releases/tag/$VERSION"
+echo "  4. Publish npm package: npm publish"
+echo "  5. Publish PyPI package: python -m build && python -m twine upload dist/*"
+echo "  6. Update Homebrew tap with new formula"
+echo "  7. Push Docker image to registry"
 echo ""
 echo "To rollback if needed:"
 echo "  git tag -d $VERSION"

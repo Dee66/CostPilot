@@ -1,0 +1,335 @@
+# CostPilot Production-Mirroring Datasets
+# Anonymized production-like infrastructure configurations for comprehensive testing
+
+# Enterprise E-commerce Platform
+enterprise_ecommerce:
+  metadata:
+    dataset_id: "enterprise-ecommerce-prod"
+    description: "Anonymized configuration from a large e-commerce platform"
+    industry: "retail"
+    scale: "enterprise"
+    region: "us-east-1"
+    anonymization_level: "high"
+    source: "production_customer_data"
+  terraform_plan:
+    version: "1.0"
+    terraform_version: "1.5.0"
+    planned_values:
+      root_module:
+        resources:
+          - address: "aws_instance.web_app[0]"
+            mode: "managed"
+            type: "aws_instance"
+            name: "web_app"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              instance_type: "m5.2xlarge"
+              ami: "ami-0abcdef1234567890"
+              tags:
+                Name: "web-app-prod-001"
+                Environment: "production"
+                Application: "ecommerce-frontend"
+          - address: "aws_instance.web_app[1]"
+            mode: "managed"
+            type: "aws_instance"
+            name: "web_app"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              instance_type: "m5.2xlarge"
+              ami: "ami-0abcdef1234567890"
+              tags:
+                Name: "web-app-prod-002"
+                Environment: "production"
+                Application: "ecommerce-frontend"
+          - address: "aws_rds_cluster.aurora"
+            mode: "managed"
+            type: "aws_rds_cluster"
+            name: "aurora"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              engine: "aurora-mysql"
+              engine_version: "8.0.mysql_aurora.3.02.0"
+              database_name: "ecommerce_prod"
+              master_username: "admin"
+              master_password: "***"
+              backup_retention_period: 7
+              preferred_backup_window: "03:00-04:00"
+              vpc_security_group_ids: ["sg-12345678"]
+              db_subnet_group_name: "prod-database-subnet"
+              db_cluster_parameter_group_name: "prod-aurora-params"
+          - address: "aws_elasticache_cluster.redis"
+            mode: "managed"
+            type: "aws_elasticache_cluster"
+            name: "redis"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              cluster_id: "prod-redis-cluster"
+              engine: "redis"
+              node_type: "cache.r5.large"
+              num_cache_nodes: 3
+              parameter_group_name: "default.redis6.x"
+              port: 6379
+              subnet_group_name: "prod-cache-subnet"
+              security_group_ids: ["sg-87654321"]
+          - address: "aws_s3_bucket.assets"
+            mode: "managed"
+            type: "aws_s3_bucket"
+            name: "assets"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              bucket: "prod-ecommerce-assets-123456789"
+              acl: "private"
+              versioning:
+                enabled: true
+              server_side_encryption_configuration:
+                - rule:
+                    apply_server_side_encryption_by_default:
+                      sse_algorithm: "AES256"
+          - address: "aws_cloudfront_distribution.cdn"
+            mode: "managed"
+            type: "aws_cloudfront_distribution"
+            name: "cdn"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              enabled: true
+              default_cache_behavior:
+                target_origin_id: "prod-assets-origin"
+                viewer_protocol_policy: "redirect-to-https"
+                allowed_methods: ["GET", "HEAD", "OPTIONS"]
+                cached_methods: ["GET", "HEAD"]
+                forwarded_values:
+                  query_string: false
+                  cookies:
+                    forward: "none"
+                min_ttl: 0
+                default_ttl: 86400
+                max_ttl: 31536000
+              origins:
+                - domain_name: "prod-ecommerce-assets-123456789.s3.amazonaws.com"
+                  origin_id: "prod-assets-origin"
+                  s3_origin_config:
+                    origin_access_identity: "origin-access-identity/cloudfront/ABCDEFGHIJKL"
+              restrictions:
+                geo_restriction:
+                  restriction_type: "none"
+              viewer_certificate:
+                cloudfront_default_certificate: true
+
+# Financial Services API Platform
+financial_services_api:
+  metadata:
+    dataset_id: "financial-api-prod"
+    description: "Anonymized configuration from a financial services API platform"
+    industry: "financial_services"
+    scale: "large"
+    region: "us-east-1"
+    anonymization_level: "high"
+    source: "production_customer_data"
+  terraform_plan:
+    version: "1.0"
+    terraform_version: "1.5.0"
+    planned_values:
+      root_module:
+        resources:
+          - address: "aws_ecs_cluster.api_cluster"
+            mode: "managed"
+            type: "aws_ecs_cluster"
+            name: "api_cluster"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              name: "prod-api-cluster"
+              capacity_providers: ["FARGATE", "FARGATE_SPOT"]
+              default_capacity_provider_strategy:
+                - capacity_provider: "FARGATE"
+                  weight: 1
+          - address: "aws_ecs_service.api_service"
+            mode: "managed"
+            type: "aws_ecs_service"
+            name: "api_service"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              name: "prod-api-service"
+              cluster: "prod-api-cluster"
+              task_definition: "prod-api-task:1"
+              desired_count: 10
+              launch_type: "FARGATE"
+              network_configuration:
+                subnets: ["subnet-12345678", "subnet-87654321"]
+                security_groups: ["sg-abcdef12"]
+                assign_public_ip: false
+          - address: "aws_rds_cluster.api_db"
+            mode: "managed"
+            type: "aws_rds_cluster"
+            name: "api_db"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              cluster_identifier: "prod-api-database"
+              engine: "aurora-postgresql"
+              engine_version: "13.7"
+              database_name: "api_prod"
+              master_username: "api_admin"
+              master_password: "***"
+              backup_retention_period: 30
+              preferred_backup_window: "02:00-03:00"
+              vpc_security_group_ids: ["sg-fedcba98"]
+              db_subnet_group_name: "prod-api-db-subnet"
+              db_cluster_parameter_group_name: "prod-api-aurora-params"
+              serverlessv2_scaling_configuration:
+                min_capacity: 2
+                max_capacity: 32
+          - address: "aws_lambda_function.api_processor"
+            mode: "managed"
+            type: "aws_lambda_function"
+            name: "api_processor"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              function_name: "prod-api-processor"
+              runtime: "python3.9"
+              handler: "lambda_function.lambda_handler"
+              memory_size: 1024
+              timeout: 300
+              environment:
+                variables:
+                  STAGE: "prod"
+                  LOG_LEVEL: "INFO"
+              vpc_config:
+                subnet_ids: ["subnet-12345678", "subnet-87654321"]
+                security_group_ids: ["sg-abcdef12"]
+          - address: "aws_api_gateway_rest_api.api_gateway"
+            mode: "managed"
+            type: "aws_api_gateway_rest_api"
+            name: "api_gateway"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              name: "prod-api-gateway"
+              description: "Production API Gateway for financial services"
+              endpoint_configuration:
+                types: ["REGIONAL"]
+              binary_media_types: ["application/octet-stream"]
+
+# Healthcare Data Analytics Platform
+healthcare_analytics:
+  metadata:
+    dataset_id: "healthcare-analytics-prod"
+    description: "Anonymized configuration from a healthcare data analytics platform"
+    industry: "healthcare"
+    scale: "enterprise"
+    region: "us-east-1"
+    anonymization_level: "high"
+    compliance: ["HIPAA", "HITRUST"]
+    source: "production_customer_data"
+  terraform_plan:
+    version: "1.0"
+    terraform_version: "1.5.0"
+    planned_values:
+      root_module:
+        resources:
+          - address: "aws_emr_cluster.analytics_cluster"
+            mode: "managed"
+            type: "aws_emr_cluster"
+            name: "analytics_cluster"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              name: "prod-healthcare-analytics"
+              release_label: "emr-6.4.0"
+              applications: ["Spark", "Hadoop", "Hive", "Presto"]
+              ec2_attributes:
+                subnet_id: "subnet-12345678"
+                emr_managed_master_security_group: "sg-master123"
+                emr_managed_slave_security_group: "sg-slave456"
+                instance_profile: "EMR_EC2_DefaultRole"
+              master_instance_group:
+                instance_type: "m5.4xlarge"
+                instance_count: 1
+              core_instance_group:
+                instance_type: "m5.2xlarge"
+                instance_count: 4
+              ebs_root_volume_size: 100
+              termination_protection: true
+              keep_job_flow_alive_when_no_steps: true
+          - address: "aws_s3_bucket.data_lake"
+            mode: "managed"
+            type: "aws_s3_bucket"
+            name: "data_lake"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              bucket: "prod-healthcare-data-lake-123456789"
+              acl: "private"
+              versioning:
+                enabled: true
+              server_side_encryption_configuration:
+                - rule:
+                    apply_server_side_encryption_by_default:
+                      sse_algorithm: "AES256"
+              lifecycle_configuration:
+                rules:
+                  - id: "data_retention"
+                    status: "Enabled"
+                    transitions:
+                      - days: 365
+                        storage_class: "STANDARD_IA"
+                      - days: 2555
+                        storage_class: "GLACIER"
+                    expiration:
+                      days: 3650
+          - address: "aws_redshift_cluster.data_warehouse"
+            mode: "managed"
+            type: "aws_redshift_cluster"
+            name: "data_warehouse"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              cluster_identifier: "prod-healthcare-dw"
+              database_name: "healthcare_prod"
+              master_username: "dw_admin"
+              master_password: "***"
+              node_type: "ra3.4xlarge"
+              number_of_nodes: 3
+              encrypted: true
+              publicly_accessible: false
+              vpc_security_group_ids: ["sg-dw789012"]
+              cluster_subnet_group_name: "prod-dw-subnet-group"
+              preferred_maintenance_window: "sun:03:00-sun:04:00"
+              automated_snapshot_retention_period: 7
+              logging:
+                enable: true
+                bucket_name: "prod-healthcare-logs-123456789"
+          - address: "aws_kinesis_stream.data_stream"
+            mode: "managed"
+            type: "aws_kinesis_stream"
+            name: "data_stream"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              name: "prod-healthcare-data-stream"
+              shard_count: 6
+              retention_period: 24
+              encryption_type: "KMS"
+              kms_key_id: "alias/aws/kinesis"
+          - address: "aws_sagemaker_notebook_instance.analytics_notebook"
+            mode: "managed"
+            type: "aws_sagemaker_notebook_instance"
+            name: "analytics_notebook"
+            provider_name: "registry.terraform.io/hashicorp/aws"
+            schema_version: 1
+            values:
+              name: "prod-healthcare-analytics-nb"
+              role_arn: "arn:aws:iam::123456789012:role/SageMakerRole"
+              instance_type: "ml.t3.xlarge"
+              default_code_repository: "https://github.com/company/healthcare-analytics.git"
+              lifecycle_config_name: "prod-notebook-lifecycle"
+              security_groups: ["sg-notebook345"]
+              subnet_id: "subnet-12345678"

@@ -1,0 +1,45 @@
+# Distribution archives
+/dist
+dist/costpilot-*.zip
+dist/costpilot-*.tar.gz
+
+# Pro Engine artifacts
+dist/pro-engine-*
+premium/engine_build/*.wasm
+
+# Packaging temporary files
+/build/package/tmp
+/staging/core/
+
+# Signing keys (private key only - public key IS committed)
+packaging/signing/private.key
+
+# Rust build artifacts
+/target
+
+# Cargo.lock for libraries (keep for binaries)
+# Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test outputs
+*.profdata
+*.profraw
+
+# Debug artifacts
+*.dSYM
+tmp.txt
+
+# Test keys and licenses
+test_*.pem
+test_license.json
+.costpilot/audit_log.json

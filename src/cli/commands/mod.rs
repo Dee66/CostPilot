@@ -4,6 +4,7 @@ pub mod audit;
 pub mod autofix_patch;
 pub mod autofix_snippet;
 pub mod diff;
+pub mod feature;
 pub mod init;
 pub mod map;
 pub mod policy_lifecycle;

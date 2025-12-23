@@ -545,6 +545,7 @@ mod tests {
             free_tier_resources: 100,
             price_per_resource: 0.01,
             price_per_scan: 0.0,
+            monthly_minimum: 0.0,
             ..Default::default()
         };
         let meter = UsageMeter::new(pricing);

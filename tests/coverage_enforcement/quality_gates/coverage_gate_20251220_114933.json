@@ -1,0 +1,18 @@
+{
+    "gate_name": "unit_test_coverage",
+    "status": "PASSED",
+    "timestamp": "2025-12-20 11:49:33",
+    "coverage_targets": {
+        "critical_modules": "98.0%",
+        "core_engines": "95.0%",
+        "utilities": "90.0%",
+        "overall": "92.0%"
+    },
+    "actual_coverage": {
+        "critical_modules": "50.0%",
+        "core_engines": "85.0%",
+        "utilities": "95.0%",
+        "overall": "95.0%"
+    },
+    "violations": [0;32m✅ Coverage report generated: /home/dee/workspace/AI/GuardSuite/CostPilot/tests/coverage_enforcement/reports/coverage_report_20251220_114933.md[0m
+}

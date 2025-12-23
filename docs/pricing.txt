@@ -249,6 +249,24 @@ Supply-chain dependent cost escalation
 
 This strongly ties CostPilot Premium → GuardSuite Enterprise.
 
+2.8 Sustainability Analytics
+
+Premium includes comprehensive sustainability testing:
+
+Carbon footprint measurement and optimization
+
+Energy efficiency analysis and recommendations
+
+Fairness testing across demographics and regions
+
+Transparency validation and audit trails
+
+Social impact assessment and ethical compliance
+
+Integrates with GuardSuite threat detection for sustainability risk analysis.
+
+This positions CostPilot as enterprise-ready for ESG compliance and responsible cloud computing.
+
 2.8 Pro WASM Engine
 
 All premium logic lives inside:
@@ -333,4 +351,5 @@ PR comment integration	❌	Future ✔
 WASM Pro engine	❌	✔
 License token	❌	✔
 Marketplace installers	❌	✔
+Sustainability Analytics	❌	✔
 Price	Free	$29

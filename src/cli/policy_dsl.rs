@@ -3,7 +3,7 @@
 use crate::engines::policy::parser::{EvaluationContext, PolicyRuleLoader, RuleEvaluator};
 use clap::Args;
 use colored::Colorize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Args)]
 pub struct PolicyDslCommand {
@@ -153,7 +153,7 @@ fn execute_list(
     Ok(())
 }
 
-fn execute_validate(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+fn execute_validate(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "Validating Policy Rules".bold().cyan());
     println!("Path: {}", path.display());
     println!();
@@ -173,7 +173,7 @@ fn execute_validate(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn execute_test(
-    policy_path: &PathBuf,
+    policy_path: &Path,
     resource_type: &str,
     monthly_cost: Option<f64>,
     verbose: bool,
@@ -386,5 +386,263 @@ fn generate_example_json() -> String {
             }
         }
     ]))
-    .unwrap_or_default()
+    .unwrap_or_else(|e| {
+        eprintln!("Warning: Failed to generate JSON example: {}", e);
+        r#"[{"error": "Failed to generate JSON example"}]"#.to_string()
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_execute_policy_dsl_command_list() {
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::List {
+                all: false,
+                severity: None,
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        // Should succeed even if no rules are found
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_list_with_severity() {
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::List {
+                all: true,
+                severity: Some("high".to_string()),
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_validate_nonexistent() {
+        let temp_dir = tempdir().unwrap();
+        let nonexistent_path = temp_dir.path().join("nonexistent.yml");
+
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Validate {
+                path: nonexistent_path,
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        // Should fail for nonexistent file
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_validate_valid_file() {
+        let temp_dir = tempdir().unwrap();
+        let policy_path = temp_dir.path().join("policy.yml");
+
+        let valid_policy = r#"
+- name: "Test Rule"
+  description: "A test policy rule"
+  enabled: true
+  severity: Medium
+  conditions:
+    - condition_type:
+        type: resource_type
+      operator: equals
+      value: "aws_instance"
+  action:
+    type: warn
+    message: "Test warning"
+"#;
+
+        fs::write(&policy_path, valid_policy).unwrap();
+
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Validate { path: policy_path },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_test() {
+        let temp_dir = tempdir().unwrap();
+        let policy_path = temp_dir.path().join("policy.yml");
+
+        let test_policy = r#"
+- name: "Test EC2 Rule"
+  description: "Test rule for EC2 instances"
+  enabled: true
+  severity: High
+  conditions:
+    - condition_type:
+        type: resource_type
+      operator: equals
+      value: "aws_instance"
+    - condition_type:
+        type: monthly_cost
+      operator: greater_than
+      value: 100.0
+  action:
+    type: block
+    message: "EC2 instance too expensive"
+"#;
+
+        fs::write(&policy_path, test_policy).unwrap();
+
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Test {
+                policy: policy_path,
+                resource_type: "aws_instance".to_string(),
+                monthly_cost: Some(200.0),
+                verbose: false,
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_test_verbose() {
+        let temp_dir = tempdir().unwrap();
+        let policy_path = temp_dir.path().join("policy.yml");
+
+        let test_policy = r#"
+- name: "Test Rule"
+  description: "A test policy rule"
+  enabled: true
+  severity: Low
+  conditions:
+    - condition_type:
+        type: resource_type
+      operator: equals
+      value: "aws_s3_bucket"
+  action:
+    type: warn
+    message: "Test warning"
+"#;
+
+        fs::write(&policy_path, test_policy).unwrap();
+
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Test {
+                policy: policy_path,
+                resource_type: "aws_s3_bucket".to_string(),
+                monthly_cost: None,
+                verbose: true,
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_stats() {
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Stats { path: None },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_stats_with_path() {
+        let temp_dir = tempdir().unwrap();
+        let policy_path = temp_dir.path().join("policy.yml");
+
+        let test_policy = r#"
+- name: "Test Rule"
+  description: "A test policy rule"
+  enabled: true
+  severity: Medium
+  conditions:
+    - condition_type:
+        type: resource_type
+      operator: equals
+      value: "aws_instance"
+  action:
+    type: warn
+    message: "Test warning"
+"#;
+
+        fs::write(&policy_path, test_policy).unwrap();
+
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Stats {
+                path: Some(policy_path),
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_example_yaml() {
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Example {
+                output: None,
+                format: "yaml".to_string(),
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_example_json() {
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Example {
+                output: None,
+                format: "json".to_string(),
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_policy_dsl_command_example_with_output() {
+        let temp_dir = tempdir().unwrap();
+        let output_path = temp_dir.path().join("example.yml");
+
+        let cmd = PolicyDslCommand {
+            command: PolicyDslSubcommand::Example {
+                output: Some(output_path.clone()),
+                format: "yaml".to_string(),
+            },
+        };
+
+        let result = execute_policy_dsl_command(&cmd);
+        assert!(result.is_ok());
+        assert!(output_path.exists());
+    }
+
+    #[test]
+    fn test_generate_example_yaml() {
+        let yaml = generate_example_yaml();
+        assert!(!yaml.is_empty());
+        assert!(yaml.contains("CostPilot Policy Rules Example"));
+        assert!(yaml.contains("Block Expensive EC2 Instances"));
+    }
+
+    #[test]
+    fn test_generate_example_json() {
+        let json = generate_example_json();
+        assert!(!json.is_empty());
+        // Should be valid JSON
+        serde_json::from_str::<serde_json::Value>(&json).unwrap();
+    }
 }

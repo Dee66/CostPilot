@@ -13,9 +13,9 @@ import tempfile
 
 def test_explain_ordering_deterministic():
     """Test that explain output order is deterministic."""
-    
+
     print("Testing explain ordering determinism...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -27,48 +27,48 @@ def test_explain_ordering_deterministic():
         }
         json.dump(template, f)
         f.flush()
-        
+
         # Run explain twice
         result1 = subprocess.run(
             ["cargo", "run", "--release", "--", "explain", f.name],
             capture_output=True,
             text=True
         )
-        
+
         result2 = subprocess.run(
             ["cargo", "run", "--release", "--", "explain", f.name],
             capture_output=True,
             text=True
         )
-        
+
         if result1.returncode != 0 or result2.returncode != 0:
             print("⚠️  Explain command failed")
             return True
-        
+
         if result1.stdout == result2.stdout:
             print("✓ Explain output is deterministic")
             return True
         else:
             print("❌ Explain output varies between runs")
-            
+
             lines1 = result1.stdout.split('\n')
             lines2 = result2.stdout.split('\n')
-            
+
             for i, (line1, line2) in enumerate(zip(lines1, lines2)):
                 if line1 != line2:
                     print(f"  First difference at line {i+1}:")
                     print(f"    Run 1: {line1[:60]}")
                     print(f"    Run 2: {line2[:60]}")
                     break
-            
+
             return False
 
 
 def test_sentence_ordering_consistent():
     """Test that sentences appear in consistent order."""
-    
+
     print("Testing sentence ordering consistency...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -84,26 +84,26 @@ def test_sentence_ordering_consistent():
         }
         json.dump(template, f)
         f.flush()
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "explain", f.name],
             capture_output=True,
             text=True
         )
-        
+
         if result.returncode != 0:
             print("⚠️  Explain command failed")
             return True
-        
+
         print("✓ Sentence ordering checked")
         return True
 
 
 def test_resource_ordering():
     """Test that resources are explained in deterministic order."""
-    
+
     print("Testing resource ordering...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -114,24 +114,24 @@ def test_resource_ordering():
         }
         json.dump(template, f)
         f.flush()
-        
+
         # Run twice
         result1 = subprocess.run(
             ["cargo", "run", "--release", "--", "explain", f.name],
             capture_output=True,
             text=True
         )
-        
+
         result2 = subprocess.run(
             ["cargo", "run", "--release", "--", "explain", f.name],
             capture_output=True,
             text=True
         )
-        
+
         if result1.returncode != 0 or result2.returncode != 0:
             print("⚠️  Explain command failed")
             return True
-        
+
         if result1.stdout == result2.stdout:
             print("✓ Resource ordering is deterministic")
             return True
@@ -142,9 +142,9 @@ def test_resource_ordering():
 
 def test_explain_no_timestamps():
     """Test that explain output has no timestamps."""
-    
+
     print("Testing explain has no timestamps...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -156,28 +156,28 @@ def test_explain_no_timestamps():
         }
         json.dump(template, f)
         f.flush()
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "explain", f.name],
             capture_output=True,
             text=True
         )
-        
+
         if result.returncode != 0:
             print("⚠️  Explain command failed")
             return True
-        
+
         output = result.stdout
-        
+
         # Check for timestamp patterns
         import re
         timestamp_patterns = [
             r'\d{4}-\d{2}-\d{2}',  # Date
             r'\d{2}:\d{2}:\d{2}',  # Time
         ]
-        
+
         has_timestamp = any(re.search(pattern, output) for pattern in timestamp_patterns)
-        
+
         if has_timestamp:
             print("⚠️  Explain output contains timestamps")
             return True
@@ -188,9 +188,9 @@ def test_explain_no_timestamps():
 
 def test_paragraph_ordering():
     """Test that paragraphs appear in consistent order."""
-    
+
     print("Testing paragraph ordering...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -202,24 +202,24 @@ def test_paragraph_ordering():
         }
         json.dump(template, f)
         f.flush()
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "explain", f.name],
             capture_output=True,
             text=True
         )
-        
+
         if result.returncode != 0:
             print("⚠️  Explain command failed")
             return True
-        
+
         print("✓ Paragraph ordering checked")
         return True
 
 
 if __name__ == "__main__":
     print("Testing explain sentence ordering...\n")
-    
+
     tests = [
         test_explain_ordering_deterministic,
         test_sentence_ordering_consistent,
@@ -227,10 +227,10 @@ if __name__ == "__main__":
         test_explain_no_timestamps,
         test_paragraph_ordering,
     ]
-    
+
     passed = 0
     failed = 0
-    
+
     for test in tests:
         try:
             if test():
@@ -241,9 +241,9 @@ if __name__ == "__main__":
             print(f"❌ Test {test.__name__} failed: {e}")
             failed += 1
         print()
-    
+
     print(f"Results: {passed} passed, {failed} failed")
-    
+
     if failed == 0:
         print("✅ All tests passed")
         sys.exit(0)

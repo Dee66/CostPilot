@@ -1,0 +1,156 @@
+# CostPilot Policy: Resource Restrictions
+# This policy restricts resource types, sizes, and configurations
+
+metadata:
+  policy_id: "resource-restrictions-ec2-limits"
+  policy_version: "1.0.0"
+  policy_type: "resource_restriction"
+  severity: "high"
+  category: "resource_governance"
+  description: "Restrict EC2 instance types and configurations to approved options"
+  created_at: "2025-01-15T00:00:00Z"
+  last_updated: "2025-01-15T00:00:00Z"
+  author: "CostPilot Policy Engine"
+  tags:
+    - resource-control
+    - ec2-restrictions
+    - cost-optimization
+
+# Policy scope
+scope:
+  accounts:
+    - "*"  # All accounts
+  regions:
+    - "*"  # All regions
+  resource_types:
+    - "AWS::EC2::Instance"
+    - "AWS::AutoScaling::AutoScalingGroup"
+  environments:
+    - production
+    - staging
+    - development
+
+# Resource restrictions
+restrictions:
+  ec2_instances:
+    allowed_instance_types:
+      # Development/Testing
+      - "t3.micro"
+      - "t3.small"
+      - "t4g.micro"
+      - "t4g.small"
+      # Production - General Purpose
+      - "t3.medium"
+      - "t3.large"
+      - "m5.large"
+      - "m5.xlarge"
+      - "m6g.large"
+      - "m6g.xlarge"
+      # Production - Compute Optimized
+      - "c5.large"
+      - "c5.xlarge"
+      - "c6g.large"
+      - "c6g.xlarge"
+      # Production - Memory Optimized
+      - "r5.large"
+      - "r5.xlarge"
+      - "r6g.large"
+      - "r6g.xlarge"
+
+    prohibited_instance_types:
+      - "t2.*"  # Legacy burstable instances
+      - "*.metal"  # Bare metal instances (expensive)
+      - "u-*.*"  # High memory instances (expensive)
+      - "z1d.*"  # High frequency instances (expensive)
+      - "p3.*"  # GPU instances (expensive)
+      - "g4dn.*"  # GPU instances (expensive)
+
+    max_vcpu_per_instance: 8
+    max_memory_gb_per_instance: 32
+
+  storage:
+    allowed_volume_types:
+      - "gp3"
+      - "gp2"
+    max_volume_size_gb: 1000
+    encryption_required: true
+
+  networking:
+    allowed_availability_zones: "*"  # All AZs allowed
+    vpc_required: true
+    public_ip_auto_assign_restricted: true  # Restrict automatic public IP assignment
+
+# Environment-specific overrides
+environment_overrides:
+  development:
+    max_vcpu_per_instance: 4
+    max_memory_gb_per_instance: 16
+    allowed_instance_types:
+      - "t3.micro"
+      - "t3.small"
+      - "t4g.micro"
+      - "t4g.small"
+
+  staging:
+    max_vcpu_per_instance: 8
+    max_memory_gb_per_instance: 32
+    allowed_instance_types:
+      - "t3.micro"
+      - "t3.small"
+      - "t3.medium"
+      - "t4g.micro"
+      - "t4g.small"
+      - "t4g.medium"
+
+  production:
+    # Full restrictions apply
+    additional_restrictions:
+      multi_az_required: true
+      backup_required: true
+      monitoring_required: true
+
+# Enforcement configuration
+enforcement:
+  mode: "block_and_alert"  # monitor_only, alert_only, block_and_alert
+  block_violations: true
+  alert_on_violation: true
+  quarantine_violations: false  # Don't quarantine, just block creation
+
+# Exceptions
+exceptions:
+  emergency_deployment:
+    enabled: true
+    max_duration_hours: 72
+    approval_required: true
+    approvers:
+      - role: "platform_engineer"
+      - role: "engineering_director"
+  service_accounts:
+    - "infrastructure-automation"
+    - "disaster-recovery"
+
+# Violation handling
+violation_handling:
+  grace_period_minutes: 60  # Allow 1 hour to fix violations
+  auto_remediation:
+    enabled: false  # Don't auto-remediate resource restrictions
+  escalation:
+    after_hours: 24
+    escalate_to:
+      - role: "platform_engineer"
+      - role: "engineering_manager"
+
+# Monitoring and reporting
+monitoring:
+  violation_metrics: true
+  compliance_reports:
+    frequency: "weekly"
+    recipients:
+      - "platform@company.com"
+      - "engineering@company.com"
+
+# Cost impact assessment
+cost_assessment:
+  enabled: true
+  show_alternatives: true
+  max_savings_threshold: 50  # Show alternatives if savings > 50%

@@ -1,0 +1,83 @@
+# Monitoring Configuration
+
+## Health Checks
+health_checks:
+  - name: api_health
+    endpoint: /health
+    method: GET
+    expected_status: 200
+    timeout: 5s
+    interval: 30s
+
+  - name: database_health
+    endpoint: /health/database
+    method: GET
+    expected_status: 200
+    timeout: 10s
+    interval: 60s
+
+  - name: cache_health
+    endpoint: /health/cache
+    method: GET
+    expected_status: 200
+    timeout: 5s
+    interval: 30s
+
+## Metrics Collection
+metrics:
+  system_metrics:
+    - cpu_usage
+    - memory_usage
+    - disk_usage
+    - network_io
+
+  application_metrics:
+    - request_count
+    - response_time
+    - error_rate
+    - active_connections
+
+  business_metrics:
+    - cost_calculations_per_minute
+    - api_calls_per_minute
+    - user_sessions_active
+
+## Dashboards
+dashboards:
+  - name: system_overview
+    metrics:
+      - cpu_usage
+      - memory_usage
+      - disk_usage
+    refresh_interval: 30s
+
+  - name: application_performance
+    metrics:
+      - request_count
+      - response_time
+      - error_rate
+    refresh_interval: 60s
+
+  - name: business_metrics
+    metrics:
+      - cost_calculations_per_minute
+      - api_calls_per_minute
+    refresh_interval: 300s
+
+## Monitoring Providers
+providers:
+  datadog:
+    enabled: true
+    api_key: ${DATADOG_API_KEY}
+    app_key: ${DATADOG_APP_KEY}
+    region: us-east-1
+
+  cloudwatch:
+    enabled: true
+    namespace: CostPilot
+    region: us-west-2
+
+  prometheus:
+    enabled: true
+    endpoint: /metrics
+    scrape_interval: 15s

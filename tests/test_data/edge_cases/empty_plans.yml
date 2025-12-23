@@ -1,0 +1,58 @@
+# CostPilot Edge Case: Empty Plans
+# Test data for handling empty or minimal plan inputs
+
+# Empty plan - completely empty
+empty_plan:
+  metadata:
+    test_case: "empty_plan"
+    description: "Completely empty plan with no resources"
+    expected_behavior: "graceful_handling"
+  plan: {}
+
+# Plan with empty resources array
+empty_resources_array:
+  metadata:
+    test_case: "empty_resources_array"
+    description: "Plan with empty resources array"
+    expected_behavior: "graceful_handling"
+  plan:
+    resources: []
+
+# Plan with null resources
+null_resources:
+  metadata:
+    test_case: "null_resources"
+    description: "Plan with null resources field"
+    expected_behavior: "graceful_handling"
+  plan:
+    resources: null
+
+# Plan with empty metadata
+empty_metadata:
+  metadata:
+    test_case: "empty_metadata"
+    description: "Plan with empty metadata object"
+    expected_behavior: "graceful_handling"
+  plan:
+    metadata: {}
+    resources: []
+
+# Minimal valid plan (just structure)
+minimal_valid:
+  metadata:
+    test_case: "minimal_valid"
+    description: "Minimal valid plan structure"
+    expected_behavior: "successful_processing"
+  plan:
+    metadata:
+      name: "minimal"
+      version: "1.0"
+    resources: []
+
+# Plan with only whitespace
+whitespace_only:
+  metadata:
+    test_case: "whitespace_only"
+    description: "Plan containing only whitespace"
+    expected_behavior: "graceful_handling"
+  plan: "   \n\t  \n  "

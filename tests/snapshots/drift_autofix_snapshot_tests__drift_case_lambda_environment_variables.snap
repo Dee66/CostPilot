@@ -1,0 +1,35 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_lambda_function.processor",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "environment": {
+            "variables": {
+              "DEBUG_MODE": "true",
+              "LOG_LEVEL": "debug"
+            }
+          }
+        },
+        "before": {
+          "environment": {
+            "variables": {
+              "LOG_LEVEL": "info"
+            }
+          }
+        }
+      },
+      "mode": "managed",
+      "name": "processor",
+      "type": "aws_lambda_function"
+    }
+  ]
+}

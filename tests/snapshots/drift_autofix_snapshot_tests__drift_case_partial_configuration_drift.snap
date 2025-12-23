@@ -1,0 +1,35 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_instance.partial_drift",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "instance_type": "t3.medium",
+          "monitoring": true,
+          "tags": {
+            "Name": "test",
+            "Owner": "ops"
+          }
+        },
+        "before": {
+          "instance_type": "t3.medium",
+          "monitoring": false,
+          "tags": {
+            "Name": "test"
+          }
+        }
+      },
+      "mode": "managed",
+      "name": "partial_drift",
+      "type": "aws_instance"
+    }
+  ]
+}

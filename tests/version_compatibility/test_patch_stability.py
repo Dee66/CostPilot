@@ -12,7 +12,7 @@ def test_patch_output_deterministic():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -23,7 +23,7 @@ def test_patch_output_deterministic():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -38,16 +38,16 @@ def test_patch_output_deterministic():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Generate patch multiple times
         patches = []
-        
+
         for _ in range(5):
             result = subprocess.run(
                 ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--dry-run"],
@@ -55,9 +55,9 @@ def test_patch_output_deterministic():
                 text=True,
                 timeout=30
             )
-            
+
             patches.append(result.stdout)
-        
+
         # All patches should be identical
         assert all(p == patches[0] for p in patches), \
             "Patch output not deterministic"
@@ -68,7 +68,7 @@ def test_patch_format_stable():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda1": {
@@ -85,7 +85,7 @@ def test_patch_format_stable():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -100,13 +100,13 @@ def test_patch_format_stable():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Generate patch
         result1 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--format", "json"],
@@ -114,14 +114,14 @@ def test_patch_format_stable():
             text=True,
             timeout=30
         )
-        
+
         result2 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--format", "json"],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Format should be consistent
         assert result1.stdout == result2.stdout, \
             "Patch format not stable"
@@ -132,7 +132,7 @@ def test_patch_application_idempotent():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -143,7 +143,7 @@ def test_patch_application_idempotent():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -158,13 +158,13 @@ def test_patch_application_idempotent():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Apply patch first time
         result1 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--apply"],
@@ -172,7 +172,7 @@ def test_patch_application_idempotent():
             text=True,
             timeout=30
         )
-        
+
         # Apply patch second time (should be no-op)
         result2 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--apply"],
@@ -180,7 +180,7 @@ def test_patch_application_idempotent():
             text=True,
             timeout=30
         )
-        
+
         # Second application should indicate no changes needed
         assert result1.returncode in [0, 1, 2, 101], "First patch should complete"
         assert result2.returncode in [0, 1, 2, 101], "Second patch should complete"
@@ -191,7 +191,7 @@ def test_patch_line_numbers_stable():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -203,7 +203,7 @@ def test_patch_line_numbers_stable():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -218,17 +218,17 @@ def test_patch_line_numbers_stable():
                 }
             ]
         }
-        
+
         # Write with consistent formatting
         with open(template_path, 'w') as f:
             json.dump(template_content, f, indent=2)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Generate patch multiple times
         patches = []
-        
+
         for _ in range(3):
             result = subprocess.run(
                 ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--dry-run"],
@@ -236,9 +236,9 @@ def test_patch_line_numbers_stable():
                 text=True,
                 timeout=30
             )
-            
+
             patches.append(result.stdout)
-        
+
         # Line numbers should be consistent
         assert all(p == patches[0] for p in patches), \
             "Patch line numbers not stable"
@@ -249,7 +249,7 @@ def test_patch_metadata_preserved():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -260,7 +260,7 @@ def test_patch_metadata_preserved():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -279,24 +279,24 @@ def test_patch_metadata_preserved():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--format", "json"],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Check metadata in output
         try:
             output_data = json.loads(result.stdout)
-            
+
             # Metadata should be included
             if "patches" in output_data or "fixes" in output_data:
                 print("Patch metadata preserved")
@@ -309,7 +309,7 @@ def test_patch_ordering_stable():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 f"Lambda{i}": {
@@ -321,7 +321,7 @@ def test_patch_ordering_stable():
                 for i in range(10)
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -336,16 +336,16 @@ def test_patch_ordering_stable():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Generate patches multiple times
         results = []
-        
+
         for _ in range(5):
             result = subprocess.run(
                 ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--dry-run"],
@@ -353,9 +353,9 @@ def test_patch_ordering_stable():
                 text=True,
                 timeout=30
             )
-            
+
             results.append(result.stdout)
-        
+
         # Ordering should be consistent
         assert all(r == results[0] for r in results), \
             "Patch ordering not stable"
@@ -366,7 +366,7 @@ def test_patch_diff_format_stable():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         policy_path = Path(tmpdir) / "policy.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -379,7 +379,7 @@ def test_patch_diff_format_stable():
                 }
             }
         }
-        
+
         policy_content = {
             "version": "1.0.0",
             "rules": [
@@ -394,13 +394,13 @@ def test_patch_diff_format_stable():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f, indent=2)
-        
+
         with open(policy_path, 'w') as f:
             json.dump(policy_content, f)
-        
+
         # Generate diff
         result1 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--show-diff"],
@@ -408,14 +408,14 @@ def test_patch_diff_format_stable():
             text=True,
             timeout=30
         )
-        
+
         result2 = subprocess.run(
             ["costpilot", "autofix", "--plan", str(template_path), "--policy", str(policy_path), "--show-diff"],
             capture_output=True,
             text=True,
             timeout=30
         )
-        
+
         # Diff format should be stable
         assert result1.stdout == result2.stdout, \
             "Diff format not stable"

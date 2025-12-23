@@ -1,0 +1,12 @@
+{
+    "gate_name": "all_targets",
+    "status": "FAILED",
+    "timestamp": "2025-12-20 11:12:18",
+    "enforced_targets": {
+        "defect_density": "< 0.1",
+        "test_effectiveness": "> 99.0%",
+        "mttd": "< 5min",
+        "customer_satisfaction": "> 4.9/5",
+        "zero_blockers": "required"
+    }
+}

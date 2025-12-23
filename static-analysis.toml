@@ -1,0 +1,153 @@
+# CostPilot Static Analysis Configuration
+# Comprehensive static analysis setup for code quality assurance
+
+# Clippy configuration (extends default)
+[lints.clippy]
+# Enable additional lints for better code quality
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+
+# Specific lint configurations
+missing_docs_in_private_items = "allow"  # Too strict for early development
+module_name_repetitions = "allow"        # Sometimes necessary
+option_if_let_else = "allow"             # Can reduce readability
+redundant_else = "allow"                 # Sometimes clearer
+
+# Security-related lints (treat as errors)
+suspicious_command_arg_processing = "deny"
+unnecessary_cast = "deny"
+cast_lossless = "warn"
+cast_possible_truncation = "deny"
+cast_possible_wrap = "deny"
+cast_precision_loss = "deny"
+cast_sign_loss = "deny"
+invalid_regex = "deny"
+
+# Performance lints
+needless_collect = "warn"
+redundant_clone = "warn"
+string_add_assign = "warn"
+vec_init_then_push = "warn"
+
+# Style lints
+implicit_clone = "warn"
+manual_string_new = "warn"
+redundant_field_names = "warn"
+unreadable_literal = "warn"
+
+# Complexity metrics (using cargo-cyclo or similar)
+[metrics]
+# Target complexity thresholds
+max_cyclomatic_complexity = 10
+max_function_length = 50
+max_file_length = 1000
+
+# Maintainability index target
+min_maintainability_index = 50
+
+# Technical debt ratio target
+max_technical_debt_ratio = 0.15
+
+# Code coverage targets
+min_line_coverage = 90.0
+min_branch_coverage = 85.0
+min_function_coverage = 95.0
+
+# Security scanning configuration
+[security]
+# Enable security vulnerability scanning
+audit_dependencies = true
+check_licenses = true
+
+# Allowed license types
+allowed_licenses = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "ISC",
+    "CC0-1.0"
+]
+
+# Flagged license types (require review)
+flagged_licenses = [
+    "BSD-2-Clause",
+    "CDDL-1.0",
+    "EPL-2.0"
+]
+
+# Forbidden license types
+forbidden_licenses = [
+    "GPL-3.0",
+    "LGPL-2.1",
+    "MS-PL"
+]
+
+# Duplication detection
+[duplication]
+# Minimum lines for duplication detection
+min_lines = 6
+
+# Maximum allowed duplication percentage
+max_duplication_percentage = 5.0
+
+# Files to exclude from duplication analysis
+exclude_patterns = [
+    "tests/**/*",
+    "benches/**/*",
+    "**/*.rs.bk",
+    "**/target/**/*"
+]
+
+# Automated quality gates
+[quality_gates]
+# Pre-commit hooks
+pre_commit = [
+    "cargo fmt -- --check",
+    "cargo clippy -- -D warnings",
+    "cargo test",
+    "cargo tarpaulin --fail-under 90"
+]
+
+# Pre-merge gates
+pre_merge = [
+    "cargo audit",
+    "cargo outdated",
+    "cargo udeps",
+    "cargo bloat --release --crates",
+    "./scripts/check_complexity.sh"
+]
+
+# Pre-deployment gates
+pre_deploy = [
+    "cargo test --release",
+    "cargo tarpaulin --fail-under 95",
+    "./scripts/security_scan.sh",
+    "./scripts/performance_benchmarks.sh"
+]
+
+# Monitoring and alerting
+[monitoring]
+# Metrics to track
+tracked_metrics = [
+    "cyclomatic_complexity",
+    "maintainability_index",
+    "technical_debt_ratio",
+    "code_coverage",
+    "security_vulnerabilities",
+    "license_compliance"
+]
+
+# Alert thresholds
+alert_thresholds = [
+    { metric = "code_coverage", operator = "<", value = 90.0, severity = "high" },
+    { metric = "security_vulnerabilities", operator = ">", value = 0, severity = "critical" },
+    { metric = "cyclomatic_complexity", operator = ">", value = 15, severity = "medium" },
+    { metric = "maintainability_index", operator = "<", value = 40, severity = "medium" }
+]
+
+# Trend analysis
+trend_analysis = [
+    { metric = "technical_debt_ratio", period = "weekly", alert_on_increase = true },
+    { metric = "code_coverage", period = "daily", alert_on_decrease = true },
+    { metric = "cyclomatic_complexity", period = "weekly", alert_on_increase = true }
+]

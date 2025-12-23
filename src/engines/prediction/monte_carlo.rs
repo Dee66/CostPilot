@@ -261,7 +261,7 @@ impl MonteCarloSimulator {
         let m = 2_u64.pow(32);
 
         let value = ((a * (self.seed + iteration as u64) + c) % m) as f64 / m as f64;
-        value.max(0.001).min(0.999) // Avoid exact 0 or 1
+        value.clamp(0.001, 0.999) // Avoid exact 0 or 1
     }
 
     /// Calculate percentile from sorted data

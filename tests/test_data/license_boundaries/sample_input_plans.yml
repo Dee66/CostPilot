@@ -1,0 +1,507 @@
+# Sample input plans for license boundary testing
+
+# Basic cost regression scenario
+baseline.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.example",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "example",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 1,
+            "values": {
+              "instance_type": "t2.micro",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.example",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "t2.micro",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ],
+    "configuration": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.example",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "example",
+            "expressions": {
+              "instance_type": {
+                "constant_value": "t2.micro"
+              },
+              "ami": {
+                "constant_value": "ami-12345"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+
+# Complex multi-resource scenario
+complex_plan.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.web",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "web",
+            "values": {
+              "instance_type": "t2.small",
+              "ami": "ami-12345"
+            }
+          },
+          {
+            "address": "aws_db_instance.database",
+            "mode": "managed",
+            "type": "aws_db_instance",
+            "name": "database",
+            "values": {
+              "instance_class": "db.t2.micro",
+              "engine": "mysql"
+            }
+          },
+          {
+            "address": "aws_s3_bucket.storage",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "storage",
+            "values": {
+              "bucket": "my-app-storage"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.web",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "t2.small",
+            "ami": "ami-12345"
+          }
+        }
+      },
+      {
+        "address": "aws_db_instance.database",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_class": "db.t2.micro",
+            "engine": "mysql"
+          }
+        }
+      },
+      {
+        "address": "aws_s3_bucket.storage",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "bucket": "my-app-storage"
+          }
+        }
+      }
+    ]
+  }
+
+# Policy violation scenario
+policy_violation.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.expensive",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "expensive",
+            "values": {
+              "instance_type": "m5.24xlarge",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.expensive",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "m5.24xlarge",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }
+
+# Drift scenario
+drift_scenario.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.drifted",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "drifted",
+            "values": {
+              "instance_type": "t2.medium",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.drifted",
+        "change": {
+          "actions": ["update"],
+          "before": {
+            "instance_type": "t2.micro",
+            "ami": "ami-12345"
+          },
+          "after": {
+            "instance_type": "t2.medium",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }
+
+# Seasonal variation within tolerance
+seasonal_normal.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.seasonal",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "seasonal",
+            "values": {
+              "instance_type": "t2.small",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.seasonal",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "t2.small",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }
+
+# Exempted violation
+exempted_violation.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.exempted",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "exempted",
+            "values": {
+              "instance_type": "m5.24xlarge",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.exempted",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "m5.24xlarge",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }
+
+# Autofix candidate
+autofix_candidate.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.fixable",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "fixable",
+            "values": {
+              "instance_type": "t2.2xlarge",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.fixable",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "t2.2xlarge",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }
+
+# Drift with violation
+drift_with_violation.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.drift_violation",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "drift_violation",
+            "values": {
+              "instance_type": "m5.24xlarge",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.drift_violation",
+        "change": {
+          "actions": ["update"],
+          "before": {
+            "instance_type": "t2.micro",
+            "ami": "ami-12345"
+          },
+          "after": {
+            "instance_type": "m5.24xlarge",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }
+
+# Patch scenario
+patch_scenario.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.patch_example",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "patch_example",
+            "values": {
+              "instance_type": "t2.xlarge",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.patch_example",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "t2.xlarge",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }
+
+# Complex analysis scenario
+complex_analysis.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.complex1",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "complex1",
+            "values": {
+              "instance_type": "m5.large",
+              "ami": "ami-12345"
+            }
+          },
+          {
+            "address": "aws_instance.complex2",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "complex2",
+            "values": {
+              "instance_type": "m5.large",
+              "ami": "ami-12345"
+            }
+          },
+          {
+            "address": "aws_instance.complex3",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "complex3",
+            "values": {
+              "instance_type": "m5.large",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.complex1",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "m5.large",
+            "ami": "ami-12345"
+          }
+        }
+      },
+      {
+        "address": "aws_instance.complex2",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "m5.large",
+            "ami": "ami-12345"
+          }
+        }
+      },
+      {
+        "address": "aws_instance.complex3",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "m5.large",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }
+
+# Error scenario
+error_scenario.json:
+  {
+    "version": "1.0",
+    "terraform_version": "1.0.0",
+    "planned_values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.error_example",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "error_example",
+            "values": {
+              "instance_type": "invalid-type",
+              "ami": "ami-12345"
+            }
+          }
+        ]
+      }
+    },
+    "resource_changes": [
+      {
+        "address": "aws_instance.error_example",
+        "change": {
+          "actions": ["create"],
+          "before": null,
+          "after": {
+            "instance_type": "invalid-type",
+            "ami": "ami-12345"
+          }
+        }
+      }
+    ]
+  }

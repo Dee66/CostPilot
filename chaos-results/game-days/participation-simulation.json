@@ -1,0 +1,44 @@
+{
+  "simulation_date": "2025-12-21T08:47:45+02:00",
+  "total_teams": 7,
+  "participation_summary": [
+  {
+    "team": "SRE",
+    "participation_rate": 87,
+    "active_participants": 9,
+    "engagement_score": 78
+  },  {
+    "team": "DevOps",
+    "participation_rate": 70,
+    "active_participants": 6,
+    "engagement_score": 42
+  },  {
+    "team": "Development",
+    "participation_rate": 70,
+    "active_participants": 9,
+    "engagement_score": 63
+  },  {
+    "team": "QA",
+    "participation_rate": 90,
+    "active_participants": 5,
+    "engagement_score": 45
+  },  {
+    "team": "Security",
+    "participation_rate": 97,
+    "active_participants": 7,
+    "engagement_score": 67
+  },  {
+    "team": "Product",
+    "participation_rate": 82,
+    "active_participants": 6,
+    "engagement_score": 49
+  },  {
+    "team": "Management",
+    "participation_rate": 93,
+    "active_participants": 9,
+    "engagement_score": 83
+  }
+  ],
+  "cross_team_collaboration": true,
+  "communication_effective": true
+}

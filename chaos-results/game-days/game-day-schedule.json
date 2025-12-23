@@ -1,0 +1,7 @@
+{
+  "next_game_day": "2026-01-05",
+  "frequency": "quarterly",
+  "duration_hours": 4,
+  "participant_roles": ["SRE", "DevOps", "Development", "QA", "Security", "Management"],
+  "scheduled": true
+}

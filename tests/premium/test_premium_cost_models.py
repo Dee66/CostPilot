@@ -11,7 +11,7 @@ def test_advanced_cost_model_exists():
     """Test advanced cost model flag exists."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -22,17 +22,17 @@ def test_advanced_cost_model_exists():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path), "--cost-model", "advanced"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should accept advanced model
         # In Free, should reject
         if result.returncode == 0:
@@ -44,7 +44,7 @@ def test_advanced_cost_model_accuracy():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         output_path = Path(tmpdir) / "cost.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -56,23 +56,23 @@ def test_advanced_cost_model_accuracy():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), 
+            ["costpilot", "scan", "--plan", str(template_path),
              "--cost-model", "advanced", "--output", str(output_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Advanced model should produce detailed cost breakdown
         if result.returncode == 0 and output_path.exists():
             with open(output_path) as f:
                 cost_data = json.load(f)
-            
+
             assert isinstance(cost_data, dict), "Cost data should be dict"
             # Advanced model should include detailed breakdown
 
@@ -81,7 +81,7 @@ def test_advanced_cost_model_multiple_resources():
     """Test advanced cost model with multiple resources."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda1": {
@@ -108,17 +108,17 @@ def test_advanced_cost_model_multiple_resources():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path), "--cost-model", "advanced"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should analyze all resources with advanced model
         if result.returncode == 0:
             assert len(result.stdout) > 0, "Should have cost analysis"
@@ -128,7 +128,7 @@ def test_advanced_cost_model_comparison():
     """Test advanced cost model comparison with basic."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -140,10 +140,10 @@ def test_advanced_cost_model_comparison():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Run with basic model
         result_basic = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
@@ -151,7 +151,7 @@ def test_advanced_cost_model_comparison():
             text=True,
             timeout=10
         )
-        
+
         # Run with advanced model
         result_advanced = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path), "--cost-model", "advanced"],
@@ -159,7 +159,7 @@ def test_advanced_cost_model_comparison():
             text=True,
             timeout=10
         )
-        
+
         # Both should succeed
         if result_basic.returncode == 0 and result_advanced.returncode == 0:
             # Advanced might provide more detail
@@ -171,7 +171,7 @@ def test_advanced_cost_model_confidence_scores():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         output_path = Path(tmpdir) / "cost.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -182,23 +182,23 @@ def test_advanced_cost_model_confidence_scores():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), 
+            ["costpilot", "scan", "--plan", str(template_path),
              "--cost-model", "advanced", "--output", str(output_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Advanced model might include confidence scores
         if result.returncode == 0 and output_path.exists():
             with open(output_path) as f:
                 cost_data = json.load(f)
-            
+
             # Check for confidence or uncertainty fields
             # (structure depends on implementation)
 
@@ -207,7 +207,7 @@ def test_advanced_cost_model_edge_cases():
     """Test advanced cost model handles edge cases."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -222,17 +222,17 @@ def test_advanced_cost_model_edge_cases():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path), "--cost-model", "advanced"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should handle edge cases
         if result.returncode == 0:
             assert len(result.stdout) > 0, "Should analyze edge cases"

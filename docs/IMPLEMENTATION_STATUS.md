@@ -1,14 +1,14 @@
 # CostPilot Implementation Status
 
-**Last Updated:** 2025-12-06  
-**Progress:** 52/246 tasks (21.1%)  
+**Last Updated:** 2025-12-06
+**Progress:** 52/246 tasks (21.1%)
 **Phase:** MVP (Trust Triangle) - **COMPLETE** ✅
 
 ---
 
 ## Phase 1: MVP (Trust Triangle) - COMPLETE ✅
 
-**Status:** 9/9 items (100%)  
+**Status:** 9/9 items (100%)
 **Timeline:** Days 0-14
 
 ### Completed Components
@@ -173,7 +173,7 @@
 
 ## Next: Phase 2 (Governance & Graph)
 
-**Timeline:** Days 15-45  
+**Timeline:** Days 15-45
 **Status:** 0/9 items (0%)
 
 ### Priorities
@@ -211,7 +211,6 @@
 
 7. **Artifact Support**
    - CDK diff JSON parsing
-   - CloudFormation changeset parsing
 
 8. **Zero-Network Policy Enforcement**
    - Runtime network monitoring

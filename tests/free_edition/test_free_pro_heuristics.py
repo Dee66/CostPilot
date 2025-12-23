@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+COSTPILOT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "target", "debug", "costpilot")
 """Test Free Edition: loading Pro heuristics bundle fails with correct error code."""
 
 import subprocess
@@ -12,7 +14,7 @@ def test_pro_bundle_loading_fails():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         bundle_path = Path(tmpdir) / "pro_bundle.bin"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -23,20 +25,20 @@ def test_pro_bundle_loading_fails():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Create fake Pro bundle
         bundle_path.write_bytes(b"PROBUNDLE" + b"\x00" * 1000)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--heuristics", str(bundle_path)],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--heuristics", str(bundle_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail with specific error
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -49,7 +51,7 @@ def test_encrypted_heuristics_rejected():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         heuristics_path = Path(tmpdir) / "heuristics.enc"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -60,20 +62,20 @@ def test_encrypted_heuristics_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Create fake encrypted heuristics
         heuristics_path.write_bytes(b"\x89PNG" + b"\x00" * 100)  # Fake binary
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--heuristics", str(heuristics_path)],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--heuristics", str(heuristics_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should fail
         if result.returncode != 0:
             error = result.stderr.lower()
@@ -86,7 +88,7 @@ def test_pro_heuristics_flag_error_code():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         bundle_path = Path(tmpdir) / "pro.bundle"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -97,19 +99,19 @@ def test_pro_heuristics_flag_error_code():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         bundle_path.write_bytes(b"PRO")
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path), "--heuristics", str(bundle_path)],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--heuristics", str(bundle_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should return error code (typically 1 or 2)
         assert result.returncode != 0, "Should fail with error code"
         assert result.returncode in [1, 2, 101], "Should have appropriate error code"
@@ -119,7 +121,7 @@ def test_default_heuristics_allowed():
     """Test default heuristics (Free Edition) work."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -130,17 +132,17 @@ def test_default_heuristics_allowed():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path)],
+            [COSTPILOT_PATH, "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Default heuristics should work
         assert result.returncode in [0, 1, 2, 101], "Default Free heuristics should work"
 
@@ -152,10 +154,10 @@ def test_pro_bundle_path_rejected():
         "premium.bundle",
         "enterprise.heuristics",
     ]
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -166,21 +168,21 @@ def test_pro_bundle_path_rejected():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         for path in paths:
             bundle_path = Path(tmpdir) / path
             bundle_path.write_bytes(b"DATA")
-            
+
             result = subprocess.run(
-                ["costpilot", "scan", "--plan", str(template_path), "--heuristics", str(bundle_path)],
+                [COSTPILOT_PATH, "scan", "--plan", str(template_path), "--heuristics", str(bundle_path)],
                 capture_output=True,
                 text=True,
                 timeout=10
             )
-            
+
             # Should fail or ignore
             if result.returncode != 0:
                 # Expected to fail

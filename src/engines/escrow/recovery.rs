@@ -492,7 +492,7 @@ impl RecoveryPlaybook {
         playbook.push_str("4. Configure according to your environment\n\n");
 
         playbook.push_str("## Support\n\n");
-        playbook.push_str(&"For recovery support, contact:\n\n".to_string());
+        playbook.push_str("For recovery support, contact:\n\n");
         playbook.push_str(&format!(
             "- **Vendor:** {}\n",
             self.package.metadata.vendor.company_name

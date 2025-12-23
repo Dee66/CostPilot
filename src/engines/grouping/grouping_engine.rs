@@ -9,6 +9,9 @@ use crate::engines::grouping::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Type alias for resource tuple: (address, type, service, tags, cost)
+pub type ResourceTuple = (String, String, String, HashMap<String, String>, f64);
+
 /// Main grouping engine for organizing and analyzing resource costs
 pub struct GroupingEngine {
     attribution_pipeline: AttributionPipeline,
@@ -44,10 +47,7 @@ impl GroupingEngine {
     }
 
     /// Group resources by environment and return results
-    pub fn group_by_environment(
-        &self,
-        resources: &[(String, String, String, HashMap<String, String>, f64)], // (address, type, service, tags, cost)
-    ) -> Vec<EnvironmentGroup> {
+    pub fn group_by_environment(&self, resources: &[ResourceTuple]) -> Vec<EnvironmentGroup> {
         group_by_environment(resources)
     }
 
@@ -75,7 +75,7 @@ impl GroupingEngine {
         let service_resources = module_resources.clone();
 
         // Prepare data for environment grouping
-        let env_resources: Vec<(String, String, String, HashMap<String, String>, f64)> = resources
+        let env_resources: Vec<ResourceTuple> = resources
             .iter()
             .map(|(addr, ty, tags, cost)| {
                 let (service, _) = crate::engines::grouping::by_service::extract_service_info(ty);

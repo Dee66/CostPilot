@@ -83,7 +83,5 @@ fn parse_resource_change(resource: &Value) -> Result<ResourceChange, Box<dyn std
         monthly_cost: None,
         config: None,
         cost_impact: None,
-        before: None,
-        after: None,
     })
 }

@@ -1,3 +1,4 @@
+use crate::engines::shared::models::RegressionType;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -123,6 +124,9 @@ pub struct BaselineViolation {
 
     /// Severity level
     pub severity: String,
+
+    /// Regression type classification
+    pub regression_type: RegressionType,
 
     /// Baseline owner for escalation
     pub owner: String,

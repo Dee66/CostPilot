@@ -1,5 +1,5 @@
 /// Custom assertions for CostPilot tests
-/// 
+///
 /// Provides domain-specific assertion helpers to make tests more readable
 /// and maintainable.
 

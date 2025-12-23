@@ -1,7 +1,7 @@
 # Error Signatures Contract
 
-**Version:** 1.0.0  
-**Status:** Enforced  
+**Version:** 1.0.0
+**Status:** Enforced
 **Last Updated:** 2025-12-06
 
 ---
@@ -34,34 +34,33 @@ pub enum ErrorCode {
     E001,  // Invalid JSON
     E002,  // Invalid Terraform plan
     E003,  // Invalid CDK structure
-    E004,  // Invalid CloudFormation template
-    E005,  // Invalid policy YAML
-    
+    E004,  // Invalid policy YAML
+
     // Validation errors (E100-E199)
     E100,  // Missing required field
     E101,  // Invalid resource type
     E102,  // Invalid module path
     E103,  // Invalid cost value
     E104,  // Invalid confidence value
-    
+
     // Runtime errors (E200-E299)
     E200,  // Heuristic not found
     E201,  // Heuristic stale
     E202,  // Cold-start inference failed
     E203,  // Graph cycle detected
     E204,  // Policy evaluation failed
-    
+
     // I/O errors (E300-E399)
     E300,  // File not found
     E301,  // File read error
     E302,  // File write error
     E303,  // Permission denied
-    
+
     // Configuration errors (E400-E499)
     E400,  // Invalid configuration
     E401,  // Missing configuration
     E402,  // Configuration conflict
-    
+
     // Internal errors (E500-E599)
     E500,  // Unexpected panic
     E501,  // Assertion failed
@@ -76,7 +75,7 @@ impl ErrorCode {
             // ... etc
         }
     }
-    
+
     pub fn category(&self) -> ErrorCategory {
         let code_num = self.as_str()[1..].parse::<u32>().unwrap();
         match code_num {
@@ -128,28 +127,28 @@ impl ErrorCategory {
 ```rust
 impl Display for ErrorSignature {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        writeln!(f, "{} Error {}: {}", 
+        writeln!(f, "{} Error {}: {}",
             self.category.emoji(),
             self.code.as_str(),
             self.message
         )?;
-        
+
         if !self.context.is_empty() {
             writeln!(f, "\nContext:")?;
             let mut sorted_context: Vec<_> = self.context.iter().collect();
             sorted_context.sort_by_key(|(k, _)| *k);
-            
+
             for (key, value) in sorted_context {
                 writeln!(f, "  {}: {}", key, value)?;
             }
         }
-        
+
         if let Some(hint) = &self.hint {
             writeln!(f, "\n💡 Hint: {}", hint)?;
         }
-        
+
         writeln!(f, "\nError signature: {}", self.hash)?;
-        
+
         Ok(())
     }
 }
@@ -198,15 +197,15 @@ impl ErrorBuilder {
         self.context.insert(key.into(), value.into());
         self
     }
-    
+
     pub fn hint(mut self, hint: impl Into<String>) -> Self {
         self.hint = Some(hint.into());
         self
     }
-    
+
     pub fn build(self) -> ErrorSignature {
         let hash = Self::compute_hash(&self.code, &self.context);
-        
+
         ErrorSignature {
             code: self.code,
             category: self.code.category(),
@@ -216,26 +215,26 @@ impl ErrorBuilder {
             hash,
         }
     }
-    
+
     fn compute_hash(code: &ErrorCode, context: &HashMap<String, String>) -> String {
         use sha2::{Sha256, Digest};
-        
+
         let mut hasher = Sha256::new();
-        
+
         // Hash error code
         hasher.update(code.as_str().as_bytes());
-        
+
         // Hash context (sorted for determinism)
         let mut sorted_context: Vec<_> = context.iter().collect();
         sorted_context.sort_by_key(|(k, _)| *k);
-        
+
         for (key, value) in sorted_context {
             hasher.update(key.as_bytes());
             hasher.update(b":");
             hasher.update(value.as_bytes());
             hasher.update(b";");
         }
-        
+
         // Take first 16 chars of hex
         format!("{:x}", hasher.finalize())[..16].to_string()
     }
@@ -296,7 +295,7 @@ pub fn parse_terraform_plan(path: &Path) -> CostPilotResult<TerraformPlan> {
             .hint("Check that the file exists and you have read permissions")
             .build()
         })?;
-    
+
     serde_json::from_str(&content)
         .map_err(|e| {
             ErrorSignature::builder(
@@ -321,18 +320,18 @@ pub fn predict_cost(resource: &Resource) -> CostPilotResult<Prediction> {
                 e.code,
                 e.message
             );
-            
+
             for (k, v) in e.context {
                 builder = builder.context(k, v);
             }
-            
+
             builder = builder
                 .context("resource_id", &resource.id)
                 .hint("This resource will use cold-start inference");
-            
+
             builder.build()
         })?;
-    
+
     Ok(compute_prediction(&resource, &heuristic))
 }
 ```
@@ -367,16 +366,16 @@ impl Serialize for ErrorSignature {
         S: Serializer,
     {
         use serde::ser::SerializeStruct;
-        
+
         let mut state = serializer.serialize_struct("ErrorSignature", 6)?;
         state.serialize_field("code", self.code.as_str())?;
         state.serialize_field("category", &self.category)?;
         state.serialize_field("message", &self.message)?;
-        
+
         // Sort context for determinism
         let mut sorted_context: BTreeMap<_, _> = self.context.iter().collect();
         state.serialize_field("context", &sorted_context)?;
-        
+
         state.serialize_field("hint", &self.hint)?;
         state.serialize_field("hash", &self.hash)?;
         state.end()
@@ -406,7 +405,7 @@ impl ErrorSignature {
 // CLI main function
 pub fn main() {
     let result = run_cli();
-    
+
     match result {
         Ok(()) => std::process::exit(0),
         Err(error) => {
@@ -576,7 +575,7 @@ fn test_error_hash_deterministic() {
     .context("file", "plan.json")
     .context("line", "47")
     .build();
-    
+
     let error2 = ErrorSignature::builder(
         ErrorCode::E002,
         "Invalid Terraform plan"
@@ -584,7 +583,7 @@ fn test_error_hash_deterministic() {
     .context("line", "47")  // Different order
     .context("file", "plan.json")
     .build();
-    
+
     // Hash must be identical
     assert_eq!(error1.hash, error2.hash);
 }
@@ -592,7 +591,7 @@ fn test_error_hash_deterministic() {
 #[test]
 fn test_all_error_codes_have_category() {
     use strum::IntoEnumIterator;  // Requires strum derive
-    
+
     for code in ErrorCode::iter() {
         let category = code.category();
         assert_ne!(category, ErrorCategory::Unknown);
@@ -609,12 +608,12 @@ fn test_error_json_serialization() {
     .context("instance_type", "t3.large")
     .hint("Update heuristics")
     .build();
-    
+
     let json = serde_json::to_string_pretty(&error).unwrap();
-    
+
     // Must be valid JSON
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
-    
+
     // Must have all required fields
     assert!(parsed["code"].is_string());
     assert!(parsed["category"].is_string());

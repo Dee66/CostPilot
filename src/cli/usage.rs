@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 /// Usage metering CLI commands
 #[derive(Debug)]
@@ -54,8 +55,10 @@ pub enum ExportFormat {
     Csv,
 }
 
-impl OutputFormat {
-    pub fn from_str(s: &str) -> Result<Self, String> {
+impl FromStr for OutputFormat {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "text" | "txt" => Ok(Self::Text),
             "json" => Ok(Self::Json),
@@ -65,8 +68,10 @@ impl OutputFormat {
     }
 }
 
-impl ExportFormat {
-    pub fn from_str(s: &str) -> Result<Self, String> {
+impl FromStr for ExportFormat {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "json" => Ok(Self::Json),
             "csv" => Ok(Self::Csv),
@@ -451,8 +456,8 @@ fn start_of_current_month() -> u64 {
 fn format_team_summary_text(summary: &crate::engines::metering::TeamUsageSummary) -> String {
     let mut output = String::new();
 
-    output.push_str(&"📊 Team Usage Summary\n".to_string());
-    output.push_str(&"====================\n\n".to_string());
+    output.push_str("📊 Team Usage Summary\n");
+    output.push_str("====================\n\n");
     output.push_str(&format!(
         "Team: {} ({})\n",
         summary.team_name, summary.team_id
@@ -462,7 +467,7 @@ fn format_team_summary_text(summary: &crate::engines::metering::TeamUsageSummary
         summary.period_start, summary.period_end
     ));
 
-    output.push_str(&"Usage:\n".to_string());
+    output.push_str("Usage:\n");
     output.push_str(&format!("  Total Events: {}\n", summary.total_events));
     output.push_str(&format!(
         "  Resources Analyzed: {}\n",
@@ -473,7 +478,7 @@ fn format_team_summary_text(summary: &crate::engines::metering::TeamUsageSummary
         summary.cost_impact_detected
     ));
 
-    output.push_str(&"Billing:\n".to_string());
+    output.push_str("Billing:\n");
     output.push_str(&format!("  Billable Units: {}\n", summary.billable_units));
     output.push_str(&format!(
         "  Estimated Charge: ${:.2}\n\n",
@@ -544,12 +549,12 @@ fn format_billing_export_csv(export: &crate::engines::metering::BillingExport) -
 fn format_pr_summary_text(summary: &crate::engines::metering::PrUsageSummary) -> String {
     let mut output = String::new();
 
-    output.push_str(&"🔍 PR Usage Summary\n".to_string());
-    output.push_str(&"===================\n\n".to_string());
+    output.push_str("🔍 PR Usage Summary\n");
+    output.push_str("===================\n\n");
     output.push_str(&format!("Repository: {}\n", summary.repository));
     output.push_str(&format!("PR Number: #{}\n\n", summary.pr_number));
 
-    output.push_str(&"Analysis:\n".to_string());
+    output.push_str("Analysis:\n");
     output.push_str(&format!("  Scans: {}\n", summary.scan_count));
     output.push_str(&format!(
         "  Resources Analyzed: {}\n",
@@ -561,7 +566,7 @@ fn format_pr_summary_text(summary: &crate::engines::metering::PrUsageSummary) ->
         summary.cost_prevented
     ));
 
-    output.push_str(&"Billing:\n".to_string());
+    output.push_str("Billing:\n");
     output.push_str(&format!("  Billable Units: {}\n", summary.billable_units));
     output.push_str(&format!(
         "  Estimated Charge: ${:.2}\n",

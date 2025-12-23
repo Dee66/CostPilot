@@ -38,14 +38,26 @@ pub struct TerraformChange {
 
 /// Parse Terraform plan JSON from string
 pub fn parse_terraform_plan(json_content: &str) -> Result<TerraformPlan> {
-    serde_json::from_str(json_content).map_err(|e| {
+    let plan: TerraformPlan = serde_json::from_str(json_content).map_err(|e| {
         CostPilotError::new(
             "PARSE_001",
             ErrorCategory::ParseError,
             format!("Failed to parse Terraform plan JSON: {}", e),
         )
         .with_hint("Ensure the input is a valid Terraform plan JSON file generated with 'terraform show -json plan.out'")
-    })
+    })?;
+
+    // Validate required fields for a meaningful plan
+    if plan.resource_changes.is_none() {
+        return Err(CostPilotError::new(
+            "PARSE_002",
+            ErrorCategory::ParseError,
+            "Terraform plan must contain resource_changes field".to_string(),
+        )
+        .with_hint("Ensure the plan contains a resource_changes field"));
+    }
+
+    Ok(plan)
 }
 
 /// Convert Terraform plan to canonical ResourceChange format
@@ -63,19 +75,23 @@ pub fn convert_to_resource_changes(plan: &TerraformPlan) -> Result<Vec<ResourceC
 
             let tags = extract_tags(&tf_change.change.after);
 
+            // Extract module path from address if not provided
+            let module_path = tf_change
+                .module_address
+                .clone()
+                .or_else(|| extract_module_path_from_address(&tf_change.address));
+
             changes.push(ResourceChange {
                 resource_id: tf_change.address.clone(),
                 resource_type: tf_change.resource_type.clone(),
                 action,
-                module_path: tf_change.module_address.clone(),
+                module_path,
                 old_config: tf_change.change.before.clone(),
                 new_config: tf_change.change.after.clone(),
                 tags,
                 monthly_cost: None,
                 config: None,
                 cost_impact: None,
-                before: None,
-                after: None,
             });
         }
     }
@@ -83,7 +99,22 @@ pub fn convert_to_resource_changes(plan: &TerraformPlan) -> Result<Vec<ResourceC
     Ok(changes)
 }
 
-/// Determine change action from Terraform actions array
+/// Extract module path from resource address
+/// For address "module.vpc.aws_instance.test", returns "module.vpc"
+/// For address "aws_instance.test", returns None
+fn extract_module_path_from_address(address: &str) -> Option<String> {
+    if let Some(module_part) = address.strip_prefix("module.") {
+        // Find the first dot after "module." to get the module name
+        if let Some(dot_pos) = module_part.find('.') {
+            Some(format!("module.{}", &module_part[..dot_pos]))
+        } else {
+            // If no dot found, the whole thing after "module." is the module name
+            Some(format!("module.{}", module_part))
+        }
+    } else {
+        None
+    }
+}
 fn determine_action(actions: &[String]) -> Result<ChangeAction> {
     if actions.is_empty() {
         return Ok(ChangeAction::NoOp);
@@ -185,9 +216,18 @@ mod tests {
 
     #[test]
     fn test_action_determination() {
-        assert_eq!(determine_action(&["create".to_string()]).unwrap(), ChangeAction::Create);
-        assert_eq!(determine_action(&["delete".to_string()]).unwrap(), ChangeAction::Delete);
-        assert_eq!(determine_action(&["update".to_string()]).unwrap(), ChangeAction::Update);
+        assert_eq!(
+            determine_action(&["create".to_string()]).unwrap(),
+            ChangeAction::Create
+        );
+        assert_eq!(
+            determine_action(&["delete".to_string()]).unwrap(),
+            ChangeAction::Delete
+        );
+        assert_eq!(
+            determine_action(&["update".to_string()]).unwrap(),
+            ChangeAction::Update
+        );
         assert_eq!(
             determine_action(&["delete".to_string(), "create".to_string()]).unwrap(),
             ChangeAction::Replace

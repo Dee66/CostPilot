@@ -16,11 +16,10 @@
 ///
 /// All burn rate calculations are deterministic and require no network access.
 /// Historical data comes from local snapshot files only.
-use super::slo_types::{Slo, SloType};
+use super::slo_types::{BurnRisk, Slo, SloType};
 use crate::engines::trend::snapshot_types::CostSnapshot;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Burn rate analysis result
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,40 +59,6 @@ pub struct BurnAnalysis {
 
     /// Analysis timestamp
     pub analyzed_at: String,
-}
-
-/// Burn risk classification
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum BurnRisk {
-    /// No breach predicted
-    Low,
-
-    /// Breach possible but not imminent (>14 days)
-    Medium,
-
-    /// Breach likely within 14 days
-    High,
-
-    /// Breach imminent (<7 days)
-    Critical,
-}
-
-impl BurnRisk {
-    /// Get numeric severity (0-3)
-    pub fn severity(&self) -> u8 {
-        match self {
-            BurnRisk::Low => 0,
-            BurnRisk::Medium => 1,
-            BurnRisk::High => 2,
-            BurnRisk::Critical => 3,
-        }
-    }
-
-    /// Check if action is required
-    pub fn requires_action(&self) -> bool {
-        matches!(self, BurnRisk::High | BurnRisk::Critical)
-    }
 }
 
 /// Aggregated burn rate report for multiple SLOs
@@ -344,7 +309,7 @@ impl BurnRateCalculator {
             0.0
         };
 
-        (slope, intercept, r_squared.max(0.0).min(1.0))
+        (slope, intercept, r_squared.clamp(0.0, 1.0))
     }
 
     /// Classify risk based on time to breach
@@ -373,6 +338,7 @@ impl Default for BurnRateCalculator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     fn create_test_snapshots() -> Vec<CostSnapshot> {
         vec![

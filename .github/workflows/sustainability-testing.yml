@@ -1,0 +1,173 @@
+name: Sustainability and Ethics Testing
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of sustainability test to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - carbon
+          - energy
+          - fairness
+          - transparency
+          - social
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      intensity:
+        description: 'Test intensity level'
+        required: false
+        default: 'comprehensive'
+        type: choice
+        options:
+          - basic
+          - comprehensive
+          - exhaustive
+  schedule:
+    # Run sustainability tests weekly on Wednesdays at 6 AM UTC
+    - cron: '0 6 * * 3'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'scripts/run_sustainability_testing.sh'
+      - '.github/workflows/sustainability-testing.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  sustainability-testing:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: actions/setup-rust@v1
+      with:
+        rust-version: stable
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Build CostPilot
+      run: cargo build --release
+
+    - name: Set up Python for ML testing
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install numpy pandas scikit-learn
+
+    - name: Run sustainability tests
+      run: |
+        case "${{ github.event.inputs.test_type }}" in
+          "carbon")
+            ./scripts/run_sustainability_testing.sh carbon
+            ;;
+          "energy")
+            ./scripts/run_sustainability_testing.sh energy
+            ;;
+          "fairness")
+            ./scripts/run_sustainability_testing.sh fairness
+            ;;
+          "transparency")
+            ./scripts/run_sustainability_testing.sh transparency
+            ;;
+          "social")
+            ./scripts/run_sustainability_testing.sh social
+            ;;
+          "full"|*)
+            ./scripts/run_sustainability_testing.sh full
+            ;;
+        esac
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: sustainability-test-results
+        path: sustainability-results/
+        retention-days: 30
+
+    - name: Generate sustainability report
+      run: |
+        if [ -d "sustainability-results" ]; then
+          echo "## Sustainability and Ethics Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Carbon footprint summary
+          if [ -f "sustainability-results/tests/carbon_footprint/carbon-analysis.json" ]; then
+            carbon_score=$(jq -r '.carbon_efficiency_rating' sustainability-results/tests/carbon_footprint/carbon-analysis.json 2>/dev/null || echo "N/A")
+            echo "🌱 **Carbon Efficiency**: $carbon_score" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Energy efficiency summary
+          if [ -f "sustainability-results/tests/energy_efficiency/efficiency-results.json" ]; then
+            energy_score=$(jq -r '.overall_efficiency_score' sustainability-results/tests/energy_efficiency/efficiency-results.json 2>/dev/null || echo "N/A")
+            echo "⚡ **Energy Efficiency**: $energy_score" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Fairness summary
+          if [ -f "sustainability-results/tests/fairness/fairness-results.json" ]; then
+            fairness_score=$(jq -r '.overall_fairness_score' sustainability-results/tests/fairness/fairness-results.json 2>/dev/null || echo "N/A")
+            echo "⚖️ **Fairness Score**: $fairness_score" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Transparency summary
+          if [ -f "sustainability-results/tests/transparency/transparency-results.json" ]; then
+            transparency_score=$(jq -r '.overall_transparency_score' sustainability-results/tests/transparency/transparency-results.json 2>/dev/null || echo "N/A")
+            echo "🔍 **Transparency Score**: $transparency_score" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Social impact summary
+          if [ -f "sustainability-results/tests/social_impact/social-impact-results.json" ]; then
+            social_score=$(jq -r '.overall_social_impact_score' sustainability-results/tests/social_impact/social-impact-results.json 2>/dev/null || echo "N/A")
+            echo "🤝 **Social Impact Score**: $social_score" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "📊 [Download Full Results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Update sustainability dashboard
+      run: |
+        if [ -d "sustainability-results" ]; then
+          # Create or update dashboard
+          ./scripts/update_sustainability_dashboard.sh || true
+        fi
+
+  notify-stakeholders:
+    needs: sustainability-testing
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Send sustainability report
+      run: |
+        echo "Sustainability testing completed with status: ${{ needs.sustainability-testing.result }}"
+        # In production, this would send notifications to stakeholders
+        # about sustainability metrics and any issues requiring attention

@@ -3,21 +3,33 @@
 pub mod abi;
 pub mod api;
 pub mod crypto;
+#[cfg(test)]
+mod crypto_tests;
 pub mod error;
 pub mod errors;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod handle;
 pub mod host_bridge;
 pub mod instantiate;
 pub mod license;
 pub mod loader;
 pub mod pro_loader;
 pub mod runtime;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod wasm_runtime;
 
 pub use abi::{ProEngineRequest as AbiRequest, ProEngineResponse as AbiResponse};
 pub use api::{ProEngineExecutor, ProEngineRequest, ProEngineResponse};
 pub use errors::ProEngineError;
+#[cfg(not(target_arch = "wasm32"))]
+pub use handle::ProEngineHandle as WasmProEngineHandle;
 pub use host_bridge::call_pro_engine;
 pub use license::License;
-pub use loader::ProEngineLoader;
+pub use loader::{load_pro_engine_from_file, LicenseInfo, LoaderError};
+#[cfg(not(target_arch = "wasm32"))]
+pub use wasm_runtime::{WasmError, WasmRuntime, WasmSandboxConfig};
+
+#[cfg(not(target_arch = "wasm32"))]
 pub use pro_loader::load_pro_engine;
 
 use crate::engines::shared::error_model::CostPilotError;

@@ -51,17 +51,17 @@ Any modification to any entry breaks the chain, making tampering immediately det
 ```rust
 fn verify_chain(log: &AuditLog) -> Result<(), AuditLogError> {
     let mut previous_hash = log.genesis_hash.clone();
-    
+
     for (i, entry) in log.entries.iter().enumerate() {
         // Verify sequence
         assert_eq!(entry.sequence, i as u64);
-        
+
         // Verify previous hash matches
         assert_eq!(entry.previous_hash, previous_hash);
-        
+
         // Verify event hash
         let event_hash = entry.event.calculate_hash();
-        
+
         // Verify entry hash
         let calculated_hash = calculate_entry_hash(
             entry.sequence,
@@ -69,14 +69,14 @@ fn verify_chain(log: &AuditLog) -> Result<(), AuditLogError> {
             &entry.previous_hash
         );
         assert_eq!(entry.hash, calculated_hash);
-        
+
         // Verify signature
         let calculated_signature = calculate_signature(&entry.hash);
         assert_eq!(entry.signature, calculated_signature);
-        
+
         previous_hash = entry.hash.clone();
     }
-    
+
     Ok(())
 }
 ```

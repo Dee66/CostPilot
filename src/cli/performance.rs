@@ -45,7 +45,7 @@ fn execute_budgets() -> Result<String, String> {
     output.push_str("⚡ Performance Budgets\n");
     output.push_str("=====================\n\n");
 
-    output.push_str(&"Prediction Engine:\n".to_string());
+    output.push_str("Prediction Engine:\n");
     output.push_str(&format!(
         "  Max Latency: {}ms\n",
         budgets.prediction.max_latency_ms
@@ -59,7 +59,7 @@ fn execute_budgets() -> Result<String, String> {
         budgets.prediction.max_file_size_mb
     ));
 
-    output.push_str(&"Mapping Engine:\n".to_string());
+    output.push_str("Mapping Engine:\n");
     output.push_str(&format!(
         "  Max Latency: {}ms\n",
         budgets.mapping.max_latency_ms
@@ -73,7 +73,7 @@ fn execute_budgets() -> Result<String, String> {
         budgets.mapping.max_file_size_mb
     ));
 
-    output.push_str(&"Autofix Engine:\n".to_string());
+    output.push_str("Autofix Engine:\n");
     output.push_str(&format!(
         "  Max Latency: {}ms\n",
         budgets.autofix.max_latency_ms
@@ -87,7 +87,7 @@ fn execute_budgets() -> Result<String, String> {
         budgets.autofix.max_file_size_mb
     ));
 
-    output.push_str(&"Total Scan:\n".to_string());
+    output.push_str("Total Scan:\n");
     output.push_str(&format!(
         "  Max Latency: {}ms\n",
         budgets.total_scan.max_latency_ms
@@ -101,7 +101,7 @@ fn execute_budgets() -> Result<String, String> {
         budgets.total_scan.max_file_size_mb
     ));
 
-    output.push_str(&"SLO Engine:\n".to_string());
+    output.push_str("SLO Engine:\n");
     output.push_str(&format!(
         "  Max Latency: {}ms\n",
         budgets.slo.max_latency_ms
@@ -111,7 +111,7 @@ fn execute_budgets() -> Result<String, String> {
         budgets.slo.max_memory_mb
     ));
 
-    output.push_str(&"Policy Engine:\n".to_string());
+    output.push_str("Policy Engine:\n");
     output.push_str(&format!(
         "  Max Latency: {}ms\n",
         budgets.policy.max_latency_ms
@@ -121,7 +121,7 @@ fn execute_budgets() -> Result<String, String> {
         budgets.policy.max_memory_mb
     ));
 
-    output.push_str(&"WASM Sandbox:\n".to_string());
+    output.push_str("WASM Sandbox:\n");
     output.push_str(&format!("  Max Memory: {}MB\n", budgets.wasm.max_memory_mb));
     output.push_str(&format!(
         "  Max Execution: {}ms\n",
@@ -136,7 +136,7 @@ fn execute_budgets() -> Result<String, String> {
         budgets.wasm.max_bytecode_mb
     ));
 
-    output.push_str(&"Circuit Breaker:\n".to_string());
+    output.push_str("Circuit Breaker:\n");
     output.push_str(&format!(
         "  Failure Threshold: {}\n",
         budgets.circuit_breaker.failure_threshold

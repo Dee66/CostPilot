@@ -1,0 +1,6 @@
+[
+{"timestamp":"2025-12-20T12:50:45+02:00","check":"binary_integrity","status":"INFO","message":"Checking binary integrity...","duration_ms":0}
+{"timestamp":"2025-12-20T12:50:45+02:00","check":"binary_integrity","status":"PASS","message":"Binary exists and has reasonable size: 7621264 bytes","duration_ms":0}
+{"timestamp":"2025-12-20T12:50:45+02:00","check":"basic_functionality","status":"INFO","message":"Testing basic CLI functionality...","duration_ms":0}
+{"timestamp":"2025-12-20T12:50:45+02:00","check":"basic_functionality","status":"PASS","message":"Version command executed successfully in 4ms","duration_ms":0}
+{"timestamp":"2025-12-20T12:50:45+02:00","check":"help_system","status":"INFO","message":"Testing help system...","duration_ms":0}

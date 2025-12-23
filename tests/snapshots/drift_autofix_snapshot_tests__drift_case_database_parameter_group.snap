@@ -1,0 +1,36 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_db_parameter_group.main",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "parameter": [
+            {
+              "name": "max_connections",
+              "value": "200"
+            }
+          ]
+        },
+        "before": {
+          "parameter": [
+            {
+              "name": "max_connections",
+              "value": "100"
+            }
+          ]
+        }
+      },
+      "mode": "managed",
+      "name": "main",
+      "type": "aws_db_parameter_group"
+    }
+  ]
+}

@@ -8,7 +8,7 @@ def test_premium_all_commands_work():
     """Test Premium all commands are available."""
     # This test documents Premium behavior
     # In Premium build, all commands should work
-    
+
     commands = [
         ["costpilot", "scan", "--help"],
         ["costpilot", "predict", "--help"],
@@ -17,7 +17,7 @@ def test_premium_all_commands_work():
         ["costpilot", "patch", "--help"],
         ["costpilot", "slo", "--help"]
     ]
-    
+
     # In Free, some commands fail
     # In Premium, all should succeed
     # Document expected Premium behavior
@@ -31,13 +31,13 @@ def test_premium_all_flags_available():
         text=True,
         timeout=10
     )
-    
+
     if result.returncode == 0:
         output = result.stdout.lower()
-        
+
         # Premium should show all flags
         # Free might hide: --bundle, --license, --premium, etc.
-        
+
         # Document expected Premium flags
 
 
@@ -45,7 +45,7 @@ def test_premium_no_feature_gating():
     """Test Premium has no feature gating."""
     # Premium build should not check license for basic operations
     # (or license is bundled/pre-validated)
-    
+
     # Document expected behavior:
     # - No "premium feature" errors
     # - All commands execute
@@ -60,10 +60,10 @@ def test_premium_help_shows_all():
         text=True,
         timeout=10
     )
-    
+
     if result.returncode == 0:
         output = result.stdout.lower()
-        
+
         # Premium should list all commands
         # Expected commands in Premium:
         # - analyze, predict, check, trend (Free)
@@ -79,14 +79,14 @@ def test_premium_no_disabled_indicators():
         text=True,
         timeout=10
     )
-    
+
     if result.returncode == 0:
         output = result.stdout
-        
+
         # Premium should not mark features as premium
         # Free might show: "autofix [Premium]"
         # Premium just shows: "autofix"
-        
+
         # Document expected: no edition badges in Premium
 
 

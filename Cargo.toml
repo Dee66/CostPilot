@@ -20,25 +20,41 @@ thiserror = "1.0"
 colored = "2.1"
 indicatif = "0.17"
 chrono = { version = "0.4", features = ["serde"] }
+semver = "1.0"
 regex = "1.10"
 walkdir = "2.4"
 atty = "0.2"
 sha2 = "0.10"
 dirs = "5.0"
-uuid = { version = "1.6", features = ["v4"] }
-ring = "0.17"
-hex = "0.4"
+uuid = { version = "1.10", features = ["v4", "js"] }
+getrandom = { version = "0.2", optional = true, features = ["js"] }
 aes-gcm = "0.10"
-hkdf = "0.12"
+hkdf = { version = "0.12", features = ["std"] }
+ed25519-dalek = "2.1"
+base64 = "0.21"
+rand = "0.8"
+zeroize = "1.5"
+hcl = { package = "hcl-rs", version = "0.19" }
+jsonschema = "0.17"
 
-# TODO: Enable when WIT integration is ready
-# wit-bindgen = "0.14"
+# Conditional crypto dependencies (not available for WASM)
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ring = "0.17"
+wasmtime = "27"
+hex = "0.4"
+
+# Build dependencies for key generation
+[build-dependencies]
+ed25519-dalek = "2.1"
+rand = "0.8"
+hex = "0.4"
 
 [dev-dependencies]
 # E2E testing
 assert_cmd = "2.0"
 predicates = "3.0"
 tempfile = "3.8"
+wat = "1"
 
 # Property-based testing
 proptest = "1.4"
@@ -52,6 +68,8 @@ rstest = "0.18"
 test-case = "3.3"
 fake = "2.9"
 pretty_assertions = "1.4"
+arbitrary = "1.4.2"
+quickcheck_macros = "1.1.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 # Benchmarking (only for native targets)
@@ -60,6 +78,10 @@ criterion = { version = "0.3", default-features = false, features = ["cargo_benc
 [[bin]]
 name = "costpilot"
 path = "src/bin/costpilot.rs"
+
+[[bin]]
+name = "license-issuer"
+path = "src/bin/license_issuer.rs"
 
 [lib]
 name = "costpilot"
@@ -104,3 +126,4 @@ mapping = []
 grouping = []
 slo = []
 yaml = []
+wasm = ["getrandom"]

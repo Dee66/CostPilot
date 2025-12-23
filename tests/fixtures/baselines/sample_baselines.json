@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "baselines": [
+    {
+      "name": "web_tier",
+      "description": "Baseline for web application tier",
+      "resources": [
+        {
+          "type": "aws_instance",
+          "instance_type": "t3.medium",
+          "monthly_cost": 45.00
+        }
+      ],
+      "total_monthly_cost": 45.00
+    },
+    {
+      "name": "database_tier",
+      "description": "Baseline for database tier",
+      "resources": [
+        {
+          "type": "aws_rds_instance",
+          "instance_class": "db.t3.micro",
+          "monthly_cost": 25.00
+        }
+      ],
+      "total_monthly_cost": 25.00
+    }
+  ]
+}

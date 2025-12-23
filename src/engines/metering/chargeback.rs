@@ -1,11 +1,9 @@
 // Chargeback reporting for team cost attribution
 
-use crate::engines::metering::usage_meter::{TeamUsageSummary, UserUsage, ProjectUsage, UsageContext};
+use crate::engines::metering::usage_meter::TeamUsageSummary;
 use crate::engines::shared::error_model::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::Duration;
-use chrono::Utc;
 
 /// Chargeback report for organization
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -379,6 +377,7 @@ impl ChargebackReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::engines::metering::usage_meter::{ProjectUsage, UserUsage};
 
     fn create_test_summary(team_id: &str, charge: f64, resources: u32) -> TeamUsageSummary {
         TeamUsageSummary {

@@ -98,7 +98,7 @@ impl<'a> PredictionExplainer<'a> {
             builder.add_cold_start_inference(
                 instance_type,
                 &format!("${:.2}/month", inferred_cost),
-                &"Instance type not in heuristics; inferred from family/size patterns".to_string(),
+                "Instance type not in heuristics; inferred from family/size patterns",
             );
 
             builder.add_calculation(

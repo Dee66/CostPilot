@@ -19,10 +19,10 @@ def test_command_injection_in_filename():
             "template`id`.json",
             "template\nls.json",
         ]
-        
+
         for dangerous_name in dangerous_names:
             template_path = Path(tmpdir) / dangerous_name
-            
+
             template_content = {
                 "Resources": {
                     "Lambda": {
@@ -33,20 +33,20 @@ def test_command_injection_in_filename():
                     }
                 }
             }
-            
+
             with open(template_path, 'w') as f:
                 json.dump(template_content, f)
-            
+
             result = subprocess.run(
                 ["costpilot", "scan", "--plan", str(template_path)],
                 capture_output=True,
                 text=True,
                 timeout=10
             )
-            
+
             # Should handle safely, not execute commands
             combined_output = result.stdout + result.stderr
-            
+
             # Check that commands didn't execute
             assert "uid=" not in combined_output, f"Command injection executed: {dangerous_name}"
             assert "root:x:" not in combined_output, f"Command injection executed: {dangerous_name}"
@@ -56,7 +56,7 @@ def test_command_injection_in_template_content():
     """Test that template content with shell commands is not executed."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         # Shell commands in various fields
         command_injections = [
             "; cat /etc/passwd",
@@ -66,7 +66,7 @@ def test_command_injection_in_template_content():
             "`id`",
             "\n/bin/bash -c 'ls'",
         ]
-        
+
         for injection in command_injections:
             template_content = {
                 "Resources": {
@@ -79,19 +79,19 @@ def test_command_injection_in_template_content():
                     }
                 }
             }
-            
+
             with open(template_path, 'w') as f:
                 json.dump(template_content, f)
-            
+
             result = subprocess.run(
                 ["costpilot", "scan", "--plan", str(template_path)],
                 capture_output=True,
                 text=True,
                 timeout=10
             )
-            
+
             combined_output = result.stdout + result.stderr
-            
+
             # Commands should not execute
             assert "root:x:" not in combined_output, f"Injection executed: {injection}"
             assert "uid=" not in combined_output, f"Injection executed: {injection}"
@@ -101,7 +101,7 @@ def test_no_shell_expansion():
     """Test that shell expansion doesn't occur in arguments."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -112,10 +112,10 @@ def test_no_shell_expansion():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Shell expansion attempts in arguments
         expansion_attempts = [
             "$HOME",
@@ -126,7 +126,7 @@ def test_no_shell_expansion():
             "$(echo test)",
             "`echo test`",
         ]
-        
+
         for expansion in expansion_attempts:
             result = subprocess.run(
                 ["costpilot", "scan", "--plan", str(template_path), "--output", expansion],
@@ -134,16 +134,16 @@ def test_no_shell_expansion():
                 text=True,
                 timeout=10
             )
-            
+
             # Should treat as literal, not expand
             # (Will likely fail because path doesn't exist, but shouldn't expand)
             combined_output = result.stdout + result.stderr
-            
+
             # Check that expansion didn't happen
             # (If it did, we'd see actual home directory path)
             import os
             home_dir = os.path.expanduser("~")
-            
+
             if expansion in ["$HOME", "${HOME}", "~", "~/test"]:
                 # The tool should either reject or not expand
                 # We accept both behaviors, but expansion is not allowed
@@ -154,7 +154,7 @@ def test_path_traversal_in_filenames():
     """Test that path traversal in filenames is blocked."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -165,10 +165,10 @@ def test_path_traversal_in_filenames():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Path traversal attempts
         traversal_paths = [
             "../../../etc/passwd",
@@ -176,7 +176,7 @@ def test_path_traversal_in_filenames():
             "/etc/passwd",
             "C:\\Windows\\System32\\config\\SAM",
         ]
-        
+
         for traversal in traversal_paths:
             result = subprocess.run(
                 ["costpilot", "scan", "--plan", str(template_path), "--output", traversal],
@@ -184,10 +184,10 @@ def test_path_traversal_in_filenames():
                 text=True,
                 timeout=10
             )
-            
+
             # Should reject or safely handle path traversal
             combined_output = result.stdout + result.stderr
-            
+
             # Should not access sensitive files
             assert "root:x:" not in combined_output, f"Path traversal succeeded: {traversal}"
 
@@ -197,9 +197,9 @@ def test_null_byte_injection():
     with tempfile.TemporaryDirectory() as tmpdir:
         # Attempt to use null bytes in filename
         # This could bypass extension checks in vulnerable systems
-        
+
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -210,17 +210,17 @@ def test_null_byte_injection():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should handle null bytes safely
         assert result.returncode in [0, 1, 2, 101], "Should handle null bytes"
 
@@ -228,10 +228,10 @@ def test_null_byte_injection():
 def test_environment_variable_injection():
     """Test that environment variable injection is blocked."""
     import os
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -242,14 +242,14 @@ def test_environment_variable_injection():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Set malicious environment variable
         env = os.environ.copy()
         env["COSTPILOT_EXEC"] = "rm -rf /"
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
@@ -257,7 +257,7 @@ def test_environment_variable_injection():
             timeout=10,
             env=env
         )
-        
+
         # Should not execute commands from env vars
         assert result.returncode in [0, 1, 2, 101], "Should not execute env var commands"
 
@@ -265,11 +265,11 @@ def test_environment_variable_injection():
 def test_symbolic_link_command_injection():
     """Test that symbolic links can't be used for command injection."""
     import os
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         symlink_path = Path(tmpdir) / "symlink.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -280,10 +280,10 @@ def test_symbolic_link_command_injection():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Create symlink
         try:
             os.symlink(template_path, symlink_path)
@@ -291,14 +291,14 @@ def test_symbolic_link_command_injection():
             # Windows may require privileges
             print("Symlink creation failed, skipping test")
             return
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(symlink_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should handle symlinks safely
         assert result.returncode in [0, 1, 2, 101], "Should handle symlinks safely"
 
@@ -307,7 +307,7 @@ def test_argument_injection():
     """Test that argument injection is blocked."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -318,10 +318,10 @@ def test_argument_injection():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         # Argument injection attempts
         # Try to inject additional flags
         result = subprocess.run(
@@ -330,10 +330,10 @@ def test_argument_injection():
             text=True,
             timeout=10
         )
-        
+
         # Should not execute injected commands
         combined_output = result.stdout + result.stderr
-        
+
         # Check that ls didn't execute
         assert "total " not in combined_output, "Command injection via arguments"
 
@@ -342,7 +342,7 @@ def test_pipe_and_redirection_blocked():
     """Test that pipes and redirections are blocked."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -353,17 +353,17 @@ def test_pipe_and_redirection_blocked():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Check that redirection didn't create files
         pwned_file = Path("/tmp/pwned")
         assert not pwned_file.exists(), "Redirection should be blocked"

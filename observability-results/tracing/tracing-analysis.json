@@ -1,0 +1,7 @@
+{
+  "total_traces": 2,
+  "distributed_traces": 0,
+  "bottleneck_spans": 2,
+  "tracing_comprehensive": false,
+  "bottleneck_detection": true
+}

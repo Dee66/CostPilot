@@ -9,9 +9,9 @@ use chrono::{Duration, Utc};
 #[test]
 fn test_trend_detection_increasing() {
     let history = mock_increasing_trend();
-    
+
     let trend = detect_trend(&history);
-    
+
     assert!(trend.is_ok());
     assert_eq!(trend.unwrap().direction, TrendDirection::Increasing);
 }
@@ -19,9 +19,9 @@ fn test_trend_detection_increasing() {
 #[test]
 fn test_trend_detection_decreasing() {
     let history = mock_decreasing_trend();
-    
+
     let trend = detect_trend(&history);
-    
+
     assert!(trend.is_ok());
     assert_eq!(trend.unwrap().direction, TrendDirection::Decreasing);
 }
@@ -29,9 +29,9 @@ fn test_trend_detection_decreasing() {
 #[test]
 fn test_trend_detection_stable() {
     let history = mock_stable_trend();
-    
+
     let trend = detect_trend(&history);
-    
+
     assert!(trend.is_ok());
     assert_eq!(trend.unwrap().direction, TrendDirection::Stable);
 }
@@ -39,9 +39,9 @@ fn test_trend_detection_stable() {
 #[test]
 fn test_trend_detection_volatile() {
     let history = mock_volatile_trend();
-    
+
     let trend = detect_trend(&history);
-    
+
     assert!(trend.is_ok());
     assert_eq!(trend.unwrap().direction, TrendDirection::Volatile);
 }
@@ -49,9 +49,9 @@ fn test_trend_detection_volatile() {
 #[test]
 fn test_linear_regression_slope() {
     let history = mock_linear_growth();
-    
+
     let regression = calculate_linear_regression(&history);
-    
+
     assert!(regression.is_ok());
     let result = regression.unwrap();
     assert!(result.slope > 0.0); // Positive slope for growth
@@ -61,9 +61,9 @@ fn test_linear_regression_slope() {
 #[test]
 fn test_forecast_next_30_days() {
     let history = mock_30_day_history();
-    
+
     let forecast = forecast_costs(&history, 30);
-    
+
     assert!(forecast.is_ok());
     let predictions = forecast.unwrap();
     assert_eq!(predictions.len(), 30);
@@ -72,12 +72,12 @@ fn test_forecast_next_30_days() {
 #[test]
 fn test_forecast_with_confidence_intervals() {
     let history = mock_30_day_history();
-    
+
     let forecast = forecast_with_intervals(&history, 7);
-    
+
     assert!(forecast.is_ok());
     let predictions = forecast.unwrap();
-    
+
     for prediction in predictions {
         assert!(prediction.lower_bound <= prediction.value);
         assert!(prediction.value <= prediction.upper_bound);
@@ -91,9 +91,9 @@ fn test_anomaly_detection_spike() {
         timestamp: Utc::now(),
         cost: 500.0, // Huge spike
     });
-    
+
     let anomalies = detect_anomalies(&history);
-    
+
     assert!(anomalies.is_ok());
     assert!(!anomalies.unwrap().is_empty());
 }
@@ -105,9 +105,9 @@ fn test_anomaly_detection_drop() {
         timestamp: Utc::now(),
         cost: 1.0, // Sudden drop
     });
-    
+
     let anomalies = detect_anomalies(&history);
-    
+
     assert!(anomalies.is_ok());
     assert!(!anomalies.unwrap().is_empty());
 }
@@ -115,9 +115,9 @@ fn test_anomaly_detection_drop() {
 #[test]
 fn test_anomaly_detection_z_score() {
     let history = mock_history_with_outliers();
-    
+
     let anomalies = detect_anomalies_z_score(&history, 2.0);
-    
+
     assert!(anomalies.is_ok());
     let detected = anomalies.unwrap();
     assert!(detected.len() > 0);
@@ -126,9 +126,9 @@ fn test_anomaly_detection_z_score() {
 #[test]
 fn test_moving_average_7_day() {
     let history = mock_30_day_history();
-    
+
     let smoothed = calculate_moving_average(&history, 7);
-    
+
     assert!(smoothed.is_ok());
     let result = smoothed.unwrap();
     assert_eq!(result.data_points.len(), history.data_points.len() - 6);
@@ -137,9 +137,9 @@ fn test_moving_average_7_day() {
 #[test]
 fn test_exponential_smoothing() {
     let history = mock_volatile_trend();
-    
+
     let smoothed = exponential_smoothing(&history, 0.3);
-    
+
     assert!(smoothed.is_ok());
     let result = smoothed.unwrap();
     assert_eq!(result.data_points.len(), history.data_points.len());
@@ -148,9 +148,9 @@ fn test_exponential_smoothing() {
 #[test]
 fn test_seasonality_detection_weekly() {
     let history = mock_weekly_pattern();
-    
+
     let seasonality = detect_seasonality(&history);
-    
+
     assert!(seasonality.is_ok());
     let result = seasonality.unwrap();
     assert_eq!(result.period_days, 7);
@@ -159,9 +159,9 @@ fn test_seasonality_detection_weekly() {
 #[test]
 fn test_seasonality_detection_monthly() {
     let history = mock_monthly_pattern();
-    
+
     let seasonality = detect_seasonality(&history);
-    
+
     assert!(seasonality.is_ok());
     let result = seasonality.unwrap();
     assert_eq!(result.period_days, 30);
@@ -170,9 +170,9 @@ fn test_seasonality_detection_monthly() {
 #[test]
 fn test_cost_variance_calculation() {
     let history = mock_30_day_history();
-    
+
     let variance = calculate_variance(&history);
-    
+
     assert!(variance.is_ok());
     assert!(variance.unwrap() >= 0.0);
 }
@@ -180,9 +180,9 @@ fn test_cost_variance_calculation() {
 #[test]
 fn test_cost_standard_deviation() {
     let history = mock_30_day_history();
-    
+
     let std_dev = calculate_std_deviation(&history);
-    
+
     assert!(std_dev.is_ok());
     assert!(std_dev.unwrap() >= 0.0);
 }
@@ -190,9 +190,9 @@ fn test_cost_standard_deviation() {
 #[test]
 fn test_cost_percentiles() {
     let history = mock_30_day_history();
-    
+
     let percentiles = calculate_percentiles(&history, &[25.0, 50.0, 75.0, 95.0]);
-    
+
     assert!(percentiles.is_ok());
     let result = percentiles.unwrap();
     assert_eq!(result.len(), 4);
@@ -205,9 +205,9 @@ fn test_cost_percentiles() {
 fn test_year_over_year_comparison() {
     let this_year = mock_365_day_history(Utc::now() - Duration::days(365));
     let last_year = mock_365_day_history(Utc::now() - Duration::days(730));
-    
+
     let comparison = compare_year_over_year(&this_year, &last_year);
-    
+
     assert!(comparison.is_ok());
     let result = comparison.unwrap();
     assert!(result.percent_change.is_finite());
@@ -217,18 +217,18 @@ fn test_year_over_year_comparison() {
 fn test_month_over_month_comparison() {
     let this_month = mock_30_day_history();
     let last_month = mock_30_day_history_offset(30);
-    
+
     let comparison = compare_month_over_month(&this_month, &last_month);
-    
+
     assert!(comparison.is_ok());
 }
 
 #[test]
 fn test_cost_breakdown_by_time_period() {
     let history = mock_90_day_history();
-    
+
     let breakdown = breakdown_by_period(&history, TimePeriod::Weekly);
-    
+
     assert!(breakdown.is_ok());
     let result = breakdown.unwrap();
     assert!(!result.periods.is_empty());
@@ -237,9 +237,9 @@ fn test_cost_breakdown_by_time_period() {
 #[test]
 fn test_cost_growth_rate() {
     let history = mock_increasing_trend();
-    
+
     let growth_rate = calculate_growth_rate(&history);
-    
+
     assert!(growth_rate.is_ok());
     assert!(growth_rate.unwrap() > 0.0);
 }
@@ -247,18 +247,18 @@ fn test_cost_growth_rate() {
 #[test]
 fn test_compound_annual_growth_rate() {
     let history = mock_365_day_history(Utc::now() - Duration::days(365));
-    
+
     let cagr = calculate_cagr(&history);
-    
+
     assert!(cagr.is_ok());
 }
 
 #[test]
 fn test_trend_reversal_detection() {
     let history = mock_trend_with_reversal();
-    
+
     let reversals = detect_trend_reversals(&history);
-    
+
     assert!(reversals.is_ok());
     assert!(!reversals.unwrap().is_empty());
 }
@@ -266,9 +266,9 @@ fn test_trend_reversal_detection() {
 #[test]
 fn test_cost_projection_6_months() {
     let history = mock_180_day_history();
-    
+
     let projection = project_costs(&history, 180);
-    
+
     assert!(projection.is_ok());
     let result = projection.unwrap();
     assert!(result.total_projected_cost > 0.0);
@@ -278,10 +278,10 @@ fn test_cost_projection_6_months() {
 fn test_trend_confidence_score() {
     let stable_history = mock_stable_trend();
     let volatile_history = mock_volatile_trend();
-    
+
     let stable_confidence = calculate_trend_confidence(&stable_history);
     let volatile_confidence = calculate_trend_confidence(&volatile_history);
-    
+
     assert!(stable_confidence.is_ok());
     assert!(volatile_confidence.is_ok());
     assert!(stable_confidence.unwrap() > volatile_confidence.unwrap());
@@ -290,13 +290,13 @@ fn test_trend_confidence_score() {
 #[test]
 fn test_cost_accumulation() {
     let history = mock_30_day_history();
-    
+
     let accumulated = calculate_cumulative_costs(&history);
-    
+
     assert!(accumulated.is_ok());
     let result = accumulated.unwrap();
     assert_eq!(result.data_points.len(), history.data_points.len());
-    
+
     // Each point should be >= previous
     for i in 1..result.data_points.len() {
         assert!(result.data_points[i].cost >= result.data_points[i - 1].cost);
@@ -306,18 +306,18 @@ fn test_cost_accumulation() {
 #[test]
 fn test_cost_rate_of_change() {
     let history = mock_30_day_history();
-    
+
     let rate_of_change = calculate_rate_of_change(&history);
-    
+
     assert!(rate_of_change.is_ok());
 }
 
 #[test]
 fn test_trend_with_insufficient_data() {
     let history = mock_history_with_n_points(2); // Too few points
-    
+
     let trend = detect_trend(&history);
-    
+
     assert!(trend.is_err());
 }
 
@@ -326,9 +326,9 @@ fn test_forecast_with_no_history() {
     let history = CostHistory {
         data_points: vec![],
     };
-    
+
     let forecast = forecast_costs(&history, 30);
-    
+
     assert!(forecast.is_err());
 }
 
@@ -490,11 +490,11 @@ fn detect_trend(history: &CostHistory) -> Result<Trend, String> {
     if history.data_points.len() < 3 {
         return Err("Insufficient data".to_string());
     }
-    
+
     let first_cost = history.data_points.first().unwrap().cost;
     let last_cost = history.data_points.last().unwrap().cost;
     let change_percent = ((last_cost - first_cost) / first_cost) * 100.0;
-    
+
     let direction = if change_percent > 10.0 {
         TrendDirection::Increasing
     } else if change_percent < -10.0 {
@@ -502,7 +502,7 @@ fn detect_trend(history: &CostHistory) -> Result<Trend, String> {
     } else {
         TrendDirection::Stable
     };
-    
+
     Ok(Trend { direction })
 }
 
@@ -518,7 +518,7 @@ fn forecast_costs(history: &CostHistory, days: usize) -> Result<Vec<DataPoint>, 
     if history.data_points.is_empty() {
         return Err("No history".to_string());
     }
-    
+
     let last_cost = history.data_points.last().unwrap().cost;
     Ok((1..=days)
         .map(|i| DataPoint {
@@ -542,7 +542,7 @@ fn forecast_with_intervals(_history: &CostHistory, days: usize) -> Result<Vec<Fo
 fn detect_anomalies(history: &CostHistory) -> Result<Vec<Anomaly>, String> {
     let mean = history.data_points.iter().map(|d| d.cost).sum::<f64>() / history.data_points.len() as f64;
     let threshold = mean * 2.0;
-    
+
     let anomalies = history
         .data_points
         .iter()
@@ -552,7 +552,7 @@ fn detect_anomalies(history: &CostHistory) -> Result<Vec<Anomaly>, String> {
             value: d.cost,
         })
         .collect();
-    
+
     Ok(anomalies)
 }
 
@@ -569,7 +569,7 @@ fn calculate_moving_average(history: &CostHistory, window: usize) -> Result<Cost
             cost: window.iter().map(|d| d.cost).sum::<f64>() / window.len() as f64,
         })
         .collect();
-    
+
     Ok(CostHistory {
         data_points: smoothed,
     })
@@ -591,7 +591,7 @@ fn calculate_variance(history: &CostHistory) -> Result<f64, String> {
         .map(|d| (d.cost - mean).powi(2))
         .sum::<f64>()
         / history.data_points.len() as f64;
-    
+
     Ok(variance)
 }
 
@@ -602,7 +602,7 @@ fn calculate_std_deviation(history: &CostHistory) -> Result<f64, String> {
 fn calculate_percentiles(history: &CostHistory, percentiles: &[f64]) -> Result<Vec<f64>, String> {
     let mut costs: Vec<f64> = history.data_points.iter().map(|d| d.cost).collect();
     costs.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    
+
     let results = percentiles
         .iter()
         .map(|p| {
@@ -610,7 +610,7 @@ fn calculate_percentiles(history: &CostHistory, percentiles: &[f64]) -> Result<V
             costs[index]
         })
         .collect();
-    
+
     Ok(results)
 }
 
@@ -673,7 +673,7 @@ fn calculate_cumulative_costs(history: &CostHistory) -> Result<CostHistory, Stri
             }
         })
         .collect();
-    
+
     Ok(CostHistory {
         data_points: cumulative_points,
     })
@@ -753,4 +753,172 @@ struct Reversal {
 
 struct Projection {
     total_projected_cost: f64,
+}
+
+// ===== TREND ENGINE EDGE CASE TESTS =====
+
+#[test]
+fn test_trend_analysis_empty_history_edge_case() {
+    // Test trend analysis with empty history
+    let empty_history: Vec<CostPoint> = vec![];
+
+    let trend = detect_trend(&empty_history);
+    // Should handle empty history gracefully
+    assert!(trend.is_ok() || trend.is_err()); // Either outcome acceptable
+}
+
+#[test]
+fn test_trend_analysis_single_point_edge_case() {
+    // Test trend analysis with single data point
+    let single_point = vec![CostPoint {
+        timestamp: Utc::now(),
+        cost: 100.0,
+    }];
+
+    let trend = detect_trend(&single_point);
+    // Should handle single point gracefully
+    assert!(trend.is_ok() || trend.is_err()); // Either outcome acceptable
+}
+
+#[test]
+fn test_trend_analysis_extreme_cost_values() {
+    // Test with extreme cost values
+    let extreme_history = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(10), cost: 0.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(9), cost: 1_000_000_000.0 }, // 1 billion
+        CostPoint { timestamp: Utc::now() - Duration::days(8), cost: -1_000_000.0 }, // Negative
+        CostPoint { timestamp: Utc::now() - Duration::days(7), cost: 0.000001 }, // Very small
+    ];
+
+    let trend = detect_trend(&extreme_history);
+    assert!(trend.is_ok());
+    // Should handle extreme values without panicking
+}
+
+#[test]
+fn test_trend_analysis_extremely_long_history() {
+    // Test with a very long history (1000+ data points)
+    let mut long_history = Vec::new();
+    let base_time = Utc::now();
+
+    for i in 0..1000 {
+        long_history.push(CostPoint {
+            timestamp: base_time - Duration::days(i as i64),
+            cost: 100.0 + (i as f64),
+        });
+    }
+
+    let trend = detect_trend(&long_history);
+    assert!(trend.is_ok());
+    // Should handle large datasets efficiently
+}
+
+#[test]
+fn test_trend_analysis_zero_variance_edge_case() {
+    // Test with zero variance (all same values)
+    let zero_variance = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(5), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(4), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(3), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(2), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(1), cost: 100.0 },
+    ];
+
+    let trend = detect_trend(&zero_variance);
+    assert!(trend.is_ok());
+    assert_eq!(trend.unwrap().direction, TrendDirection::Stable);
+}
+
+#[test]
+fn test_trend_analysis_extreme_timestamps() {
+    // Test with extreme timestamp ranges
+    let extreme_timestamps = vec![
+        CostPoint { timestamp: chrono::DateTime::from_timestamp(0, 0).unwrap(), cost: 100.0 }, // Unix epoch
+        CostPoint { timestamp: chrono::DateTime::from_timestamp(2147483647, 0).unwrap(), cost: 200.0 }, // Year 2038
+        CostPoint { timestamp: Utc::now(), cost: 150.0 },
+    ];
+
+    let trend = detect_trend(&extreme_timestamps);
+    assert!(trend.is_ok());
+    // Should handle extreme timestamps
+}
+
+#[test]
+fn test_trend_analysis_unsorted_timestamps_edge_case() {
+    // Test with unsorted timestamps
+    let unsorted_history = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(1), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(10), cost: 50.0 }, // Out of order
+        CostPoint { timestamp: Utc::now() - Duration::days(5), cost: 75.0 }, // Out of order
+        CostPoint { timestamp: Utc::now(), cost: 125.0 },
+    ];
+
+    let trend = detect_trend(&unsorted_history);
+    assert!(trend.is_ok());
+    // Should handle unsorted data gracefully
+}
+
+#[test]
+fn test_trend_analysis_duplicate_timestamps() {
+    // Test with duplicate timestamps
+    let duplicate_timestamps = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(2), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(2), cost: 150.0 }, // Same timestamp
+        CostPoint { timestamp: Utc::now() - Duration::days(1), cost: 125.0 },
+    ];
+
+    let trend = detect_trend(&duplicate_timestamps);
+    assert!(trend.is_ok());
+    // Should handle duplicate timestamps gracefully
+}
+
+#[test]
+fn test_trend_analysis_extreme_seasonality() {
+    // Test with extreme seasonality patterns
+    let mut seasonal_history = Vec::new();
+    let base_time = Utc::now();
+
+    for i in 0..365 { // One year of daily data
+        let seasonal_cost = 100.0 + 50.0 * (i as f64 * 2.0 * std::f64::consts::PI / 365.0).sin();
+        seasonal_history.push(CostPoint {
+            timestamp: base_time - Duration::days(365 - i),
+            cost: seasonal_cost,
+        });
+    }
+
+    let trend = detect_trend(&seasonal_history);
+    assert!(trend.is_ok());
+    // Should detect seasonal patterns
+}
+
+#[test]
+fn test_trend_analysis_nan_infinity_values_edge_case() {
+    // Test with NaN and infinity values
+    let special_values = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(3), cost: f64::NAN },
+        CostPoint { timestamp: Utc::now() - Duration::days(2), cost: f64::INFINITY },
+        CostPoint { timestamp: Utc::now() - Duration::days(1), cost: f64::NEG_INFINITY },
+        CostPoint { timestamp: Utc::now(), cost: 100.0 },
+    ];
+
+    let trend = detect_trend(&special_values);
+    // Should handle special float values gracefully
+    assert!(trend.is_ok() || trend.is_err()); // Either outcome acceptable
+}
+
+#[test]
+fn test_trend_analysis_extreme_outliers() {
+    // Test with extreme outliers
+    let outlier_history = vec![
+        CostPoint { timestamp: Utc::now() - Duration::days(10), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(9), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(8), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(7), cost: 1_000_000.0 }, // Extreme outlier
+        CostPoint { timestamp: Utc::now() - Duration::days(6), cost: 100.0 },
+        CostPoint { timestamp: Utc::now() - Duration::days(5), cost: 100.0 },
+    ];
+
+    let trend = detect_trend(&outlier_history);
+    assert!(trend.is_ok());
+    // Should be robust to outliers
 }

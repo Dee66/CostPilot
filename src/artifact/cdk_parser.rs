@@ -1,20 +1,301 @@
 use super::artifact_types::*;
-use super::cloudformation_parser::CloudFormationParser;
 use serde_json::Value;
+use std::collections::HashMap;
 use std::path::Path;
 
-/// Parser for AWS CDK synthesized output
-pub struct CdkParser {
-    /// Underlying CloudFormation parser (CDK outputs CFN templates)
-    cfn_parser: CloudFormationParser,
+/// CDK diff structure (output from `cdk diff --json`)
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CdkDiff {
+    /// Success status
+    success: bool,
+    /// List of stacks with changes
+    stacks: Vec<CdkStackDiff>,
+    /// Error message if any
+    error: Option<String>,
 }
 
+/// Stack diff in CDK
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CdkStackDiff {
+    /// Stack name
+    stack_name: String,
+    /// Stack path
+    stack_path: Option<String>,
+    /// Changes in this stack
+    changes: Vec<CdkResourceChange>,
+}
+
+/// Resource change in CDK diff
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CdkResourceChange {
+    /// Resource logical ID
+    logical_id: String,
+    /// Resource type
+    resource_type: String,
+    /// Change type
+    change_type: CdkChangeType,
+    /// Impact level
+    impact: Option<String>,
+    /// Property changes
+    property_changes: Option<Vec<CdkPropertyChange>>,
+    /// Old values
+    old_values: Option<serde_json::Value>,
+    /// New values
+    new_values: Option<serde_json::Value>,
+}
+
+/// Type of change in CDK
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+enum CdkChangeType {
+    Create,
+    Update,
+    Delete,
+}
+
+/// Property change details
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CdkPropertyChange {
+    /// Property path
+    property_path: String,
+    /// Old value
+    old_value: Option<serde_json::Value>,
+    /// New value
+    new_value: Option<serde_json::Value>,
+    /// Change impact
+    change_impact: Option<String>,
+}
+
+/// Parse CDK diff JSON
+fn parse_cdk_diff(json_content: &str) -> ArtifactResult<CdkDiff> {
+    serde_json::from_str(json_content)
+        .map_err(|e| ArtifactError::ParseError(format!("Failed to parse CDK diff JSON: {}", e)))
+}
+
+/// CloudFormation template structure (subset needed for CDK)
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CloudFormationTemplate {
+    /// Resources
+    #[serde(rename = "Resources", default)]
+    pub resources: HashMap<String, CloudFormationResource>,
+}
+
+/// CloudFormation resource
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+struct CloudFormationResource {
+    /// Resource type
+    #[serde(rename = "Type")]
+    pub resource_type: String,
+    /// Resource properties
+    #[serde(rename = "Properties")]
+    pub properties: Option<serde_json::Value>,
+    /// Resource metadata
+    #[serde(rename = "Metadata", default)]
+    pub metadata: Option<serde_json::Value>,
+    /// Dependencies
+    #[serde(rename = "DependsOn", default)]
+    pub depends_on: Option<serde_json::Value>,
+}
+
+/// Parse CloudFormation template JSON
+fn parse_cloudformation_template(json_content: &str) -> ArtifactResult<CloudFormationTemplate> {
+    serde_json::from_str(json_content).map_err(|e| {
+        ArtifactError::ParseError(format!("Failed to parse CloudFormation template: {}", e))
+    })
+}
+
+/// Map CloudFormation resource type to Terraform-style resource type
+#[allow(dead_code)]
+fn map_cloudformation_resource_type(cf_type: &str) -> String {
+    match cf_type {
+        "AWS::EC2::Instance" => "aws_instance".to_string(),
+        "AWS::EC2::LaunchTemplate" => "aws_launch_template".to_string(),
+        "AWS::EC2::SecurityGroup" => "aws_security_group".to_string(),
+        "AWS::EC2::Subnet" => "aws_subnet".to_string(),
+        "AWS::EC2::VPC" => "aws_vpc".to_string(),
+        "AWS::EC2::InternetGateway" => "aws_internet_gateway".to_string(),
+        "AWS::EC2::NatGateway" => "aws_nat_gateway".to_string(),
+        "AWS::EC2::RouteTable" => "aws_route_table".to_string(),
+        "AWS::EC2::NetworkAcl" => "aws_network_acl".to_string(),
+        "AWS::RDS::DBInstance" => "aws_db_instance".to_string(),
+        "AWS::RDS::DBCluster" => "aws_rds_cluster".to_string(),
+        "AWS::RDS::DBSubnetGroup" => "aws_db_subnet_group".to_string(),
+        "AWS::Lambda::Function" => "aws_lambda_function".to_string(),
+        "AWS::S3::Bucket" => "aws_s3_bucket".to_string(),
+        "AWS::S3::BucketPolicy" => "aws_s3_bucket_policy".to_string(),
+        "AWS::IAM::Role" => "aws_iam_role".to_string(),
+        "AWS::IAM::Policy" => "aws_iam_policy".to_string(),
+        "AWS::IAM::InstanceProfile" => "aws_iam_instance_profile".to_string(),
+        "AWS::ELB::LoadBalancer" => "aws_elb".to_string(),
+        "AWS::ELBv2::LoadBalancer" => "aws_lb".to_string(),
+        "AWS::ELBv2::TargetGroup" => "aws_lb_target_group".to_string(),
+        "AWS::ELBv2::Listener" => "aws_lb_listener".to_string(),
+        "AWS::CloudWatch::Alarm" => "aws_cloudwatch_metric_alarm".to_string(),
+        "AWS::CloudWatch::LogGroup" => "aws_cloudwatch_log_group".to_string(),
+        "AWS::SNS::Topic" => "aws_sns_topic".to_string(),
+        "AWS::SQS::Queue" => "aws_sqs_queue".to_string(),
+        "AWS::DynamoDB::Table" => "aws_dynamodb_table".to_string(),
+        "AWS::Kinesis::Stream" => "aws_kinesis_stream".to_string(),
+        "AWS::ApiGateway::RestApi" => "aws_api_gateway_rest_api".to_string(),
+        "AWS::ApiGateway::Resource" => "aws_api_gateway_resource".to_string(),
+        "AWS::ApiGateway::Method" => "aws_api_gateway_method".to_string(),
+        "AWS::ApiGateway::Deployment" => "aws_api_gateway_deployment".to_string(),
+        "AWS::CloudFront::Distribution" => "aws_cloudfront_distribution".to_string(),
+        "AWS::Route53::HostedZone" => "aws_route53_zone".to_string(),
+        "AWS::Route53::RecordSet" => "aws_route53_record".to_string(),
+        "AWS::EFS::FileSystem" => "aws_efs_file_system".to_string(),
+        "AWS::EFS::MountTarget" => "aws_efs_mount_target".to_string(),
+        "AWS::EKS::Cluster" => "aws_eks_cluster".to_string(),
+        "AWS::EKS::Nodegroup" => "aws_eks_nodegroup".to_string(),
+        "AWS::ECS::Cluster" => "aws_ecs_cluster".to_string(),
+        "AWS::ECS::Service" => "aws_ecs_service".to_string(),
+        "AWS::ECS::TaskDefinition" => "aws_ecs_task_definition".to_string(),
+        // Add more mappings as needed
+        _ => {
+            // For unknown types, create a generic mapping
+            format!(
+                "aws_{}",
+                cf_type
+                    .split("::")
+                    .last()
+                    .unwrap_or("unknown")
+                    .to_lowercase()
+            )
+        }
+    }
+}
+
+/// Parser for AWS CDK synthesized output
+pub struct CdkParser;
+
 impl CdkParser {
+    /// Parse CDK diff to artifact
+    fn parse_cdk_diff_to_artifact(&self, diff: &CdkDiff) -> ArtifactResult<Artifact> {
+        let mut all_resources = Vec::new();
+        let mut stack_name = None;
+
+        for stack in &diff.stacks {
+            stack_name = Some(stack.stack_name.clone());
+            for change in &stack.changes {
+                // Only include resources with new values (created/updated)
+                if let Some(new_values) = &change.new_values {
+                    let properties = new_values
+                        .as_object()
+                        .map(|m| m.clone().into_iter().collect())
+                        .unwrap_or_default();
+
+                    let resource = ArtifactResource {
+                        id: change.logical_id.clone(),
+                        resource_type: change.resource_type.clone(),
+                        properties,
+                        metadata: HashMap::new(),
+                        depends_on: Vec::new(),
+                    };
+                    all_resources.push(resource);
+                }
+            }
+        }
+
+        Ok(Artifact {
+            format: ArtifactFormat::Cdk,
+            resources: all_resources,
+            metadata: ArtifactMetadata {
+                source: "cdk-diff".to_string(),
+                version: None,
+                stack_name,
+                region: None,
+                tags: HashMap::new(),
+            },
+            outputs: HashMap::new(),
+            parameters: HashMap::new(),
+        })
+    }
     /// Create a new CDK parser
     pub fn new() -> Self {
-        Self {
-            cfn_parser: CloudFormationParser::new(),
+        Self
+    }
+
+    /// Parse a CloudFormation template file and return an Artifact
+    fn parse_cloudformation_template_file(&self, template_path: &str) -> ArtifactResult<Artifact> {
+        let content = std::fs::read_to_string(template_path)
+            .map_err(|e| ArtifactError::IoError(format!("Failed to read template file: {}", e)))?;
+
+        let template: CloudFormationTemplate = parse_cloudformation_template(&content)?;
+
+        // Convert template resources to artifact resources
+        let mut resources = Vec::new();
+        for (logical_id, resource) in &template.resources {
+            let _resource_type = resource.resource_type.clone();
+            let properties = resource
+                .properties
+                .as_ref()
+                .and_then(|p| p.as_object())
+                .map(|m| m.clone().into_iter().collect())
+                .unwrap_or_default();
+            let mut metadata = HashMap::new();
+            // Extract metadata from CloudFormation resource
+            if let Some(metadata_value) = &resource.metadata {
+                if let Some(metadata_obj) = metadata_value.as_object() {
+                    for (key, value) in metadata_obj {
+                        if let Some(str_value) = value.as_str() {
+                            metadata.insert(key.clone(), str_value.to_string());
+                        }
+                    }
+                }
+            }
+
+            // Extract tags into metadata
+            if let Some(props) = &resource.properties {
+                if let Some(tags_value) = props.get("Tags") {
+                    if let Some(tags_array) = tags_value.as_array() {
+                        for tag in tags_array {
+                            if let (Some(key), Some(value)) = (
+                                tag.get("Key").and_then(|k| k.as_str()),
+                                tag.get("Value").and_then(|v| v.as_str()),
+                            ) {
+                                metadata.insert(format!("tag:{}", key), value.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+
+            resources.push(ArtifactResource {
+                id: logical_id.clone(),
+                resource_type: resource.resource_type.clone(), // Keep original CFN type
+                properties,
+                depends_on: if let Some(depends_value) = &resource.depends_on {
+                    if let Some(depends_array) = depends_value.as_array() {
+                        depends_array
+                            .iter()
+                            .filter_map(|v| v.as_str())
+                            .map(|s| s.to_string())
+                            .collect()
+                    } else if let Some(depends_str) = depends_value.as_str() {
+                        vec![depends_str.to_string()]
+                    } else {
+                        Vec::new()
+                    }
+                } else {
+                    Vec::new()
+                },
+                metadata,
+            });
         }
+
+        Ok(Artifact {
+            format: ArtifactFormat::Cdk, // Will be overridden to CDK
+            metadata: ArtifactMetadata {
+                source: template_path.to_string(),
+                version: None,
+                stack_name: None,
+                region: None,
+                tags: HashMap::new(),
+            },
+            resources,
+            outputs: HashMap::new(),
+            parameters: HashMap::new(),
+        })
     }
 
     /// Parse CDK output directory (cdk.out/)
@@ -66,7 +347,7 @@ impl CdkParser {
         let template_path = format!("{}/{}", output_dir, template_file);
 
         // Parse the CloudFormation template
-        let mut artifact = self.cfn_parser.parse_file(&template_path)?;
+        let mut artifact = self.parse_cloudformation_template_file(&template_path)?;
 
         // Override format to CDK
         artifact.format = ArtifactFormat::Cdk;
@@ -164,11 +445,88 @@ impl Default for CdkParser {
 
 impl ArtifactParser for CdkParser {
     fn parse(&self, content: &str) -> ArtifactResult<Artifact> {
-        // For CDK, we expect a CloudFormation template
-        // (CDK synthesizes to CFN)
-        let mut artifact = self.cfn_parser.parse(content)?;
-        artifact.format = ArtifactFormat::Cdk;
-        Ok(artifact)
+        // Try to parse as CDK diff first
+        if let Ok(diff) = parse_cdk_diff(content) {
+            return self.parse_cdk_diff_to_artifact(&diff);
+        }
+
+        // Fall back to CloudFormation template
+        let template: CloudFormationTemplate = parse_cloudformation_template(content)?;
+
+        // Convert template resources to artifact resources
+        let mut resources = Vec::new();
+        for (logical_id, resource) in &template.resources {
+            let _resource_type = resource.resource_type.clone();
+            let properties = resource
+                .properties
+                .as_ref()
+                .and_then(|p| p.as_object())
+                .map(|m| m.clone().into_iter().collect())
+                .unwrap_or_default();
+            let mut metadata = HashMap::new();
+            // Extract metadata from CloudFormation resource
+            if let Some(metadata_value) = &resource.metadata {
+                if let Some(metadata_obj) = metadata_value.as_object() {
+                    for (key, value) in metadata_obj {
+                        if let Some(str_value) = value.as_str() {
+                            metadata.insert(key.clone(), str_value.to_string());
+                        }
+                    }
+                }
+            }
+
+            // Extract tags into metadata
+            if let Some(props) = &resource.properties {
+                if let Some(tags_value) = props.get("Tags") {
+                    if let Some(tags_array) = tags_value.as_array() {
+                        for tag in tags_array {
+                            if let (Some(key), Some(value)) = (
+                                tag.get("Key").and_then(|k| k.as_str()),
+                                tag.get("Value").and_then(|v| v.as_str()),
+                            ) {
+                                metadata.insert(format!("tag:{}", key), value.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+
+            resources.push(ArtifactResource {
+                id: logical_id.clone(),
+                resource_type: resource.resource_type.clone(), // Keep original CFN type
+                properties,
+                depends_on: if let Some(depends_value) = &resource.depends_on {
+                    if let Some(depends_array) = depends_value.as_array() {
+                        depends_array
+                            .iter()
+                            .filter_map(|v| v.as_str())
+                            .map(|s| s.to_string())
+                            .collect()
+                    } else if let Some(depends_str) = depends_value.as_str() {
+                        vec![depends_str.to_string()]
+                    } else {
+                        Vec::new()
+                    }
+                } else {
+                    Vec::new()
+                },
+                metadata,
+            });
+        }
+
+        Ok(Artifact {
+            format: ArtifactFormat::Cdk,
+            metadata: ArtifactMetadata {
+                source: "cdk-template".to_string(),
+                version: None,
+                stack_name: None,
+                region: None,
+                tags: HashMap::new(),
+            },
+            resources,
+            outputs: HashMap::new(),
+            parameters: HashMap::new(),
+        })
     }
 
     fn format(&self) -> ArtifactFormat {

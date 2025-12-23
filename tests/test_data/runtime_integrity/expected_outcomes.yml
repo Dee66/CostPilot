@@ -1,0 +1,343 @@
+# CostPilot Runtime Integrity: Expected Outcomes
+# Test data for runtime integrity expected outcomes
+
+# Hard stop outcomes
+hard_stop_outcomes:
+  metadata:
+    test_case: "hard_stop_outcomes"
+    description: "Expected behavior for hard stop scenarios"
+    outcome_type: "hard_stop"
+    severity: "critical"
+  expected_behaviors:
+    - behavior: "immediate_termination"
+      description: "Application terminates immediately on integrity violation"
+      validation:
+        - exit_code: 1
+        - no_partial_execution: true
+        - no_output_generated: true
+        - temp_files_cleaned: true
+    - behavior: "no_data_processing"
+      description: "No input data is processed when integrity fails"
+      validation:
+        - input_files_untouched: true
+        - output_files_not_created: true
+        - database_not_modified: true
+        - network_requests_not_made: true
+    - behavior: "clear_error_message"
+      description: "Clear, actionable error message provided"
+      validation:
+        - error_message_present: true
+        - error_code_unique: true
+        - troubleshooting_guidance: true
+        - no_sensitive_data_leakage: true
+    - behavior: "audit_log_entry"
+      description: "Integrity violation logged for audit purposes"
+      validation:
+        - log_entry_created: true
+        - log_contains_violation_type: true
+        - log_contains_timestamp: true
+        - log_protected_from_tampering: true
+
+# Graceful degradation outcomes
+graceful_degradation_outcomes:
+  metadata:
+    test_case: "graceful_degradation_outcomes"
+    description: "Expected behavior for graceful degradation scenarios"
+    outcome_type: "graceful_degradation"
+    severity: "medium"
+  expected_behaviors:
+    - behavior: "reduced_functionality"
+      description: "Application continues with reduced functionality"
+      validation:
+        - core_features_available: true
+        - advanced_features_disabled: true
+        - performance_degraded: true
+        - user_notification_provided: true
+    - behavior: "fallback_mode"
+      description: "Application switches to fallback/safe mode"
+      validation:
+        - safe_defaults_applied: true
+        - conservative_processing: true
+        - limited_resource_usage: true
+        - recovery_instructions_provided: true
+    - behavior: "warning_messages"
+      description: "Clear warnings about degraded functionality"
+      validation:
+        - warning_messages_displayed: true
+        - warning_severity_indicated: true
+        - continued_operation_allowed: true
+        - mitigation_steps_suggested: true
+
+# Recovery outcomes
+recovery_outcomes:
+  metadata:
+    test_case: "recovery_outcomes"
+    description: "Expected behavior for recovery scenarios"
+    outcome_type: "recovery"
+    severity: "low"
+  expected_behaviors:
+    - behavior: "automatic_recovery"
+      description: "Application automatically recovers from integrity issues"
+      validation:
+        - recovery_attempted: true
+        - recovery_successful: true
+        - no_user_intervention: true
+        - full_functionality_restored: true
+    - behavior: "manual_recovery"
+      description: "Application guides user through recovery process"
+      validation:
+        - recovery_instructions_provided: true
+        - step_by_step_guidance: true
+        - recovery_verification: true
+        - rollback_available: true
+    - behavior: "partial_recovery"
+      description: "Application recovers partially with limitations"
+      validation:
+        - some_functionality_restored: true
+        - limitations_clearly_stated: true
+        - alternative_workflows_suggested: true
+        - full_recovery_path_provided: true
+
+# Integrity violation responses
+integrity_violation_responses:
+  metadata:
+    test_case: "integrity_violation_responses"
+    description: "Expected responses to different integrity violations"
+    outcome_type: "violation_response"
+  violation_responses:
+    - violation: "binary_integrity_failure"
+      expected_response: "hard_stop"
+      response_details:
+        exit_code: 1
+        error_message: "Binary integrity check failed"
+        recovery_action: "reinstall_application"
+    - violation: "configuration_corruption"
+      expected_response: "graceful_degradation"
+      response_details:
+        fallback_config: true
+        warning_message: "Using default configuration"
+        recovery_action: "restore_config_backup"
+    - violation: "data_file_corruption"
+      expected_response: "recovery"
+      response_details:
+        automatic_repair: true
+        backup_restoration: true
+        data_validation: true
+    - violation: "network_certificate_failure"
+      expected_response: "hard_stop"
+      response_details:
+        connection_terminated: true
+        security_alert: true
+        certificate_validation: true
+    - violation: "memory_corruption"
+      expected_response: "hard_stop"
+      response_details:
+        immediate_termination: true
+        crash_dump_generated: true
+        forensic_analysis_enabled: true
+
+# Error handling patterns
+error_handling_patterns:
+  metadata:
+    test_case: "error_handling_patterns"
+    description: "Expected error handling patterns for integrity issues"
+    outcome_type: "error_handling"
+  handling_patterns:
+    - pattern: "fail_fast"
+      description: "Fail immediately on integrity violations"
+      applicable_scenarios: ["binary_tampering", "critical_data_corruption"]
+      expected_behavior:
+        - immediate_termination: true
+        - minimal_cleanup: true
+        - error_logging: true
+        - no_recovery_attempt: true
+    - pattern: "fail_safe"
+      description: "Enter safe mode on integrity violations"
+      applicable_scenarios: ["configuration_issues", "non_critical_corruption"]
+      expected_behavior:
+        - safe_mode_activation: true
+        - functionality_limitation: true
+        - user_notification: true
+        - recovery_guidance: true
+    - pattern: "fail_secure"
+      description: "Maintain security posture during failures"
+      applicable_scenarios: ["security_violations", "authentication_failures"]
+      expected_behavior:
+        - security_maintained: true
+        - access_denied: true
+        - audit_logging: true
+        - incident_response: true
+
+# User experience expectations
+user_experience_expectations:
+  metadata:
+    test_case: "user_experience_expectations"
+    description: "Expected user experience during integrity violations"
+    outcome_type: "user_experience"
+  experience_expectations:
+    - expectation: "clear_communication"
+      description: "Users receive clear information about what happened"
+      requirements:
+        - error_messages_understandable: true
+        - technical_jargon_minimized: true
+        - actionable_guidance_provided: true
+        - contact_information_available: true
+    - expectation: "minimal_disruption"
+      description: "Integrity issues cause minimal workflow disruption"
+      requirements:
+        - work_in_progress_preserved: true
+        - quick_recovery_possible: true
+        - alternative_methods_available: true
+        - data_integrity_maintained: true
+    - expectation: "trust_maintenance"
+      description: "User trust in the application is maintained"
+      requirements:
+        - transparent_error_handling: true
+        - security_measures_visible: true
+        - recovery_process_reliable: true
+        - incident_followup_provided: true
+
+# System resource handling
+system_resource_handling:
+  metadata:
+    test_case: "system_resource_handling"
+    description: "Expected system resource handling during integrity issues"
+    outcome_type: "resource_handling"
+  resource_expectations:
+    - resource: "memory"
+      integrity_failure_behavior:
+        - memory_cleanup_attempted: true
+        - no_memory_leaks: true
+        - crash_dump_generation: false  # Unless configured
+        - resource_limits_enforced: true
+    - resource: "file_handles"
+      integrity_failure_behavior:
+        - file_handles_closed: true
+        - temporary_files_cleaned: true
+        - locks_released: true
+        - file_system_integrity: true
+    - resource: "network_connections"
+      integrity_failure_behavior:
+        - connections_closed_securely: true
+        - ssl_sessions_terminated: true
+        - no_data_leakage: true
+        - connection_pool_reset: true
+    - resource: "system_processes"
+      integrity_failure_behavior:
+        - child_processes_terminated: true
+        - process_cleanup: true
+        - system_resource_release: true
+        - no_orphaned_processes: true
+
+# Audit and compliance expectations
+audit_compliance_expectations:
+  metadata:
+    test_case: "audit_compliance_expectations"
+    description: "Expected audit and compliance behavior"
+    outcome_type: "audit_compliance"
+  compliance_requirements:
+    - requirement: "immutable_audit_logs"
+      description: "Audit logs cannot be tampered with"
+      validation:
+        - log_integrity_protected: true
+        - cryptographic_signatures: true
+        - append_only_storage: true
+        - tamper_detection: true
+    - requirement: "incident_reporting"
+      description: "Security incidents are properly reported"
+      validation:
+        - incident_detection: true
+        - alert_generation: true
+        - escalation_procedures: true
+        - regulatory_compliance: true
+    - requirement: "forensic_capabilities"
+      description: "Adequate forensic information collected"
+      validation:
+        - crash_dumps_available: true
+        - system_state_captured: true
+        - attack_vector_documented: true
+        - evidence_preservation: true
+
+# Performance expectations
+performance_expectations:
+  metadata:
+    test_case: "performance_expectations"
+    description: "Expected performance characteristics during integrity handling"
+    outcome_type: "performance"
+  performance_requirements:
+    - requirement: "fast_failure_detection"
+      description: "Integrity violations detected quickly"
+      metrics:
+        - detection_time: "< 100ms"
+        - cpu_overhead: "< 5%"
+        - memory_overhead: "< 10MB"
+    - requirement: "efficient_cleanup"
+      description: "Resource cleanup is efficient"
+      metrics:
+        - cleanup_time: "< 500ms"
+        - resource_recovery: "> 95%"
+        - system_impact: "minimal"
+    - requirement: "recovery_performance"
+      description: "Recovery operations perform well"
+      metrics:
+        - recovery_time: "< 2s"
+        - success_rate: "> 99%"
+        - resource_usage: "normal"
+
+# Integration expectations
+integration_expectations:
+  metadata:
+    test_case: "integration_expectations"
+    description: "Expected behavior in integrated environments"
+    outcome_type: "integration"
+  integration_scenarios:
+    - scenario: "container_orchestration"
+      description: "Behavior in Kubernetes/Docker environments"
+      expectations:
+        - container_restart_triggered: true
+        - health_checks_fail: true
+        - logs_properly_captured: true
+        - resource_limits_respected: true
+    - scenario: "ci_cd_pipeline"
+      description: "Behavior in CI/CD environments"
+      expectations:
+        - pipeline_failure_triggered: true
+        - test_results_recorded: true
+        - artifacts_preserved: true
+        - notification_sent: true
+    - scenario: "monitoring_integration"
+      description: "Behavior with monitoring systems"
+      expectations:
+        - alerts_generated: true
+        - metrics_collected: true
+        - dashboard_updated: true
+        - incident_created: true
+
+# Long-term reliability expectations
+long_term_reliability:
+  metadata:
+    test_case: "long_term_reliability"
+    description: "Expected long-term reliability characteristics"
+    outcome_type: "reliability"
+  reliability_expectations:
+    - expectation: "consistent_behavior"
+      description: "Integrity handling remains consistent over time"
+      validation:
+        - behavior_predictable: true
+        - error_messages_stable: true
+        - recovery_reliable: true
+        - performance_steady: true
+    - expectation: "maintenance_tolerance"
+      description: "System remains maintainable"
+      validation:
+        - log_rotation_works: true
+        - configuration_updates: true
+        - security_updates: true
+        - diagnostic_tools: true
+    - expectation: "scalability_preservation"
+      description: "Integrity checks don't impact scalability"
+      validation:
+        - performance_scales: true
+        - resource_usage_scales: true
+        - concurrent_handling: true
+        - load_distribution: true

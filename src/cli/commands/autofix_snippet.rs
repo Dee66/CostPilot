@@ -69,7 +69,8 @@ pub fn execute(
         &changes,
         &[], // estimates not used for snippet mode
         AutofixMode::Snippet,
-    );
+        edition,
+    )?;
 
     if autofix_result.fixes.is_empty() {
         println!("   {} No fix snippets available", "ℹ".bright_blue());

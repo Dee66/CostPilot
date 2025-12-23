@@ -1,0 +1,18 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "RedisCluster": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "CacheNodeType": "cache.t3.medium",
+        "Engine": "redis",
+        "NumCacheNodes": 2,
+        "Port": 6379
+      },
+      "Type": "AWS::ElastiCache::CacheCluster"
+    }
+  }
+}

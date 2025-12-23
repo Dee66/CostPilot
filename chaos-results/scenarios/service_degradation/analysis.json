@@ -1,0 +1,8 @@
+{
+  "scenario_name": "service_degradation",
+  "metrics_collected": 270,
+  "average_cpu_usage": 49,
+  "average_memory_usage": 51,
+  "max_errors_detected": 9,
+  "chaos_resilience_score": 75
+}

@@ -1,0 +1,32 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_api_gateway_stage.prod",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "throttle_settings": {
+            "burst_limit": 10000,
+            "rate_limit": 5000
+          }
+        },
+        "before": {
+          "throttle_settings": {
+            "burst_limit": 2000,
+            "rate_limit": 1000
+          }
+        }
+      },
+      "mode": "managed",
+      "name": "prod",
+      "type": "aws_api_gateway_stage"
+    }
+  ]
+}

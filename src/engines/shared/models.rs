@@ -34,14 +34,6 @@ pub struct ResourceChange {
     /// Optional cost impact details
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub cost_impact: Option<CostImpact>,
-    
-    // Legacy compatibility fields (tests only, not serialized)
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use old_config instead")]
-    pub before: Option<serde_json::Value>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use new_config instead")]
-    pub after: Option<serde_json::Value>,
 }
 
 /// Type of change action
@@ -70,33 +62,13 @@ pub struct CostEstimate {
     pub heuristic_reference: Option<String>,
     #[serde(default)]
     pub cold_start_inference: bool,
-    
-    // Legacy compatibility fields (tests only, not serialized)
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use monthly_cost instead")]
-    pub monthly: Option<f64>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use monthly_cost * 12 instead")]
-    pub yearly: Option<f64>,
-    #[serde(skip_serializing, default)]
+    #[serde(default)]
     pub one_time: Option<f64>,
-    #[serde(skip_serializing, default)]
+    #[serde(default)]
     pub breakdown: Option<HashMap<String, f64>>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use monthly_cost instead")]
-    pub estimate: Option<f64>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use prediction_interval_low instead")]
-    pub lower: Option<f64>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use prediction_interval_high instead")]
-    pub upper: Option<f64>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use confidence_score instead")]
-    pub confidence: Option<f64>,
-    #[serde(skip_serializing, default)]
+    #[serde(default)]
     pub hourly: Option<f64>,
-    #[serde(skip_serializing, default)]
+    #[serde(default)]
     pub daily: Option<f64>,
 }
 
@@ -111,8 +83,9 @@ pub struct TotalCost {
 }
 
 /// Regression classification
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum RegressionType {
+    #[default]
     Configuration,
     Scaling,
     Provisioning,
@@ -125,8 +98,9 @@ pub enum RegressionType {
 }
 
 /// Severity level
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum Severity {
+    #[default]
     Low,
     Medium,
     High,
@@ -150,20 +124,6 @@ pub struct Detection {
     pub fix_snippet: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub estimated_cost: Option<f64>,
-    
-    // Legacy compatibility fields (tests only, not serialized)
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Detection no longer stores resource_type directly")]
-    pub resource_type: Option<String>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use message instead")]
-    pub issue: Option<String>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use confidence_score instead")]
-    pub confidence: Option<f64>,
-    #[serde(skip_serializing, default)]
-    #[deprecated(note = "Use estimated_cost instead")]
-    pub monthly_cost: Option<f64>,
 }
 
 /// Scan result containing all analysis
@@ -179,7 +139,7 @@ pub struct ScanResult {
 /// Metadata about the scan
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanMetadata {
-    pub timestamp: String,
+    pub timestamp: Option<String>,
     pub heuristics_version: String,
     pub policy_version: Option<String>,
     pub deterministic: bool,
@@ -195,13 +155,6 @@ pub struct CostEstimateBuilder {
     confidence_score: Option<f64>,
     heuristic_reference: Option<String>,
     cold_start_inference: bool,
-    // Legacy field support
-    monthly: Option<f64>,
-    yearly: Option<f64>,
-    estimate: Option<f64>,
-    lower: Option<f64>,
-    upper: Option<f64>,
-    confidence: Option<f64>,
 }
 
 impl CostEstimateBuilder {
@@ -214,12 +167,6 @@ impl CostEstimateBuilder {
             confidence_score: None,
             heuristic_reference: None,
             cold_start_inference: false,
-            monthly: None,
-            yearly: None,
-            estimate: None,
-            lower: None,
-            upper: None,
-            confidence: None,
         }
     }
 
@@ -258,55 +205,15 @@ impl CostEstimateBuilder {
         self
     }
 
-    // Legacy field setters (map to canonical)
-    pub fn monthly(mut self, val: f64) -> Self {
-        self.monthly = Some(val);
-        self
-    }
-
-    pub fn yearly(mut self, val: f64) -> Self {
-        self.yearly = Some(val);
-        self
-    }
-
-    pub fn estimate(mut self, val: f64) -> Self {
-        self.estimate = Some(val);
-        self
-    }
-
-    pub fn lower(mut self, val: f64) -> Self {
-        self.lower = Some(val);
-        self
-    }
-
-    pub fn upper(mut self, val: f64) -> Self {
-        self.upper = Some(val);
-        self
-    }
-
-    pub fn confidence(mut self, val: f64) -> Self {
-        self.confidence = Some(val);
-        self
-    }
-
     pub fn build(self) -> CostEstimate {
-        // Priority: explicit canonical > legacy mappings > defaults
-        let monthly_cost = self.monthly_cost
-            .or(self.monthly)
-            .or(self.estimate)
-            .unwrap_or(0.0);
-        
-        let prediction_interval_low = self.prediction_interval_low
-            .or(self.lower)
-            .unwrap_or(monthly_cost * 0.8);
-        
-        let prediction_interval_high = self.prediction_interval_high
-            .or(self.upper)
-            .unwrap_or(monthly_cost * 1.2);
-        
-        let confidence_score = self.confidence_score
-            .or(self.confidence)
-            .unwrap_or(0.85);
+        // Priority: explicit canonical > defaults
+        let monthly_cost = self.monthly_cost.unwrap_or(0.0);
+
+        let prediction_interval_low = self.prediction_interval_low.unwrap_or(monthly_cost * 0.8);
+
+        let prediction_interval_high = self.prediction_interval_high.unwrap_or(monthly_cost * 1.2);
+
+        let confidence_score = self.confidence_score.unwrap_or(0.85);
 
         CostEstimate {
             resource_id: self.resource_id.unwrap_or_else(|| "unknown".to_string()),
@@ -316,14 +223,8 @@ impl CostEstimateBuilder {
             confidence_score,
             heuristic_reference: self.heuristic_reference,
             cold_start_inference: self.cold_start_inference,
-            monthly: None,
-            yearly: None,
             one_time: None,
             breakdown: None,
-            estimate: None,
-            lower: None,
-            upper: None,
-            confidence: None,
             hourly: None,
             daily: None,
         }
@@ -341,14 +242,8 @@ impl CostEstimate {
             confidence_score: 0.85,
             heuristic_reference: None,
             cold_start_inference: false,
-            monthly: None,
-            yearly: None,
             one_time: None,
             breakdown: None,
-            estimate: None,
-            lower: None,
-            upper: None,
-            confidence: None,
             hourly: None,
             daily: None,
         }
@@ -357,6 +252,30 @@ impl CostEstimate {
     /// Builder pattern entry point
     pub fn builder() -> CostEstimateBuilder {
         CostEstimateBuilder::new()
+    }
+}
+
+impl Default for CostEstimateBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Default for CostEstimate {
+    fn default() -> Self {
+        Self {
+            resource_id: "unknown".to_string(),
+            monthly_cost: 0.0,
+            prediction_interval_low: 0.0,
+            prediction_interval_high: 0.0,
+            confidence_score: 0.0,
+            heuristic_reference: None,
+            cold_start_inference: false,
+            one_time: None,
+            breakdown: None,
+            hourly: None,
+            daily: None,
+        }
     }
 }
 
@@ -371,9 +290,6 @@ pub struct ResourceChangeBuilder {
     tags: HashMap<String, String>,
     monthly_cost: Option<f64>,
     cost_impact: Option<CostImpact>,
-    // Legacy field support
-    before: Option<serde_json::Value>,
-    after: Option<serde_json::Value>,
 }
 
 impl ResourceChangeBuilder {
@@ -388,8 +304,6 @@ impl ResourceChangeBuilder {
             tags: HashMap::new(),
             monthly_cost: None,
             cost_impact: None,
-            before: None,
-            after: None,
         }
     }
 
@@ -438,45 +352,25 @@ impl ResourceChangeBuilder {
         self
     }
 
-    // Legacy field setters (map to canonical)
-    pub fn before(mut self, val: serde_json::Value) -> Self {
-        self.before = Some(val);
-        self
-    }
-
-    pub fn after(mut self, val: serde_json::Value) -> Self {
-        self.after = Some(val);
-        self
-    }
-
     pub fn build(self) -> ResourceChange {
-        let old_config = self.old_config.or(self.before);
-        let new_config = self.new_config.or(self.after);
-
         ResourceChange {
             resource_id: self.resource_id.unwrap_or_else(|| "unknown".to_string()),
             resource_type: self.resource_type.unwrap_or_else(|| "unknown".to_string()),
             action: self.action.unwrap_or(ChangeAction::NoOp),
             module_path: self.module_path,
-            old_config,
-            new_config,
+            old_config: self.old_config,
+            new_config: self.new_config,
             tags: self.tags,
             monthly_cost: self.monthly_cost,
             config: None,
             cost_impact: self.cost_impact,
-            before: None,
-            after: None,
         }
     }
 }
 
 impl ResourceChange {
     /// Create new resource change (canonical API)
-    pub fn new(
-        resource_id: String,
-        resource_type: String,
-        action: ChangeAction,
-    ) -> Self {
+    pub fn new(resource_id: String, resource_type: String, action: ChangeAction) -> Self {
         Self {
             resource_id,
             resource_type,
@@ -488,14 +382,18 @@ impl ResourceChange {
             monthly_cost: None,
             config: None,
             cost_impact: None,
-            before: None,
-            after: None,
         }
     }
 
     /// Builder pattern entry point
     pub fn builder() -> ResourceChangeBuilder {
         ResourceChangeBuilder::new()
+    }
+}
+
+impl Default for ResourceChangeBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -509,11 +407,6 @@ pub struct DetectionBuilder {
     message: Option<String>,
     fix_snippet: Option<String>,
     estimated_cost: Option<f64>,
-    // Legacy field support
-    resource_type: Option<String>,
-    issue: Option<String>,
-    confidence: Option<f64>,
-    monthly_cost: Option<f64>,
 }
 
 impl DetectionBuilder {
@@ -527,10 +420,6 @@ impl DetectionBuilder {
             message: None,
             fix_snippet: None,
             estimated_cost: None,
-            resource_type: None,
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         }
     }
 
@@ -574,33 +463,12 @@ impl DetectionBuilder {
         self
     }
 
-    // Legacy field setters
-    pub fn resource_type(mut self, val: impl Into<String>) -> Self {
-        self.resource_type = Some(val.into());
-        self
-    }
-
-    pub fn issue(mut self, val: impl Into<String>) -> Self {
-        self.issue = Some(val.into());
-        self
-    }
-
-    pub fn confidence(mut self, val: f64) -> Self {
-        self.confidence = Some(val);
-        self
-    }
-
-    pub fn monthly_cost(mut self, val: f64) -> Self {
-        self.monthly_cost = Some(val);
-        self
-    }
-
     pub fn build(self) -> Detection {
         let severity = self.severity.unwrap_or(Severity::Low);
-        let message = self.message.or(self.issue).unwrap_or_else(|| "".to_string());
-        let estimated_cost = self.estimated_cost.or(self.monthly_cost);
-        
-        let severity_score = self.severity_score.unwrap_or_else(|| match severity {
+        let message = self.message.unwrap_or_default();
+        let estimated_cost = self.estimated_cost;
+
+        let severity_score = self.severity_score.unwrap_or(match severity {
             Severity::Critical => 90,
             Severity::High => 70,
             Severity::Medium => 50,
@@ -611,34 +479,27 @@ impl DetectionBuilder {
             rule_id: self.rule_id.unwrap_or_else(|| "unknown".to_string()),
             severity,
             resource_id: self.resource_id.unwrap_or_else(|| "unknown".to_string()),
-            regression_type: self.regression_type.unwrap_or(RegressionType::Configuration),
+            regression_type: self
+                .regression_type
+                .unwrap_or(RegressionType::Configuration),
             severity_score,
             message,
             fix_snippet: self.fix_snippet,
             estimated_cost,
-            resource_type: None,
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         }
     }
 }
 
 impl Detection {
     /// Create new detection (canonical API)
-    pub fn new(
-        rule_id: String,
-        severity: Severity,
-        resource_id: String,
-        message: String,
-    ) -> Self {
+    pub fn new(rule_id: String, severity: Severity, resource_id: String, message: String) -> Self {
         let severity_score = match severity {
             Severity::Critical => 90,
             Severity::High => 70,
             Severity::Medium => 50,
             Severity::Low => 30,
         };
-        
+
         Self {
             rule_id,
             severity,
@@ -648,16 +509,18 @@ impl Detection {
             message,
             fix_snippet: None,
             estimated_cost: None,
-            resource_type: None,
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         }
     }
 
     /// Builder pattern entry point
     pub fn builder() -> DetectionBuilder {
         DetectionBuilder::new()
+    }
+}
+
+impl Default for DetectionBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -707,8 +570,8 @@ impl ScanResultBuilder {
     }
 
     pub fn build(self) -> ScanResult {
-        let metadata = self.metadata.unwrap_or_else(|| ScanMetadata {
-            timestamp: chrono::Utc::now().to_rfc3339(),
+        let metadata = self.metadata.unwrap_or(ScanMetadata {
+            timestamp: None,
             heuristics_version: "1.0.0".to_string(),
             policy_version: None,
             deterministic: true,
@@ -724,21 +587,15 @@ impl ScanResultBuilder {
     }
 }
 
+impl Default for ScanResultBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScanResult {
     /// Builder pattern entry point
     pub fn builder() -> ScanResultBuilder {
         ScanResultBuilder::new()
-    }
-}
-
-impl Default for Severity {
-    fn default() -> Self {
-        Severity::Low
-    }
-}
-
-impl Default for RegressionType {
-    fn default() -> Self {
-        RegressionType::Configuration
     }
 }

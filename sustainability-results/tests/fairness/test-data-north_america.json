@@ -1,0 +1,1001 @@
+{
+  "demographic": "north_america",
+  "test_cases": [
+    {
+      "case_id": "north_america-1",
+      "infrastructure_cost": 1359,
+      "region": "north_america",
+      "expected_cost_prediction": 648
+    },
+    {
+      "case_id": "north_america-2",
+      "infrastructure_cost": 3152,
+      "region": "north_america",
+      "expected_cost_prediction": 1434
+    },
+    {
+      "case_id": "north_america-3",
+      "infrastructure_cost": 5096,
+      "region": "north_america",
+      "expected_cost_prediction": 938
+    },
+    {
+      "case_id": "north_america-4",
+      "infrastructure_cost": 4550,
+      "region": "north_america",
+      "expected_cost_prediction": 570
+    },
+    {
+      "case_id": "north_america-5",
+      "infrastructure_cost": 5263,
+      "region": "north_america",
+      "expected_cost_prediction": 890
+    },
+    {
+      "case_id": "north_america-6",
+      "infrastructure_cost": 4588,
+      "region": "north_america",
+      "expected_cost_prediction": 1304
+    },
+    {
+      "case_id": "north_america-7",
+      "infrastructure_cost": 5338,
+      "region": "north_america",
+      "expected_cost_prediction": 1311
+    },
+    {
+      "case_id": "north_america-8",
+      "infrastructure_cost": 5819,
+      "region": "north_america",
+      "expected_cost_prediction": 1114
+    },
+    {
+      "case_id": "north_america-9",
+      "infrastructure_cost": 4352,
+      "region": "north_america",
+      "expected_cost_prediction": 1166
+    },
+    {
+      "case_id": "north_america-10",
+      "infrastructure_cost": 1162,
+      "region": "north_america",
+      "expected_cost_prediction": 655
+    },
+    {
+      "case_id": "north_america-11",
+      "infrastructure_cost": 2174,
+      "region": "north_america",
+      "expected_cost_prediction": 1034
+    },
+    {
+      "case_id": "north_america-12",
+      "infrastructure_cost": 4582,
+      "region": "north_america",
+      "expected_cost_prediction": 788
+    },
+    {
+      "case_id": "north_america-13",
+      "infrastructure_cost": 2729,
+      "region": "north_america",
+      "expected_cost_prediction": 514
+    },
+    {
+      "case_id": "north_america-14",
+      "infrastructure_cost": 3316,
+      "region": "north_america",
+      "expected_cost_prediction": 865
+    },
+    {
+      "case_id": "north_america-15",
+      "infrastructure_cost": 4246,
+      "region": "north_america",
+      "expected_cost_prediction": 1318
+    },
+    {
+      "case_id": "north_america-16",
+      "infrastructure_cost": 4758,
+      "region": "north_america",
+      "expected_cost_prediction": 866
+    },
+    {
+      "case_id": "north_america-17",
+      "infrastructure_cost": 1378,
+      "region": "north_america",
+      "expected_cost_prediction": 1001
+    },
+    {
+      "case_id": "north_america-18",
+      "infrastructure_cost": 2147,
+      "region": "north_america",
+      "expected_cost_prediction": 1075
+    },
+    {
+      "case_id": "north_america-19",
+      "infrastructure_cost": 2045,
+      "region": "north_america",
+      "expected_cost_prediction": 885
+    },
+    {
+      "case_id": "north_america-20",
+      "infrastructure_cost": 1013,
+      "region": "north_america",
+      "expected_cost_prediction": 666
+    },
+    {
+      "case_id": "north_america-21",
+      "infrastructure_cost": 5503,
+      "region": "north_america",
+      "expected_cost_prediction": 516
+    },
+    {
+      "case_id": "north_america-22",
+      "infrastructure_cost": 3489,
+      "region": "north_america",
+      "expected_cost_prediction": 829
+    },
+    {
+      "case_id": "north_america-23",
+      "infrastructure_cost": 5949,
+      "region": "north_america",
+      "expected_cost_prediction": 720
+    },
+    {
+      "case_id": "north_america-24",
+      "infrastructure_cost": 2524,
+      "region": "north_america",
+      "expected_cost_prediction": 583
+    },
+    {
+      "case_id": "north_america-25",
+      "infrastructure_cost": 2451,
+      "region": "north_america",
+      "expected_cost_prediction": 711
+    },
+    {
+      "case_id": "north_america-26",
+      "infrastructure_cost": 3202,
+      "region": "north_america",
+      "expected_cost_prediction": 1201
+    },
+    {
+      "case_id": "north_america-27",
+      "infrastructure_cost": 4197,
+      "region": "north_america",
+      "expected_cost_prediction": 567
+    },
+    {
+      "case_id": "north_america-28",
+      "infrastructure_cost": 4463,
+      "region": "north_america",
+      "expected_cost_prediction": 717
+    },
+    {
+      "case_id": "north_america-29",
+      "infrastructure_cost": 3839,
+      "region": "north_america",
+      "expected_cost_prediction": 1476
+    },
+    {
+      "case_id": "north_america-30",
+      "infrastructure_cost": 3668,
+      "region": "north_america",
+      "expected_cost_prediction": 683
+    },
+    {
+      "case_id": "north_america-31",
+      "infrastructure_cost": 1010,
+      "region": "north_america",
+      "expected_cost_prediction": 502
+    },
+    {
+      "case_id": "north_america-32",
+      "infrastructure_cost": 5369,
+      "region": "north_america",
+      "expected_cost_prediction": 959
+    },
+    {
+      "case_id": "north_america-33",
+      "infrastructure_cost": 1265,
+      "region": "north_america",
+      "expected_cost_prediction": 1178
+    },
+    {
+      "case_id": "north_america-34",
+      "infrastructure_cost": 2427,
+      "region": "north_america",
+      "expected_cost_prediction": 894
+    },
+    {
+      "case_id": "north_america-35",
+      "infrastructure_cost": 1337,
+      "region": "north_america",
+      "expected_cost_prediction": 782
+    },
+    {
+      "case_id": "north_america-36",
+      "infrastructure_cost": 3759,
+      "region": "north_america",
+      "expected_cost_prediction": 1289
+    },
+    {
+      "case_id": "north_america-37",
+      "infrastructure_cost": 2581,
+      "region": "north_america",
+      "expected_cost_prediction": 1033
+    },
+    {
+      "case_id": "north_america-38",
+      "infrastructure_cost": 3448,
+      "region": "north_america",
+      "expected_cost_prediction": 560
+    },
+    {
+      "case_id": "north_america-39",
+      "infrastructure_cost": 1401,
+      "region": "north_america",
+      "expected_cost_prediction": 607
+    },
+    {
+      "case_id": "north_america-40",
+      "infrastructure_cost": 2918,
+      "region": "north_america",
+      "expected_cost_prediction": 1329
+    },
+    {
+      "case_id": "north_america-41",
+      "infrastructure_cost": 3602,
+      "region": "north_america",
+      "expected_cost_prediction": 1131
+    },
+    {
+      "case_id": "north_america-42",
+      "infrastructure_cost": 4953,
+      "region": "north_america",
+      "expected_cost_prediction": 1479
+    },
+    {
+      "case_id": "north_america-43",
+      "infrastructure_cost": 1331,
+      "region": "north_america",
+      "expected_cost_prediction": 616
+    },
+    {
+      "case_id": "north_america-44",
+      "infrastructure_cost": 5330,
+      "region": "north_america",
+      "expected_cost_prediction": 844
+    },
+    {
+      "case_id": "north_america-45",
+      "infrastructure_cost": 5228,
+      "region": "north_america",
+      "expected_cost_prediction": 812
+    },
+    {
+      "case_id": "north_america-46",
+      "infrastructure_cost": 3012,
+      "region": "north_america",
+      "expected_cost_prediction": 855
+    },
+    {
+      "case_id": "north_america-47",
+      "infrastructure_cost": 3711,
+      "region": "north_america",
+      "expected_cost_prediction": 914
+    },
+    {
+      "case_id": "north_america-48",
+      "infrastructure_cost": 2012,
+      "region": "north_america",
+      "expected_cost_prediction": 684
+    },
+    {
+      "case_id": "north_america-49",
+      "infrastructure_cost": 2322,
+      "region": "north_america",
+      "expected_cost_prediction": 674
+    },
+    {
+      "case_id": "north_america-50",
+      "infrastructure_cost": 1386,
+      "region": "north_america",
+      "expected_cost_prediction": 1080
+    },
+    {
+      "case_id": "north_america-51",
+      "infrastructure_cost": 1213,
+      "region": "north_america",
+      "expected_cost_prediction": 940
+    },
+    {
+      "case_id": "north_america-52",
+      "infrastructure_cost": 1803,
+      "region": "north_america",
+      "expected_cost_prediction": 1235
+    },
+    {
+      "case_id": "north_america-53",
+      "infrastructure_cost": 4446,
+      "region": "north_america",
+      "expected_cost_prediction": 880
+    },
+    {
+      "case_id": "north_america-54",
+      "infrastructure_cost": 1860,
+      "region": "north_america",
+      "expected_cost_prediction": 803
+    },
+    {
+      "case_id": "north_america-55",
+      "infrastructure_cost": 2507,
+      "region": "north_america",
+      "expected_cost_prediction": 1401
+    },
+    {
+      "case_id": "north_america-56",
+      "infrastructure_cost": 5931,
+      "region": "north_america",
+      "expected_cost_prediction": 525
+    },
+    {
+      "case_id": "north_america-57",
+      "infrastructure_cost": 1444,
+      "region": "north_america",
+      "expected_cost_prediction": 611
+    },
+    {
+      "case_id": "north_america-58",
+      "infrastructure_cost": 3056,
+      "region": "north_america",
+      "expected_cost_prediction": 1381
+    },
+    {
+      "case_id": "north_america-59",
+      "infrastructure_cost": 2121,
+      "region": "north_america",
+      "expected_cost_prediction": 702
+    },
+    {
+      "case_id": "north_america-60",
+      "infrastructure_cost": 5054,
+      "region": "north_america",
+      "expected_cost_prediction": 899
+    },
+    {
+      "case_id": "north_america-61",
+      "infrastructure_cost": 2650,
+      "region": "north_america",
+      "expected_cost_prediction": 613
+    },
+    {
+      "case_id": "north_america-62",
+      "infrastructure_cost": 2018,
+      "region": "north_america",
+      "expected_cost_prediction": 815
+    },
+    {
+      "case_id": "north_america-63",
+      "infrastructure_cost": 4634,
+      "region": "north_america",
+      "expected_cost_prediction": 610
+    },
+    {
+      "case_id": "north_america-64",
+      "infrastructure_cost": 2397,
+      "region": "north_america",
+      "expected_cost_prediction": 1432
+    },
+    {
+      "case_id": "north_america-65",
+      "infrastructure_cost": 5290,
+      "region": "north_america",
+      "expected_cost_prediction": 1470
+    },
+    {
+      "case_id": "north_america-66",
+      "infrastructure_cost": 4883,
+      "region": "north_america",
+      "expected_cost_prediction": 566
+    },
+    {
+      "case_id": "north_america-67",
+      "infrastructure_cost": 2165,
+      "region": "north_america",
+      "expected_cost_prediction": 1293
+    },
+    {
+      "case_id": "north_america-68",
+      "infrastructure_cost": 3308,
+      "region": "north_america",
+      "expected_cost_prediction": 1495
+    },
+    {
+      "case_id": "north_america-69",
+      "infrastructure_cost": 3667,
+      "region": "north_america",
+      "expected_cost_prediction": 1328
+    },
+    {
+      "case_id": "north_america-70",
+      "infrastructure_cost": 4217,
+      "region": "north_america",
+      "expected_cost_prediction": 1479
+    },
+    {
+      "case_id": "north_america-71",
+      "infrastructure_cost": 2959,
+      "region": "north_america",
+      "expected_cost_prediction": 1045
+    },
+    {
+      "case_id": "north_america-72",
+      "infrastructure_cost": 2915,
+      "region": "north_america",
+      "expected_cost_prediction": 836
+    },
+    {
+      "case_id": "north_america-73",
+      "infrastructure_cost": 1061,
+      "region": "north_america",
+      "expected_cost_prediction": 613
+    },
+    {
+      "case_id": "north_america-74",
+      "infrastructure_cost": 1568,
+      "region": "north_america",
+      "expected_cost_prediction": 550
+    },
+    {
+      "case_id": "north_america-75",
+      "infrastructure_cost": 3011,
+      "region": "north_america",
+      "expected_cost_prediction": 558
+    },
+    {
+      "case_id": "north_america-76",
+      "infrastructure_cost": 2673,
+      "region": "north_america",
+      "expected_cost_prediction": 779
+    },
+    {
+      "case_id": "north_america-77",
+      "infrastructure_cost": 2019,
+      "region": "north_america",
+      "expected_cost_prediction": 778
+    },
+    {
+      "case_id": "north_america-78",
+      "infrastructure_cost": 4702,
+      "region": "north_america",
+      "expected_cost_prediction": 733
+    },
+    {
+      "case_id": "north_america-79",
+      "infrastructure_cost": 3991,
+      "region": "north_america",
+      "expected_cost_prediction": 714
+    },
+    {
+      "case_id": "north_america-80",
+      "infrastructure_cost": 1673,
+      "region": "north_america",
+      "expected_cost_prediction": 1306
+    },
+    {
+      "case_id": "north_america-81",
+      "infrastructure_cost": 3542,
+      "region": "north_america",
+      "expected_cost_prediction": 1410
+    },
+    {
+      "case_id": "north_america-82",
+      "infrastructure_cost": 3556,
+      "region": "north_america",
+      "expected_cost_prediction": 1390
+    },
+    {
+      "case_id": "north_america-83",
+      "infrastructure_cost": 5189,
+      "region": "north_america",
+      "expected_cost_prediction": 929
+    },
+    {
+      "case_id": "north_america-84",
+      "infrastructure_cost": 2163,
+      "region": "north_america",
+      "expected_cost_prediction": 665
+    },
+    {
+      "case_id": "north_america-85",
+      "infrastructure_cost": 2178,
+      "region": "north_america",
+      "expected_cost_prediction": 976
+    },
+    {
+      "case_id": "north_america-86",
+      "infrastructure_cost": 2315,
+      "region": "north_america",
+      "expected_cost_prediction": 840
+    },
+    {
+      "case_id": "north_america-87",
+      "infrastructure_cost": 5136,
+      "region": "north_america",
+      "expected_cost_prediction": 1263
+    },
+    {
+      "case_id": "north_america-88",
+      "infrastructure_cost": 2641,
+      "region": "north_america",
+      "expected_cost_prediction": 850
+    },
+    {
+      "case_id": "north_america-89",
+      "infrastructure_cost": 4723,
+      "region": "north_america",
+      "expected_cost_prediction": 1200
+    },
+    {
+      "case_id": "north_america-90",
+      "infrastructure_cost": 1193,
+      "region": "north_america",
+      "expected_cost_prediction": 1302
+    },
+    {
+      "case_id": "north_america-91",
+      "infrastructure_cost": 3344,
+      "region": "north_america",
+      "expected_cost_prediction": 809
+    },
+    {
+      "case_id": "north_america-92",
+      "infrastructure_cost": 4093,
+      "region": "north_america",
+      "expected_cost_prediction": 1045
+    },
+    {
+      "case_id": "north_america-93",
+      "infrastructure_cost": 2840,
+      "region": "north_america",
+      "expected_cost_prediction": 605
+    },
+    {
+      "case_id": "north_america-94",
+      "infrastructure_cost": 2213,
+      "region": "north_america",
+      "expected_cost_prediction": 1385
+    },
+    {
+      "case_id": "north_america-95",
+      "infrastructure_cost": 3826,
+      "region": "north_america",
+      "expected_cost_prediction": 887
+    },
+    {
+      "case_id": "north_america-96",
+      "infrastructure_cost": 2170,
+      "region": "north_america",
+      "expected_cost_prediction": 1334
+    },
+    {
+      "case_id": "north_america-97",
+      "infrastructure_cost": 2322,
+      "region": "north_america",
+      "expected_cost_prediction": 1439
+    },
+    {
+      "case_id": "north_america-98",
+      "infrastructure_cost": 2287,
+      "region": "north_america",
+      "expected_cost_prediction": 940
+    },
+    {
+      "case_id": "north_america-99",
+      "infrastructure_cost": 3705,
+      "region": "north_america",
+      "expected_cost_prediction": 1085
+    },
+    {
+      "case_id": "north_america-100",
+      "infrastructure_cost": 3868,
+      "region": "north_america",
+      "expected_cost_prediction": 1215
+    },
+    {
+      "case_id": "north_america-101",
+      "infrastructure_cost": 1245,
+      "region": "north_america",
+      "expected_cost_prediction": 1050
+    },
+    {
+      "case_id": "north_america-102",
+      "infrastructure_cost": 3332,
+      "region": "north_america",
+      "expected_cost_prediction": 1299
+    },
+    {
+      "case_id": "north_america-103",
+      "infrastructure_cost": 1044,
+      "region": "north_america",
+      "expected_cost_prediction": 1298
+    },
+    {
+      "case_id": "north_america-104",
+      "infrastructure_cost": 3341,
+      "region": "north_america",
+      "expected_cost_prediction": 620
+    },
+    {
+      "case_id": "north_america-105",
+      "infrastructure_cost": 1384,
+      "region": "north_america",
+      "expected_cost_prediction": 970
+    },
+    {
+      "case_id": "north_america-106",
+      "infrastructure_cost": 4804,
+      "region": "north_america",
+      "expected_cost_prediction": 1033
+    },
+    {
+      "case_id": "north_america-107",
+      "infrastructure_cost": 4599,
+      "region": "north_america",
+      "expected_cost_prediction": 1217
+    },
+    {
+      "case_id": "north_america-108",
+      "infrastructure_cost": 5638,
+      "region": "north_america",
+      "expected_cost_prediction": 1136
+    },
+    {
+      "case_id": "north_america-109",
+      "infrastructure_cost": 3192,
+      "region": "north_america",
+      "expected_cost_prediction": 904
+    },
+    {
+      "case_id": "north_america-110",
+      "infrastructure_cost": 4204,
+      "region": "north_america",
+      "expected_cost_prediction": 1435
+    },
+    {
+      "case_id": "north_america-111",
+      "infrastructure_cost": 5284,
+      "region": "north_america",
+      "expected_cost_prediction": 742
+    },
+    {
+      "case_id": "north_america-112",
+      "infrastructure_cost": 2087,
+      "region": "north_america",
+      "expected_cost_prediction": 1054
+    },
+    {
+      "case_id": "north_america-113",
+      "infrastructure_cost": 5912,
+      "region": "north_america",
+      "expected_cost_prediction": 1141
+    },
+    {
+      "case_id": "north_america-114",
+      "infrastructure_cost": 4607,
+      "region": "north_america",
+      "expected_cost_prediction": 716
+    },
+    {
+      "case_id": "north_america-115",
+      "infrastructure_cost": 2493,
+      "region": "north_america",
+      "expected_cost_prediction": 969
+    },
+    {
+      "case_id": "north_america-116",
+      "infrastructure_cost": 4049,
+      "region": "north_america",
+      "expected_cost_prediction": 851
+    },
+    {
+      "case_id": "north_america-117",
+      "infrastructure_cost": 5911,
+      "region": "north_america",
+      "expected_cost_prediction": 1187
+    },
+    {
+      "case_id": "north_america-118",
+      "infrastructure_cost": 4252,
+      "region": "north_america",
+      "expected_cost_prediction": 1049
+    },
+    {
+      "case_id": "north_america-119",
+      "infrastructure_cost": 5207,
+      "region": "north_america",
+      "expected_cost_prediction": 1004
+    },
+    {
+      "case_id": "north_america-120",
+      "infrastructure_cost": 1144,
+      "region": "north_america",
+      "expected_cost_prediction": 612
+    },
+    {
+      "case_id": "north_america-121",
+      "infrastructure_cost": 4959,
+      "region": "north_america",
+      "expected_cost_prediction": 1378
+    },
+    {
+      "case_id": "north_america-122",
+      "infrastructure_cost": 1501,
+      "region": "north_america",
+      "expected_cost_prediction": 1486
+    },
+    {
+      "case_id": "north_america-123",
+      "infrastructure_cost": 5891,
+      "region": "north_america",
+      "expected_cost_prediction": 883
+    },
+    {
+      "case_id": "north_america-124",
+      "infrastructure_cost": 4441,
+      "region": "north_america",
+      "expected_cost_prediction": 1132
+    },
+    {
+      "case_id": "north_america-125",
+      "infrastructure_cost": 2737,
+      "region": "north_america",
+      "expected_cost_prediction": 1431
+    },
+    {
+      "case_id": "north_america-126",
+      "infrastructure_cost": 4819,
+      "region": "north_america",
+      "expected_cost_prediction": 987
+    },
+    {
+      "case_id": "north_america-127",
+      "infrastructure_cost": 3807,
+      "region": "north_america",
+      "expected_cost_prediction": 1456
+    },
+    {
+      "case_id": "north_america-128",
+      "infrastructure_cost": 4647,
+      "region": "north_america",
+      "expected_cost_prediction": 1466
+    },
+    {
+      "case_id": "north_america-129",
+      "infrastructure_cost": 5041,
+      "region": "north_america",
+      "expected_cost_prediction": 1231
+    },
+    {
+      "case_id": "north_america-130",
+      "infrastructure_cost": 4230,
+      "region": "north_america",
+      "expected_cost_prediction": 862
+    },
+    {
+      "case_id": "north_america-131",
+      "infrastructure_cost": 2934,
+      "region": "north_america",
+      "expected_cost_prediction": 913
+    },
+    {
+      "case_id": "north_america-132",
+      "infrastructure_cost": 2490,
+      "region": "north_america",
+      "expected_cost_prediction": 1299
+    },
+    {
+      "case_id": "north_america-133",
+      "infrastructure_cost": 2531,
+      "region": "north_america",
+      "expected_cost_prediction": 965
+    },
+    {
+      "case_id": "north_america-134",
+      "infrastructure_cost": 2799,
+      "region": "north_america",
+      "expected_cost_prediction": 846
+    },
+    {
+      "case_id": "north_america-135",
+      "infrastructure_cost": 4864,
+      "region": "north_america",
+      "expected_cost_prediction": 818
+    },
+    {
+      "case_id": "north_america-136",
+      "infrastructure_cost": 2269,
+      "region": "north_america",
+      "expected_cost_prediction": 511
+    },
+    {
+      "case_id": "north_america-137",
+      "infrastructure_cost": 4176,
+      "region": "north_america",
+      "expected_cost_prediction": 586
+    },
+    {
+      "case_id": "north_america-138",
+      "infrastructure_cost": 1848,
+      "region": "north_america",
+      "expected_cost_prediction": 1262
+    },
+    {
+      "case_id": "north_america-139",
+      "infrastructure_cost": 2768,
+      "region": "north_america",
+      "expected_cost_prediction": 845
+    },
+    {
+      "case_id": "north_america-140",
+      "infrastructure_cost": 4180,
+      "region": "north_america",
+      "expected_cost_prediction": 922
+    },
+    {
+      "case_id": "north_america-141",
+      "infrastructure_cost": 2872,
+      "region": "north_america",
+      "expected_cost_prediction": 974
+    },
+    {
+      "case_id": "north_america-142",
+      "infrastructure_cost": 4645,
+      "region": "north_america",
+      "expected_cost_prediction": 1323
+    },
+    {
+      "case_id": "north_america-143",
+      "infrastructure_cost": 3369,
+      "region": "north_america",
+      "expected_cost_prediction": 822
+    },
+    {
+      "case_id": "north_america-144",
+      "infrastructure_cost": 3517,
+      "region": "north_america",
+      "expected_cost_prediction": 1124
+    },
+    {
+      "case_id": "north_america-145",
+      "infrastructure_cost": 5130,
+      "region": "north_america",
+      "expected_cost_prediction": 530
+    },
+    {
+      "case_id": "north_america-146",
+      "infrastructure_cost": 1854,
+      "region": "north_america",
+      "expected_cost_prediction": 668
+    },
+    {
+      "case_id": "north_america-147",
+      "infrastructure_cost": 5048,
+      "region": "north_america",
+      "expected_cost_prediction": 1397
+    },
+    {
+      "case_id": "north_america-148",
+      "infrastructure_cost": 1931,
+      "region": "north_america",
+      "expected_cost_prediction": 1127
+    },
+    {
+      "case_id": "north_america-149",
+      "infrastructure_cost": 5755,
+      "region": "north_america",
+      "expected_cost_prediction": 1105
+    },
+    {
+      "case_id": "north_america-150",
+      "infrastructure_cost": 1224,
+      "region": "north_america",
+      "expected_cost_prediction": 985
+    },
+    {
+      "case_id": "north_america-151",
+      "infrastructure_cost": 2152,
+      "region": "north_america",
+      "expected_cost_prediction": 632
+    },
+    {
+      "case_id": "north_america-152",
+      "infrastructure_cost": 2058,
+      "region": "north_america",
+      "expected_cost_prediction": 1328
+    },
+    {
+      "case_id": "north_america-153",
+      "infrastructure_cost": 1556,
+      "region": "north_america",
+      "expected_cost_prediction": 792
+    },
+    {
+      "case_id": "north_america-154",
+      "infrastructure_cost": 1297,
+      "region": "north_america",
+      "expected_cost_prediction": 1469
+    },
+    {
+      "case_id": "north_america-155",
+      "infrastructure_cost": 3003,
+      "region": "north_america",
+      "expected_cost_prediction": 657
+    },
+    {
+      "case_id": "north_america-156",
+      "infrastructure_cost": 4308,
+      "region": "north_america",
+      "expected_cost_prediction": 884
+    },
+    {
+      "case_id": "north_america-157",
+      "infrastructure_cost": 4228,
+      "region": "north_america",
+      "expected_cost_prediction": 1213
+    },
+    {
+      "case_id": "north_america-158",
+      "infrastructure_cost": 3270,
+      "region": "north_america",
+      "expected_cost_prediction": 540
+    },
+    {
+      "case_id": "north_america-159",
+      "infrastructure_cost": 3629,
+      "region": "north_america",
+      "expected_cost_prediction": 855
+    },
+    {
+      "case_id": "north_america-160",
+      "infrastructure_cost": 2993,
+      "region": "north_america",
+      "expected_cost_prediction": 549
+    },
+    {
+      "case_id": "north_america-161",
+      "infrastructure_cost": 5911,
+      "region": "north_america",
+      "expected_cost_prediction": 758
+    },
+    {
+      "case_id": "north_america-162",
+      "infrastructure_cost": 4054,
+      "region": "north_america",
+      "expected_cost_prediction": 1053
+    },
+    {
+      "case_id": "north_america-163",
+      "infrastructure_cost": 2117,
+      "region": "north_america",
+      "expected_cost_prediction": 731
+    },
+    {
+      "case_id": "north_america-164",
+      "infrastructure_cost": 2531,
+      "region": "north_america",
+      "expected_cost_prediction": 1273
+    },
+    {
+      "case_id": "north_america-165",
+      "infrastructure_cost": 1890,
+      "region": "north_america",
+      "expected_cost_prediction": 981
+    },
+    {
+      "case_id": "north_america-166",
+      "infrastructure_cost": 2959,
+      "region": "north_america",
+      "expected_cost_prediction": 1376
+    }
+  ]
+}

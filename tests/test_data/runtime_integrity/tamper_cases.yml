@@ -1,0 +1,383 @@
+# CostPilot Runtime Integrity: Tamper Cases
+# Test data for runtime integrity tamper detection
+
+# Missing WASM module
+missing_wasm:
+  metadata:
+    test_case: "missing_wasm"
+    description: "Runtime behavior when WASM module is missing"
+    tamper_type: "missing_component"
+    severity: "critical"
+    expected_outcome: "hard_stop"
+  test_scenario:
+    setup:
+      - action: "remove_wasm_file"
+        target: "costpilot.wasm"
+        method: "file_deletion"
+      - action: "preserve_other_files"
+        target: ["costpilot.exe", "config.yml", "heuristics.json"]
+    execution:
+      - command: "costpilot analyze --file test_plan.json"
+        expected_exit_code: 1
+        expected_stderr: "WASM module not found"
+        timeout_seconds: 10
+    validation:
+      - check: "error_message_clarity"
+        expected_message: "Critical component missing: costpilot.wasm"
+        acceptable_messages: ["WASM module not found", "Missing WASM file", "Component integrity check failed"]
+      - check: "graceful_shutdown"
+        expected_behavior: "immediate_termination"
+        no_partial_execution: true
+      - check: "no_data_corruption"
+        expected_behavior: "clean_exit"
+        temp_files_cleaned: true
+
+# Modified binary
+modified_binary:
+  metadata:
+    test_case: "modified_binary"
+    description: "Runtime behavior when main binary is modified"
+    tamper_type: "binary_tampering"
+    severity: "critical"
+    expected_outcome: "hard_stop"
+  test_scenarios:
+    - scenario: "single_byte_modification"
+      description: "Modify a single byte in the binary"
+      modification:
+        offset: 1000
+        original_byte: "0x48"
+        modified_byte: "0x49"
+        method: "hex_edit"
+      execution:
+        command: "costpilot --version"
+        expected_exit_code: 1
+        expected_stderr: "Binary integrity check failed"
+      validation:
+        check: "tamper_detection"
+        expected_message: "Binary signature verification failed"
+    - scenario: "appended_data"
+      description: "Append malicious data to binary"
+      modification:
+        append_data: "malicious_payload_here"
+        method: "file_append"
+      execution:
+        command: "costpilot analyze --file test.json"
+        expected_exit_code: 1
+        expected_stderr: "Integrity check failed"
+    - scenario: "header_corruption"
+      description: "Corrupt binary header"
+      modification:
+        offset: 0
+        length: 64
+        method: "random_corruption"
+      execution:
+        command: "costpilot"
+        expected_exit_code: 1
+        expected_stderr: "Invalid executable format"
+
+# Corrupt heuristics
+corrupt_heuristics:
+  metadata:
+    test_case: "corrupt_heuristics"
+    description: "Runtime behavior with corrupted heuristics data"
+    tamper_type: "data_corruption"
+    severity: "high"
+    expected_outcome: "hard_stop"
+  corruption_scenarios:
+    - scenario: "json_syntax_error"
+      description: "Introduce JSON syntax error in heuristics"
+      corruption:
+        file: "heuristics.json"
+        modification: ',"invalid_key": }'
+        position: "end_of_file"
+      execution:
+        command: "costpilot analyze --file valid_plan.json"
+        expected_exit_code: 1
+        expected_stderr: "Heuristics data corrupted"
+      validation:
+        check: "error_specificity"
+        expected_message_contains: "heuristics"
+    - scenario: "data_structure_corruption"
+      description: "Corrupt internal data structures"
+      corruption:
+        file: "heuristics.json"
+        modification: '{"rules": null, "patterns": "corrupted"}'
+        method: "full_replacement"
+      execution:
+        command: "costpilot analyze --file test.json"
+        expected_exit_code: 1
+        expected_stderr: "Invalid heuristics format"
+    - scenario: "partial_file_corruption"
+      description: "Partially corrupt heuristics file"
+      corruption:
+        file: "heuristics.json"
+        offset: 100
+        length: 50
+        method: "random_bytes"
+      execution:
+        command: "costpilot --help"
+        expected_exit_code: 1
+        expected_stderr: "Heuristics integrity check failed"
+
+# Corrupt policies
+corrupt_policies:
+  metadata:
+    test_case: "corrupt_policies"
+    description: "Runtime behavior with corrupted policy data"
+    tamper_type: "data_corruption"
+    severity: "high"
+    expected_outcome: "hard_stop"
+  corruption_scenarios:
+    - scenario: "policy_syntax_error"
+      description: "Introduce syntax error in policies"
+      corruption:
+        file: "policies.yml"
+        modification: "invalid_yaml_syntax: [unclosed"
+        position: "middle_of_file"
+      execution:
+        command: "costpilot check --file test_plan.json"
+        expected_exit_code: 1
+        expected_stderr: "Policy configuration corrupted"
+    - scenario: "missing_required_policies"
+      description: "Remove required policy sections"
+      corruption:
+        file: "policies.yml"
+        modification: "cost_limits: # removed"
+        method: "section_removal"
+      execution:
+        command: "costpilot analyze --file valid.json"
+        expected_exit_code: 1
+        expected_stderr: "Required policies missing"
+    - scenario: "invalid_policy_values"
+      description: "Set invalid policy values"
+      corruption:
+        file: "policies.yml"
+        modification: "max_cost: 'invalid_number'"
+        method: "value_corruption"
+      execution:
+        command: "costpilot validate --file test.json"
+        expected_exit_code: 1
+        expected_stderr: "Invalid policy configuration"
+
+# Configuration file tampering
+corrupt_config:
+  metadata:
+    test_case: "corrupt_config"
+    description: "Runtime behavior with corrupted configuration"
+    tamper_type: "config_tampering"
+    severity: "medium"
+    expected_outcome: "hard_stop"
+  corruption_scenarios:
+    - scenario: "missing_config_file"
+      description: "Remove configuration file entirely"
+      corruption:
+        file: "config.yml"
+        method: "file_deletion"
+      execution:
+        command: "costpilot analyze --file test.json"
+        expected_exit_code: 1
+        expected_stderr: "Configuration file missing"
+    - scenario: "invalid_config_syntax"
+      description: "Introduce syntax error in config"
+      corruption:
+        file: "config.yml"
+        modification: "invalid: yaml: syntax: ["
+        method: "syntax_error"
+      execution:
+        command: "costpilot --version"
+        expected_exit_code: 1
+        expected_stderr: "Configuration parsing failed"
+    - scenario: "incompatible_config_version"
+      description: "Set incompatible configuration version"
+      corruption:
+        file: "config.yml"
+        modification: "version: 999.0"
+        method: "version_mismatch"
+      execution:
+        command: "costpilot analyze --file valid.json"
+        expected_exit_code: 1
+        expected_stderr: "Configuration version incompatible"
+
+# Baseline data corruption
+corrupt_baselines:
+  metadata:
+    test_case: "corrupt_baselines"
+    description: "Runtime behavior with corrupted baseline data"
+    tamper_type: "baseline_tampering"
+    severity: "medium"
+    expected_outcome: "hard_stop"
+  corruption_scenarios:
+    - scenario: "baseline_file_missing"
+      description: "Remove baseline data file"
+      corruption:
+        file: "baselines.json"
+        method: "file_deletion"
+      execution:
+        command: "costpilot forecast --file test.json"
+        expected_exit_code: 1
+        expected_stderr: "Baseline data unavailable"
+    - scenario: "baseline_data_corrupted"
+      description: "Corrupt baseline data structure"
+      corruption:
+        file: "baselines.json"
+        modification: '{"historical_costs": null}'
+        method: "structure_corruption"
+      execution:
+        command: "costpilot analyze --baseline --file test.json"
+        expected_exit_code: 1
+        expected_stderr: "Baseline data corrupted"
+    - scenario: "inconsistent_baseline_dates"
+      description: "Create date inconsistencies in baselines"
+      corruption:
+        file: "baselines.json"
+        modification: '"2023-12-31": "invalid_date_format"'
+        method: "date_corruption"
+      execution:
+        command: "costpilot trend --file test.json"
+        expected_exit_code: 1
+        expected_stderr: "Baseline date validation failed"
+
+# Library dependency tampering
+corrupt_dependencies:
+  metadata:
+    test_case: "corrupt_dependencies"
+    description: "Runtime behavior with corrupted dependencies"
+    tamper_type: "dependency_tampering"
+    severity: "high"
+    expected_outcome: "hard_stop"
+  corruption_scenarios:
+    - scenario: "missing_library"
+      description: "Remove required shared library"
+      corruption:
+        file: "libcostpilot.so"
+        method: "file_deletion"
+      execution:
+        command: "costpilot --version"
+        expected_exit_code: 127
+        expected_stderr: "libcostpilot.so: cannot open shared object file"
+    - scenario: "modified_library"
+      description: "Modify shared library binary"
+      corruption:
+        file: "libcostpilot.so"
+        offset: 1000
+        modified_byte: "0xFF"
+        method: "binary_modification"
+      execution:
+        command: "costpilot analyze --file test.json"
+        expected_exit_code: 1
+        expected_stderr: "Library integrity check failed"
+    - scenario: "incompatible_library_version"
+      description: "Use incompatible library version"
+      corruption:
+        file: "libcostpilot.so"
+        method: "version_downgrade"
+        target_version: "0.1.0"
+      execution:
+        command: "costpilot --help"
+        expected_exit_code: 1
+        expected_stderr: "Library version incompatible"
+
+# Memory corruption simulation
+memory_corruption:
+  metadata:
+    test_case: "memory_corruption"
+    description: "Simulate memory corruption scenarios"
+    tamper_type: "memory_tampering"
+    severity: "critical"
+    expected_outcome: "hard_stop"
+  corruption_scenarios:
+    - scenario: "heap_corruption"
+      description: "Simulate heap memory corruption"
+      method: "memory_injection"
+      injection_point: "malloc_hook"
+      payload: "corruption_data"
+      execution:
+        command: "costpilot analyze --file large_plan.json"
+        expected_exit_code: 134  # SIGABRT
+        expected_stderr: "Segmentation fault"
+    - scenario: "stack_overflow"
+      description: "Trigger stack overflow conditions"
+      method: "deep_recursion"
+      recursion_depth: 10000
+      execution:
+        command: "costpilot process --deep-nesting test.json"
+        expected_exit_code: 139  # SIGSEGV
+        expected_stderr: "Stack overflow"
+    - scenario: "use_after_free"
+      description: "Simulate use-after-free vulnerabilities"
+      method: "memory_management_test"
+      test_case: "double_free"
+      execution:
+        command: "costpilot test --memory-corruption"
+        expected_exit_code: 1
+        expected_stderr: "Memory corruption detected"
+
+# Network-based tampering
+network_tampering:
+  metadata:
+    test_case: "network_tampering"
+    description: "Runtime behavior with network-based tampering"
+    tamper_type: "network_interference"
+    severity: "medium"
+    expected_outcome: "hard_stop"
+  tampering_scenarios:
+    - scenario: "dns_poisoning"
+      description: "Simulate DNS poisoning attacks"
+      method: "dns_spoofing"
+      target_domain: "api.costpilot.com"
+      fake_ip: "127.0.0.1"
+      execution:
+        command: "costpilot sync --remote"
+        expected_exit_code: 1
+        expected_stderr: "SSL certificate verification failed"
+    - scenario: "man_in_the_middle"
+      description: "Simulate MITM attacks"
+      method: "ssl_interception"
+      certificate_forgery: true
+      execution:
+        command: "costpilot update --check"
+        expected_exit_code: 1
+        expected_stderr: "Certificate chain validation failed"
+    - scenario: "connection_hijacking"
+      description: "Simulate TCP connection hijacking"
+      method: "tcp_injection"
+      injection_payload: "malicious_data"
+      execution:
+        command: "costpilot upload --file results.json"
+        expected_exit_code: 1
+        expected_stderr: "Connection integrity check failed"
+
+# Time-based tampering
+temporal_tampering:
+  metadata:
+    test_case: "temporal_tampering"
+    description: "Runtime behavior with time-based tampering"
+    tamper_type: "temporal_manipulation"
+    severity: "low"
+    expected_outcome: "hard_stop"
+  tampering_scenarios:
+    - scenario: "clock_skew"
+      description: "System clock manipulation"
+      method: "time_alteration"
+      time_offset: "-30_days"
+      execution:
+        command: "costpilot validate --license"
+        expected_exit_code: 1
+        expected_stderr: "License validation failed: clock skew detected"
+    - scenario: "license_expiry_manipulation"
+      description: "Manipulate license expiry dates"
+      method: "file_timestamp_alteration"
+      target_file: "license.key"
+      timestamp_offset: "+365_days"
+      execution:
+        command: "costpilot --version"
+        expected_exit_code: 1
+        expected_stderr: "License integrity check failed"
+    - scenario: "certificate_expiry_bypass"
+      description: "Attempt to bypass certificate expiry"
+      method: "system_clock_rollback"
+      rollback_days: 400
+      execution:
+        command: "costpilot secure --connect"
+        expected_exit_code: 1
+        expected_stderr: "Certificate expired"

@@ -1,0 +1,150 @@
+name: Synthetic Monitoring
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      interval:
+        description: 'Monitoring interval in minutes'
+        required: false
+        default: '15'
+        type: string
+
+jobs:
+  synthetic-monitoring:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Build CostPilot
+      run: cargo build --release
+
+    - name: Run synthetic monitoring
+      run: |
+        chmod +x scripts/synthetic_monitoring.sh
+        ./scripts/synthetic_monitoring.sh
+
+    - name: Check for alerts
+      run: |
+        chmod +x scripts/synthetic_monitoring_alerts.sh
+        ./scripts/synthetic_monitoring_alerts.sh check
+
+    - name: Upload monitoring results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: synthetic-monitoring-results-${{ github.run_number }}
+        path: synthetic-monitoring/
+        retention-days: 30
+
+    - name: Create monitoring summary
+      if: always()
+      run: |
+        echo "## Synthetic Monitoring Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Get latest results file
+        LATEST_RESULTS=$(find synthetic-monitoring -name "health-check-*.json" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2- || echo "")
+
+        if [ -n "$LATEST_RESULTS" ]; then
+          TOTAL_CHECKS=$(grep -c '"check"' "$LATEST_RESULTS" || echo "0")
+          PASSED_CHECKS=$(grep -c '"status":"PASS"' "$LATEST_RESULTS" || echo "0")
+          FAILED_CHECKS=$(grep -c '"status":"FAIL"' "$LATEST_RESULTS" || echo "0")
+          WARN_CHECKS=$(grep -c '"status":"WARN"' "$LATEST_RESULTS" || echo "0")
+
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Checks | $TOTAL_CHECKS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Passed | $PASSED_CHECKS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Warnings | $WARN_CHECKS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failures | $FAILED_CHECKS |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$FAILED_CHECKS" -gt 0 ]; then
+            echo "### 🚨 Failures Detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            grep '"status":"FAIL"' "$LATEST_RESULTS" | sed 's/.*"check":"\([^"]*\)".*"message":"\([^"]*\)".*/- **\1**: \2/' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$WARN_CHECKS" -gt 0 ]; then
+            echo "### ⚠️ Warnings Detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            grep '"status":"WARN"' "$LATEST_RESULTS" | sed 's/.*"check":"\([^"]*\)".*"message":"\([^"]*\)".*/- **\1**: \2/' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+        else
+          echo "No monitoring results found" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Send failure notification
+      if: failure()
+      run: |
+        # This would integrate with your notification system
+        echo "Synthetic monitoring failed - notification would be sent here"
+
+  monitoring-dashboard:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Generate monitoring dashboard
+      run: |
+        echo "# CostPilot Synthetic Monitoring Dashboard" > monitoring-dashboard.md
+        echo "" >> monitoring-dashboard.md
+        echo "Generated: $(date)" >> monitoring-dashboard.md
+        echo "" >> monitoring-dashboard.md
+
+        # Aggregate recent results
+        echo "## Recent Health Checks" >> monitoring-dashboard.md
+        echo "" >> monitoring-dashboard.md
+
+        find synthetic-monitoring -name "health-check-*.json" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -10 | while read -r line; do
+          file=$(echo "$line" | cut -d' ' -f2-)
+          timestamp=$(basename "$file" | sed 's/health-check-\(.*\)\.json/\1/' | sed 's/-/ /g' | sed 's/\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)-\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1-\2-\3 \4:\5:\6/')
+
+          total=$(grep -c '"check"' "$file" || echo "0")
+          passed=$(grep -c '"status":"PASS"' "$file" || echo "0")
+          failed=$(grep -c '"status":"FAIL"' "$file" || echo "0")
+          warned=$(grep -c '"status":"WARN"' "$file" || echo "0")
+
+          status="✅"
+          if [ "$failed" -gt 0 ]; then
+            status="❌"
+          elif [ "$warned" -gt 0 ]; then
+            status="⚠️"
+          fi
+
+          echo "- $status $timestamp | $passed/$total passed | $failed failures | $warned warnings" >> monitoring-dashboard.md
+        done
+
+        echo "" >> monitoring-dashboard.md
+        echo "## Alert History" >> monitoring-dashboard.md
+        echo "" >> monitoring-dashboard.md
+
+        if [ -f "synthetic-monitoring/alerts.log" ]; then
+          tail -n 20 synthetic-monitoring/alerts.log | while read -r line; do
+            echo "- $line" >> monitoring-dashboard.md
+          done
+        else
+          echo "No alerts logged yet" >> monitoring-dashboard.md
+        fi
+
+    - name: Update dashboard
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "Update synthetic monitoring dashboard"
+        file_pattern: monitoring-dashboard.md

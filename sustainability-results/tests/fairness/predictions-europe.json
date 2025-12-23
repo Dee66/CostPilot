@@ -1,0 +1,1164 @@
+[
+  {
+    "case_id": "europe-1",
+    "infrastructure_cost": 2377,
+    "region": "europe",
+    "expected_cost_prediction": 1274,
+    "predicted_cost": 356.565
+  },
+  {
+    "case_id": "europe-2",
+    "infrastructure_cost": 1925,
+    "region": "europe",
+    "expected_cost_prediction": 1493,
+    "predicted_cost": 288.765
+  },
+  {
+    "case_id": "europe-3",
+    "infrastructure_cost": 3621,
+    "region": "europe",
+    "expected_cost_prediction": 844,
+    "predicted_cost": 543.165
+  },
+  {
+    "case_id": "europe-4",
+    "infrastructure_cost": 2989,
+    "region": "europe",
+    "expected_cost_prediction": 1337,
+    "predicted_cost": 448.36499999999995
+  },
+  {
+    "case_id": "europe-5",
+    "infrastructure_cost": 4206,
+    "region": "europe",
+    "expected_cost_prediction": 991,
+    "predicted_cost": 630.915
+  },
+  {
+    "case_id": "europe-6",
+    "infrastructure_cost": 2034,
+    "region": "europe",
+    "expected_cost_prediction": 842,
+    "predicted_cost": 305.11499999999995
+  },
+  {
+    "case_id": "europe-7",
+    "infrastructure_cost": 4588,
+    "region": "europe",
+    "expected_cost_prediction": 1242,
+    "predicted_cost": 688.2149999999999
+  },
+  {
+    "case_id": "europe-8",
+    "infrastructure_cost": 2149,
+    "region": "europe",
+    "expected_cost_prediction": 1059,
+    "predicted_cost": 322.36499999999995
+  },
+  {
+    "case_id": "europe-9",
+    "infrastructure_cost": 3229,
+    "region": "europe",
+    "expected_cost_prediction": 1237,
+    "predicted_cost": 484.36499999999995
+  },
+  {
+    "case_id": "europe-10",
+    "infrastructure_cost": 2254,
+    "region": "europe",
+    "expected_cost_prediction": 1269,
+    "predicted_cost": 338.11499999999995
+  },
+  {
+    "case_id": "europe-11",
+    "infrastructure_cost": 3993,
+    "region": "europe",
+    "expected_cost_prediction": 1316,
+    "predicted_cost": 598.9649999999999
+  },
+  {
+    "case_id": "europe-12",
+    "infrastructure_cost": 5239,
+    "region": "europe",
+    "expected_cost_prediction": 687,
+    "predicted_cost": 785.865
+  },
+  {
+    "case_id": "europe-13",
+    "infrastructure_cost": 3330,
+    "region": "europe",
+    "expected_cost_prediction": 1023,
+    "predicted_cost": 499.515
+  },
+  {
+    "case_id": "europe-14",
+    "infrastructure_cost": 4245,
+    "region": "europe",
+    "expected_cost_prediction": 1056,
+    "predicted_cost": 636.765
+  },
+  {
+    "case_id": "europe-15",
+    "infrastructure_cost": 4615,
+    "region": "europe",
+    "expected_cost_prediction": 891,
+    "predicted_cost": 692.265
+  },
+  {
+    "case_id": "europe-16",
+    "infrastructure_cost": 4772,
+    "region": "europe",
+    "expected_cost_prediction": 956,
+    "predicted_cost": 715.8149999999999
+  },
+  {
+    "case_id": "europe-17",
+    "infrastructure_cost": 3123,
+    "region": "europe",
+    "expected_cost_prediction": 775,
+    "predicted_cost": 468.465
+  },
+  {
+    "case_id": "europe-18",
+    "infrastructure_cost": 5298,
+    "region": "europe",
+    "expected_cost_prediction": 1143,
+    "predicted_cost": 794.7149999999999
+  },
+  {
+    "case_id": "europe-19",
+    "infrastructure_cost": 3313,
+    "region": "europe",
+    "expected_cost_prediction": 796,
+    "predicted_cost": 496.965
+  },
+  {
+    "case_id": "europe-20",
+    "infrastructure_cost": 3612,
+    "region": "europe",
+    "expected_cost_prediction": 836,
+    "predicted_cost": 541.8149999999999
+  },
+  {
+    "case_id": "europe-21",
+    "infrastructure_cost": 4826,
+    "region": "europe",
+    "expected_cost_prediction": 656,
+    "predicted_cost": 723.915
+  },
+  {
+    "case_id": "europe-22",
+    "infrastructure_cost": 1648,
+    "region": "europe",
+    "expected_cost_prediction": 975,
+    "predicted_cost": 247.21499999999997
+  },
+  {
+    "case_id": "europe-23",
+    "infrastructure_cost": 2721,
+    "region": "europe",
+    "expected_cost_prediction": 618,
+    "predicted_cost": 408.16499999999996
+  },
+  {
+    "case_id": "europe-24",
+    "infrastructure_cost": 1800,
+    "region": "europe",
+    "expected_cost_prediction": 639,
+    "predicted_cost": 270.015
+  },
+  {
+    "case_id": "europe-25",
+    "infrastructure_cost": 3749,
+    "region": "europe",
+    "expected_cost_prediction": 1212,
+    "predicted_cost": 562.365
+  },
+  {
+    "case_id": "europe-26",
+    "infrastructure_cost": 4461,
+    "region": "europe",
+    "expected_cost_prediction": 693,
+    "predicted_cost": 669.165
+  },
+  {
+    "case_id": "europe-27",
+    "infrastructure_cost": 1754,
+    "region": "europe",
+    "expected_cost_prediction": 1102,
+    "predicted_cost": 263.11499999999995
+  },
+  {
+    "case_id": "europe-28",
+    "infrastructure_cost": 5197,
+    "region": "europe",
+    "expected_cost_prediction": 1381,
+    "predicted_cost": 779.5649999999999
+  },
+  {
+    "case_id": "europe-29",
+    "infrastructure_cost": 2321,
+    "region": "europe",
+    "expected_cost_prediction": 898,
+    "predicted_cost": 348.16499999999996
+  },
+  {
+    "case_id": "europe-30",
+    "infrastructure_cost": 2399,
+    "region": "europe",
+    "expected_cost_prediction": 1141,
+    "predicted_cost": 359.86499999999995
+  },
+  {
+    "case_id": "europe-31",
+    "infrastructure_cost": 3011,
+    "region": "europe",
+    "expected_cost_prediction": 953,
+    "predicted_cost": 451.66499999999996
+  },
+  {
+    "case_id": "europe-32",
+    "infrastructure_cost": 2007,
+    "region": "europe",
+    "expected_cost_prediction": 966,
+    "predicted_cost": 301.065
+  },
+  {
+    "case_id": "europe-33",
+    "infrastructure_cost": 3248,
+    "region": "europe",
+    "expected_cost_prediction": 502,
+    "predicted_cost": 487.215
+  },
+  {
+    "case_id": "europe-34",
+    "infrastructure_cost": 5549,
+    "region": "europe",
+    "expected_cost_prediction": 555,
+    "predicted_cost": 832.365
+  },
+  {
+    "case_id": "europe-35",
+    "infrastructure_cost": 2777,
+    "region": "europe",
+    "expected_cost_prediction": 1304,
+    "predicted_cost": 416.565
+  },
+  {
+    "case_id": "europe-36",
+    "infrastructure_cost": 1293,
+    "region": "europe",
+    "expected_cost_prediction": 1236,
+    "predicted_cost": 193.96499999999997
+  },
+  {
+    "case_id": "europe-37",
+    "infrastructure_cost": 3013,
+    "region": "europe",
+    "expected_cost_prediction": 939,
+    "predicted_cost": 451.965
+  },
+  {
+    "case_id": "europe-38",
+    "infrastructure_cost": 1549,
+    "region": "europe",
+    "expected_cost_prediction": 1464,
+    "predicted_cost": 232.36499999999998
+  },
+  {
+    "case_id": "europe-39",
+    "infrastructure_cost": 1934,
+    "region": "europe",
+    "expected_cost_prediction": 609,
+    "predicted_cost": 290.11499999999995
+  },
+  {
+    "case_id": "europe-40",
+    "infrastructure_cost": 5538,
+    "region": "europe",
+    "expected_cost_prediction": 1060,
+    "predicted_cost": 830.7149999999999
+  },
+  {
+    "case_id": "europe-41",
+    "infrastructure_cost": 3967,
+    "region": "europe",
+    "expected_cost_prediction": 1253,
+    "predicted_cost": 595.0649999999999
+  },
+  {
+    "case_id": "europe-42",
+    "infrastructure_cost": 3757,
+    "region": "europe",
+    "expected_cost_prediction": 1313,
+    "predicted_cost": 563.5649999999999
+  },
+  {
+    "case_id": "europe-43",
+    "infrastructure_cost": 4913,
+    "region": "europe",
+    "expected_cost_prediction": 1207,
+    "predicted_cost": 736.9649999999999
+  },
+  {
+    "case_id": "europe-44",
+    "infrastructure_cost": 3334,
+    "region": "europe",
+    "expected_cost_prediction": 1274,
+    "predicted_cost": 500.11499999999995
+  },
+  {
+    "case_id": "europe-45",
+    "infrastructure_cost": 5377,
+    "region": "europe",
+    "expected_cost_prediction": 541,
+    "predicted_cost": 806.5649999999999
+  },
+  {
+    "case_id": "europe-46",
+    "infrastructure_cost": 5398,
+    "region": "europe",
+    "expected_cost_prediction": 1331,
+    "predicted_cost": 809.7149999999999
+  },
+  {
+    "case_id": "europe-47",
+    "infrastructure_cost": 3993,
+    "region": "europe",
+    "expected_cost_prediction": 860,
+    "predicted_cost": 598.9649999999999
+  },
+  {
+    "case_id": "europe-48",
+    "infrastructure_cost": 2137,
+    "region": "europe",
+    "expected_cost_prediction": 1018,
+    "predicted_cost": 320.565
+  },
+  {
+    "case_id": "europe-49",
+    "infrastructure_cost": 1676,
+    "region": "europe",
+    "expected_cost_prediction": 1245,
+    "predicted_cost": 251.41499999999996
+  },
+  {
+    "case_id": "europe-50",
+    "infrastructure_cost": 4534,
+    "region": "europe",
+    "expected_cost_prediction": 731,
+    "predicted_cost": 680.115
+  },
+  {
+    "case_id": "europe-51",
+    "infrastructure_cost": 4400,
+    "region": "europe",
+    "expected_cost_prediction": 574,
+    "predicted_cost": 660.015
+  },
+  {
+    "case_id": "europe-52",
+    "infrastructure_cost": 3469,
+    "region": "europe",
+    "expected_cost_prediction": 823,
+    "predicted_cost": 520.365
+  },
+  {
+    "case_id": "europe-53",
+    "infrastructure_cost": 5934,
+    "region": "europe",
+    "expected_cost_prediction": 1468,
+    "predicted_cost": 890.115
+  },
+  {
+    "case_id": "europe-54",
+    "infrastructure_cost": 4352,
+    "region": "europe",
+    "expected_cost_prediction": 1153,
+    "predicted_cost": 652.8149999999999
+  },
+  {
+    "case_id": "europe-55",
+    "infrastructure_cost": 3717,
+    "region": "europe",
+    "expected_cost_prediction": 916,
+    "predicted_cost": 557.5649999999999
+  },
+  {
+    "case_id": "europe-56",
+    "infrastructure_cost": 1868,
+    "region": "europe",
+    "expected_cost_prediction": 1277,
+    "predicted_cost": 280.215
+  },
+  {
+    "case_id": "europe-57",
+    "infrastructure_cost": 3245,
+    "region": "europe",
+    "expected_cost_prediction": 1215,
+    "predicted_cost": 486.765
+  },
+  {
+    "case_id": "europe-58",
+    "infrastructure_cost": 3490,
+    "region": "europe",
+    "expected_cost_prediction": 860,
+    "predicted_cost": 523.515
+  },
+  {
+    "case_id": "europe-59",
+    "infrastructure_cost": 1341,
+    "region": "europe",
+    "expected_cost_prediction": 616,
+    "predicted_cost": 201.165
+  },
+  {
+    "case_id": "europe-60",
+    "infrastructure_cost": 2979,
+    "region": "europe",
+    "expected_cost_prediction": 617,
+    "predicted_cost": 446.86499999999995
+  },
+  {
+    "case_id": "europe-61",
+    "infrastructure_cost": 3180,
+    "region": "europe",
+    "expected_cost_prediction": 1085,
+    "predicted_cost": 477.015
+  },
+  {
+    "case_id": "europe-62",
+    "infrastructure_cost": 5061,
+    "region": "europe",
+    "expected_cost_prediction": 624,
+    "predicted_cost": 759.165
+  },
+  {
+    "case_id": "europe-63",
+    "infrastructure_cost": 1911,
+    "region": "europe",
+    "expected_cost_prediction": 827,
+    "predicted_cost": 286.66499999999996
+  },
+  {
+    "case_id": "europe-64",
+    "infrastructure_cost": 5576,
+    "region": "europe",
+    "expected_cost_prediction": 669,
+    "predicted_cost": 836.415
+  },
+  {
+    "case_id": "europe-65",
+    "infrastructure_cost": 1944,
+    "region": "europe",
+    "expected_cost_prediction": 1449,
+    "predicted_cost": 291.61499999999995
+  },
+  {
+    "case_id": "europe-66",
+    "infrastructure_cost": 3693,
+    "region": "europe",
+    "expected_cost_prediction": 753,
+    "predicted_cost": 553.9649999999999
+  },
+  {
+    "case_id": "europe-67",
+    "infrastructure_cost": 4207,
+    "region": "europe",
+    "expected_cost_prediction": 528,
+    "predicted_cost": 631.0649999999999
+  },
+  {
+    "case_id": "europe-68",
+    "infrastructure_cost": 2852,
+    "region": "europe",
+    "expected_cost_prediction": 788,
+    "predicted_cost": 427.815
+  },
+  {
+    "case_id": "europe-69",
+    "infrastructure_cost": 2474,
+    "region": "europe",
+    "expected_cost_prediction": 1250,
+    "predicted_cost": 371.11499999999995
+  },
+  {
+    "case_id": "europe-70",
+    "infrastructure_cost": 1711,
+    "region": "europe",
+    "expected_cost_prediction": 575,
+    "predicted_cost": 256.66499999999996
+  },
+  {
+    "case_id": "europe-71",
+    "infrastructure_cost": 2481,
+    "region": "europe",
+    "expected_cost_prediction": 1378,
+    "predicted_cost": 372.16499999999996
+  },
+  {
+    "case_id": "europe-72",
+    "infrastructure_cost": 4031,
+    "region": "europe",
+    "expected_cost_prediction": 1148,
+    "predicted_cost": 604.665
+  },
+  {
+    "case_id": "europe-73",
+    "infrastructure_cost": 1077,
+    "region": "europe",
+    "expected_cost_prediction": 649,
+    "predicted_cost": 161.56499999999997
+  },
+  {
+    "case_id": "europe-74",
+    "infrastructure_cost": 3339,
+    "region": "europe",
+    "expected_cost_prediction": 600,
+    "predicted_cost": 500.86499999999995
+  },
+  {
+    "case_id": "europe-75",
+    "infrastructure_cost": 2508,
+    "region": "europe",
+    "expected_cost_prediction": 967,
+    "predicted_cost": 376.215
+  },
+  {
+    "case_id": "europe-76",
+    "infrastructure_cost": 5558,
+    "region": "europe",
+    "expected_cost_prediction": 1231,
+    "predicted_cost": 833.7149999999999
+  },
+  {
+    "case_id": "europe-77",
+    "infrastructure_cost": 2003,
+    "region": "europe",
+    "expected_cost_prediction": 1244,
+    "predicted_cost": 300.465
+  },
+  {
+    "case_id": "europe-78",
+    "infrastructure_cost": 5692,
+    "region": "europe",
+    "expected_cost_prediction": 1471,
+    "predicted_cost": 853.8149999999999
+  },
+  {
+    "case_id": "europe-79",
+    "infrastructure_cost": 2632,
+    "region": "europe",
+    "expected_cost_prediction": 1497,
+    "predicted_cost": 394.815
+  },
+  {
+    "case_id": "europe-80",
+    "infrastructure_cost": 3335,
+    "region": "europe",
+    "expected_cost_prediction": 550,
+    "predicted_cost": 500.265
+  },
+  {
+    "case_id": "europe-81",
+    "infrastructure_cost": 2306,
+    "region": "europe",
+    "expected_cost_prediction": 536,
+    "predicted_cost": 345.91499999999996
+  },
+  {
+    "case_id": "europe-82",
+    "infrastructure_cost": 4049,
+    "region": "europe",
+    "expected_cost_prediction": 642,
+    "predicted_cost": 607.365
+  },
+  {
+    "case_id": "europe-83",
+    "infrastructure_cost": 3972,
+    "region": "europe",
+    "expected_cost_prediction": 753,
+    "predicted_cost": 595.8149999999999
+  },
+  {
+    "case_id": "europe-84",
+    "infrastructure_cost": 5441,
+    "region": "europe",
+    "expected_cost_prediction": 913,
+    "predicted_cost": 816.165
+  },
+  {
+    "case_id": "europe-85",
+    "infrastructure_cost": 4946,
+    "region": "europe",
+    "expected_cost_prediction": 1209,
+    "predicted_cost": 741.915
+  },
+  {
+    "case_id": "europe-86",
+    "infrastructure_cost": 4560,
+    "region": "europe",
+    "expected_cost_prediction": 1124,
+    "predicted_cost": 684.015
+  },
+  {
+    "case_id": "europe-87",
+    "infrastructure_cost": 5092,
+    "region": "europe",
+    "expected_cost_prediction": 1464,
+    "predicted_cost": 763.8149999999999
+  },
+  {
+    "case_id": "europe-88",
+    "infrastructure_cost": 4182,
+    "region": "europe",
+    "expected_cost_prediction": 922,
+    "predicted_cost": 627.3149999999999
+  },
+  {
+    "case_id": "europe-89",
+    "infrastructure_cost": 5959,
+    "region": "europe",
+    "expected_cost_prediction": 1112,
+    "predicted_cost": 893.865
+  },
+  {
+    "case_id": "europe-90",
+    "infrastructure_cost": 3306,
+    "region": "europe",
+    "expected_cost_prediction": 1228,
+    "predicted_cost": 495.91499999999996
+  },
+  {
+    "case_id": "europe-91",
+    "infrastructure_cost": 1056,
+    "region": "europe",
+    "expected_cost_prediction": 1158,
+    "predicted_cost": 158.415
+  },
+  {
+    "case_id": "europe-92",
+    "infrastructure_cost": 4680,
+    "region": "europe",
+    "expected_cost_prediction": 1416,
+    "predicted_cost": 702.015
+  },
+  {
+    "case_id": "europe-93",
+    "infrastructure_cost": 4349,
+    "region": "europe",
+    "expected_cost_prediction": 1278,
+    "predicted_cost": 652.365
+  },
+  {
+    "case_id": "europe-94",
+    "infrastructure_cost": 1221,
+    "region": "europe",
+    "expected_cost_prediction": 1207,
+    "predicted_cost": 183.165
+  },
+  {
+    "case_id": "europe-95",
+    "infrastructure_cost": 3599,
+    "region": "europe",
+    "expected_cost_prediction": 775,
+    "predicted_cost": 539.865
+  },
+  {
+    "case_id": "europe-96",
+    "infrastructure_cost": 4672,
+    "region": "europe",
+    "expected_cost_prediction": 1043,
+    "predicted_cost": 700.8149999999999
+  },
+  {
+    "case_id": "europe-97",
+    "infrastructure_cost": 4557,
+    "region": "europe",
+    "expected_cost_prediction": 1413,
+    "predicted_cost": 683.5649999999999
+  },
+  {
+    "case_id": "europe-98",
+    "infrastructure_cost": 4749,
+    "region": "europe",
+    "expected_cost_prediction": 684,
+    "predicted_cost": 712.365
+  },
+  {
+    "case_id": "europe-99",
+    "infrastructure_cost": 5059,
+    "region": "europe",
+    "expected_cost_prediction": 603,
+    "predicted_cost": 758.865
+  },
+  {
+    "case_id": "europe-100",
+    "infrastructure_cost": 1373,
+    "region": "europe",
+    "expected_cost_prediction": 646,
+    "predicted_cost": 205.96499999999997
+  },
+  {
+    "case_id": "europe-101",
+    "infrastructure_cost": 4228,
+    "region": "europe",
+    "expected_cost_prediction": 1261,
+    "predicted_cost": 634.2149999999999
+  },
+  {
+    "case_id": "europe-102",
+    "infrastructure_cost": 1014,
+    "region": "europe",
+    "expected_cost_prediction": 1200,
+    "predicted_cost": 152.11499999999998
+  },
+  {
+    "case_id": "europe-103",
+    "infrastructure_cost": 5768,
+    "region": "europe",
+    "expected_cost_prediction": 1308,
+    "predicted_cost": 865.2149999999999
+  },
+  {
+    "case_id": "europe-104",
+    "infrastructure_cost": 2897,
+    "region": "europe",
+    "expected_cost_prediction": 1111,
+    "predicted_cost": 434.565
+  },
+  {
+    "case_id": "europe-105",
+    "infrastructure_cost": 2747,
+    "region": "europe",
+    "expected_cost_prediction": 1378,
+    "predicted_cost": 412.065
+  },
+  {
+    "case_id": "europe-106",
+    "infrastructure_cost": 1160,
+    "region": "europe",
+    "expected_cost_prediction": 594,
+    "predicted_cost": 174.015
+  },
+  {
+    "case_id": "europe-107",
+    "infrastructure_cost": 3163,
+    "region": "europe",
+    "expected_cost_prediction": 1045,
+    "predicted_cost": 474.465
+  },
+  {
+    "case_id": "europe-108",
+    "infrastructure_cost": 4670,
+    "region": "europe",
+    "expected_cost_prediction": 813,
+    "predicted_cost": 700.515
+  },
+  {
+    "case_id": "europe-109",
+    "infrastructure_cost": 3164,
+    "region": "europe",
+    "expected_cost_prediction": 634,
+    "predicted_cost": 474.61499999999995
+  },
+  {
+    "case_id": "europe-110",
+    "infrastructure_cost": 5211,
+    "region": "europe",
+    "expected_cost_prediction": 1301,
+    "predicted_cost": 781.665
+  },
+  {
+    "case_id": "europe-111",
+    "infrastructure_cost": 4509,
+    "region": "europe",
+    "expected_cost_prediction": 955,
+    "predicted_cost": 676.365
+  },
+  {
+    "case_id": "europe-112",
+    "infrastructure_cost": 4952,
+    "region": "europe",
+    "expected_cost_prediction": 518,
+    "predicted_cost": 742.8149999999999
+  },
+  {
+    "case_id": "europe-113",
+    "infrastructure_cost": 3134,
+    "region": "europe",
+    "expected_cost_prediction": 1376,
+    "predicted_cost": 470.11499999999995
+  },
+  {
+    "case_id": "europe-114",
+    "infrastructure_cost": 5651,
+    "region": "europe",
+    "expected_cost_prediction": 1447,
+    "predicted_cost": 847.665
+  },
+  {
+    "case_id": "europe-115",
+    "infrastructure_cost": 4940,
+    "region": "europe",
+    "expected_cost_prediction": 1408,
+    "predicted_cost": 741.015
+  },
+  {
+    "case_id": "europe-116",
+    "infrastructure_cost": 3949,
+    "region": "europe",
+    "expected_cost_prediction": 1416,
+    "predicted_cost": 592.365
+  },
+  {
+    "case_id": "europe-117",
+    "infrastructure_cost": 1217,
+    "region": "europe",
+    "expected_cost_prediction": 1491,
+    "predicted_cost": 182.56499999999997
+  },
+  {
+    "case_id": "europe-118",
+    "infrastructure_cost": 2676,
+    "region": "europe",
+    "expected_cost_prediction": 1371,
+    "predicted_cost": 401.41499999999996
+  },
+  {
+    "case_id": "europe-119",
+    "infrastructure_cost": 5615,
+    "region": "europe",
+    "expected_cost_prediction": 1338,
+    "predicted_cost": 842.265
+  },
+  {
+    "case_id": "europe-120",
+    "infrastructure_cost": 4205,
+    "region": "europe",
+    "expected_cost_prediction": 910,
+    "predicted_cost": 630.765
+  },
+  {
+    "case_id": "europe-121",
+    "infrastructure_cost": 4931,
+    "region": "europe",
+    "expected_cost_prediction": 703,
+    "predicted_cost": 739.665
+  },
+  {
+    "case_id": "europe-122",
+    "infrastructure_cost": 4726,
+    "region": "europe",
+    "expected_cost_prediction": 1226,
+    "predicted_cost": 708.915
+  },
+  {
+    "case_id": "europe-123",
+    "infrastructure_cost": 3501,
+    "region": "europe",
+    "expected_cost_prediction": 1167,
+    "predicted_cost": 525.165
+  },
+  {
+    "case_id": "europe-124",
+    "infrastructure_cost": 1612,
+    "region": "europe",
+    "expected_cost_prediction": 861,
+    "predicted_cost": 241.81499999999997
+  },
+  {
+    "case_id": "europe-125",
+    "infrastructure_cost": 5386,
+    "region": "europe",
+    "expected_cost_prediction": 682,
+    "predicted_cost": 807.915
+  },
+  {
+    "case_id": "europe-126",
+    "infrastructure_cost": 1852,
+    "region": "europe",
+    "expected_cost_prediction": 1452,
+    "predicted_cost": 277.815
+  },
+  {
+    "case_id": "europe-127",
+    "infrastructure_cost": 3297,
+    "region": "europe",
+    "expected_cost_prediction": 1390,
+    "predicted_cost": 494.56499999999994
+  },
+  {
+    "case_id": "europe-128",
+    "infrastructure_cost": 5155,
+    "region": "europe",
+    "expected_cost_prediction": 785,
+    "predicted_cost": 773.265
+  },
+  {
+    "case_id": "europe-129",
+    "infrastructure_cost": 3900,
+    "region": "europe",
+    "expected_cost_prediction": 1127,
+    "predicted_cost": 585.015
+  },
+  {
+    "case_id": "europe-130",
+    "infrastructure_cost": 4064,
+    "region": "europe",
+    "expected_cost_prediction": 1122,
+    "predicted_cost": 609.615
+  },
+  {
+    "case_id": "europe-131",
+    "infrastructure_cost": 1523,
+    "region": "europe",
+    "expected_cost_prediction": 603,
+    "predicted_cost": 228.46499999999997
+  },
+  {
+    "case_id": "europe-132",
+    "infrastructure_cost": 5880,
+    "region": "europe",
+    "expected_cost_prediction": 573,
+    "predicted_cost": 882.015
+  },
+  {
+    "case_id": "europe-133",
+    "infrastructure_cost": 2199,
+    "region": "europe",
+    "expected_cost_prediction": 1020,
+    "predicted_cost": 329.86499999999995
+  },
+  {
+    "case_id": "europe-134",
+    "infrastructure_cost": 3093,
+    "region": "europe",
+    "expected_cost_prediction": 619,
+    "predicted_cost": 463.965
+  },
+  {
+    "case_id": "europe-135",
+    "infrastructure_cost": 2739,
+    "region": "europe",
+    "expected_cost_prediction": 1171,
+    "predicted_cost": 410.86499999999995
+  },
+  {
+    "case_id": "europe-136",
+    "infrastructure_cost": 1303,
+    "region": "europe",
+    "expected_cost_prediction": 582,
+    "predicted_cost": 195.46499999999997
+  },
+  {
+    "case_id": "europe-137",
+    "infrastructure_cost": 3728,
+    "region": "europe",
+    "expected_cost_prediction": 655,
+    "predicted_cost": 559.2149999999999
+  },
+  {
+    "case_id": "europe-138",
+    "infrastructure_cost": 5465,
+    "region": "europe",
+    "expected_cost_prediction": 867,
+    "predicted_cost": 819.765
+  },
+  {
+    "case_id": "europe-139",
+    "infrastructure_cost": 4439,
+    "region": "europe",
+    "expected_cost_prediction": 1358,
+    "predicted_cost": 665.865
+  },
+  {
+    "case_id": "europe-140",
+    "infrastructure_cost": 3399,
+    "region": "europe",
+    "expected_cost_prediction": 506,
+    "predicted_cost": 509.86499999999995
+  },
+  {
+    "case_id": "europe-141",
+    "infrastructure_cost": 4017,
+    "region": "europe",
+    "expected_cost_prediction": 1190,
+    "predicted_cost": 602.5649999999999
+  },
+  {
+    "case_id": "europe-142",
+    "infrastructure_cost": 4941,
+    "region": "europe",
+    "expected_cost_prediction": 1073,
+    "predicted_cost": 741.165
+  },
+  {
+    "case_id": "europe-143",
+    "infrastructure_cost": 5865,
+    "region": "europe",
+    "expected_cost_prediction": 973,
+    "predicted_cost": 879.765
+  },
+  {
+    "case_id": "europe-144",
+    "infrastructure_cost": 4351,
+    "region": "europe",
+    "expected_cost_prediction": 1147,
+    "predicted_cost": 652.665
+  },
+  {
+    "case_id": "europe-145",
+    "infrastructure_cost": 3179,
+    "region": "europe",
+    "expected_cost_prediction": 1184,
+    "predicted_cost": 476.86499999999995
+  },
+  {
+    "case_id": "europe-146",
+    "infrastructure_cost": 5541,
+    "region": "europe",
+    "expected_cost_prediction": 550,
+    "predicted_cost": 831.165
+  },
+  {
+    "case_id": "europe-147",
+    "infrastructure_cost": 3418,
+    "region": "europe",
+    "expected_cost_prediction": 670,
+    "predicted_cost": 512.7149999999999
+  },
+  {
+    "case_id": "europe-148",
+    "infrastructure_cost": 3671,
+    "region": "europe",
+    "expected_cost_prediction": 737,
+    "predicted_cost": 550.665
+  },
+  {
+    "case_id": "europe-149",
+    "infrastructure_cost": 5906,
+    "region": "europe",
+    "expected_cost_prediction": 831,
+    "predicted_cost": 885.915
+  },
+  {
+    "case_id": "europe-150",
+    "infrastructure_cost": 4043,
+    "region": "europe",
+    "expected_cost_prediction": 744,
+    "predicted_cost": 606.4649999999999
+  },
+  {
+    "case_id": "europe-151",
+    "infrastructure_cost": 5613,
+    "region": "europe",
+    "expected_cost_prediction": 549,
+    "predicted_cost": 841.9649999999999
+  },
+  {
+    "case_id": "europe-152",
+    "infrastructure_cost": 5066,
+    "region": "europe",
+    "expected_cost_prediction": 1354,
+    "predicted_cost": 759.915
+  },
+  {
+    "case_id": "europe-153",
+    "infrastructure_cost": 5740,
+    "region": "europe",
+    "expected_cost_prediction": 622,
+    "predicted_cost": 861.015
+  },
+  {
+    "case_id": "europe-154",
+    "infrastructure_cost": 4642,
+    "region": "europe",
+    "expected_cost_prediction": 1007,
+    "predicted_cost": 696.3149999999999
+  },
+  {
+    "case_id": "europe-155",
+    "infrastructure_cost": 5784,
+    "region": "europe",
+    "expected_cost_prediction": 1165,
+    "predicted_cost": 867.615
+  },
+  {
+    "case_id": "europe-156",
+    "infrastructure_cost": 2837,
+    "region": "europe",
+    "expected_cost_prediction": 612,
+    "predicted_cost": 425.565
+  },
+  {
+    "case_id": "europe-157",
+    "infrastructure_cost": 5330,
+    "region": "europe",
+    "expected_cost_prediction": 1299,
+    "predicted_cost": 799.515
+  },
+  {
+    "case_id": "europe-158",
+    "infrastructure_cost": 4971,
+    "region": "europe",
+    "expected_cost_prediction": 1277,
+    "predicted_cost": 745.665
+  },
+  {
+    "case_id": "europe-159",
+    "infrastructure_cost": 4972,
+    "region": "europe",
+    "expected_cost_prediction": 692,
+    "predicted_cost": 745.8149999999999
+  },
+  {
+    "case_id": "europe-160",
+    "infrastructure_cost": 3121,
+    "region": "europe",
+    "expected_cost_prediction": 802,
+    "predicted_cost": 468.16499999999996
+  },
+  {
+    "case_id": "europe-161",
+    "infrastructure_cost": 4217,
+    "region": "europe",
+    "expected_cost_prediction": 1152,
+    "predicted_cost": 632.5649999999999
+  },
+  {
+    "case_id": "europe-162",
+    "infrastructure_cost": 5812,
+    "region": "europe",
+    "expected_cost_prediction": 502,
+    "predicted_cost": 871.8149999999999
+  },
+  {
+    "case_id": "europe-163",
+    "infrastructure_cost": 3925,
+    "region": "europe",
+    "expected_cost_prediction": 1130,
+    "predicted_cost": 588.765
+  },
+  {
+    "case_id": "europe-164",
+    "infrastructure_cost": 2975,
+    "region": "europe",
+    "expected_cost_prediction": 940,
+    "predicted_cost": 446.265
+  },
+  {
+    "case_id": "europe-165",
+    "infrastructure_cost": 5000,
+    "region": "europe",
+    "expected_cost_prediction": 999,
+    "predicted_cost": 750.015
+  },
+  {
+    "case_id": "europe-166",
+    "infrastructure_cost": 5625,
+    "region": "europe",
+    "expected_cost_prediction": 1206,
+    "predicted_cost": 843.765
+  }
+]

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// Result type for validation operations
-pub type ValidationResult<T> = Result<T, ValidationError>;
+pub type ValidationResult<T> = Result<T, Box<ValidationError>>;
 
 /// Validation error with context and remediation hints
 #[derive(Debug, Clone, Serialize, Deserialize)]

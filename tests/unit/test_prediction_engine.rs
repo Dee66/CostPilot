@@ -1,5 +1,5 @@
 /// Unit tests for Prediction Engine
-/// 
+///
 /// Tests heuristics loading, cost prediction, confidence intervals,
 /// cold-start inference, and advanced probabilistic models.
 

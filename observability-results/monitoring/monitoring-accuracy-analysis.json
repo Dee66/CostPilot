@@ -1,0 +1,6 @@
+{
+  "metric_accuracy": true,
+  "alert_accuracy": true,
+  "monitoring_coverage": false,
+  "overall_monitoring_effectiveness": false
+}

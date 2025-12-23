@@ -2,7 +2,6 @@
 
 pub mod cdk;
 pub mod classifier;
-pub mod cloudformation;
 pub mod detection_engine;
 pub mod severity;
 pub mod terraform;

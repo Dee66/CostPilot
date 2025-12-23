@@ -1,0 +1,137 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Security child stack for nested CloudFormation testing",
+
+  "Parameters": {
+    "Environment": {
+      "Type": "String",
+      "Description": "Environment name"
+    },
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "VPC ID from parent stack"
+    }
+  },
+
+  "Resources": {
+    "WebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for web servers",
+        "VpcId": { "Ref": "VpcId" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "10.0.0.0/8"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-Web-SG" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "DatabaseSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for database servers",
+        "VpcId": { "Ref": "VpcId" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "3306",
+            "ToPort": "3306",
+            "SourceSecurityGroupId": { "Ref": "WebSecurityGroup" }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-DB-SG" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    },
+
+    "LoadBalancerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for load balancers",
+        "VpcId": { "Ref": "VpcId" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": { "Fn::Sub": "${Environment}-ALB-SG" }
+          },
+          {
+            "Key": "Environment",
+            "Value": { "Ref": "Environment" }
+          }
+        ]
+      }
+    }
+  },
+
+  "Outputs": {
+    "SecurityGroupId": {
+      "Description": "Web server security group ID",
+      "Value": { "Ref": "WebSecurityGroup" },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-WebSGId" }
+      }
+    },
+    "DBSecurityGroupId": {
+      "Description": "Database security group ID",
+      "Value": { "Ref": "DatabaseSecurityGroup" },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-DBSGId" }
+      }
+    },
+    "LoadBalancerSecurityGroupId": {
+      "Description": "Load balancer security group ID",
+      "Value": { "Ref": "LoadBalancerSecurityGroup" },
+      "Export": {
+        "Name": { "Fn::Sub": "${Environment}-ALBSGId" }
+      }
+    }
+  }
+}

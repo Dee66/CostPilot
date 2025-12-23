@@ -3,7 +3,7 @@
   "last_updated": "2025-12-06",
   "description": "Conservative cost heuristics for AWS services - used for deterministic prediction",
   "default_region": "us-east-1",
-  
+
   "compute": {
     "ec2": {
       "t3.nano": { "hourly": 0.0052, "monthly": 3.8 },
@@ -31,7 +31,7 @@
       "default_duration_ms": 200
     }
   },
-  
+
   "storage": {
     "s3": {
       "standard": {
@@ -62,7 +62,7 @@
       "sc1": { "per_gb": 0.015 }
     }
   },
-  
+
   "database": {
     "rds": {
       "mysql": {
@@ -99,7 +99,7 @@
       }
     }
   },
-  
+
   "networking": {
     "nat_gateway": {
       "hourly": 0.045,
@@ -131,7 +131,7 @@
       "inter_az_per_gb": 0.01
     }
   },
-  
+
   "cold_start_defaults": {
     "dynamodb_unknown_rcu": 15,
     "dynamodb_unknown_wcu": 15,
@@ -141,7 +141,7 @@
     "ec2_default_utilization": 0.4,
     "rds_backup_retention_days": 7
   },
-  
+
   "prediction_intervals": {
     "range_factor": 0.25,
     "description": "Prediction intervals calculated as ±25% of estimate"

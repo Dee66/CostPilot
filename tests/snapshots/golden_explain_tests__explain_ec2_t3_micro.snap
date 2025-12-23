@@ -1,0 +1,16 @@
+---
+source: tests/golden_explain_tests.rs
+expression: stdout
+---
+Explanation for aws_instance:
+
+Predicted monthly cost: $150.00
+Confidence: 95.0%
+
+Reasoning:
+• Identify Resource
+• Extract instance_type
+• Lookup t3.micro Price
+• Monthly Instance Cost
+• Calculate Confidence
+• Calculate Prediction Interval

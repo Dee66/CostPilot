@@ -39,7 +39,7 @@ pub enum ProEngineRequest {
         estimates: Vec<CostEstimate>,
     },
     SloEnforce {
-        snapshot: CostSnapshot,
+        snapshot: Box<CostSnapshot>,
     },
 }
 

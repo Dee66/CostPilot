@@ -14,11 +14,11 @@ jobs:
   test:
     name: Test CostPilot
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -26,45 +26,38 @@ jobs:
           profile: minimal
           override: true
           components: rustfmt, clippy
-      
+
       - name: Cache cargo registry
         uses: actions/cache@v3
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Cache cargo index
         uses: actions/cache@v3
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Cache cargo build
         uses: actions/cache@v3
         with:
           path: products/costpilot/target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Run tests
+
+      - name: Run comprehensive static analysis
         run: |
-          cd products/costpilot
-          cargo test --verbose
-      
-      - name: Run clippy
+          ../../scripts/static_analysis.sh
+
+      - name: Run security review
         run: |
-          cd products/costpilot
-          cargo clippy --all-targets --all-features -- -D warnings
-      
-      - name: Check formatting
-        run: |
-          cd products/costpilot
-          cargo fmt -- --check
-      
+          ../../scripts/security_review.sh
+
       - name: Build release
         run: |
           cd products/costpilot
           cargo build --release --verbose
-      
+
       - name: Validate zero-cost policy
         run: |
           cd products/costpilot
@@ -73,11 +66,11 @@ jobs:
   wasm:
     name: Build WASM
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -85,12 +78,12 @@ jobs:
           profile: minimal
           override: true
           target: wasm32-wasi
-      
+
       - name: Build WASM module
         run: |
           cd products/costpilot
           cargo build --target wasm32-wasi --release
-      
+
       - name: Upload WASM artifact
         uses: actions/upload-artifact@v3
         with:

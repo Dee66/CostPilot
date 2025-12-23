@@ -15,7 +15,7 @@ def test_anomaly_detection_command():
         text=True,
         timeout=10
     )
-    
+
     # In Premium, should succeed or be subcommand
     if result.returncode != 0:
         result = subprocess.run(
@@ -31,7 +31,7 @@ def test_anomaly_detection_with_baseline():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         baseline_path = Path(tmpdir) / "baseline.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -42,7 +42,7 @@ def test_anomaly_detection_with_baseline():
                 }
             }
         }
-        
+
         baseline_content = {
             "resources": [
                 {
@@ -57,20 +57,20 @@ def test_anomaly_detection_with_baseline():
                 }
             ]
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         with open(baseline_path, 'w') as f:
             json.dump(baseline_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "anomaly", "--plan", str(template_path), "--baseline", str(baseline_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # In Premium, should detect anomaly
         if result.returncode == 0:
             output = result.stdout.lower()
@@ -82,7 +82,7 @@ def test_anomaly_detection_threshold():
     """Test anomaly detection with threshold."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -93,17 +93,17 @@ def test_anomaly_detection_threshold():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "anomaly", "--plan", str(template_path), "--threshold", "3.0"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should use threshold for detection
 
 
@@ -111,7 +111,7 @@ def test_anomaly_detection_multiple_anomalies():
     """Test anomaly detection with multiple anomalies."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 f"Lambda{i}": {
@@ -123,17 +123,17 @@ def test_anomaly_detection_multiple_anomalies():
                 for i in range(10)
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "anomaly", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should detect multiple anomalies
         if result.returncode == 0:
             assert len(result.stdout) > 0, "Should report anomalies"
@@ -144,7 +144,7 @@ def test_anomaly_detection_output_format():
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
         output_path = Path(tmpdir) / "anomalies.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda": {
@@ -155,17 +155,17 @@ def test_anomaly_detection_output_format():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "anomaly", "--plan", str(template_path), "--output", str(output_path)],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should create output file
         if result.returncode == 0 and output_path.exists():
             with open(output_path) as f:
@@ -177,7 +177,7 @@ def test_anomaly_detection_severity():
     """Test anomaly detection severity levels."""
     with tempfile.TemporaryDirectory() as tmpdir:
         template_path = Path(tmpdir) / "template.json"
-        
+
         template_content = {
             "Resources": {
                 "Lambda1": {
@@ -194,17 +194,17 @@ def test_anomaly_detection_severity():
                 }
             }
         }
-        
+
         with open(template_path, 'w') as f:
             json.dump(template_content, f)
-        
+
         result = subprocess.run(
             ["costpilot", "anomaly", "--plan", str(template_path), "--min-severity", "medium"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        
+
         # Should report anomalies based on severity
 
 

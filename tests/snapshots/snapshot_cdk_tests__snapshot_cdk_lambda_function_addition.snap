@@ -1,0 +1,18 @@
+---
+source: tests/snapshot_cdk_tests.rs
+expression: diff
+---
+{
+  "Resources": {
+    "ApiHandler": {
+      "ChangeType": "Addition",
+      "Properties": {
+        "Handler": "index.handler",
+        "MemorySize": 512,
+        "Runtime": "nodejs18.x",
+        "Timeout": 30
+      },
+      "Type": "AWS::Lambda::Function"
+    }
+  }
+}

@@ -14,9 +14,9 @@ import socket
 
 def test_no_dns_lookups():
     """Test that tool doesn't perform DNS lookups."""
-    
+
     print("Testing DNS lookup blocking...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -28,22 +28,22 @@ def test_no_dns_lookups():
         }
         json.dump(template, f)
         f.flush()
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "scan", f.name, "--output", "json"],
             capture_output=True,
             text=True
         )
-        
+
         # Tool should work without DNS
         if result.returncode == 0:
             print("✓ Tool works without DNS resolution")
-            
+
             # Check for DNS-related errors
             stderr = result.stderr.lower()
             if "dns" in stderr or "resolve" in stderr or "lookup" in stderr:
                 print("⚠️  DNS-related messages in stderr")
-            
+
             return True
         else:
             print("⚠️  Tool failed")
@@ -52,9 +52,9 @@ def test_no_dns_lookups():
 
 def test_hardcoded_urls_rejected():
     """Test that hardcoded URLs don't trigger network access."""
-    
+
     print("Testing hardcoded URL handling...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         # Template with URL in description
         template = {
@@ -70,13 +70,13 @@ def test_hardcoded_urls_rejected():
         }
         json.dump(template, f)
         f.flush()
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "scan", f.name, "--output", "json"],
             capture_output=True,
             text=True
         )
-        
+
         if result.returncode == 0:
             print("✓ URLs in templates don't trigger network access")
             return True
@@ -87,9 +87,9 @@ def test_hardcoded_urls_rejected():
 
 def test_localhost_blocked():
     """Test that localhost resolution is blocked."""
-    
+
     print("Testing localhost blocking...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -101,28 +101,28 @@ def test_localhost_blocked():
         }
         json.dump(template, f)
         f.flush()
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "scan", f.name, "--output", "json"],
             capture_output=True,
             text=True
         )
-        
+
         # Should not attempt to connect to localhost
         stderr = result.stderr.lower()
         if "localhost" in stderr or "127.0.0.1" in stderr:
             print("⚠️  Localhost mentioned in output")
         else:
             print("✓ No localhost access")
-        
+
         return True
 
 
 def test_external_dns_blocked():
     """Test that external DNS is blocked."""
-    
+
     print("Testing external DNS blocking...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -134,13 +134,13 @@ def test_external_dns_blocked():
         }
         json.dump(template, f)
         f.flush()
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "scan", f.name, "--output", "json"],
             capture_output=True,
             text=True
         )
-        
+
         # Check for common AWS endpoints
         output = result.stdout + result.stderr
         aws_endpoints = [
@@ -148,20 +148,20 @@ def test_external_dns_blocked():
             "aws.amazon.com",
             "cloudformation.amazonaws.com",
         ]
-        
+
         for endpoint in aws_endpoints:
             if endpoint in output.lower():
                 print(f"⚠️  AWS endpoint mentioned: {endpoint}")
-        
+
         print("✓ No DNS resolution of AWS endpoints")
         return True
 
 
 def test_offline_operation():
     """Test that tool works completely offline."""
-    
+
     print("Testing offline operation...")
-    
+
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         template = {
             "Resources": {
@@ -173,13 +173,13 @@ def test_offline_operation():
         }
         json.dump(template, f)
         f.flush()
-        
+
         result = subprocess.run(
             ["cargo", "run", "--release", "--", "scan", f.name, "--output", "json"],
             capture_output=True,
             text=True
         )
-        
+
         if result.returncode == 0:
             print("✓ Tool operates completely offline")
             return True
@@ -190,7 +190,7 @@ def test_offline_operation():
 
 if __name__ == "__main__":
     print("Testing DNS resolution blocking...\n")
-    
+
     tests = [
         test_no_dns_lookups,
         test_hardcoded_urls_rejected,
@@ -198,10 +198,10 @@ if __name__ == "__main__":
         test_external_dns_blocked,
         test_offline_operation,
     ]
-    
+
     passed = 0
     failed = 0
-    
+
     for test in tests:
         try:
             if test():
@@ -212,9 +212,9 @@ if __name__ == "__main__":
             print(f"❌ Test {test.__name__} failed: {e}")
             failed += 1
         print()
-    
+
     print(f"Results: {passed} passed, {failed} failed")
-    
+
     if failed == 0:
         print("✅ All tests passed")
         sys.exit(0)

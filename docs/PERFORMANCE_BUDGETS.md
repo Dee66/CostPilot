@@ -99,7 +99,7 @@ tracker.check_budget()?;
 
 // Complete and get metrics
 let metrics = tracker.complete();
-println!("Duration: {}ms ({}% of budget)", 
+println!("Duration: {}ms ({}% of budget)",
     metrics.duration_ms, metrics.utilization as u64);
 ```
 
@@ -404,18 +404,18 @@ use costpilot::engines::performance::{PerformanceTracker, EngineBudget, Performa
 pub fn run_prediction_engine(input: &Input) -> Result<Output, String> {
     // Load budgets
     let budgets = PerformanceBudgets::default();
-    
+
     // Start tracking
     let tracker = PerformanceTracker::new(budgets.prediction);
-    
+
     // Perform work
     let mut result = initialize_result();
-    
+
     for item in &input.items {
         // Check budget periodically
         if let Err(violation) = tracker.check_budget() {
             eprintln!("{}", violation.format_error());
-            
+
             match violation.action {
                 TimeoutAction::PartialResults => break,
                 TimeoutAction::Error => return Err(violation.format_error()),
@@ -425,16 +425,16 @@ pub fn run_prediction_engine(input: &Input) -> Result<Output, String> {
                 }
             }
         }
-        
+
         result.add(process_item(item)?);
     }
-    
+
     // Complete tracking
     let metrics = tracker.complete();
-    
+
     // Log metrics
     println!("{}", metrics.format_text());
-    
+
     Ok(result)
 }
 ```
@@ -453,17 +453,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Run CostPilot with Performance Monitoring
         run: |
           costpilot scan --performance-report performance.json
-      
+
       - name: Check for Regressions
         run: |
           costpilot performance check-regressions \
             --report performance.json \
             --fail-on-severity moderate
-      
+
       - name: Upload Performance Report
         uses: actions/upload-artifact@v3
         with:
@@ -544,7 +544,7 @@ let mut tracker = MemoryTracker::new(256);
 for chunk in input.chunks(1000) {
     // Check memory before processing chunk
     tracker.check_limit()?;
-    
+
     process_chunk(chunk)?;
 }
 ```

@@ -436,6 +436,8 @@ mod tests {
                 has_cycles: false,
                 cycles: vec![],
                 total_cost: Some(250.0),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+                timestamp: chrono::Utc::now().to_rfc3339(),
             },
         }
     }

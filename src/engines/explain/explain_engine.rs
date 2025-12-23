@@ -359,10 +359,8 @@ impl ExplainEngine {
 
         for detection in detections.iter().take(5) {
             let pattern = format!(
-                "• {} in {}: {} severity",
-                format!("{:?}", detection.regression_type),
-                detection.resource_id,
-                format!("{:?}", detection.severity)
+                "• {:?} in {}: {:?} severity",
+                detection.regression_type, detection.resource_id, detection.severity
             );
             patterns.push(pattern);
         }
@@ -429,11 +427,11 @@ mod tests {
             .build();
 
         let estimate = CostEstimate::builder()
-                .monthly_cost(500.0)
-                .prediction_interval_low(450.0)
-                .prediction_interval_high(550.0)
-                .confidence_score(0.9)
-                .build();
+            .monthly_cost(500.0)
+            .prediction_interval_low(450.0)
+            .prediction_interval_high(550.0)
+            .confidence_score(0.9)
+            .build();
 
         let detection = Detection {
             rule_id: "EC2_CONFIG".to_string(),
@@ -444,10 +442,6 @@ mod tests {
             message: "Configuration change detected".to_string(),
             fix_snippet: None,
             estimated_cost: Some(7.59),
-            resource_type: None,
-            issue: None,
-            confidence: None,
-            monthly_cost: None,
         };
 
         let explanation = ExplainEngine::explain(&detection, &change, Some(&estimate), None);
@@ -479,10 +473,6 @@ mod tests {
                 message: "Scaling detected".to_string(),
                 fix_snippet: None,
                 estimated_cost: Some(100.0),
-                resource_type: None,
-                issue: None,
-                confidence: None,
-                monthly_cost: None,
             },
             Detection {
                 rule_id: "CONFIG_001".to_string(),
@@ -493,10 +483,6 @@ mod tests {
                 message: "Configuration change".to_string(),
                 fix_snippet: None,
                 estimated_cost: Some(50.0),
-                resource_type: None,
-                issue: None,
-                confidence: None,
-                monthly_cost: None,
             },
         ];
 

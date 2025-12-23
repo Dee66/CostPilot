@@ -38,12 +38,12 @@ echo "🔍 Detecting platform: ${OS}-${ARCH}"
 if [ "$VERSION" = "latest" ]; then
   echo "📡 Fetching latest release version..."
   VERSION=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-  
+
   if [ -z "$VERSION" ]; then
     echo "Error: Failed to fetch latest version"
     exit 1
   fi
-  
+
   echo "✓ Latest version: $VERSION"
 fi
 

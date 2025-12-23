@@ -1,5 +1,5 @@
 /// Test helpers and utilities for CostPilot test suite
-/// 
+///
 /// This module provides common testing utilities, fixtures, and assertions
 /// used across unit, integration, and E2E tests.
 
@@ -52,9 +52,9 @@ pub fn free() -> EditionContext {
 pub fn premium() -> EditionContext {
     use costpilot::edition::pro_handle::ProEngineHandle;
     use std::path::PathBuf;
-    
+
     let stub_handle = ProEngineHandle::stub(PathBuf::from("/tmp/test_pro.wasm"));
-    
+
     EditionContext {
         mode: EditionMode::Premium,
         license: None,
@@ -83,4 +83,3 @@ macro_rules! require_premium {
         }
     };
 }
-

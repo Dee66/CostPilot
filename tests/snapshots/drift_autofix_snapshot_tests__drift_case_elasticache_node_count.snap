@@ -1,0 +1,26 @@
+---
+source: tests/drift_autofix_snapshot_tests.rs
+expression: plan
+---
+{
+  "format_version": "1.0",
+  "resource_changes": [
+    {
+      "address": "aws_elasticache_replication_group.redis",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "number_cache_clusters": 3
+        },
+        "before": {
+          "number_cache_clusters": 2
+        }
+      },
+      "mode": "managed",
+      "name": "redis",
+      "type": "aws_elasticache_replication_group"
+    }
+  ]
+}

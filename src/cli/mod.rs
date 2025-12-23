@@ -1,5 +1,6 @@
 // CLI module exports
 
+pub mod baseline;
 pub mod commands;
 pub mod escrow;
 pub mod explain;

@@ -1,7 +1,6 @@
 // CI integration for exemption validation
 
 use std::process;
-use chrono::Utc;
 
 use super::exemption_types::{ExemptionStatus, ExemptionsFile};
 use super::exemption_validator::ExemptionValidator;
@@ -52,7 +51,7 @@ impl CIExemptionCheck {
     pub fn summary(&self) -> String {
         let mut output = String::new();
 
-        output.push_str(&"Exemption Check Summary:\n".to_string());
+        output.push_str("Exemption Check Summary:\n");
         output.push_str(&format!("  Total exemptions: {}\n", self.total_exemptions));
         output.push_str(&format!("  Active: {}\n", self.active_exemptions));
         output.push_str(&format!("  Expiring soon: {}\n", self.expiring_soon));
@@ -152,6 +151,7 @@ pub fn validate_and_exit_ci(exemptions_file: &ExemptionsFile) -> ! {
 mod tests {
     use super::*;
     use crate::engines::policy::exemption_types::PolicyExemption;
+    use chrono::Utc;
 
     fn create_test_exemption(id: &str, expires_at: &str) -> PolicyExemption {
         // For expired exemptions (dates in 2024), use a created_at a few months before expiry
@@ -165,7 +165,7 @@ mod tests {
         } else {
             "2025-06-01T00:00:00Z"
         };
-        
+
         PolicyExemption {
             id: id.to_string(),
             policy_name: "TEST_POLICY".to_string(),

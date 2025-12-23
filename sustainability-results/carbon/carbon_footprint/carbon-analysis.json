@@ -1,0 +1,13 @@
+{
+  "total_carbon_emissions_grams": 0.6750000000000002,
+  "average_emission_per_operation": 0.06750000000000002,
+  "total_measurements": 10,
+  "emissions_per_hour": 48.600,
+  "carbon_efficiency_rating": 37.313,
+  "recommendations": [
+    "Optimize algorithm efficiency to reduce computational load",
+    "Implement energy-aware scheduling",
+    "Consider carbon-aware data center selection",
+    "Regular carbon footprint monitoring and reporting"
+  ]
+}

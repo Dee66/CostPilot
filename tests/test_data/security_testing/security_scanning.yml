@@ -1,0 +1,279 @@
+# CostPilot Security Testing: Security Scanning
+# Test data for security scanning scenarios
+
+# Static Application Security Testing (SAST)
+sast_vulnerability_scanning:
+  metadata:
+    test_case: "sast_vulnerability_scanning"
+    description: "Static analysis for security vulnerabilities"
+    scan_type: "static_application_security_testing"
+    expected_findings: "zero_critical_vulnerabilities"
+  scan_configuration:
+    scope: "all_source_code"
+    rules:
+      - rule_id: "SQL_INJECTION"
+        severity: "critical"
+        cwe: "CWE-89"
+        pattern: "SELECT.*\\+.*WHERE"
+      - rule_id: "HARDCODED_SECRETS"
+        severity: "high"
+        cwe: "CWE-798"
+        pattern: "(?i)(password|secret|key).*=.+[a-zA-Z0-9]{20,}"
+      - rule_id: "COMMAND_INJECTION"
+        severity: "critical"
+        cwe: "CWE-78"
+        pattern: "(exec|system|eval).*\\+"
+      - rule_id: "PATH_TRAVERSAL"
+        severity: "high"
+        cwe: "CWE-22"
+        pattern: "\\.\\./.*"
+  expected_results:
+    critical: 0
+    high: 0
+    medium: "< 5"
+    low: "< 10"
+
+code_quality_security_checks:
+  metadata:
+    test_case: "code_quality_security_checks"
+    description: "Security-focused code quality analysis"
+    scan_type: "static_application_security_testing"
+    expected_findings: "compliant_code_quality"
+  quality_metrics:
+    cyclomatic_complexity:
+      threshold: 10
+      severity: "medium"
+    function_length:
+      threshold: 50
+      severity: "low"
+    duplicate_code:
+      threshold: "5%"
+      severity: "low"
+    test_coverage:
+      threshold: "80%"
+      severity: "medium"
+
+# Dynamic Application Security Testing (DAST)
+dast_api_endpoint_scanning:
+  metadata:
+    test_case: "dast_api_endpoint_scanning"
+    description: "Dynamic testing of API endpoints"
+    scan_type: "dynamic_application_security_testing"
+    expected_findings: "no_exploitable_vulnerabilities"
+  scan_targets:
+    - endpoint: "/api/v1/plans"
+      methods: ["GET", "POST", "PUT", "DELETE"]
+      authentication: "required"
+    - endpoint: "/api/v1/costs/analyze"
+      methods: ["POST"]
+      authentication: "required"
+    - endpoint: "/api/v1/reports"
+      methods: ["GET"]
+      authentication: "required"
+  attack_payloads:
+    - type: "sql_injection"
+      payloads: ["'", "'; --", "' OR 1=1 --"]
+    - type: "xss"
+      payloads: ["<script>alert(1)</script>", "javascript:alert(1)"]
+    - type: "command_injection"
+      payloads: ["; ls", "| cat /etc/passwd", "`whoami`"]
+
+dast_input_fuzzing:
+  metadata:
+    test_case: "dast_input_fuzzing"
+    description: "Fuzz testing of input validation"
+    scan_type: "dynamic_application_security_testing"
+    expected_findings: "robust_input_handling"
+  fuzz_targets:
+    json_inputs:
+      - field: "plan.resources[].name"
+        fuzz_data: ["", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "../../../etc/passwd", "<script>", "null"]
+      - field: "plan.metadata.name"
+        fuzz_data: ["", "🚀🚀🚀", "ñáéíóú", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]
+      - field: "cost_estimate.monthly"
+        fuzz_data: ["", "abc", "-1", "999999999999999999999", "NaN"]
+    file_uploads:
+      - file_types: [".json", ".yaml", ".xml", ".txt"]
+        malicious_files: ["xss_payload.html", "xxe_payload.xml", "large_file_1gb.txt"]
+
+# Dependency Vulnerability Scanning
+dependency_vulnerability_scan:
+  metadata:
+    test_case: "dependency_vulnerability_scan"
+    description: "Scanning for vulnerable dependencies"
+    scan_type: "dependency_vulnerability_scanning"
+    expected_findings: "no_critical_vulnerabilities"
+  scan_scope:
+    package_managers: ["npm", "cargo", "pip", "maven"]
+    include_dev_dependencies: true
+    include_transitive_dependencies: true
+  vulnerability_thresholds:
+    critical: 0
+    high: 0
+    medium: "< 5"
+    low: "< 10"
+  databases:
+    - nvd: "National Vulnerability Database"
+    - osv: "Open Source Vulnerabilities"
+    - github: "GitHub Security Advisories"
+
+license_compliance_scan:
+  metadata:
+    test_case: "license_compliance_scan"
+    description: "Checking dependency license compliance"
+    scan_type: "dependency_vulnerability_scanning"
+    expected_findings: "osi_approved_licenses"
+  license_policies:
+    allowed_licenses: ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"]
+    restricted_licenses: ["GPL-3.0", "LGPL-2.1", "MS-PL"]
+    flagged_licenses: ["BSD-2-Clause", "CDDL-1.0"]
+  compliance_rules:
+    - rule: "no_copyleft"
+      severity: "high"
+    - rule: "osi_approved_only"
+      severity: "medium"
+
+# Container Image Scanning
+container_image_vulnerability_scan:
+  metadata:
+    test_case: "container_image_vulnerability_scan"
+    description: "Scanning container images for vulnerabilities"
+    scan_type: "container_image_scanning"
+    expected_findings: "no_critical_vulnerabilities"
+  scan_targets:
+    images:
+      - "costpilot/api:latest"
+      - "costpilot/worker:latest"
+      - "costpilot/web:latest"
+    base_images:
+      - "ubuntu:20.04"
+      - "node:18-alpine"
+      - "rust:1.70-slim"
+  vulnerability_checks:
+    os_packages: true
+    application_dependencies: true
+    configuration_files: true
+    secrets_detection: true
+
+container_image_compliance_scan:
+  metadata:
+    test_case: "container_image_compliance_scan"
+    description: "Container compliance and security best practices"
+    scan_type: "container_image_scanning"
+    expected_findings: "compliant_containers"
+  compliance_checks:
+    - check: "no_root_user"
+      severity: "high"
+      description: "Containers should not run as root"
+    - check: "minimal_base_image"
+      severity: "medium"
+      description: "Use minimal base images"
+    - check: "no_sensitive_files"
+      severity: "high"
+      description: "No sensitive files in container"
+    - check: "latest_tag_avoided"
+      severity: "low"
+      description: "Avoid using 'latest' tag"
+
+# Infrastructure as Code Security Scanning
+iac_security_scan:
+  metadata:
+    test_case: "iac_security_scan"
+    description: "Security scanning of infrastructure code"
+    scan_type: "infrastructure_security_scanning"
+    expected_findings: "secure_infrastructure"
+  scan_targets:
+    terraform_files: ["*.tf", "*.tfvars"]
+    cloudformation_templates: ["*.yaml", "*.json"]
+    kubernetes_manifests: ["*.yaml", "*.yml"]
+  security_rules:
+    - rule: "no_hardcoded_secrets"
+      severity: "critical"
+      pattern: "(?i)(password|secret|key).*=.+[a-zA-Z0-9]{10,}"
+    - rule: "secure_iam_policies"
+      severity: "high"
+      pattern: "\\*.*\\*"
+    - rule: "encrypted_volumes"
+      severity: "medium"
+      pattern: "aws_ebs_volume.*encrypted.*=.*false"
+    - rule: "public_security_groups"
+      severity: "high"
+      pattern: "0\\.0\\.0\\.0/0"
+
+# Secrets Detection
+secrets_detection_scan:
+  metadata:
+    test_case: "secrets_detection_scan"
+    description: "Detection of hardcoded secrets and credentials"
+    scan_type: "secrets_detection"
+    expected_findings: "no_exposed_secrets"
+  secret_types:
+    - type: "aws_access_key"
+      pattern: "AKIA[0-9A-Z]{16}"
+      severity: "critical"
+    - type: "aws_secret_key"
+      pattern: "[0-9a-zA-Z/+]{40}"
+      severity: "critical"
+    - type: "generic_password"
+      pattern: "(?i)password.*=.+[a-zA-Z0-9]{8,}"
+      severity: "high"
+    - type: "jwt_token"
+      pattern: "eyJ[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]*"
+      severity: "medium"
+    - type: "private_key"
+      pattern: "-----BEGIN.*PRIVATE KEY-----"
+      severity: "critical"
+  scan_scope:
+    files: ["*.py", "*.rs", "*.js", "*.ts", "*.yaml", "*.yml", "*.json", "*.env"]
+    exclude_paths: [".git/", "node_modules/", "target/"]
+
+# Configuration Security Scanning
+configuration_security_scan:
+  metadata:
+    test_case: "configuration_security_scan"
+    description: "Security analysis of configuration files"
+    scan_type: "configuration_security_scanning"
+    expected_findings: "secure_configuration"
+  config_files:
+    - file: "config/database.yml"
+      checks:
+        - check: "no_plaintext_passwords"
+          severity: "critical"
+        - check: "encrypted_connections"
+          severity: "high"
+    - file: "config/security.yml"
+      checks:
+        - check: "secure_session_settings"
+          severity: "medium"
+        - check: "strong_crypto_algorithms"
+          severity: "high"
+    - file: ".env"
+      checks:
+        - check: "no_development_secrets"
+          severity: "critical"
+        - check: "environment_separation"
+          severity: "medium"
+
+# Malware Detection
+malware_detection_scan:
+  metadata:
+    test_case: "malware_detection_scan"
+    description: "Detection of malware in codebase and artifacts"
+    scan_type: "malware_detection"
+    expected_findings: "clean_codebase"
+  scan_targets:
+    source_code: true
+    compiled_binaries: true
+    container_images: true
+    package_artifacts: true
+  detection_methods:
+    - signature_based: true
+    - heuristic_analysis: true
+    - behavioral_analysis: true
+    - ai_based_detection: true
+  malware_types:
+    - trojans
+    - backdoors
+    - ransomware
+    - rootkits
+    - keyloggers

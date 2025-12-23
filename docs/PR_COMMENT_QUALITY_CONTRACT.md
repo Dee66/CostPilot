@@ -1,7 +1,7 @@
 # PR Comment Quality Contract
 
-**Version:** 1.0.0  
-**Status:** Enforced  
+**Version:** 1.0.0
+**Status:** Enforced
 **Last Updated:** 2025-12-06
 
 ---
@@ -106,19 +106,19 @@ impl PrComment {
     pub fn format(&self) -> String {
         // Validate before formatting
         self.validate();
-        
+
         let mut output = String::new();
-        
+
         // Header
         output.push_str("## 💰 CostPilot Analysis\n\n");
-        
+
         // Delta line
         output.push_str(&format!(
             "**Monthly Cost Delta:** {} ({}%)\n\n",
             format_currency(self.delta.delta),
             format_percentage(self.delta.percentage)
         ));
-        
+
         // Summary section
         output.push_str("### 📊 Summary\n");
         output.push_str(&format!("- **Resources Changed:** {}\n", self.resources_changed));
@@ -127,14 +127,14 @@ impl PrComment {
             self.format_impact()
         ));
         output.push_str(&format!("- **Severity:** {}\n\n", self.severity.as_str()));
-        
+
         // Key Findings section
         output.push_str("### 🔍 Key Findings\n");
         for (i, finding) in self.key_findings.iter().enumerate().take(5) {
             output.push_str(&format!("{}. {}\n", i + 1, finding));
         }
         output.push('\n');
-        
+
         // Recommendations section
         if !self.recommendations.is_empty() {
             output.push_str("### 💡 Recommendations\n");
@@ -143,24 +143,24 @@ impl PrComment {
             }
             output.push('\n');
         }
-        
+
         // Confidence section
         output.push_str("### 📈 Confidence\n");
         output.push_str(&format!(
             "{}% confidence in estimates\n\n",
             (self.confidence * 100.0) as u32
         ));
-        
+
         // Detailed breakdown (collapsible)
         output.push_str("---\n");
         output.push_str("<details>\n");
         output.push_str("<summary>View detailed breakdown</summary>\n\n");
         output.push_str(&self.detailed_breakdown);
         output.push_str("\n\n</details>\n");
-        
+
         output
     }
-    
+
     fn format_impact(&self) -> String {
         let delta = self.delta.delta;
         if delta > 0.0 {
@@ -171,26 +171,26 @@ impl PrComment {
             "No cost change".to_string()
         }
     }
-    
+
     fn validate(&self) {
         // Must have 1-5 key findings
         assert!(
             !self.key_findings.is_empty() && self.key_findings.len() <= 5,
             "Must have 1-5 key findings"
         );
-        
+
         // Must have 0-3 recommendations
         assert!(
             self.recommendations.len() <= 3,
             "Must have at most 3 recommendations"
         );
-        
+
         // Confidence must be valid
         assert!(
             self.confidence >= 0.0 && self.confidence <= 1.0,
             "Confidence must be 0.0-1.0"
         );
-        
+
         // Each finding must be under 80 chars
         for finding in &self.key_findings {
             assert!(
@@ -199,7 +199,7 @@ impl PrComment {
                 finding.len()
             );
         }
-        
+
         // Each recommendation must be under 80 chars
         for rec in &self.recommendations {
             assert!(
@@ -223,7 +223,7 @@ impl PrComment {
         let before_details = formatted.split("<details>").next().unwrap();
         before_details.lines().count()
     }
-    
+
     pub fn is_under_line_limit(&self) -> bool {
         self.line_count_before_details() <= 15
     }
@@ -232,7 +232,7 @@ impl PrComment {
 #[test]
 fn test_pr_comment_under_15_lines() {
     let comment = sample_pr_comment();
-    
+
     assert!(
         comment.is_under_line_limit(),
         "PR comment exceeds 15 lines: {} lines",
@@ -272,7 +272,7 @@ fn trim_lines(s: &str) -> String {
 #[test]
 fn test_no_trailing_whitespace() {
     let comment = sample_pr_comment().format();
-    
+
     for (i, line) in comment.lines().enumerate() {
         assert!(
             !line.ends_with(' ') && !line.ends_with('\t'),
@@ -288,7 +288,7 @@ fn test_no_trailing_whitespace() {
 #[test]
 fn test_no_tab_characters() {
     let comment = sample_pr_comment().format();
-    
+
     assert!(
         !comment.contains('\t'),
         "PR comment contains tab characters"
@@ -309,14 +309,14 @@ impl PrCommentEmoji {
     pub const FINDINGS: &'static str = "🔍";
     pub const RECOMMENDATIONS: &'static str = "💡";
     pub const CONFIDENCE: &'static str = "📈";
-    
+
     // Severity emoji
     pub const CRITICAL: &'static str = "🔴";
     pub const HIGH: &'static str = "🟠";
     pub const MEDIUM: &'static str = "🟡";
     pub const LOW: &'static str = "🔵";
     pub const INFO: &'static str = "⚪";
-    
+
     // Change type emoji
     pub const INCREASE: &'static str = "📈";
     pub const DECREASE: &'static str = "📉";
@@ -328,7 +328,7 @@ impl PrCommentEmoji {
 #[test]
 fn test_emoji_consistency() {
     let comment = sample_pr_comment().format();
-    
+
     // Must use standard emoji
     assert!(comment.contains(PrCommentEmoji::HEADER));
     assert!(comment.contains(PrCommentEmoji::SUMMARY));
@@ -345,18 +345,18 @@ fn test_emoji_consistency() {
 ```rust
 pub fn format_detailed_breakdown(regressions: &[Regression]) -> String {
     let mut output = String::new();
-    
+
     // New resources
     let new_resources: Vec<_> = regressions
         .iter()
         .filter(|r| matches!(r.regression_type, RegressionType::NewResource))
         .collect();
-    
+
     if !new_resources.is_empty() {
         output.push_str("#### New Resources\n");
         output.push_str("| Resource | Type | Cost/Month |\n");
         output.push_str("|----------|------|------------|\n");
-        
+
         for resource in new_resources {
             output.push_str(&format!(
                 "| {} | {} | {} |\n",
@@ -367,18 +367,18 @@ pub fn format_detailed_breakdown(regressions: &[Regression]) -> String {
         }
         output.push('\n');
     }
-    
+
     // Modified resources
     let modified_resources: Vec<_> = regressions
         .iter()
         .filter(|r| matches!(r.regression_type, RegressionType::ModifiedResource))
         .collect();
-    
+
     if !modified_resources.is_empty() {
         output.push_str("#### Modified Resources\n");
         output.push_str("| Resource | Before | After | Delta |\n");
         output.push_str("|----------|--------|-------|-------|\n");
-        
+
         for resource in modified_resources {
             output.push_str(&format!(
                 "| {} | {}<br>{} | {}<br>{} | {} |\n",
@@ -392,18 +392,18 @@ pub fn format_detailed_breakdown(regressions: &[Regression]) -> String {
         }
         output.push('\n');
     }
-    
+
     // Deleted resources
     let deleted_resources: Vec<_> = regressions
         .iter()
         .filter(|r| matches!(r.regression_type, RegressionType::DeletedResource))
         .collect();
-    
+
     if !deleted_resources.is_empty() {
         output.push_str("#### Deleted Resources\n");
         output.push_str("| Resource | Type | Previous Cost |\n");
         output.push_str("|----------|------|---------------|\n");
-        
+
         for resource in deleted_resources {
             output.push_str(&format!(
                 "| {} | {} | {} |\n",
@@ -414,7 +414,7 @@ pub fn format_detailed_breakdown(regressions: &[Regression]) -> String {
         }
         output.push('\n');
     }
-    
+
     output
 }
 ```
@@ -545,19 +545,19 @@ pub fn format_detailed_breakdown(regressions: &[Regression]) -> String {
 #[test]
 fn test_pr_comment_format_valid() {
     let comment = sample_pr_comment().format();
-    
+
     // Must have header
     assert!(comment.starts_with("## 💰 CostPilot Analysis"));
-    
+
     // Must have all required sections
     assert!(comment.contains("### 📊 Summary"));
     assert!(comment.contains("### 🔍 Key Findings"));
     assert!(comment.contains("### 📈 Confidence"));
-    
+
     // Must have details section
     assert!(comment.contains("<details>"));
     assert!(comment.contains("</details>"));
-    
+
     // Must be under 15 lines before details
     let before_details = comment.split("<details>").next().unwrap();
     assert!(before_details.lines().count() <= 15);
@@ -566,18 +566,18 @@ fn test_pr_comment_format_valid() {
 #[test]
 fn test_pr_comment_copy_paste_safe() {
     let comment = sample_pr_comment().format();
-    
+
     // No tabs
     assert!(!comment.contains('\t'));
-    
+
     // No trailing whitespace
     for line in comment.lines() {
         assert!(!line.ends_with(' '));
     }
-    
+
     // Only ASCII minus (not Unicode minus)
     assert!(!comment.contains('−'));  // U+2212
-    
+
     // No zero-width spaces
     assert!(!comment.contains('\u{200B}'));
 }
@@ -585,11 +585,11 @@ fn test_pr_comment_copy_paste_safe() {
 #[test]
 fn test_pr_comment_currency_formatting() {
     let comment = sample_pr_comment().format();
-    
+
     // All costs must have currency symbol
     let cost_pattern = regex::Regex::new(r"\$\d+\.\d{2}").unwrap();
     let costs = cost_pattern.find_iter(&comment).count();
-    
+
     assert!(costs > 0, "PR comment must include formatted costs");
 }
 ```
@@ -605,24 +605,24 @@ fn test_pr_comment_currency_formatting() {
 pub fn generate_pr_comment(plan_path: &Path) -> CostPilotResult<String> {
     let plan = parse_terraform_plan(plan_path)?;
     let regressions = detect_regressions(&plan)?;
-    
+
     // Aggregate data
     let total_delta = regressions.iter()
         .map(|r| r.delta.delta)
         .sum();
-    
+
     let resources_changed = regressions.len();
-    
+
     let severity = compute_overall_severity(&regressions);
-    
+
     let key_findings = extract_key_findings(&regressions, 5);
-    
+
     let recommendations = generate_recommendations(&regressions, 3);
-    
+
     let confidence = compute_average_confidence(&regressions);
-    
+
     let detailed_breakdown = format_detailed_breakdown(&regressions);
-    
+
     // Build comment
     let comment = PrComment {
         delta: CostDelta::new(
@@ -637,7 +637,7 @@ pub fn generate_pr_comment(plan_path: &Path) -> CostPilotResult<String> {
         confidence,
         detailed_breakdown,
     };
-    
+
     Ok(comment.format())
 }
 ```

@@ -60,7 +60,7 @@ if let Some(analysis) = analysis {
     println!("Burn Rate: ${:.2}/day", analysis.burn_rate);
     println!("Projected Cost: ${:.2}", analysis.projected_cost);
     println!("Risk: {:?}", analysis.risk);
-    
+
     if let Some(days) = analysis.days_to_breach {
         println!("Days to Breach: {:.1}", days);
     }
@@ -234,9 +234,9 @@ fn check_burn_rate_in_ci() -> Result<(), String> {
     let snapshots = load_historical_snapshots()?;
     let config = SloConfig::load(".costpilot/slo.yml")?;
     let calculator = BurnRateCalculator::new();
-    
+
     let report = calculator.analyze_all(&config.slos, &snapshots);
-    
+
     // Block deployment if critical
     if report.overall_risk == BurnRisk::Critical {
         return Err(format!(
@@ -244,13 +244,13 @@ fn check_burn_rate_in_ci() -> Result<(), String> {
             report.critical_slos().len()
         ));
     }
-    
+
     // Warn if high risk
     if report.overall_risk == BurnRisk::High {
         eprintln!("Warning: High SLO burn rate detected");
         eprintln!("Consider reviewing cost optimizations");
     }
-    
+
     Ok(())
 }
 ```
@@ -263,19 +263,19 @@ costpilot slo burn
 
 # Output:
 # 📊 SLO Burn Rate Analysis
-# 
+#
 # Global Budget ($10,000/month)
 #   Burn Rate: $142.86/day
 #   Days to Breach: 21.0
 #   Risk: MEDIUM
 #   Confidence: 92%
-# 
+#
 # VPC Module ($3,000/month)
 #   Burn Rate: $71.43/day
 #   Days to Breach: 8.5
 #   Risk: HIGH
 #   Confidence: 95%
-# 
+#
 # Overall Risk: HIGH
 # Action Required: 1 SLO needs attention
 
@@ -411,9 +411,9 @@ fn test_end_to_end_burn_analysis() {
     let snapshots = load_real_snapshots();
     let config = SloConfig::load("tests/fixtures/slo.yml")?;
     let calculator = BurnRateCalculator::new();
-    
+
     let report = calculator.analyze_all(&config.slos, &snapshots);
-    
+
     assert!(report.total_slos > 0);
     assert!(report.overall_risk != BurnRisk::Critical); // Assuming healthy state
 }

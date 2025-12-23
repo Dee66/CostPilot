@@ -152,12 +152,12 @@ impl MappingEngine {
     fn validate_json(&self, json: &str) -> Result<(), CostPilotError> {
         // Parse to ensure valid JSON
         let parsed: serde_json::Value = serde_json::from_str(json).map_err(|e| {
-            CostPilotError::InvalidJson(format!("Mapping graph JSON invalid: {}", e))
+            CostPilotError::invalid_json(format!("Mapping graph JSON invalid: {}", e))
         })?;
 
         // Ensure it's an object or array
         if !parsed.is_object() && !parsed.is_array() {
-            return Err(CostPilotError::InvalidJson(
+            return Err(CostPilotError::invalid_json(
                 "Mapping graph JSON must be object or array".to_string(),
             ));
         }
@@ -167,7 +167,7 @@ impl MappingEngine {
             // Check for nodes array
             if let Some(nodes) = obj.get("nodes") {
                 if !nodes.is_array() {
-                    return Err(CostPilotError::InvalidJson(
+                    return Err(CostPilotError::invalid_json(
                         "nodes field must be an array".to_string(),
                     ));
                 }
@@ -176,7 +176,7 @@ impl MappingEngine {
             // Check for edges array if present
             if let Some(edges) = obj.get("edges") {
                 if !edges.is_array() {
-                    return Err(CostPilotError::InvalidJson(
+                    return Err(CostPilotError::invalid_json(
                         "edges field must be an array".to_string(),
                     ));
                 }
@@ -365,8 +365,8 @@ pub struct CostPropagation {
 mod tests {
     use crate::edition::EditionContext;
     use super::*;
+    use crate::engines::shared::models::{ChangeAction, ResourceChange};
     use serde_json::json;
-    use crate::engines::shared::models::{ResourceChange, ChangeAction};
 
     fn create_test_resource(id: &str, resource_type: &str) -> ResourceChange {
         ResourceChange::builder()
@@ -395,7 +395,13 @@ mod tests {
         let result = engine.map_dependencies(&changes);
         // Free edition has depth=5 by default which triggers upgrade error
         if edition.is_free() {
-            assert!(result.is_err() || result.as_ref().map(|s| s.contains("flowchart TB")).unwrap_or(false));
+            assert!(
+                result.is_err()
+                    || result
+                        .as_ref()
+                        .map(|s| s.contains("flowchart TB"))
+                        .unwrap_or(false)
+            );
         } else {
             assert!(result.is_ok());
             let mermaid = result.unwrap();

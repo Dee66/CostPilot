@@ -1,0 +1,41 @@
+# Rust build artifacts
+target/
+Cargo.lock
+
+# Test files
+tests/
+test_*.json
+*.test
+
+# Development files
+.github/
+docs/
+scripts/
+packaging/
+ci/
+
+# Python files (not needed for Docker)
+*.py
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Node.js files (not needed for Docker)
+node_modules/
+package.json
+package-lock.json
+
+# Other unnecessary files
+.git/
+.gitignore
+README.md
+CHANGELOG.md
+LICENSE
+Makefile
+*.md
+*.toml
+*.yml
+*.yaml
+
+# Keep only the binary
+!costpilot

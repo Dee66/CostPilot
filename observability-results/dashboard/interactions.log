@@ -1,0 +1,5 @@
+{"interaction": "filter_applied", "timestamp": 1766229898, "success": true}
+{"interaction": "time_range_changed", "timestamp": 1766229898, "success": true}
+{"interaction": "zoom_applied", "timestamp": 1766229898, "success": true}
+{"interaction": "export_requested", "timestamp": 1766229898, "success": true}
+{"interaction": "alert_acknowledged", "timestamp": 1766229898, "success": true}

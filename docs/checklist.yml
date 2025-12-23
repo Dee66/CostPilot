@@ -347,10 +347,10 @@ tasks:
   automation_level: partial
   severity: critical
   retry_policy: safe
-  notes: ''
+  notes: 'Zero-network enforcement implemented with ZeroNetworkToken, ZeroNetworkValidator, ZeroNetworkEnforced wrapper, and ZeroNetworkRuntime. All 6 zero-network tests pass. Policy engines use evaluate_zero_network with token guarantees.'
   dependencies:
   - task-100
-  status: pending
+  status: completed
   result_hash: null
   steps:
   - id: step-110-1
@@ -748,3 +748,40 @@ tasks:
     - id: ac-260-2
       type: manual_review
       reviewer: Deon Prinsloo
+- id: task-270
+  phase: phase-06
+  title: Gate sustainability analytics behind premium licensing
+  description: Implement license checks in sustainability testing scripts to restrict access to Founding Engineer Edition ($29/month) only.
+  automation_level: partial
+  severity: high
+  retry_policy: safe
+  notes: Sustainability Analytics is now a premium-only feature. Free tier users should not have access to carbon footprint, energy efficiency, fairness testing, transparency validation, or social impact assessment.
+  dependencies:
+  - task-260
+  status: pending
+  result_hash: null
+  steps:
+  - id: step-270-1
+    action: add_license_checks
+    description: Add license token validation to run_sustainability_testing.sh script.
+    acceptance_criteria:
+    - id: ac-270-1
+      type: command
+      command: ./scripts/run_sustainability_testing.sh --help | grep -i license
+      expected_exit_code: 0
+  - id: step-270-2
+    action: update_sustainability_dashboard
+    description: Modify sustainability-dashboard.md to show premium-only access messaging.
+    acceptance_criteria:
+    - id: ac-270-2
+      type: file_contains
+      target: docs/sustainability-dashboard.md
+      pattern: premium.*license
+  - id: step-270-3
+    action: test_license_gating
+    description: Verify that sustainability tests fail gracefully without valid license token.
+    acceptance_criteria:
+    - id: ac-270-3
+      type: command
+      command: ./scripts/run_sustainability_testing.sh carbon 2>&1 | grep -i "license\|premium"
+      expected_exit_code: 1
