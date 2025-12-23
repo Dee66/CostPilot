@@ -639,8 +639,7 @@ mod tests {
 
         // Query by event type
         let log_ref = &log;
-        let query = AuditQuery::new(log_ref)
-            .with_event_type(AuditEventType::PolicyActivated);
+        let query = AuditQuery::new(log_ref).with_event_type(AuditEventType::PolicyActivated);
         let results = query.execute();
 
         assert_eq!(results.len(), 1);

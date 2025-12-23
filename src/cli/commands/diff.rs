@@ -233,10 +233,10 @@ fn print_diff_markdown(before: f64, after: f64, delta: f64, percentage: f64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
-    use tempfile::TempDir;
     use crate::edition::EditionContext;
     use crate::test_helpers::edition;
+    use std::fs;
+    use tempfile::TempDir;
 
     fn create_mock_plan(temp_dir: &TempDir, filename: &str, content: &str) -> std::path::PathBuf {
         let path = temp_dir.path().join(filename);
@@ -269,7 +269,10 @@ mod tests {
 
         let result = execute(before_path, after_path, "text", false, &edition);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("After plan not found"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("After plan not found"));
     }
 
     #[test]

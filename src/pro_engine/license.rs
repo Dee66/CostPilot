@@ -13,9 +13,9 @@ struct RateLimitState {
 }
 
 impl RateLimitState {
-    const MAX_ATTEMPTS: u32 = 5;  // Max 5 attempts per minute
-    const WINDOW_SECS: u64 = 60;  // 1 minute window
-    const BLOCK_SECS: u64 = 300;  // 5 minute block after exceeding limit
+    const MAX_ATTEMPTS: u32 = 5; // Max 5 attempts per minute
+    const WINDOW_SECS: u64 = 60; // 1 minute window
+    const BLOCK_SECS: u64 = 300; // 5 minute block after exceeding limit
 
     fn new() -> Self {
         Self {

@@ -3,11 +3,11 @@
 use crate::engines::mapping::{
     ColorScheme, GraphvizConfig, JsonExportConfig, JsonFormat, MappingEngine,
 };
+#[cfg(not(target_arch = "wasm32"))]
+use crate::validation::OutputValidator;
 use clap::Args;
 use colored::Colorize;
 use std::path::PathBuf;
-#[cfg(not(target_arch = "wasm32"))]
-use crate::validation::OutputValidator;
 
 #[derive(Debug, Args)]
 pub struct MapCommand {
@@ -148,7 +148,8 @@ pub fn execute_map_command(
 
             // Validate JSON output against schema only for standard format
             if json_format == JsonFormat::Standard {
-                #[cfg(not(target_arch = "wasm32"))] {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
                     use crate::validation::output::OutputType;
                     let validator = OutputValidator::new()?;
                     validator.validate(OutputType::Mapping, &json_output)?;
@@ -254,7 +255,8 @@ pub fn execute_map_command(
                     crate::engines::mapping::ImpactSeverity::Low => "🟢",
                 };
 
-                println!("  {} {} (${:.2}/mo) - {} affected resources",
+                println!(
+                    "  {} {} (${:.2}/mo) - {} affected resources",
                     severity_icon,
                     impact.source_label,
                     impact.source_cost,
@@ -277,8 +279,10 @@ pub fn execute_map_command(
             if propagations.is_empty() {
                 println!("  No cost propagation detected");
             } else {
-                for prop in propagations.iter().take(5) { // Show top 5
-                    println!("  {}: ${:.2} direct + ${:.2} downstream = ${:.2} total ({:.1}x)",
+                for prop in propagations.iter().take(5) {
+                    // Show top 5
+                    println!(
+                        "  {}: ${:.2} direct + ${:.2} downstream = ${:.2} total ({:.1}x)",
                         prop.resource_label,
                         prop.direct_cost,
                         prop.downstream_cost,
@@ -336,7 +340,9 @@ mod tests {
                 allow_policy_enforce: true,
                 allow_slo_enforce: true,
             },
-            pro: Some(crate::edition::ProEngineHandle::stub(std::path::PathBuf::from("/tmp/stub"))),
+            pro: Some(crate::edition::ProEngineHandle::stub(
+                std::path::PathBuf::from("/tmp/stub"),
+            )),
             paths: crate::edition::EditionPaths::default(),
         }
     }
@@ -671,17 +677,38 @@ mod tests {
     fn test_parse_color_scheme() {
         assert!(matches!(parse_color_scheme("cost"), ColorScheme::CostBased));
         assert!(matches!(parse_color_scheme("type"), ColorScheme::TypeBased));
-        assert!(matches!(parse_color_scheme("mono"), ColorScheme::Monochrome));
-        assert!(matches!(parse_color_scheme("monochrome"), ColorScheme::Monochrome));
-        assert!(matches!(parse_color_scheme("invalid"), ColorScheme::CostBased)); // default
+        assert!(matches!(
+            parse_color_scheme("mono"),
+            ColorScheme::Monochrome
+        ));
+        assert!(matches!(
+            parse_color_scheme("monochrome"),
+            ColorScheme::Monochrome
+        ));
+        assert!(matches!(
+            parse_color_scheme("invalid"),
+            ColorScheme::CostBased
+        )); // default
     }
 
     #[test]
     fn test_parse_json_format() {
-        assert!(matches!(parse_json_format("standard"), JsonFormat::Standard));
-        assert!(matches!(parse_json_format("adjacency"), JsonFormat::AdjacencyList));
-        assert!(matches!(parse_json_format("adjacency_list"), JsonFormat::AdjacencyList));
-        assert!(matches!(parse_json_format("cytoscape"), JsonFormat::Cytoscape));
+        assert!(matches!(
+            parse_json_format("standard"),
+            JsonFormat::Standard
+        ));
+        assert!(matches!(
+            parse_json_format("adjacency"),
+            JsonFormat::AdjacencyList
+        ));
+        assert!(matches!(
+            parse_json_format("adjacency_list"),
+            JsonFormat::AdjacencyList
+        ));
+        assert!(matches!(
+            parse_json_format("cytoscape"),
+            JsonFormat::Cytoscape
+        ));
         assert!(matches!(parse_json_format("cyto"), JsonFormat::Cytoscape));
         assert!(matches!(parse_json_format("d3"), JsonFormat::D3Force));
         assert!(matches!(parse_json_format("d3force"), JsonFormat::D3Force));

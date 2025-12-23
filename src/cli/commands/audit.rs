@@ -49,10 +49,13 @@ pub fn cmd_audit_view(
     format: &str,
     _verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    cmd_audit_view_with_path(event_type, actor, resource, severity, last_n, format, _verbose, None)
+    cmd_audit_view_with_path(
+        event_type, actor, resource, severity, last_n, format, _verbose, None,
+    )
 }
 
 /// View audit log entries with custom path (for testing)
+#[allow(clippy::too_many_arguments)]
 pub fn cmd_audit_view_with_path(
     event_type: Option<String>,
     actor: Option<String>,
@@ -534,9 +537,8 @@ mod tests {
         let log = AuditLog::new();
         save_audit_log(&log, Some(log_path.clone())).unwrap();
 
-        let result = cmd_audit_view_with_path(
-            None, None, None, None, None, "text", false, Some(log_path)
-        );
+        let result =
+            cmd_audit_view_with_path(None, None, None, None, None, "text", false, Some(log_path));
         assert!(result.is_ok());
     }
 
@@ -567,12 +569,26 @@ mod tests {
         save_audit_log(&log, Some(log_path.clone())).unwrap();
 
         let result = cmd_audit_view_with_path(
-            None, None, None, None, None, "text", false, Some(log_path.clone())
+            None,
+            None,
+            None,
+            None,
+            None,
+            "text",
+            false,
+            Some(log_path.clone()),
         );
         assert!(result.is_ok());
 
         let result = cmd_audit_view_with_path(
-            Some("policy_state_change".to_string()), None, None, None, None, "text", false, Some(log_path)
+            Some("policy_state_change".to_string()),
+            None,
+            None,
+            None,
+            None,
+            "text",
+            false,
+            Some(log_path),
         );
         assert!(result.is_ok());
     }
@@ -619,7 +635,7 @@ mod tests {
             "policy".to_string(),
             "Test event".to_string(),
             "text",
-            false
+            false,
         );
         assert!(result.is_ok());
 
@@ -630,7 +646,7 @@ mod tests {
             "policy".to_string(),
             "Test approval".to_string(),
             "json",
-            false
+            false,
         );
         assert!(result.is_ok());
     }

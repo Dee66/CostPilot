@@ -215,7 +215,11 @@ impl PolicyConfig {
             // If version is invalid, start from 1.0.0
             semver::Version::new(1, 0, 0)
         });
-        let new_version = semver::Version::new(current_version.major, current_version.minor, current_version.patch + 1);
+        let new_version = semver::Version::new(
+            current_version.major,
+            current_version.minor,
+            current_version.patch + 1,
+        );
 
         self.version = new_version.to_string();
         self.metadata.updated_at = Some(chrono::Utc::now().to_rfc3339());
@@ -271,7 +275,6 @@ impl PolicyConfig {
     }
 }
 
-
 impl Default for PolicyConfig {
     fn default() -> Self {
         Self::new()
@@ -299,7 +302,6 @@ impl PolicyResult {
     pub fn add_applied_exemption(&mut self, exemption_id: String) {
         self.applied_exemptions.push(exemption_id);
     }
-
 }
 impl Default for PolicyResult {
     fn default() -> Self {

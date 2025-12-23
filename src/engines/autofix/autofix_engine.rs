@@ -1,11 +1,11 @@
 // Autofix engine - orchestrates fix generation
 
+use crate::edition::EditionContext;
 use crate::engines::autofix::patch_generator::{PatchFile, PatchGenerator};
 use crate::engines::autofix::snippet_generator::{FixSnippet, SnippetGenerator};
 use crate::engines::explain::anti_patterns::detect_anti_patterns;
 use crate::engines::shared::error_model::CostPilotError;
 use crate::engines::shared::models::{CostEstimate, Detection, ResourceChange};
-use crate::edition::EditionContext;
 use serde::{Deserialize, Serialize};
 
 /// Autofix mode
@@ -216,11 +216,7 @@ impl AutofixEngine {
 
         // Generate rollback patch to revert to expected state
         let rollback_generator = RollbackPatchGenerator::new();
-        let patch = rollback_generator.generate_rollback_patch(
-            detection,
-            change,
-            &drift_result,
-        )?;
+        let patch = rollback_generator.generate_rollback_patch(detection, change, &drift_result)?;
 
         Ok(Some(patch))
     }
@@ -280,7 +276,14 @@ mod tests {
             .monthly_cost(560.0)
             .build();
 
-        let result = AutofixEngine::generate_fixes(&[detection], &[change], &[estimate], AutofixMode::Snippet, &crate::edition::EditionContext::free()).unwrap();
+        let result = AutofixEngine::generate_fixes(
+            &[detection],
+            &[change],
+            &[estimate],
+            AutofixMode::Snippet,
+            &crate::edition::EditionContext::free(),
+        )
+        .unwrap();
 
         assert_eq!(result.mode, "snippet");
         assert_eq!(result.fixes_generated, 1);
@@ -309,7 +312,14 @@ mod tests {
             .new_config(serde_json::Value::Null)
             .build();
 
-        let result = AutofixEngine::generate_fixes(&[detection], &[change], &[], AutofixMode::Patch, &crate::edition::EditionContext::premium_for_test()).unwrap();
+        let result = AutofixEngine::generate_fixes(
+            &[detection],
+            &[change],
+            &[],
+            AutofixMode::Patch,
+            &crate::edition::EditionContext::premium_for_test(),
+        )
+        .unwrap();
 
         assert_eq!(result.mode, "patch");
         // Result should be generated successfully

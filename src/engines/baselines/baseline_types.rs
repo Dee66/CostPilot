@@ -1,7 +1,7 @@
+use crate::engines::shared::models::RegressionType;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::engines::shared::models::RegressionType;
 
 /// A baseline cost expectation for a module or resource
 #[derive(Debug, Clone, Serialize, Deserialize)]

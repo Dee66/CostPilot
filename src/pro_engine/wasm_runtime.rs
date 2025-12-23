@@ -2,8 +2,8 @@
 
 // WASM runtime with strict sandboxing and resource limits
 
-use wasmtime::*;
 use std::time::{Duration, Instant};
+use wasmtime::*;
 
 #[derive(Debug, Clone)]
 pub struct WasmSandboxConfig {
@@ -87,8 +87,7 @@ impl WasmRuntime {
         config.wasm_bulk_memory(true);
         config.static_memory_maximum_size(256 * 1024 * 1024); // 256MB absolute max
 
-        let engine = Engine::new(&config)
-            .map_err(|e| WasmError::CompileError(e.to_string()))?;
+        let engine = Engine::new(&config).map_err(|e| WasmError::CompileError(e.to_string()))?;
 
         Ok(Self { engine })
     }
@@ -121,10 +120,7 @@ impl WasmRuntime {
         let instance = Instance::new(&mut store, &module, &[])
             .map_err(|e| WasmError::InstantiateError(e.to_string()))?;
 
-        Ok(SandboxInstance {
-            store,
-            instance,
-        })
+        Ok(SandboxInstance { store, instance })
     }
 }
 
@@ -172,7 +168,8 @@ impl SandboxInstance {
                 let trap_str = trap.to_string();
                 if trap_str.contains("interrupt")
                     || trap_str.contains("epoch")
-                    || elapsed >= timeout_duration {
+                    || elapsed >= timeout_duration
+                {
                     Err(WasmError::Timeout)
                 } else {
                     Err(WasmError::CallError(trap_str))

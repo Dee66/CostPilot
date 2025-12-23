@@ -306,8 +306,16 @@ mod tests {
     #[test]
     fn test_feature_rollout() {
         let mut flags = FeatureFlags::default();
-        flags.flags.get_mut("experimental_prediction").unwrap().enabled = true;
-        flags.flags.get_mut("experimental_prediction").unwrap().rollout_percentage = 0.5;
+        flags
+            .flags
+            .get_mut("experimental_prediction")
+            .unwrap()
+            .enabled = true;
+        flags
+            .flags
+            .get_mut("experimental_prediction")
+            .unwrap()
+            .rollout_percentage = 0.5;
 
         let mut enabled_count = 0;
         for i in 0..100 {
@@ -322,8 +330,16 @@ mod tests {
     #[test]
     fn test_allowlist() {
         let mut flags = FeatureFlags::default();
-        flags.flags.get_mut("experimental_prediction").unwrap().enabled = true;
-        flags.flags.get_mut("experimental_prediction").unwrap().allowlist = Some(vec!["user1".to_string()]);
+        flags
+            .flags
+            .get_mut("experimental_prediction")
+            .unwrap()
+            .enabled = true;
+        flags
+            .flags
+            .get_mut("experimental_prediction")
+            .unwrap()
+            .allowlist = Some(vec!["user1".to_string()]);
 
         assert!(flags.is_enabled("experimental_prediction", Some("user1")));
         assert!(!flags.is_enabled("experimental_prediction", Some("user2")));

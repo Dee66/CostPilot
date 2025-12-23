@@ -464,9 +464,7 @@ mod tests {
         fs::write(&policy_path, valid_policy).unwrap();
 
         let cmd = PolicyDslCommand {
-            command: PolicyDslSubcommand::Validate {
-                path: policy_path,
-            },
+            command: PolicyDslSubcommand::Validate { path: policy_path },
         };
 
         let result = execute_policy_dsl_command(&cmd);

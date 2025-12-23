@@ -1,7 +1,7 @@
 // CDK diff JSON parsing
 
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
-use crate::engines::shared::models::{ResourceChange, ChangeAction};
+use crate::engines::shared::models::{ChangeAction, ResourceChange};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -156,7 +156,10 @@ pub fn cdk_diff_to_resource_changes(diff: &CdkDiff) -> Vec<ResourceChange> {
 }
 
 /// Convert CDK synthesized template to ResourceChange format
-pub fn cdk_template_to_resource_changes(template: &CdkSynthesizedTemplate, stack_name: &str) -> Vec<ResourceChange> {
+pub fn cdk_template_to_resource_changes(
+    template: &CdkSynthesizedTemplate,
+    stack_name: &str,
+) -> Vec<ResourceChange> {
     let mut changes = Vec::new();
 
     if let Some(resources) = &template.resources {
@@ -200,7 +203,9 @@ fn map_cdk_resource_type(cdk_type: &str) -> String {
 }
 
 /// Extract tags from CDK resource properties
-fn extract_tags_from_cdk_properties(properties: &Option<serde_json::Value>) -> HashMap<String, String> {
+fn extract_tags_from_cdk_properties(
+    properties: &Option<serde_json::Value>,
+) -> HashMap<String, String> {
     let mut tags = HashMap::new();
 
     if let Some(props) = properties {
@@ -209,7 +214,7 @@ fn extract_tags_from_cdk_properties(properties: &Option<serde_json::Value>) -> H
                 for tag in tags_array {
                     if let (Some(key), Some(value)) = (
                         tag.get("Key").and_then(|k| k.as_str()),
-                        tag.get("Value").and_then(|v| v.as_str())
+                        tag.get("Value").and_then(|v| v.as_str()),
                     ) {
                         tags.insert(key.to_string(), value.to_string());
                     }
@@ -282,6 +287,9 @@ mod tests {
     #[test]
     fn test_map_cdk_resource_type() {
         assert_eq!(map_cdk_resource_type("AWS::S3::Bucket"), "aws_s3_bucket");
-        assert_eq!(map_cdk_resource_type("AWS::Lambda::Function"), "aws_lambda_function");
+        assert_eq!(
+            map_cdk_resource_type("AWS::Lambda::Function"),
+            "aws_lambda_function"
+        );
     }
 }

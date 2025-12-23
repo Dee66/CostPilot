@@ -360,9 +360,7 @@ impl ExplainEngine {
         for detection in detections.iter().take(5) {
             let pattern = format!(
                 "• {:?} in {}: {:?} severity",
-                detection.regression_type,
-                detection.resource_id,
-                detection.severity
+                detection.regression_type, detection.resource_id, detection.severity
             );
             patterns.push(pattern);
         }
@@ -429,11 +427,11 @@ mod tests {
             .build();
 
         let estimate = CostEstimate::builder()
-                .monthly_cost(500.0)
-                .prediction_interval_low(450.0)
-                .prediction_interval_high(550.0)
-                .confidence_score(0.9)
-                .build();
+            .monthly_cost(500.0)
+            .prediction_interval_low(450.0)
+            .prediction_interval_high(550.0)
+            .confidence_score(0.9)
+            .build();
 
         let detection = Detection {
             rule_id: "EC2_CONFIG".to_string(),

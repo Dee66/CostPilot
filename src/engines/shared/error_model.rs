@@ -232,27 +232,41 @@ pub type Result<T> = std::result::Result<T, CostPilotError>;
 impl From<crate::artifact::ArtifactError> for CostPilotError {
     fn from(err: crate::artifact::ArtifactError) -> Self {
         let (id, category, message) = match err {
-            crate::artifact::ArtifactError::UnsupportedFormat(msg) => {
-                ("ARTIFACT_001", ErrorCategory::ValidationError, format!("Unsupported artifact format: {}", msg))
-            }
-            crate::artifact::ArtifactError::ParseError(msg) => {
-                ("ARTIFACT_002", ErrorCategory::ParseError, format!("Failed to parse artifact: {}", msg))
-            }
-            crate::artifact::ArtifactError::InvalidResource(msg) => {
-                ("ARTIFACT_003", ErrorCategory::ValidationError, format!("Invalid resource definition: {}", msg))
-            }
-            crate::artifact::ArtifactError::MissingField(msg) => {
-                ("ARTIFACT_004", ErrorCategory::ValidationError, format!("Missing required field: {}", msg))
-            }
-            crate::artifact::ArtifactError::InvalidVersion(msg) => {
-                ("ARTIFACT_005", ErrorCategory::ValidationError, format!("Invalid template version: {}", msg))
-            }
-            crate::artifact::ArtifactError::UnsupportedFunction(msg) => {
-                ("ARTIFACT_007", ErrorCategory::ValidationError, format!("Unsupported intrinsic function: {}", msg))
-            }
-            crate::artifact::ArtifactError::IoError(err) => {
-                ("ARTIFACT_006", ErrorCategory::IoError, format!("IO error: {}", err))
-            }
+            crate::artifact::ArtifactError::UnsupportedFormat(msg) => (
+                "ARTIFACT_001",
+                ErrorCategory::ValidationError,
+                format!("Unsupported artifact format: {}", msg),
+            ),
+            crate::artifact::ArtifactError::ParseError(msg) => (
+                "ARTIFACT_002",
+                ErrorCategory::ParseError,
+                format!("Failed to parse artifact: {}", msg),
+            ),
+            crate::artifact::ArtifactError::InvalidResource(msg) => (
+                "ARTIFACT_003",
+                ErrorCategory::ValidationError,
+                format!("Invalid resource definition: {}", msg),
+            ),
+            crate::artifact::ArtifactError::MissingField(msg) => (
+                "ARTIFACT_004",
+                ErrorCategory::ValidationError,
+                format!("Missing required field: {}", msg),
+            ),
+            crate::artifact::ArtifactError::InvalidVersion(msg) => (
+                "ARTIFACT_005",
+                ErrorCategory::ValidationError,
+                format!("Invalid template version: {}", msg),
+            ),
+            crate::artifact::ArtifactError::UnsupportedFunction(msg) => (
+                "ARTIFACT_007",
+                ErrorCategory::ValidationError,
+                format!("Unsupported intrinsic function: {}", msg),
+            ),
+            crate::artifact::ArtifactError::IoError(err) => (
+                "ARTIFACT_006",
+                ErrorCategory::IoError,
+                format!("IO error: {}", err),
+            ),
         };
 
         CostPilotError::new(id, category, message)

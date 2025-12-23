@@ -8,8 +8,8 @@
 use clap::Args;
 use std::path::PathBuf;
 
-use crate::engines::baselines::BaselinesManager;
 use crate::engines::baselines::baseline_types::{Baseline, BaselinesConfig};
+use crate::engines::baselines::BaselinesManager;
 
 /// Manage cost baselines
 #[derive(Debug, Args)]
@@ -139,7 +139,9 @@ impl BaselineCommand {
 
             BaselineCommands::Validate { file } => self.validate_baselines(file),
 
-            BaselineCommands::Status { baselines, plan } => self.show_baseline_status(baselines, plan),
+            BaselineCommands::Status { baselines, plan } => {
+                self.show_baseline_status(baselines, plan)
+            }
         }
     }
 
@@ -176,17 +178,20 @@ impl BaselineCommand {
         let mut manager = if baselines_path.exists() {
             BaselinesManager::load_from_file(baselines_path)?
         } else {
-            println!("📝 Creating new baselines file: {}", baselines_path.display());
-            BaselinesManager::from_config(
-                BaselinesConfig::new()
-            )
+            println!(
+                "📝 Creating new baselines file: {}",
+                baselines_path.display()
+            );
+            BaselinesManager::from_config(BaselinesConfig::new())
         };
 
         // Update baselines based on extracted costs
-        let default_justification = justification.clone()
+        let default_justification = justification
+            .clone()
             .unwrap_or_else(|| format!("Recorded from deployment of {}", plan_path.display()));
 
-        let default_owner = owner.clone()
+        let default_owner = owner
+            .clone()
             .unwrap_or_else(|| "deployment-automation".to_string());
 
         // This would update specific modules based on the plan
@@ -224,11 +229,11 @@ impl BaselineCommand {
         // Load baselines
         let mut manager = BaselinesManager::load_from_file(baselines_path)?;
 
-        let default_justification = justification.clone()
+        let default_justification = justification
+            .clone()
             .unwrap_or_else(|| "Manual update via CLI".to_string());
 
-        let default_owner = owner.clone()
-            .unwrap_or_else(|| "cli-user".to_string());
+        let default_owner = owner.clone().unwrap_or_else(|| "cli-user".to_string());
 
         // Create baseline with custom variance if provided
         let mut baseline = Baseline::new(
@@ -250,7 +255,9 @@ impl BaselineCommand {
         } else {
             // Assume service baseline
             // Note: Current API doesn't support service baselines directly
-            return Err("Service baseline updates not yet implemented. Use module.global for now.".into());
+            return Err(
+                "Service baseline updates not yet implemented. Use module.global for now.".into(),
+            );
         }
 
         // Save
@@ -315,8 +322,10 @@ impl BaselineCommand {
         if !manager.config().modules.is_empty() {
             println!("\n📦 Module Baselines:");
             for (name, baseline) in &manager.config().modules {
-                println!("   {}: ${:.2}/month (±{:.1}%)",
-                    name, baseline.expected_monthly_cost, baseline.acceptable_variance_percent);
+                println!(
+                    "   {}: ${:.2}/month (±{:.1}%)",
+                    name, baseline.expected_monthly_cost, baseline.acceptable_variance_percent
+                );
             }
         }
 

@@ -20,7 +20,7 @@ pub mod test_helpers {
         pub use crate::edition::EditionContext;
 
         pub fn premium() -> EditionContext {
-            use crate::edition::{EditionMode, Capabilities, pro_handle::ProEngineHandle};
+            use crate::edition::{pro_handle::ProEngineHandle, Capabilities, EditionMode};
             use std::path::PathBuf;
 
             let stub_handle = ProEngineHandle::stub(PathBuf::from("/tmp/test_pro.wasm"));
@@ -45,13 +45,13 @@ pub mod test_helpers {
     }
 }
 
+pub use config::{load_product_spec, load_product_spec_from_path, ConfigError, ProductSpec};
 pub use engines::shared::models::*;
 pub use security::{SandboxLimits, SecurityValidator};
 pub use validation::{
     validate_file, BaselinesValidator, ConfigValidator, PolicyValidator, SloValidator,
     ValidationError, ValidationReport, ValidationWarning,
 };
-pub use config::{load_product_spec, load_product_spec_from_path, ProductSpec, ConfigError};
 pub use wasm::{EngineBudget, SandboxLimits as WasmSandboxLimits, ValidationResult};
 pub use zero_cost_guard::{ZeroCostGuard, ZeroCostViolation};
 

@@ -215,22 +215,49 @@ mod tests {
         let spec = load_product_spec().expect("Failed to load product spec");
 
         // Verify zero cost policy fields
-        assert!(spec.zero_cost_policy.allowed_modes.contains(&"safe".to_string()));
-        assert!(spec.zero_cost_policy.allowed_modes.contains(&"simulate".to_string()));
+        assert!(spec
+            .zero_cost_policy
+            .allowed_modes
+            .contains(&"safe".to_string()));
+        assert!(spec
+            .zero_cost_policy
+            .allowed_modes
+            .contains(&"simulate".to_string()));
         assert_eq!(spec.zero_cost_policy.default_mode, "safe");
 
         // Verify invariants
         assert!(spec.zero_cost_policy.invariants.len() > 0);
-        assert!(spec.zero_cost_policy.invariants.iter().any(|inv| inv.contains("No IAM permissions")));
+        assert!(spec
+            .zero_cost_policy
+            .invariants
+            .iter()
+            .any(|inv| inv.contains("No IAM permissions")));
 
         // Verify forbidden actions
-        assert!(spec.zero_cost_policy.forbidden_actions.contains(&"terraform_apply".to_string()));
-        assert!(spec.zero_cost_policy.forbidden_actions.contains(&"cloud_resource_create".to_string()));
+        assert!(spec
+            .zero_cost_policy
+            .forbidden_actions
+            .contains(&"terraform_apply".to_string()));
+        assert!(spec
+            .zero_cost_policy
+            .forbidden_actions
+            .contains(&"cloud_resource_create".to_string()));
 
         // Verify simulation rules
         assert!(!spec.zero_cost_policy.simulation_rules.terraform.allow_apply);
-        assert!(spec.zero_cost_policy.simulation_rules.terraform.simulate_plan);
-        assert!(!spec.zero_cost_policy.simulation_rules.network.outbound_enabled);
+        assert!(
+            spec.zero_cost_policy
+                .simulation_rules
+                .terraform
+                .simulate_plan
+        );
+        assert!(
+            !spec
+                .zero_cost_policy
+                .simulation_rules
+                .network
+                .outbound_enabled
+        );
     }
 
     #[test]

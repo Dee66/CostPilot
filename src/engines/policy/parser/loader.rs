@@ -1,6 +1,7 @@
 // Policy loader - Load policy rules from files and directories
 
 use super::dsl::{DslParser, ParseError, PolicyRule};
+use dirs;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -26,14 +27,25 @@ impl PolicyRuleLoader {
 
     /// Default search paths for policy rules
     pub fn default_search_paths() -> Vec<PathBuf> {
-        vec![
+        let mut paths = vec![
             PathBuf::from(".costpilot/policies"), // Project policies
             PathBuf::from(".costpilot/rules"),    // Alternative name
-            dirs::home_dir()
-                .map(|h| h.join(".costpilot/policies"))
-                .unwrap_or_else(|| PathBuf::from("~/.costpilot/policies")), // User policies
-            PathBuf::from("/etc/costpilot/policies"), // System-wide policies
-        ]
+        ];
+
+        // User policies
+        if let Some(home) = dirs::home_dir() {
+            paths.push(home.join(".costpilot/policies"));
+        }
+
+        // System-wide policies
+        #[cfg(unix)]
+        paths.push(PathBuf::from("/etc/costpilot/policies"));
+        #[cfg(windows)]
+        if let Some(program_data) = std::env::var_os("ProgramData") {
+            paths.push(PathBuf::from(program_data).join("CostPilot\\policies"));
+        }
+
+        paths
     }
 
     /// Load all policy rules from search paths

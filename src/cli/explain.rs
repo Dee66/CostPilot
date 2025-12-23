@@ -264,7 +264,8 @@ fn execute_explain_all(
         output.push('\n');
     }
 
-    output.push_str("\n💡 Use 'costpilot explain resource --resource <id>' for detailed reasoning\n");
+    output
+        .push_str("\n💡 Use 'costpilot explain resource --resource <id>' for detailed reasoning\n");
 
     Ok(output)
 }
@@ -312,19 +313,31 @@ pub fn execute_explain_args(
     let mut config = serde_json::Map::new();
 
     if let Some(instance_type) = &args.instance_type {
-        config.insert("instance_type".to_string(), serde_json::Value::String(instance_type.clone()));
+        config.insert(
+            "instance_type".to_string(),
+            serde_json::Value::String(instance_type.clone()),
+        );
     }
     if let Some(engine) = &args.engine {
-        config.insert("engine".to_string(), serde_json::Value::String(engine.clone()));
+        config.insert(
+            "engine".to_string(),
+            serde_json::Value::String(engine.clone()),
+        );
     }
     if let Some(storage_gb) = args.storage_gb {
-        config.insert("storage_gb".to_string(), serde_json::Value::Number(storage_gb.into()));
+        config.insert(
+            "storage_gb".to_string(),
+            serde_json::Value::Number(storage_gb.into()),
+        );
     }
     if let Some(vcpu) = args.vcpu {
         config.insert("vcpu".to_string(), serde_json::Value::Number(vcpu.into()));
     }
     if let Some(memory_gb) = args.memory_gb {
-        config.insert("memory_gb".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(memory_gb as f64).unwrap()));
+        config.insert(
+            "memory_gb".to_string(),
+            serde_json::Value::Number(serde_json::Number::from_f64(memory_gb as f64).unwrap()),
+        );
     }
 
     let config_value = serde_json::Value::Object(config);
@@ -343,7 +356,8 @@ pub fn execute_explain_args(
         .map_err(|e| format!("Failed to initialize prediction engine: {}", e))?;
 
     // Get prediction
-    let prediction = prediction_engine.predict_resource_cost(&change)
+    let prediction = prediction_engine
+        .predict_resource_cost(&change)
         .map_err(|e| format!("Failed to predict cost: {}", e))?;
 
     // Get explanation
@@ -352,8 +366,14 @@ pub fn execute_explain_args(
 
     // Format output
     let mut output = format!("Explanation for {}:\n\n", args.resource_type);
-    output.push_str(&format!("Predicted monthly cost: ${:.2}\n", prediction.monthly_cost));
-    output.push_str(&format!("Confidence: {:.1}%\n\n", prediction.confidence_score * 100.0));
+    output.push_str(&format!(
+        "Predicted monthly cost: ${:.2}\n",
+        prediction.monthly_cost
+    ));
+    output.push_str(&format!(
+        "Confidence: {:.1}%\n\n",
+        prediction.confidence_score * 100.0
+    ));
 
     output.push_str("Reasoning:\n");
     for step in &explanation.steps {

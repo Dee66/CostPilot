@@ -10,7 +10,7 @@ use aes_gcm::{
     aead::{Aead, KeyInit},
     Aes256Gcm, Nonce as AesNonce,
 };
-use base64::{Engine as _, engine::general_purpose};
+use base64::{engine::general_purpose, Engine as _};
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use hkdf::SimpleHkdf;
 use sha2::Sha256;
@@ -31,7 +31,11 @@ pub fn hkdf_derive(key_material: &str, salt: &[u8], info: &[u8]) -> [u8; 32] {
 
 /// Decrypts AES-GCM ciphertext
 /// Expects: key (32 bytes), nonce (12 bytes), ciphertext with tag appended
-pub fn aes_gcm_decrypt(key: &[u8; 32], nonce: &[u8; 12], ciphertext: &[u8]) -> Result<Vec<u8>, String> {
+pub fn aes_gcm_decrypt(
+    key: &[u8; 32],
+    nonce: &[u8; 12],
+    ciphertext: &[u8],
+) -> Result<Vec<u8>, String> {
     let cipher = Aes256Gcm::new(key.into());
     let nonce = AesNonce::from_slice(nonce);
 
@@ -158,7 +162,10 @@ pub fn verify_wasm_signature(wasm: &[u8], sig: &[u8]) -> Result<(), String> {
 #[cfg(not(target_arch = "wasm32"))]
 pub fn verify_license_signature(lic: &super::license::License) -> Result<(), String> {
     // Construct canonical signing message (now includes issuer)
-    let message = format!("{}|{}|{}|{}", lic.email, lic.license_key, lic.expires, lic.issuer);
+    let message = format!(
+        "{}|{}|{}|{}",
+        lic.email, lic.license_key, lic.expires, lic.issuer
+    );
 
     // Decode signature from hex
     let sig_bytes = hex::decode(&lic.signature).map_err(|_| "Invalid signature format")?;

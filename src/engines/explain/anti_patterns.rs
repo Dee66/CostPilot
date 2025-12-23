@@ -255,7 +255,7 @@ fn detect_dynamodb_pay_per_request_default(change: &ResourceChange) -> Option<An
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ResourceChange, ChangeAction, CostEstimate};
+    use crate::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
     use serde_json::json;
 
     #[test]

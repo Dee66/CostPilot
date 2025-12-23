@@ -363,10 +363,10 @@ pub struct CostPropagation {
 
 #[cfg(test)]
 mod tests {
-    use crate::edition::EditionContext;
     use super::*;
+    use crate::edition::EditionContext;
+    use crate::engines::shared::models::{ChangeAction, ResourceChange};
     use serde_json::json;
-    use crate::engines::shared::models::{ResourceChange, ChangeAction};
 
     fn create_test_resource(id: &str, resource_type: &str) -> ResourceChange {
         ResourceChange::builder()
@@ -395,7 +395,13 @@ mod tests {
         let result = engine.map_dependencies(&changes);
         // Free edition has depth=5 by default which triggers upgrade error
         if edition.is_free() {
-            assert!(result.is_err() || result.as_ref().map(|s| s.contains("flowchart TB")).unwrap_or(false));
+            assert!(
+                result.is_err()
+                    || result
+                        .as_ref()
+                        .map(|s| s.contains("flowchart TB"))
+                        .unwrap_or(false)
+            );
         } else {
             assert!(result.is_ok());
             let mermaid = result.unwrap();

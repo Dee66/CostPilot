@@ -408,7 +408,7 @@ impl GraphBuilder {
 
         for node in &graph.nodes {
             if !visited.contains(&node.id) {
-                self.dfs_cycle_detect(
+                Self::dfs_cycle_detect(
                     &node.id,
                     graph,
                     &mut visited,
@@ -424,7 +424,6 @@ impl GraphBuilder {
 
     /// DFS helper for cycle detection
     fn dfs_cycle_detect(
-        &self,
         node_id: &str,
         graph: &DependencyGraph,
         visited: &mut HashSet<String>,
@@ -438,7 +437,7 @@ impl GraphBuilder {
 
         for edge in graph.edges_from(node_id) {
             if !visited.contains(&edge.to) {
-                self.dfs_cycle_detect(&edge.to, graph, visited, rec_stack, path, cycles);
+                Self::dfs_cycle_detect(&edge.to, graph, visited, rec_stack, path, cycles);
             } else if rec_stack.contains(&edge.to) {
                 // Found a cycle
                 if let Some(cycle_start) = path.iter().position(|id| id == &edge.to) {

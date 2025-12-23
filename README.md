@@ -147,6 +147,15 @@ CostPilot is distributed as a single CLI binary.
 Installation methods and package managers are documented per-release.
 Correctness and determinism take precedence over distribution convenience.
 
+### Windows
+
+1. Download the latest `costpilot-windows-amd64.zip` from the [GitHub releases](https://github.com/Dee66/CostPilot/releases) page.
+2. Extract the ZIP file to a directory of your choice (e.g., `C:\CostPilot`).
+3. Add the `bin` directory to your PATH environment variable:
+   - Open System Properties > Advanced > Environment Variables
+   - Edit the `Path` variable and add the path to the `bin` directory
+4. Open a new Command Prompt or PowerShell window and verify: `costpilot.exe --version`
+
 ---
 
 ## Documentation

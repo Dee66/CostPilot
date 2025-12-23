@@ -86,8 +86,8 @@ pub fn parse_bundle(bytes: &[u8]) -> Result<EncryptedBundle, LoaderError> {
     let metadata_start = 4;
     let metadata_end = metadata_start + metadata_len;
     let metadata_bytes = bytes[metadata_start..metadata_end].to_vec();
-    let metadata: serde_json::Value = serde_json::from_slice(&metadata_bytes)
-        .map_err(|_| LoaderError::InvalidFormat)?;
+    let metadata: serde_json::Value =
+        serde_json::from_slice(&metadata_bytes).map_err(|_| LoaderError::InvalidFormat)?;
 
     let nonce_start = metadata_end;
     let nonce_end = nonce_start + 12;
@@ -134,8 +134,8 @@ pub fn verify_signature(bundle: &EncryptedBundle, public_key: &[u8]) -> Result<(
     )
     .map_err(|_| LoaderError::SignatureInvalid)?;
 
-    let signature = Signature::from_slice(&bundle.signature)
-        .map_err(|_| LoaderError::SignatureInvalid)?;
+    let signature =
+        Signature::from_slice(&bundle.signature).map_err(|_| LoaderError::SignatureInvalid)?;
 
     verifying_key
         .verify_strict(&signed_data, &signature)
@@ -145,10 +145,7 @@ pub fn verify_signature(bundle: &EncryptedBundle, public_key: &[u8]) -> Result<(
 }
 
 /// Derive AES-256 decryption key from license info using HKDF-SHA256
-pub fn derive_decryption_key(
-    license: &LicenseInfo,
-    salt: &[u8],
-) -> Result<[u8; 32], LoaderError> {
+pub fn derive_decryption_key(license: &LicenseInfo, salt: &[u8]) -> Result<[u8; 32], LoaderError> {
     if license.license_key.is_empty() {
         return Err(LoaderError::MissingKeyMaterial);
     }
@@ -171,20 +168,20 @@ pub fn derive_decryption_key(
 }
 
 /// Decrypt AES-GCM bundle using derived key
-pub fn decrypt_bundle(
-    bundle: &EncryptedBundle,
-    key: &[u8; 32],
-) -> Result<Vec<u8>, LoaderError> {
+pub fn decrypt_bundle(bundle: &EncryptedBundle, key: &[u8; 32]) -> Result<Vec<u8>, LoaderError> {
     let cipher = Aes256Gcm::new(key.into());
     let nonce = Nonce::from_slice(&bundle.nonce);
 
     let aad = &bundle.metadata_bytes;
 
     let plaintext = cipher
-        .decrypt(nonce, aes_gcm::aead::Payload {
-            msg: &bundle.ciphertext,
-            aad,
-        })
+        .decrypt(
+            nonce,
+            aes_gcm::aead::Payload {
+                msg: &bundle.ciphertext,
+                aad,
+            },
+        )
         .map_err(|_| LoaderError::DecryptionFailed)?;
 
     Ok(plaintext)
@@ -202,8 +199,8 @@ pub fn load_pro_engine_from_file(
 
     verify_signature(&bundle, public_key)?;
 
-    let metadata: BundleMetadata = serde_json::from_value(bundle.metadata.clone())
-        .map_err(|_| LoaderError::InvalidFormat)?;
+    let metadata: BundleMetadata =
+        serde_json::from_value(bundle.metadata.clone()).map_err(|_| LoaderError::InvalidFormat)?;
     let salt = metadata
         .salt
         .as_ref()
@@ -226,9 +223,9 @@ pub fn load_pro_engine_from_file(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
     use std::path::PathBuf;
     use tempfile::NamedTempFile;
-    use std::io::Write;
 
     #[test]
     fn test_parse_bundle_valid() {
@@ -257,7 +254,10 @@ mod tests {
     #[test]
     fn test_parse_bundle_too_short() {
         let short_bytes = vec![0u8; 10];
-        assert!(matches!(parse_bundle(&short_bytes), Err(LoaderError::InvalidFormat)));
+        assert!(matches!(
+            parse_bundle(&short_bytes),
+            Err(LoaderError::InvalidFormat)
+        ));
     }
 
     #[test]
@@ -265,7 +265,10 @@ mod tests {
         let mut bytes = vec![0u8; 100];
         // Set metadata len to larger than available
         bytes[0..4].copy_from_slice(&(100u32.to_be_bytes()));
-        assert!(matches!(parse_bundle(&bytes), Err(LoaderError::InvalidFormat)));
+        assert!(matches!(
+            parse_bundle(&bytes),
+            Err(LoaderError::InvalidFormat)
+        ));
     }
 
     #[test]
@@ -283,7 +286,10 @@ mod tests {
         bundle_bytes.extend_from_slice(ciphertext);
         bundle_bytes.extend_from_slice(&signature);
 
-        assert!(matches!(parse_bundle(&bundle_bytes), Err(LoaderError::InvalidFormat)));
+        assert!(matches!(
+            parse_bundle(&bundle_bytes),
+            Err(LoaderError::InvalidFormat)
+        ));
     }
 
     #[test]
@@ -296,7 +302,9 @@ mod tests {
         let signing_key = ed25519_dalek::SigningKey::from(&secret_key);
         let public_key = ed25519_dalek::VerifyingKey::from(&signing_key);
         let keypair_bytes = [secret_key_bytes, public_key.to_bytes()].concat();
-        let signing_key = ed25519_dalek::SigningKey::from_keypair_bytes(&keypair_bytes.try_into().unwrap()).unwrap();
+        let signing_key =
+            ed25519_dalek::SigningKey::from_keypair_bytes(&keypair_bytes.try_into().unwrap())
+                .unwrap();
 
         let data = b"test data";
         let mut signed_data = Vec::new();
@@ -327,7 +335,10 @@ mod tests {
             metadata_bytes: vec![],
         };
 
-        assert!(matches!(verify_signature(&bundle, &[0u8; 31]), Err(LoaderError::SignatureInvalid)));
+        assert!(matches!(
+            verify_signature(&bundle, &[0u8; 31]),
+            Err(LoaderError::SignatureInvalid)
+        ));
     }
 
     #[test]
@@ -341,7 +352,10 @@ mod tests {
         };
 
         let key = [0u8; 32];
-        assert!(matches!(verify_signature(&bundle, &key), Err(LoaderError::SignatureInvalid)));
+        assert!(matches!(
+            verify_signature(&bundle, &key),
+            Err(LoaderError::SignatureInvalid)
+        ));
     }
 
     #[test]
@@ -368,7 +382,10 @@ mod tests {
         };
 
         let salt = b"salt";
-        assert!(matches!(derive_decryption_key(&license, salt), Err(LoaderError::MissingKeyMaterial)));
+        assert!(matches!(
+            derive_decryption_key(&license, salt),
+            Err(LoaderError::MissingKeyMaterial)
+        ));
     }
 
     #[test]
@@ -382,10 +399,15 @@ mod tests {
         let aad = b"metadata";
         let plaintext = b"test plaintext";
 
-        let ciphertext = cipher.encrypt(nonce, aes_gcm::aead::Payload {
-            msg: plaintext,
-            aad,
-        }).unwrap();
+        let ciphertext = cipher
+            .encrypt(
+                nonce,
+                aes_gcm::aead::Payload {
+                    msg: plaintext,
+                    aad,
+                },
+            )
+            .unwrap();
 
         let bundle = EncryptedBundle {
             ciphertext,
@@ -410,7 +432,10 @@ mod tests {
         };
 
         let wrong_key = [0u8; 32];
-        assert!(matches!(decrypt_bundle(&bundle, &wrong_key), Err(LoaderError::DecryptionFailed)));
+        assert!(matches!(
+            decrypt_bundle(&bundle, &wrong_key),
+            Err(LoaderError::DecryptionFailed)
+        ));
     }
 
     #[test]
@@ -425,7 +450,10 @@ mod tests {
         let path = PathBuf::from("nonexistent.wasm");
         let key = [0u8; 32];
 
-        assert!(matches!(load_pro_engine_from_file(&path, &license, &key), Err(LoaderError::Io(_))));
+        assert!(matches!(
+            load_pro_engine_from_file(&path, &license, &key),
+            Err(LoaderError::Io(_))
+        ));
     }
 
     #[test]
@@ -445,6 +473,9 @@ mod tests {
         let key = [0u8; 32];
 
         // This will fail at parse_bundle since it's not a valid bundle
-        assert!(matches!(load_pro_engine_from_file(temp_file.path(), &license, &key), Err(LoaderError::InvalidFormat)));
+        assert!(matches!(
+            load_pro_engine_from_file(temp_file.path(), &license, &key),
+            Err(LoaderError::InvalidFormat)
+        ));
     }
 }

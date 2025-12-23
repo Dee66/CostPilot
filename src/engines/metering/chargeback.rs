@@ -377,7 +377,7 @@ impl ChargebackReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::metering::usage_meter::{UserUsage, ProjectUsage};
+    use crate::engines::metering::usage_meter::{ProjectUsage, UserUsage};
 
     fn create_test_summary(team_id: &str, charge: f64, resources: u32) -> TeamUsageSummary {
         TeamUsageSummary {

@@ -144,10 +144,9 @@ pub fn aggregate_module_hierarchy(groups: &[ModuleGroup]) -> Vec<ModuleGroup> {
                 break;
             }
 
-            let parent_group = aggregated.entry(parent.clone()).or_insert_with(|| {
-
-                ModuleGroup::new(parent.clone())
-            });
+            let parent_group = aggregated
+                .entry(parent.clone())
+                .or_insert_with(|| ModuleGroup::new(parent.clone()));
 
             // Only add cost if this isn't already counted (avoid double-counting)
             if parent != group.module_path {
@@ -192,7 +191,12 @@ pub fn generate_module_tree(groups: &[ModuleGroup]) -> String {
         let name = if group.depth() == 0 {
             group.module_path.clone()
         } else {
-            group.module_path.split('.').next_back().unwrap().to_string()
+            group
+                .module_path
+                .split('.')
+                .next_back()
+                .unwrap()
+                .to_string()
         };
 
         tree.push_str(&format!(

@@ -45,10 +45,19 @@ fn test_default_search_paths_contains_expected_locations() {
         .any(|p| p.to_string_lossy().contains("cost_heuristics.json")));
 
     // Should include system paths
-    assert!(paths.iter().any(|p| p.to_string_lossy().contains("/etc/")));
-    assert!(paths
-        .iter()
-        .any(|p| p.to_string_lossy().contains("/usr/local/")));
+    #[cfg(unix)]
+    {
+        assert!(paths.iter().any(|p| p.to_string_lossy().contains("/etc/")));
+        assert!(paths
+            .iter()
+            .any(|p| p.to_string_lossy().contains("/usr/local/")));
+    }
+    #[cfg(windows)]
+    {
+        assert!(paths
+            .iter()
+            .any(|p| p.to_string_lossy().contains("CostPilot")));
+    }
 }
 
 #[test]

@@ -69,6 +69,7 @@ fn test_config_file_creation() {
 }
 
 // Test permission handling
+#[cfg(unix)]
 #[test]
 fn test_permission_handling() {
     use std::os::unix::fs::PermissionsExt;

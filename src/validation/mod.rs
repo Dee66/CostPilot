@@ -166,7 +166,10 @@ pub fn validate_file(path: impl AsRef<Path>) -> ValidationResult<ValidationRepor
 
     // Check if file exists first
     if !path.exists() {
-        return Err(ValidationError::new(format!("No such file: {}", path.display())));
+        return Err(Box::new(ValidationError::new(format!(
+            "No such file: {}",
+            path.display()
+        ))));
     }
 
     // Detect file type from name/extension
@@ -202,10 +205,10 @@ fn detect_file_type(path: &Path) -> ValidationResult<FileType> {
         // Assume policy file
         Ok(FileType::Policy)
     } else {
-        Err(ValidationError::new(format!(
+        Err(Box::new(ValidationError::new(format!(
             "Could not detect file type for: {}. Supported: costpilot.yaml, baselines.json, slo.yaml, *.yaml (policies)",
             file_name
-        )))
+        ))))
     }
 }
 

@@ -38,11 +38,13 @@ impl OutputValidator {
         let mut schemas = HashMap::new();
 
         // Load detection schema
-        let detection_schema = Self::load_schema("tests/golden/schemas/detection_output.schema.json")?;
+        let detection_schema =
+            Self::load_schema("tests/golden/schemas/detection_output.schema.json")?;
         schemas.insert(OutputType::Detection, detection_schema);
 
         // Load prediction schema
-        let prediction_schema = Self::load_schema("tests/golden/schemas/prediction_output.schema.json")?;
+        let prediction_schema =
+            Self::load_schema("tests/golden/schemas/prediction_output.schema.json")?;
         schemas.insert(OutputType::Prediction, prediction_schema);
 
         // Load mapping schema

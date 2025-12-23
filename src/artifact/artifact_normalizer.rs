@@ -1,7 +1,7 @@
 use super::artifact_types::*;
+use crate::engines::shared::models::{ChangeAction as EngineChangeAction, ResourceChange};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use crate::engines::shared::models::{ResourceChange, ChangeAction as EngineChangeAction};
 
 /// Normalizes different artifact formats to a common internal representation
 pub struct ArtifactNormalizer;
@@ -114,8 +114,10 @@ impl ArtifactNormalizer {
                 // Insert underscore if previous character exists and is lowercase
                 // Or if previous is uppercase and next is lowercase (acronym handling)
                 let should_insert = if i > 0 {
-                    chars[i-1].is_lowercase() ||
-                    (chars[i-1].is_uppercase() && i < chars.len() - 1 && chars[i+1].is_lowercase())
+                    chars[i - 1].is_lowercase()
+                        || (chars[i - 1].is_uppercase()
+                            && i < chars.len() - 1
+                            && chars[i + 1].is_lowercase())
                 } else {
                     false
                 };
@@ -144,8 +146,8 @@ impl ArtifactNormalizer {
         }
 
         // S3 Bucket mappings
-        if resource_type.contains("bucket") {
-            if key == "bucket_name" { return "bucket".to_string() }
+        if resource_type.contains("bucket") && key == "bucket_name" {
+            return "bucket".to_string();
         }
 
         // RDS mappings
@@ -212,11 +214,9 @@ impl ArtifactNormalizer {
                 }
                 Value::Object(normalized)
             }
-            Value::Array(arr) => Value::Array(
-                arr.iter()
-                    .map(Self::normalize_property_value)
-                    .collect(),
-            ),
+            Value::Array(arr) => {
+                Value::Array(arr.iter().map(Self::normalize_property_value).collect())
+            }
             Value::String(s) => {
                 // Try to convert string numbers to actual numbers
                 if let Ok(num) = s.parse::<i64>() {
@@ -329,7 +329,9 @@ impl NormalizedPlan {
                     EngineChangeAction::Update
                 } else if change.change.actions.contains(&"delete".to_string()) {
                     EngineChangeAction::Delete
-                } else if change.change.actions.contains(&"delete".to_string()) && change.change.actions.contains(&"create".to_string()) {
+                } else if change.change.actions.contains(&"delete".to_string())
+                    && change.change.actions.contains(&"create".to_string())
+                {
                     EngineChangeAction::Replace
                 } else {
                     EngineChangeAction::NoOp

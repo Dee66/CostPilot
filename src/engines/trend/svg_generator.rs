@@ -2,6 +2,38 @@ use std::fmt::Write;
 
 use super::snapshot_types::{CostSnapshot, TrendHistory};
 
+/// Parameters for drawing grid
+#[derive(Debug)]
+pub struct GridParams {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+/// Parameters for drawing cost line
+#[derive(Debug)]
+pub struct CostLineParams<'a> {
+    pub snapshots: &'a [CostSnapshot],
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+    pub y_min: f64,
+    pub y_range: f64,
+}
+
+/// Parameters for drawing labels
+#[derive(Debug)]
+pub struct LabelsParams {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+    pub y_min: f64,
+    pub y_max: f64,
+}
+
 /// Configuration for SVG graph generation
 #[derive(Debug, Clone)]
 pub struct SvgConfig {
@@ -110,66 +142,46 @@ impl SvgGenerator {
 
         // Draw grid
         if self.config.show_grid {
-            self.draw_grid(
-                &mut svg,
-                graph_x,
-                graph_y,
-                graph_width,
-                graph_height,
-                y_min,
-                y_max,
-            );
+            let grid_params = GridParams {
+                x: graph_x,
+                y: graph_y,
+                width: graph_width,
+                height: graph_height,
+            };
+            self.draw_grid(&mut svg, grid_params);
         }
 
         // Draw axes
         self.draw_axes(&mut svg, graph_x, graph_y, graph_width, graph_height);
 
         // Draw cost line
-        self.draw_cost_line(
-            &mut svg,
-            &history.snapshots,
-            graph_x,
-            graph_y,
-            graph_width,
-            graph_height,
+        let cost_line_params = CostLineParams {
+            snapshots: &history.snapshots,
+            x: graph_x,
+            y: graph_y,
+            width: graph_width,
+            height: graph_height,
             y_min,
             y_range,
-        );
+        };
+        self.draw_cost_line(&mut svg, &cost_line_params);
 
         // Draw regression annotations
-        self.draw_regression_annotations(
-            &mut svg,
-            &history.snapshots,
-            graph_x,
-            graph_y,
-            graph_width,
-            graph_height,
-            y_min,
-            y_range,
-        );
+        self.draw_regression_annotations(&mut svg, &cost_line_params);
 
         // Draw SLO violation annotations
-        self.draw_slo_annotations(
-            &mut svg,
-            &history.snapshots,
-            graph_x,
-            graph_y,
-            graph_width,
-            graph_height,
-            y_min,
-            y_range,
-        );
+        self.draw_slo_annotations(&mut svg, &cost_line_params);
 
         // Draw labels
-        self.draw_labels(
-            &mut svg,
-            graph_x,
-            graph_y,
-            graph_width,
-            graph_height,
+        let labels_params = LabelsParams {
+            x: graph_x,
+            y: graph_y,
+            width: graph_width,
+            height: graph_height,
             y_min,
             y_max,
-        );
+        };
+        self.draw_labels(&mut svg, labels_params);
 
         // SVG footer
         writeln!(&mut svg, "</svg>").unwrap();
@@ -177,16 +189,7 @@ impl SvgGenerator {
         Ok(svg)
     }
 
-    fn draw_grid(
-        &self,
-        svg: &mut String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        _y_min: f64,
-        _y_max: f64,
-    ) {
+    fn draw_grid(&self, svg: &mut String, params: GridParams) {
         writeln!(
             svg,
             r##"  <g id="grid" stroke="#e5e7eb" stroke-width="1" opacity="0.5">"##
@@ -195,13 +198,13 @@ impl SvgGenerator {
 
         // Horizontal grid lines (5 lines)
         for i in 0..=5 {
-            let y_pos = y + (i as f64 / 5.0) * height;
+            let y_pos = params.y + (i as f64 / 5.0) * params.height;
             writeln!(
                 svg,
                 r#"    <line x1="{}" y1="{}" x2="{}" y2="{}"/>"#,
-                x,
+                params.x,
                 y_pos,
-                x + width,
+                params.x + params.width,
                 y_pos
             )
             .unwrap();
@@ -210,14 +213,14 @@ impl SvgGenerator {
         // Vertical grid lines (based on snapshot count)
         let line_count = 6;
         for i in 0..=line_count {
-            let x_pos = x + (i as f64 / line_count as f64) * width;
+            let x_pos = params.x + (i as f64 / line_count as f64) * params.width;
             writeln!(
                 svg,
                 r#"    <line x1="{}" y1="{}" x2="{}" y2="{}"/>"#,
                 x_pos,
-                y,
+                params.y,
                 x_pos,
-                y + height
+                params.y + params.height
             )
             .unwrap();
         }
@@ -257,18 +260,8 @@ impl SvgGenerator {
         writeln!(svg, "  </g>").unwrap();
     }
 
-    fn draw_cost_line(
-        &self,
-        svg: &mut String,
-        snapshots: &[CostSnapshot],
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        y_min: f64,
-        y_range: f64,
-    ) {
-        if snapshots.is_empty() {
+    fn draw_cost_line(&self, svg: &mut String, params: &CostLineParams) {
+        if params.snapshots.is_empty() {
             return;
         }
 
@@ -282,9 +275,9 @@ impl SvgGenerator {
         // Build path
         let mut path = String::from("    <path d=\"");
 
-        for (i, snapshot) in snapshots.iter().enumerate() {
-            let x_pos = x + (i as f64 / (snapshots.len() - 1).max(1) as f64) * width;
-            let y_pos = y + height - ((snapshot.total_monthly_cost - y_min) / y_range) * height;
+        for (i, snapshot) in params.snapshots.iter().enumerate() {
+            let x_pos = params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
+            let y_pos = params.y + params.height - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
 
             if i == 0 {
                 write!(&mut path, "M {} {}", x_pos, y_pos).unwrap();
@@ -298,9 +291,9 @@ impl SvgGenerator {
 
         // Draw points if enabled
         if self.config.show_points {
-            for (i, snapshot) in snapshots.iter().enumerate() {
-                let x_pos = x + (i as f64 / (snapshots.len() - 1).max(1) as f64) * width;
-                let y_pos = y + height - ((snapshot.total_monthly_cost - y_min) / y_range) * height;
+            for (i, snapshot) in params.snapshots.iter().enumerate() {
+                let x_pos = params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
+                let y_pos = params.y + params.height - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
 
                 writeln!(
                     svg,
@@ -314,23 +307,13 @@ impl SvgGenerator {
         writeln!(svg, "  </g>").unwrap();
     }
 
-    fn draw_regression_annotations(
-        &self,
-        svg: &mut String,
-        snapshots: &[CostSnapshot],
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        y_min: f64,
-        y_range: f64,
-    ) {
+    fn draw_regression_annotations(&self, svg: &mut String, params: &CostLineParams) {
         writeln!(svg, r#"  <g id="regressions">"#).unwrap();
 
-        for (i, snapshot) in snapshots.iter().enumerate() {
+        for (i, snapshot) in params.snapshots.iter().enumerate() {
             if !snapshot.regressions.is_empty() {
-                let x_pos = x + (i as f64 / (snapshots.len() - 1).max(1) as f64) * width;
-                let y_pos = y + height - ((snapshot.total_monthly_cost - y_min) / y_range) * height;
+                let x_pos = params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
+                let y_pos = params.y + params.height - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
 
                 // Draw warning marker
                 writeln!(
@@ -352,23 +335,13 @@ impl SvgGenerator {
         writeln!(svg, "  </g>").unwrap();
     }
 
-    fn draw_slo_annotations(
-        &self,
-        svg: &mut String,
-        snapshots: &[CostSnapshot],
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        y_min: f64,
-        y_range: f64,
-    ) {
+    fn draw_slo_annotations(&self, svg: &mut String, params: &CostLineParams) {
         writeln!(svg, r#"  <g id="slo-violations">"#).unwrap();
 
-        for (i, snapshot) in snapshots.iter().enumerate() {
+        for (i, snapshot) in params.snapshots.iter().enumerate() {
             if !snapshot.slo_violations.is_empty() {
-                let x_pos = x + (i as f64 / (snapshots.len() - 1).max(1) as f64) * width;
-                let y_pos = y + height - ((snapshot.total_monthly_cost - y_min) / y_range) * height;
+                let x_pos = params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
+                let y_pos = params.y + params.height - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
 
                 // Draw SLO violation marker (different color from regression)
                 writeln!(
@@ -382,16 +355,7 @@ impl SvgGenerator {
         writeln!(svg, "  </g>").unwrap();
     }
 
-    fn draw_labels(
-        &self,
-        svg: &mut String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        y_min: f64,
-        y_max: f64,
-    ) {
+    fn draw_labels(&self, svg: &mut String, params: LabelsParams) {
         writeln!(
             svg,
             r##"  <g id="labels" font-family="monospace" font-size="12" fill="#374151">"##
@@ -400,13 +364,13 @@ impl SvgGenerator {
 
         // Y-axis labels (cost values)
         for i in 0..=5 {
-            let value = y_min + (y_max - y_min) * (i as f64 / 5.0);
-            let y_pos = y + height - (i as f64 / 5.0) * height;
+            let value = params.y_min + (params.y_max - params.y_min) * (i as f64 / 5.0);
+            let y_pos = params.y + params.height - (i as f64 / 5.0) * params.height;
 
             writeln!(
                 svg,
                 r#"    <text x="{}" y="{}" text-anchor="end" dominant-baseline="middle">${:.0}</text>"#,
-                x - 5.0,
+                params.x - 5.0,
                 y_pos,
                 value
             ).unwrap();
@@ -416,18 +380,18 @@ impl SvgGenerator {
         writeln!(
             svg,
             r#"    <text x="{}" y="{}" text-anchor="middle" font-weight="bold">Time</text>"#,
-            x + width / 2.0,
-            y + height + 30.0
+            params.x + params.width / 2.0,
+            params.y + params.height + 30.0
         )
         .unwrap();
 
         writeln!(
             svg,
             r#"    <text x="{}" y="{}" text-anchor="middle" font-weight="bold" transform="rotate(-90 {} {})">Monthly Cost ($)</text>"#,
-            x - 30.0,
-            y + height / 2.0,
-            x - 30.0,
-            y + height / 2.0
+            params.x - 30.0,
+            params.y + params.height / 2.0,
+            params.x - 30.0,
+            params.y + params.height / 2.0
         ).unwrap();
 
         writeln!(svg, "  </g>").unwrap();
