@@ -236,7 +236,7 @@ impl CriticalDriftDetector {
 
         if attr_lower.contains("security") || attr_lower.contains("security_group") {
             CriticalDriftReason::SecurityViolation
-        } else if attr_lower.contains("encryption") || attr_lower.contains("kms") {
+        } else if attr_lower.contains("encrypt") || attr_lower.contains("encryption") || attr_lower.contains("kms") || attr_lower.contains("key") {
             CriticalDriftReason::EncryptionDisabled
         } else if attr_lower.contains("iam")
             || attr_lower.contains("policy")

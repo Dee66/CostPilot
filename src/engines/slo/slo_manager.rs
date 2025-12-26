@@ -1,8 +1,10 @@
 use super::slo_types::{
-    EnforcementLevel, Slo, SloConfig, SloEvaluation, SloParams, SloReport, SloStatus, SloType,
+    EnforcementLevel, Slo, SloConfig, SloEvaluation, SloReport, SloStatus, SloType,
 };
 use crate::engines::baselines::BaselinesManager;
 use crate::engines::trend::CostSnapshot;
+use crate::engines::slo::slo_types::SloParams;
+use crate::engines::slo::SloThreshold;
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
@@ -382,7 +384,6 @@ impl SloManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::slo::slo_types::SloThreshold;
     use crate::engines::trend::ModuleCost;
 
     fn create_test_slo() -> Slo {

@@ -120,7 +120,6 @@ impl GraphBuilder {
                     "⚠️  Mapping budget exceeded: {} ({}ms budget, {}ms elapsed)",
                     violation.violation_type, violation.budget_value, violation.actual_value
                 );
-                eprintln!("   Returning empty graph");
                 Ok(DependencyGraph::new())
             }
             TimeoutAction::Error => Err(CostPilotError::timeout(format!(
@@ -144,7 +143,6 @@ impl GraphBuilder {
             TimeoutAction::PartialResults => {
                 eprintln!("⚠️  Mapping budget exceeded: {} ({}ms budget, {}ms elapsed)",
                     violation.violation_type, violation.budget_value, violation.actual_value);
-                eprintln!("   Returning partial graph with {} nodes", partial.nodes.len());
                 Ok(partial)
             }
             TimeoutAction::Error => {

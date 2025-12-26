@@ -1,3 +1,4 @@
+use assert_cmd::Command;
 use costpilot::engines::detection::DetectionEngine;
 use costpilot::engines::explain::PredictionExplainer;
 use costpilot::engines::prediction::{prediction_engine::CostHeuristics, PredictionEngine};
@@ -236,7 +237,7 @@ mod determinism_tests {
         // Currently, no commands output timestamps, so this is a placeholder test
         // When timestamps are added, they must end with 'Z' or '+00:00'
 
-        let mut cmd = assert_cmd::Command::cargo_bin("costpilot").unwrap();
+        let mut cmd = Command::cargo_bin("costpilot").unwrap();
         cmd.arg("explain")
             .arg("aws_instance")
             .arg("--instance-type")
@@ -325,7 +326,7 @@ mod determinism_tests {
         // Run costpilot multiple times and collect output hashes
         let mut hashes = Vec::new();
         for _ in 0..3 {
-            let mut cmd = assert_cmd::Command::cargo_bin("costpilot").unwrap();
+            let mut cmd = Command::cargo_bin("costpilot").unwrap();
             cmd.arg("scan").arg(plan_path).arg("--json");
 
             let output = cmd.output().unwrap();
@@ -400,7 +401,7 @@ mod determinism_tests {
         // Run costpilot multiple times and collect output hashes
         let mut hashes = Vec::new();
         for _ in 0..3 {
-            let mut cmd = assert_cmd::Command::cargo_bin("costpilot").unwrap();
+            let mut cmd = Command::cargo_bin("costpilot").unwrap();
             cmd.arg("scan").arg(plan_path).arg("--json");
 
             let output = cmd.output().unwrap();

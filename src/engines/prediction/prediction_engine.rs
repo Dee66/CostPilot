@@ -248,33 +248,14 @@ impl PredictionEngine {
             ));
         }
 
-        // Free mode: use resource prediction with basic heuristics
+        // Free mode: produce per-resource predictions using the internal predictor
         let mut estimates = Vec::new();
         for change in changes {
-            // Simple resource type detection only - no cost calculation
-            let monthly_cost = 0.0; // Free tier doesn't calculate costs
-
-            let action_applies = match change.action {
-                ChangeAction::Create | ChangeAction::Update | ChangeAction::Replace => true,
-                ChangeAction::Delete | ChangeAction::NoOp => false,
-            };
-
-            if action_applies {
-                estimates.push(CostEstimate {
-                    resource_id: change.resource_id.clone(),
-                    monthly_cost,
-                    prediction_interval_low: 0.0,
-                    prediction_interval_high: 0.0,
-                    confidence_score: 0.0, // No confidence in free tier
-                    heuristic_reference: Some("free_static".to_string()),
-                    cold_start_inference: true,
-                    one_time: None,
-                    breakdown: None,
-                    hourly: None,
-                    daily: None,
-                });
+            if let Some(estimate) = self.predict_resource(change)? {
+                estimates.push(estimate);
             }
         }
+
         Ok(estimates)
     }
 

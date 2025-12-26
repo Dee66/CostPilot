@@ -1,11 +1,12 @@
 ---
 source: tests/golden_prediction_tests.rs
+assertion_line: 96
 expression: output
 ---
 {
-  "confidence_score": 0.0,
-  "monthly_cost": 0.0,
-  "prediction_interval_high": 0.0,
-  "prediction_interval_low": 0.0,
+  "confidence_score": 0.95,
+  "monthly_cost": 30.0,
+  "prediction_interval_high": 39.0,
+  "prediction_interval_low": 21.0,
   "resource_id": "aws_nat_gateway.main"
 }

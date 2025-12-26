@@ -206,7 +206,7 @@
    - Limited to EC2 instance type & S3 lifecycle
 
 6. **SLO Engine V1**
-   - Monthly cost SLO checking
+   - Monthly cost SLO checking (aligned with renewable 30-day offline licenses).
    - Module cost SLO checking
 
 7. **Artifact Support**
