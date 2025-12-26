@@ -31,11 +31,14 @@ getrandom = { version = "0.2", optional = true, features = ["js"] }
 aes-gcm = "0.10"
 hkdf = { version = "0.12", features = ["std"] }
 ed25519-dalek = "2.1"
+curve25519-dalek = "4"
 base64 = "0.21"
 rand = "0.8"
 zeroize = "1.5"
 hcl = { package = "hcl-rs", version = "0.19" }
 jsonschema = "0.17"
+cargo = "0.93"
+subtle = "2"
 
 # Conditional crypto dependencies (not available for WASM)
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

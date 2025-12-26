@@ -155,12 +155,9 @@ impl ExemptionValidator {
 
     /// Check the status of an exemption (active, expired, expiring soon)
     pub fn check_status(&self, exemption: &PolicyExemption) -> ExemptionStatus {
-        // First validate the exemption
-        if let Err(e) = self.validate_exemption(exemption) {
-            return ExemptionStatus::Invalid {
-                reason: e.to_string(),
-            };
-        }
+        // For status checks used in CI, be lenient: do not fail on duration validation
+        // (created_at vs expires) so expired exemptions are still recognized even
+        // if created_at is inconsistent. Only treat clearly malformed dates as invalid.
 
         let expires = match NaiveDate::parse_from_str(&exemption.expires_at, "%Y-%m-%d") {
             Ok(date) => date,
@@ -170,6 +167,13 @@ impl ExemptionValidator {
                 }
             }
         };
+
+        // Ensure created_at is parseable; if not, mark invalid
+        if let Err(_) = self.parse_created_date(&exemption.created_at) {
+            return ExemptionStatus::Invalid {
+                reason: "Invalid created_at date format".to_string(),
+            };
+        }
 
         let today = Utc::now().date_naive();
         let days_until_expiry = (expires - today).num_days();

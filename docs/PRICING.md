@@ -23,7 +23,9 @@
 - No premium analytics features
 
 ## Premium Tier (Founding Engineer Edition)
-**Price:** $29/month
+**Price:** $29 per month, delivered as a renewable 30-day offline license.
+
+Licenses are issued manually and validated locally. Expired licenses fall back to free mode.
 
 ### Includes Everything in Free, Plus:
 - ✅ Advanced heuristics engine (encrypted, licensed)

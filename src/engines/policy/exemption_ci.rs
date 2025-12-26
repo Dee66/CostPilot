@@ -88,6 +88,26 @@ pub fn check_exemptions_for_ci(
     };
 
     for exemption in &exemptions_file.exemptions {
+        // First perform strict validation to catch malformed exemptions (missing fields,
+        // invalid date formats). However, do not treat duration-related validation
+        // (created_at after expires or overly long duration) as invalid for CI status
+        // purposes — we still want to recognize expired exemptions.
+        match validator.validate_exemption(exemption) {
+            Ok(_) => {}
+            Err(e) => {
+                let msg = e.to_string();
+                if msg.contains("Expiration date must be after creation date")
+                    || msg.contains("exceeds maximum allowed")
+                {
+                    // ignore duration-related validation errors for CI counting
+                } else {
+                    result.invalid_exemptions += 1;
+                    continue;
+                }
+            }
+        }
+
+        // Now perform a lenient status check (will return Invalid only for malformed dates)
         let status = validator.check_status(exemption);
 
         match status {

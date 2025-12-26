@@ -65,6 +65,7 @@ impl Default for ExemptionConfig {
         Self {
             warning_threshold_days: 30,
             enforce_expiration: true,
+            // Maximum exemption duration (default: 1 year)
             max_duration_days: 365,
         }
     }

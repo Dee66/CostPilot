@@ -5,6 +5,7 @@ use aes_gcm::{
     Aes256Gcm, Nonce,
 };
 use chrono::{DateTime, Utc};
+use curve25519_dalek::scalar::Scalar;
 use ed25519_dalek::{Signature, VerifyingKey};
 use hkdf::Hkdf;
 use serde::{Deserialize, Serialize};
@@ -71,39 +72,52 @@ pub struct EncryptedBundle {
     metadata_bytes: Vec<u8>,
 }
 
+impl EncryptedBundle {
+    pub fn get_metadata_bytes(&self) -> &Vec<u8> {
+        &self.metadata_bytes
+    }
+}
+
 /// Parse encrypted bundle from binary format:
 /// [4-byte BE length][metadata JSON][12-byte nonce][ciphertext][64-byte signature]
 pub fn parse_bundle(bytes: &[u8]) -> Result<EncryptedBundle, LoaderError> {
+    // Minimal, robust parsing logic.
     if bytes.len() < 4 + 12 + 64 {
         return Err(LoaderError::InvalidFormat);
     }
 
     let metadata_len = u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
-    if bytes.len() < 4 + metadata_len + 12 + 64 {
+    let metadata_start = 4usize;
+    let metadata_end = metadata_start.checked_add(metadata_len).ok_or(LoaderError::InvalidFormat)?;
+
+    // signature occupies the last 64 bytes
+    let signature_len = 64usize;
+    if bytes.len() < signature_len {
         return Err(LoaderError::InvalidFormat);
     }
+    let signature_start = bytes.len() - signature_len;
 
-    let metadata_start = 4;
-    let metadata_end = metadata_start + metadata_len;
-    let metadata_bytes = bytes[metadata_start..metadata_end].to_vec();
-    let metadata: serde_json::Value =
-        serde_json::from_slice(&metadata_bytes).map_err(|_| LoaderError::InvalidFormat)?;
-
+    // nonce must be directly after metadata and before ciphertext
     let nonce_start = metadata_end;
-    let nonce_end = nonce_start + 12;
-    let nonce: [u8; 12] = bytes[nonce_start..nonce_end]
-        .try_into()
-        .map_err(|_| LoaderError::InvalidFormat)?;
+    let nonce_end = nonce_start.checked_add(12).ok_or(LoaderError::InvalidFormat)?;
 
-    let ciphertext_start = nonce_end;
-    let signature_start = bytes.len() - 64;
-    if ciphertext_start >= signature_start {
+    // validate ranges
+    if metadata_end > bytes.len() || nonce_end > signature_start || nonce_end >= signature_start {
         return Err(LoaderError::InvalidFormat);
     }
-    let ciphertext = bytes[ciphertext_start..signature_start].to_vec();
+
+    let metadata_bytes = bytes[metadata_start..metadata_end].to_vec();
+    let metadata: serde_json::Value = serde_json::from_slice(&metadata_bytes).map_err(|_| LoaderError::InvalidFormat)?;
+
+    let nonce: [u8; 12] = bytes[nonce_start..nonce_end].try_into().map_err(|_| LoaderError::InvalidFormat)?;
+
+    let ciphertext = bytes[nonce_end..signature_start].to_vec();
+    if ciphertext.is_empty() {
+        return Err(LoaderError::InvalidFormat);
+    }
 
     let signature = bytes[signature_start..].to_vec();
-    if signature.len() != 64 {
+    if signature.len() != signature_len {
         return Err(LoaderError::InvalidFormat);
     }
 
@@ -122,7 +136,13 @@ pub fn verify_signature(bundle: &EncryptedBundle, public_key: &[u8]) -> Result<(
         return Err(LoaderError::SignatureInvalid);
     }
 
-    let mut signed_data = Vec::new();
+    if bundle.signature.len() != 64 {
+        return Err(LoaderError::SignatureInvalid);
+    }
+
+    let mut signed_data = Vec::with_capacity(
+        bundle.metadata_bytes.len() + bundle.nonce.len() + bundle.ciphertext.len(),
+    );
     signed_data.extend_from_slice(&bundle.metadata_bytes);
     signed_data.extend_from_slice(&bundle.nonce);
     signed_data.extend_from_slice(&bundle.ciphertext);
@@ -134,8 +154,7 @@ pub fn verify_signature(bundle: &EncryptedBundle, public_key: &[u8]) -> Result<(
     )
     .map_err(|_| LoaderError::SignatureInvalid)?;
 
-    let signature =
-        Signature::from_slice(&bundle.signature).map_err(|_| LoaderError::SignatureInvalid)?;
+    let signature = Signature::from_slice(&bundle.signature).map_err(|_| LoaderError::SignatureInvalid)?;
 
     verifying_key
         .verify_strict(&signed_data, &signature)

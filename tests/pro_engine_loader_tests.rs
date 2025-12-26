@@ -6,8 +6,10 @@ use aes_gcm::{
 };
 use chrono::Utc;
 use costpilot::pro_engine::{load_pro_engine_from_file, LicenseInfo, LoaderError};
+use curve25519_dalek::scalar::Scalar;
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use rand::rngs::OsRng;
+use rand::RngCore; // Import the RngCore trait to bring `fill_bytes` into scope
 use std::fs;
 use tempfile::tempdir;
 
@@ -53,6 +55,8 @@ fn create_test_bundle(
     signed_data.extend_from_slice(&ciphertext);
     let signature: Signature = signing_key.sign(&signed_data);
 
+    // omitted debug logging in production test run
+
     // Assemble bundle: [len][metadata][nonce][ciphertext][signature]
     let mut bundle = Vec::new();
     bundle.extend_from_slice(&metadata_len.to_be_bytes());
@@ -61,7 +65,29 @@ fn create_test_bundle(
     bundle.extend_from_slice(&ciphertext);
     bundle.extend_from_slice(&signature.to_bytes());
 
+    // omitted immediate signature validation logging
+
     bundle
+}
+
+// Refine the signing key generation logic to ensure valid scalars
+fn generate_valid_signing_key() -> SigningKey {
+    loop {
+        let mut secret_key_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut secret_key_bytes);
+
+        // Ensure the scalar's high bit is not set and the scalar is clamped
+        secret_key_bytes[0] &= 248; // Clamp the first byte
+        secret_key_bytes[31] &= 127; // Clamp the last byte
+        secret_key_bytes[31] |= 64; // Set the second highest bit
+
+        // Validate the scalar to ensure it is within the Ed25519 curve's range
+        if let Some(_) = <subtle::CtOption<Scalar> as Into<Option<Scalar>>>::into(Scalar::from_canonical_bytes(secret_key_bytes)) {
+            return SigningKey::from_bytes(&secret_key_bytes);
+        }
+
+        // regenerate silently
+    }
 }
 
 #[test]
@@ -76,10 +102,9 @@ fn test_parse_and_verify_signature_ok() {
         machine_binding: None,
     };
 
-    // Generate keypair
-    let mut secret_bytes = [0u8; 32];
-    rand::RngCore::fill_bytes(&mut OsRng, &mut secret_bytes);
-    let signing_key = SigningKey::from_bytes(&secret_bytes);
+    // Generate keypair with valid scalar
+    let signing_key = generate_valid_signing_key();
+
     let verifying_key = signing_key.verifying_key();
 
     // Create bundle
@@ -105,10 +130,9 @@ fn test_decrypt_with_correct_license_ok() {
         machine_binding: Some("machine-123".to_string()),
     };
 
-    // Generate keypair
-    let mut secret_bytes = [0u8; 32];
-    rand::RngCore::fill_bytes(&mut OsRng, &mut secret_bytes);
-    let signing_key = SigningKey::from_bytes(&secret_bytes);
+    // Generate keypair with valid scalar
+    let signing_key = generate_valid_signing_key();
+
     let verifying_key = signing_key.verifying_key();
 
     // Create bundle and write to temp file
@@ -145,10 +169,9 @@ fn test_decrypt_with_wrong_license_fails() {
         machine_binding: None,
     };
 
-    // Generate keypair
-    let mut secret_bytes = [0u8; 32];
-    rand::RngCore::fill_bytes(&mut OsRng, &mut secret_bytes);
-    let signing_key = SigningKey::from_bytes(&secret_bytes);
+    // Generate keypair with valid scalar
+    let signing_key = generate_valid_signing_key();
+
     let verifying_key = signing_key.verifying_key();
 
     // Create bundle with correct license
@@ -175,10 +198,9 @@ fn test_signature_tamper_detected() {
         machine_binding: None,
     };
 
-    // Generate keypair
-    let mut secret_bytes = [0u8; 32];
-    rand::RngCore::fill_bytes(&mut OsRng, &mut secret_bytes);
-    let signing_key = SigningKey::from_bytes(&secret_bytes);
+    // Generate keypair with valid scalar
+    let signing_key = generate_valid_signing_key();
+
     let verifying_key = signing_key.verifying_key();
 
     // Create bundle and tamper with ciphertext

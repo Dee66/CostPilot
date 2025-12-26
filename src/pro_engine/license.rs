@@ -1,5 +1,6 @@
 // License management for CostPilot Premium
 
+use crate::pro_engine::loader::{EncryptedBundle, LoaderError};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -51,10 +52,13 @@ impl RateLimitState {
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs();
-            now < blocked_until
-        } else {
-            false
+            let is_blocked = now < blocked_until;
+
+            // internal rate limit check (no debug output in production)
+
+            return is_blocked;
         }
+        false
     }
 
     fn record_attempt(&mut self) {
@@ -75,6 +79,8 @@ impl RateLimitState {
         if self.attempts >= Self::MAX_ATTEMPTS {
             self.blocked_until = Some(now + Self::BLOCK_SECS);
         }
+
+        // updated rate limit state (no debug output in production)
     }
 }
 
@@ -93,10 +99,40 @@ impl License {
         let content =
             std::fs::read_to_string(path).map_err(|e| format!("Failed to read license: {}", e))?;
 
-        let license: License =
-            serde_json::from_str(&content).map_err(|e| format!("Invalid license format: {}", e))?;
+        let value: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| format!("Invalid license format: {}", e))?;
 
-        Ok(license)
+        let email = value["email"].as_str().unwrap_or("").to_string();
+        let license_key = value["license_key"].as_str().unwrap_or("").to_string();
+        let expires = value["expires"].as_str().unwrap_or("").to_string();
+        let signature = value["signature"].as_str().unwrap_or("").to_string();
+        let issuer = value["issuer"].as_str().unwrap_or("").to_string();
+
+        // license loaded (sensitive content omitted from logs)
+
+        if email.is_empty() {
+            return Err("Missing required field: email".to_string());
+        }
+        if license_key.is_empty() {
+            return Err("Missing required field: license_key".to_string());
+        }
+        if expires.is_empty() {
+            return Err("Missing required field: expires".to_string());
+        }
+        if signature.is_empty() {
+            return Err("Missing required field: signature".to_string());
+        }
+        if issuer.is_empty() {
+            return Err("Missing required field: issuer".to_string());
+        }
+
+        Ok(License {
+            email,
+            license_key,
+            expires,
+            signature,
+            issuer,
+        })
     }
 
     /// Check if license is expired
@@ -137,5 +173,9 @@ impl License {
             return Err("License expired".to_string());
         }
         Ok(())
+    }
+
+    pub fn verify_signature(&self, bundle: &EncryptedBundle, public_key: &[u8]) -> Result<(), LoaderError> {
+        crate::pro_engine::loader::verify_signature(bundle, public_key)
     }
 }

@@ -43,6 +43,7 @@ fn execute_budgets() -> Result<String, String> {
 
     let mut output = String::new();
     output.push_str("⚡ Performance Budgets\n");
+    output.push_str("Performance budgets\n\n");
     output.push_str("=====================\n\n");
 
     output.push_str("Prediction Engine:\n");

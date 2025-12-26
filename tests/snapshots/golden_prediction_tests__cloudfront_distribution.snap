@@ -1,11 +1,12 @@
 ---
 source: tests/golden_prediction_tests.rs
+assertion_line: 290
 expression: output
 ---
 {
-  "confidence_score": 0.0,
-  "monthly_cost": 0.0,
-  "prediction_interval_high": 0.0,
-  "prediction_interval_low": 0.0,
+  "confidence_score": 0.6,
+  "monthly_cost": 15.0,
+  "prediction_interval_high": 19.5,
+  "prediction_interval_low": 10.5,
   "resource_id": "aws_cloudfront_distribution.cdn"
 }

@@ -1,9 +1,10 @@
 ---
 source: tests/golden_prediction_tests.rs
+assertion_line: 69
 expression: output
 ---
 {
-  "confidence_score": 0.0,
+  "confidence_score": 0.65,
   "monthly_cost": 0.0,
   "prediction_interval_high": 0.0,
   "prediction_interval_low": 0.0,

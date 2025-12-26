@@ -7,7 +7,7 @@ fn create_test_manager() -> ApprovalWorkflowManager {
     let config = ApprovalConfig {
         min_approvals: 1,
         required_roles: vec![],
-        allowed_approvers: vec![],
+        allowed_approvers: vec!["alice@example.com".to_string(), "bob@example.com".to_string()],
         auto_approve_roles: vec![],
         review_expiration_days: 7,
     };
@@ -284,7 +284,7 @@ fn test_multiple_approvals_with_different_references() {
     let config = ApprovalConfig {
         min_approvals: 2,
         required_roles: vec![],
-        allowed_approvers: vec![],
+        allowed_approvers: vec!["alice@example.com".to_string(), "bob@example.com".to_string()],
         auto_approve_roles: vec![],
         review_expiration_days: 7,
     };

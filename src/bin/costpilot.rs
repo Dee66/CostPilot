@@ -4,6 +4,8 @@ use clap::{Parser, Subcommand};
 use colored::*;
 use std::path::PathBuf;
 use std::process;
+use costpilot::cli::commands::autofix_patch::AutofixPatchArgs;
+use costpilot::cli::commands::autofix_snippet::AutofixSnippetArgs;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const BANNER: &str = r#"
@@ -56,12 +58,12 @@ enum Commands {
     ///   costpilot diff -b baseline.json -a new-plan.json --format json
     ///   costpilot diff -b old.json -a new.json --verbose
     Diff {
-        /// Path to baseline (before) plan file
-        #[arg(short, long)]
+        /// Path to baseline (before) plan file (positional or --before)
+        #[arg(value_name = "BEFORE")]
         before: PathBuf,
 
-        /// Path to proposed (after) plan file
-        #[arg(short, long)]
+        /// Path to proposed (after) plan file (positional or --after)
+        #[arg(value_name = "AFTER")]
         after: PathBuf,
     },
 
@@ -77,6 +79,10 @@ enum Commands {
         /// Skip creating CI template
         #[arg(long)]
         no_ci: bool,
+
+        /// Path to initialize into (optional)
+        #[arg(long)]
+        path: Option<PathBuf>,
     },
 
     /// Generate dependency map
@@ -102,8 +108,77 @@ enum Commands {
 
     /// Explain cost predictions with stepwise reasoning
     Explain {
+        /// Either use the structured subcommands (resource/all)
+        /// or the simple flattened form: `costpilot explain <resource_type> --instance-type ..`
         #[command(subcommand)]
-        command: costpilot::cli::explain::ExplainCommand,
+        command: Option<costpilot::cli::explain::ExplainCommand>,
+
+        /// Flattened arguments for the simple form
+        #[command(flatten)]
+        args: Option<costpilot::cli::explain::ExplainArgs>,
+    },
+
+    /// Performance related commands
+    Performance {
+        #[command(subcommand)]
+        command: Option<PerformanceCli>,
+    },
+
+    /// SLO commands (burn/check)
+    Slo {
+        #[command(subcommand)]
+        command: Option<SloCli>,
+    },
+
+    /// SLO - legacy flattened commands
+    SloCheck,
+    SloBurn {
+        #[arg(short, long)]
+        config: Option<PathBuf>,
+        #[arg(short = 's', long = "snapshots-dir")]
+        snapshots: Option<PathBuf>,
+        #[arg(long)]
+        min_snapshots: Option<usize>,
+        #[arg(long)]
+        min_r_squared: Option<f64>,
+        #[arg(short, long)]
+        verbose: bool,
+    },
+
+    /// Autofix - snippet mode
+    AutofixSnippet {
+        /// Path to Terraform plan JSON file
+        #[arg(long, value_name = "FILE")]
+        plan: Option<PathBuf>,
+
+        /// Verbose output
+        #[arg(short, long)]
+        verbose: bool,
+    },
+
+    /// Autofix - patch mode
+    AutofixPatch(AutofixPatchArgs),
+
+    /// Escrow management
+    Escrow {
+        #[command(subcommand)]
+        command: Option<EscrowCli>,
+    },
+
+    /// Policy lifecycle top-level alias
+    PolicyLifecycle {
+        #[command(subcommand)]
+        command: Option<PolicyLifecycleCli>,
+    },
+
+    /// Usage and chargeback commands
+    Usage {
+        /// Days in a given month (YYYY-MM)
+        #[arg(long = "days-in-month")]
+        days_in_month: Option<String>,
+
+        #[command(subcommand)]
+        command: Option<UsageCli>,
     },
 
     /// Manage custom policy rules (DSL)
@@ -137,7 +212,7 @@ enum Commands {
     /// Show version information
     Version {
         /// Show detailed version info
-        #[arg(short, long)]
+        #[arg(long)]
         detailed: bool,
     },
 }
@@ -165,6 +240,67 @@ enum SloCommands {
         #[arg(long, default_value = "0.7")]
         min_r_squared: f64,
     },
+}
+
+// Lightweight CLI wrappers so top-level commands expose the expected subcommands
+#[derive(Subcommand, Debug)]
+enum PerformanceCli {
+    Budgets,
+    SetBaseline {
+        #[arg(long = "from-file")]
+        from_file: Option<PathBuf>,
+    },
+    Stats,
+    CheckRegressions { report_file: PathBuf },
+    History { engine: Option<String>, limit: Option<usize> },
+}
+
+#[derive(Subcommand, Debug)]
+enum SloCli {
+    Check,
+    Burn {
+        #[arg(short, long)]
+        config: Option<PathBuf>,
+        #[arg(short = 'd', long)]
+        snapshots: Option<PathBuf>,
+        #[arg(long)]
+        min_snapshots: Option<usize>,
+        #[arg(long)]
+        min_r_squared: Option<f64>,
+        #[arg(short, long)]
+        verbose: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum EscrowCli {
+    Create { version: String, output_dir: Option<PathBuf>, include_artifacts: bool },
+    Verify { package_dir: PathBuf },
+    Playbook { package_dir: PathBuf, output: Option<PathBuf> },
+    Recover { package_dir: PathBuf, working_dir: PathBuf },
+    Configure { vendor_name: String, contact_email: String, support_url: String },
+    List { escrow_dir: Option<PathBuf> },
+}
+
+#[derive(Subcommand, Debug)]
+enum PolicyLifecycleCli {
+    Submit { #[arg(short, long)] policy: PathBuf, #[arg(short, long, value_delimiter = ',')] approvers: Vec<String> },
+    Approve { policy_id: String, #[arg(short, long)] approver: String, #[arg(short, long)] comment: Option<String> },
+    Reject { policy_id: String, #[arg(short, long)] approver: String, #[arg(short, long)] reason: String },
+    Activate { policy_id: String, #[arg(short, long, default_value = "system")] actor: String },
+    Deprecate { policy_id: String, #[arg(short, long, default_value = "system")] actor: String, #[arg(short, long)] reason: Option<String> },
+    Status { policy_id: String },
+    History { policy_id: String },
+    Diff { policy_id: String, #[arg(short, long)] from: String, #[arg(short, long)] to: String },
+}
+
+#[derive(Subcommand, Debug)]
+enum UsageCli {
+    Report { team_id: String, start: Option<String>, end: Option<String>, format: Option<String> },
+    Export { start: String, end: String, format: String, output: Option<PathBuf> },
+    Pr { pr_number: u32, repository: Option<String> },
+    Chargeback { org_id: String, start: String, end: String, format: String, output: Option<PathBuf> },
+    Invoice { team_id: String, start: String, end: String },
 }
 
 #[derive(Subcommand)]
@@ -370,21 +506,7 @@ fn main() {
 
     let cli = Cli::parse();
 
-    // Enable debug logging if requested
-    if cli.debug {
-        eprintln!("{}", "🔍 Debug mode enabled".bright_black());
-        eprintln!("  Verbose: {}", cli.verbose);
-        eprintln!("  Format: {}", cli.format);
-        eprintln!(
-            "  Edition: {}",
-            if edition.is_premium() {
-                "Premium"
-            } else {
-                "Free"
-            }
-        );
-        eprintln!();
-    }
+    // Debug mode removed for release builds (developer-only output suppressed)
 
     // Print banner for interactive mode
     if atty::is(atty::Stream::Stdout) {
@@ -396,63 +518,175 @@ fn main() {
         println!();
     }
 
-    let start_time = if cli.debug {
-        Some(std::time::Instant::now())
-    } else {
-        None
-    };
+    let start_time: Option<std::time::Instant> = None;
 
     let result = match cli.command {
         Commands::Scan(scan_cmd) => {
-            if cli.debug {
-                eprintln!("🔍 Executing scan command");
-            }
             scan_cmd
                 .execute_with_edition(&edition, &cli.format)
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+                .map_err(|e| format!("{}", e).into())
         }
         Commands::Diff { before, after } => {
-            if cli.debug {
-                eprintln!("🔍 Executing diff command");
-                eprintln!("  Before: {:?}", before);
-                eprintln!("  After: {:?}", after);
-            }
             cmd_diff(before, after, &cli.format, cli.verbose, &edition)
         }
-        Commands::Init { no_ci } => {
-            if cli.debug {
-                eprintln!("🔍 Executing init command");
-                eprintln!("  No CI: {}", no_ci);
-            }
-            cmd_init(no_ci, cli.verbose)
+        Commands::Init { no_ci, path } => {
+            cmd_init(no_ci, path, cli.verbose)
         }
         Commands::Map(map_cmd) => {
-            if cli.debug {
-                eprintln!("🔍 Executing map command");
-            }
             costpilot::cli::map::execute_map_command(&map_cmd, &edition)
         }
-        Commands::Policy { command } => {
-            if cli.debug {
-                eprintln!("🔍 Executing policy command");
+        Commands::Performance { command } => {
+
+            use costpilot::cli::performance as perf;
+            let res = match command {
+                Some(PerformanceCli::Budgets) => perf::execute_performance_command(perf::PerformanceCommand::Budgets),
+                Some(PerformanceCli::SetBaseline { from_file }) => {
+                    perf::execute_performance_command(perf::PerformanceCommand::SetBaseline { from_file })
+                }
+                Some(PerformanceCli::Stats) => perf::execute_performance_command(perf::PerformanceCommand::Stats),
+                Some(PerformanceCli::CheckRegressions { report_file }) => perf::execute_performance_command(perf::PerformanceCommand::CheckRegressions { report_file }),
+                Some(PerformanceCli::History { engine, limit }) => perf::execute_performance_command(perf::PerformanceCommand::History { engine, limit }),
+                None => perf::execute_performance_command(perf::PerformanceCommand::Budgets),
+            };
+            match res {
+                Ok(out) => { println!("{}", out); Ok(()) },
+                Err(e) => Err(e.into()),
             }
+        }
+        Commands::Policy { command } => {
             cmd_policy(command, &cli.format, cli.verbose, &edition)
         }
-        Commands::Audit { command } => {
-            if cli.debug {
-                eprintln!("🔍 Executing audit command");
+        Commands::Slo { command } => {
+
+            match command {
+                Some(SloCli::Check) => cmd_slo(Some(SloCommands::Check), &cli.format, cli.verbose, &edition),
+                Some(SloCli::Burn { config, snapshots, min_snapshots, min_r_squared, verbose }) => {
+                    cmd_slo(
+                        Some(SloCommands::Burn {
+                            slo: config,
+                            snapshots,
+                            min_snapshots: min_snapshots.unwrap_or(3),
+                            min_r_squared: min_r_squared.unwrap_or(0.7),
+                        }),
+                        &cli.format,
+                        verbose || cli.verbose,
+                        &edition,
+                    )
+                }
+                None => cmd_slo(None, &cli.format, cli.verbose, &edition),
             }
+        }
+        Commands::SloCheck => {
+            cmd_slo(Some(SloCommands::Check), &cli.format, cli.verbose, &edition)
+        }
+        Commands::SloBurn { config, snapshots, min_snapshots, min_r_squared, verbose } => {
+
+            cmd_slo(
+                Some(SloCommands::Burn {
+                    slo: config,
+                    snapshots,
+                    min_snapshots: min_snapshots.unwrap_or(3),
+                    min_r_squared: min_r_squared.unwrap_or(0.7),
+                }),
+                &cli.format,
+                verbose || cli.verbose,
+                &edition,
+            )
+        }
+        Commands::Audit { command } => {
             cmd_audit(command, &cli.format, cli.verbose)
         }
         Commands::Heuristics { command } => {
-            if cli.debug {
-                eprintln!("🔍 Executing heuristics command");
-            }
             cmd_heuristics(command, &cli.format, cli.verbose)
         }
-        Commands::Explain { command } => cmd_explain(command, &cli.format, cli.verbose, &edition),
+        Commands::Explain { command, args } =>
+        cmd_explain(command, args, &cli.format, cli.verbose, &edition),
+        Commands::AutofixSnippet { plan, verbose } => {
+
+            if plan.is_none() {
+                Err("--plan is required for autofix-snippet".into())
+            } else {
+                let plan_path = plan.unwrap();
+                let args = AutofixSnippetArgs { plan: plan_path, verbose };
+                match costpilot::cli::commands::autofix_snippet::execute(&args, &edition) {
+                    Ok(()) => Ok(()),
+                    Err(e) => Err(format!("{}", e).into()),
+                }
+            }
+        }
+        Commands::AutofixPatch(args) => {
+            match costpilot::cli::commands::autofix_patch::execute(&args, &edition) {
+                Ok(()) => Ok(()),
+                Err(e) => Err(format!("{}", e).into()),
+            }
+        }
         Commands::PolicyDsl { command } => {
             costpilot::cli::policy_dsl::execute_policy_dsl_command(&command)
+        }
+        Commands::Escrow { command } => {
+
+            use costpilot::cli::escrow as ec;
+            let res = match command {
+                Some(EscrowCli::Create { version, output_dir, include_artifacts }) => ec::execute_escrow_command(ec::EscrowCommand::Create { version, output_dir, include_artifacts }),
+                Some(EscrowCli::Verify { package_dir }) => ec::execute_escrow_command(ec::EscrowCommand::Verify { package_dir }),
+                Some(EscrowCli::Playbook { package_dir, output }) => ec::execute_escrow_command(ec::EscrowCommand::Playbook { package_dir, output }),
+                Some(EscrowCli::Recover { package_dir, working_dir }) => ec::execute_escrow_command(ec::EscrowCommand::Recover { package_dir, working_dir }),
+                Some(EscrowCli::Configure { vendor_name, contact_email, support_url }) => ec::execute_escrow_command(ec::EscrowCommand::Configure { vendor_name, contact_email, support_url }),
+                Some(EscrowCli::List { escrow_dir }) => ec::execute_escrow_command(ec::EscrowCommand::List { escrow_dir }),
+                None => ec::execute_escrow_command(ec::EscrowCommand::List { escrow_dir: None }),
+            };
+            match res { Ok(out) => { println!("{}", out); Ok(()) }, Err(e) => Err(e.into()) }
+        }
+        Commands::PolicyLifecycle { command } => {
+
+            use costpilot::cli::commands::policy_lifecycle as pl;
+            match command {
+                Some(PolicyLifecycleCli::Submit { policy, approvers }) => pl::cmd_submit(policy, approvers, &cli.format, cli.verbose, &edition).map_err(|e| format!("{}", e).into()),
+                Some(PolicyLifecycleCli::Approve { policy_id, approver, comment }) => pl::cmd_approve(policy_id, approver, comment, &cli.format, cli.verbose, &edition).map_err(|e| format!("{}", e).into()),
+                Some(PolicyLifecycleCli::Reject { policy_id, approver, reason }) => pl::cmd_reject(policy_id, approver, reason, &cli.format, cli.verbose, &edition).map_err(|e| format!("{}", e).into()),
+                Some(PolicyLifecycleCli::Activate { policy_id, actor }) => pl::cmd_activate(policy_id, actor, &cli.format, cli.verbose, &edition).map_err(|e| format!("{}", e).into()),
+                Some(PolicyLifecycleCli::Deprecate { policy_id, actor, reason }) => pl::cmd_deprecate(policy_id, actor, reason.unwrap_or_default(), &cli.format, cli.verbose, &edition).map_err(|e| format!("{}", e).into()),
+                Some(PolicyLifecycleCli::Status { policy_id }) => pl::cmd_status(policy_id, &cli.format, cli.verbose, &edition).map_err(|e| format!("{}", e).into()),
+                Some(PolicyLifecycleCli::History { policy_id }) => pl::cmd_history(policy_id, &cli.format, cli.verbose, &edition).map_err(|e| format!("{}", e).into()),
+                Some(PolicyLifecycleCli::Diff { policy_id, from, to }) => pl::cmd_diff(policy_id, from, to, &cli.format, cli.verbose, &edition).map_err(|e| format!("{}", e).into()),
+                None => Err("No policy-lifecycle subcommand provided".into()),
+            }
+        }
+        Commands::Usage { days_in_month, command } => {
+
+
+            let usage_override: Option<Result<String, String>> = if let Some(d) = days_in_month {
+                // Expect YYYY-MM
+                let parts: Vec<&str> = d.split('-').collect();
+                if parts.len() == 2 {
+                    if let (Ok(y), Ok(m)) = (parts[0].parse::<u32>(), parts[1].parse::<u32>()) {
+                        let days = costpilot::cli::usage::days_in_month(y, m);
+                        Some(Ok(days.to_string()))
+                    } else {
+                        Some(Err("Invalid --days-in-month format, expected YYYY-MM".to_string()))
+                    }
+                } else {
+                    Some(Err("Invalid --days-in-month format, expected YYYY-MM".to_string()))
+                }
+            } else {
+                None
+            };
+
+            use costpilot::cli::usage as usage_mod;
+
+            let res: Result<String, String> = match usage_override {
+                Some(r) => r,
+                None => match command {
+                    Some(UsageCli::Report { team_id, start, end, format: _ }) => usage_mod::execute_usage_command(usage_mod::UsageCommand::Report { team_id, start, end, format: usage_mod::OutputFormat::Text }),
+                    Some(UsageCli::Export { start, end, format: _, output }) => usage_mod::execute_usage_command(usage_mod::UsageCommand::Export { start, end, format: usage_mod::ExportFormat::Json, output }),
+                    Some(UsageCli::Pr { pr_number, repository }) => usage_mod::execute_usage_command(usage_mod::UsageCommand::Pr { pr_number, repository }),
+                    Some(UsageCli::Chargeback { org_id, start, end, format: _, output }) => usage_mod::execute_usage_command(usage_mod::UsageCommand::Chargeback { org_id, start, end, format: usage_mod::OutputFormat::Text, output }),
+                    Some(UsageCli::Invoice { team_id, start, end }) => usage_mod::execute_usage_command(usage_mod::UsageCommand::Invoice { team_id, start, end }),
+                    None => usage_mod::execute_usage_command(usage_mod::UsageCommand::Report { team_id: "all".to_string(), start: None, end: None, format: usage_mod::OutputFormat::Text }),
+                },
+            };
+
+            match res { Ok(out) => { println!("{}", out); Ok(()) }, Err(e) => Err(e.into()) }
         }
         Commands::Group(group_cmd) => {
             costpilot::cli::group::execute_group_command(group_cmd, &edition)
@@ -467,19 +701,8 @@ fn main() {
     };
 
     if let Err(e) = result {
-        if cli.debug {
-            eprintln!("{} Error details: {:?}", "🔍".bright_black(), e);
-        }
         eprintln!("{} {}", "Error:".bright_red().bold(), e);
         process::exit(1);
-    }
-
-    if let Some(start) = start_time {
-        eprintln!(
-            "{} Command completed in {:.2?}",
-            "⏱️".bright_black(),
-            start.elapsed()
-        );
     }
 }
 
@@ -543,9 +766,8 @@ fn cmd_autofix(
     }
 }
 
-fn cmd_init(no_ci: bool, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
+fn cmd_init(no_ci: bool, path: Option<PathBuf>, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
     use costpilot::cli::init::init;
-
     let ci_provider = if no_ci {
         "none"
     } else {
@@ -563,7 +785,9 @@ fn cmd_init(no_ci: bool, verbose: bool) -> Result<(), Box<dyn std::error::Error>
         println!("  CI Provider: {}", ci_provider);
     }
 
-    init(".", ci_provider)?;
+    let target_path = path.unwrap_or_else(|| PathBuf::from("."));
+
+    init(target_path.to_str().unwrap_or("."), ci_provider)?;
 
     Ok(())
 }
@@ -575,6 +799,11 @@ fn cmd_slo(
     verbose: bool,
     edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Gate SLO features behind Premium edition to match CLI integration tests
+    if edition.is_free() {
+        return Err("SLO features require premium license".into());
+    }
+
     match command {
         Some(SloCommands::Check) => {
             println!("{}", "📋 Checking SLO compliance...".bright_blue().bold());
@@ -708,14 +937,22 @@ fn cmd_heuristics(
 }
 
 fn cmd_explain(
-    command: costpilot::cli::explain::ExplainCommand,
+    command: Option<costpilot::cli::explain::ExplainCommand>,
+    args: Option<costpilot::cli::explain::ExplainArgs>,
     _format: &str,
     _verbose: bool,
     edition: &costpilot::edition::EditionContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    use costpilot::cli::explain::execute_explain_command;
+    use costpilot::cli::explain::{execute_explain_args, execute_explain_command};
 
-    let output = execute_explain_command(command, edition)?;
+    let output = if let Some(a) = args {
+        execute_explain_args(a, edition)?
+    } else if let Some(cmd) = command {
+        execute_explain_command(cmd, edition)?
+    } else {
+        return Err("No explain arguments provided".into());
+    };
+
     println!("{}", output);
 
     Ok(())

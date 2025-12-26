@@ -43,3 +43,4 @@ tmp.txt
 test_*.pem
 test_license.json
 .costpilot/audit_log.json
+target/
