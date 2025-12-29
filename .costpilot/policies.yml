@@ -19,7 +19,7 @@ policies:
         currency: "USD"
         period: "monthly"
     severity: "high"
-    
+
   - id: "nat-gateway-required-justification"
     name: "NAT Gateway Justification Required"
     description: "NAT gateways are expensive and require justification"
@@ -29,7 +29,7 @@ policies:
         pattern: "aws_nat_gateway.*"
         requires_tag: "justification"
     severity: "medium"
-    
+
   - id: "no-untagged-resources"
     name: "All Resources Must Be Tagged"
     description: "Enforce tagging for cost attribution"

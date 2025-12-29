@@ -11,16 +11,16 @@ Fix all Category D failures by updating builder defaults and helper functions.
    - prediction_interval_high: monthly_cost * 1.2 → 1.1
    - confidence_score: 0.85 → 0.95
    - heuristic_reference: "test_heuristic" → "test-default"
-   
+
 2. ResourceChange Builder Defaults - UPDATED:
    - old_config: Added json!({})
    - new_config: json!({"type": resource_type}) → json!({})
    - monthly_cost: Added explicit 0.0 default
-   
+
 3. Detection Builder Defaults - UPDATED:
    - message: format!("Test detection for {}", resource_id) → "test"
    - estimated_cost: Added explicit 0.0 default
-   
+
 4. Trend Snapshot ID Helper - UPDATED:
    - make_test_snapshot_id(): Now returns fixed "TEST-SNAPSHOT-ID"
    - make_fixed_snapshot_id(): Now returns fixed "TEST-SNAPSHOT-ID"

@@ -1,8 +1,12 @@
 # CostPilot
 
-Deterministic, audit-grade cost governance at the pull-request boundary.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Status](https://img.shields.io/badge/status-stable-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.2-orange.svg)
 
-CostPilot analyzes infrastructure-as-code changes **before they merge** and blocks only **irreversible cloud cost regressions**.
+**Deterministic, audit-grade cost governance at the pull-request boundary.**
+
+CostPilot analyzes infrastructure-as-code changes **before they merge** and blocks only **irreversible cloud cost regressions**.  
 When no meaningful risk exists, it stays silent.
 
 Silence is a valid outcome.
@@ -11,12 +15,15 @@ Silence is a valid outcome.
 
 ## Overview
 
-CostPilot is a local, offline CLI tool for PR-time cost governance.
+CostPilot is a **local, offline CLI tool** for PR-time cost governance.
+
+It exists for one reason:  
+to surface *real*, *irreversible* cost risk **at review time**, not after deployment.
 
 Given a pull request and its associated infrastructure plan, CostPilot:
 
 - Detects cost-impacting changes
-- Predicts monthly cost deltas
+- Predicts monthly cost deltas using deterministic heuristics
 - Explains causality and propagation
 - Enforces policy or SLO-based blocking **only when explicitly configured or required for safety**
 
@@ -32,6 +39,9 @@ All outputs are deterministic, reproducible, and suitable for CI enforcement.
 - Supports advisory and blocking modes
 - Remains silent for no-op or cosmetic changes
 
+CostPilot does not reward noise.  
+It acts only when evidence is sufficient.
+
 ---
 
 ## What CostPilot Does *Not* Do
@@ -40,8 +50,12 @@ All outputs are deterministic, reproducible, and suitable for CI enforcement.
 - No historical billing analysis
 - No runtime agents or background collectors
 - No cloud credentials or IAM access required
-- No network access or external services
+- No external service dependencies at runtime
 - No speculative or noisy blocking
+
+Everything runs locally.  
+Everything is inspectable.  
+Nothing phones home.
 
 ---
 
@@ -58,6 +72,9 @@ CostPilot blocks CI **only** in the following cases:
 
 All other findings are advisory by default.
 
+This is intentional.  
+Blocking is a last resort, not a feature.
+
 ---
 
 ## Trust Model
@@ -68,22 +85,26 @@ CostPilot enforces a single trust chain:
 
 If any stage lacks sufficient evidence, CostPilot refuses to act.
 
+Confidence is earned, not assumed.
+
 ---
 
 ## Canonical Demo
 
 The authoritative reference for CostPilot behavior is the **CostPilot Demo** repository.
 
-- Deterministic PR scenario
-- Frozen, hash-stable outputs
+It demonstrates a complete, frozen scenario:
+
+- Deterministic PR inputs
+- Hash-stable outputs
 - Zero-IAM, offline-safe execution
 - CI-enforced invariants
 
-Demo repository:
+Demo repository:  
 https://github.com/Dee66/costpilotdemo
 
-Live demo UI:
-https://dee66.github.io/costpilotdemo/
+Live demo UI:  
+https://dee66.github.io/costpilotdemo
 
 All screenshots, videos, and launch materials originate from this demo.
 
