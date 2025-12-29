@@ -22,7 +22,7 @@ slos:
       critical: 0.95  # Critical at 95% of budget consumed
     window_days: 30
     enforcement_mode: "warn"  # warn | block
-    
+
   - id: "weekly-growth-slo"
     name: "Weekly Growth Rate SLO"
     description: "Limit week-over-week cost growth rate"
