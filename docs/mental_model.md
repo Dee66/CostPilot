@@ -1,13 +1,14 @@
 # CostPilot — Canonical Mental Model
 
+## MODEL_STATE
+mutable
+
 This document is intentionally incomplete.
 
 It records only stable, verified, non-derivable facts about the system.
 Absence of information indicates UNKNOWN, not absence in the system.
 
 This file is not a design document, roadmap, or product description.
-
----
 
 ## 0. Authority & Precedence
 
@@ -21,16 +22,12 @@ Order of truth:
 If conflicts exist, they must be reported.
 Conflicts must not be resolved implicitly.
 
----
-
 ## 1. Project Identity (Factual)
 
 - Name: CostPilot
 - Artifact type: Local CLI binary
 - Execution scope: Pull-request boundary only
-- Runtime network access: Not permitted
-
----
+- Runtime network access: Not permitted (except pattern matching for violation detection)
 
 ## 2. Non-Goals (Hard Constraints)
 
@@ -41,8 +38,6 @@ CostPilot does NOT:
 - Run as a background service or daemon
 - Maintain mutable external state
 - Operate against live infrastructure
-
----
 
 ## 3. Execution Model
 
@@ -61,8 +56,6 @@ CostPilot does NOT:
 
 Silence is a valid and correct outcome.
 
----
-
 ## 4. Blocking Semantics
 
 Blocking occurs ONLY when one of the following is true:
@@ -80,8 +73,6 @@ The following MUST NOT cause blocking by default:
 
 Default behavior is advisory.
 
----
-
 ## 5. Determinism Contract
 
 Given identical inputs:
@@ -90,9 +81,12 @@ Given identical inputs:
 - Ordering must be stable
 - Hashes must match across runs and platforms
 
-Non-deterministic behavior is a defect.
+Non-deterministic behavior is a defect, except:
 
----
+- Cryptographic key generation (license issuer)
+- Unique identifier generation (UUIDs for escrow receipts, metering events)
+- Timestamp recording (SystemTime for audit trails, not for core logic)
+- Deterministic pseudo-random sequences (Monte Carlo with fixed seeds)
 
 ## 6. Security Boundary (Factual)
 
@@ -100,8 +94,6 @@ Non-deterministic behavior is a defect.
 - Runtime network access is prohibited
 - WASM execution, when used, is sandboxed
 - WASM modules have no direct host system access
-
----
 
 ## 7. Edition & Licensing Model (Factual)
 
@@ -113,8 +105,6 @@ Non-deterministic behavior is a defect.
   - Client-side only
 
 No server-side license validation occurs at runtime.
-
----
 
 ## 8. Known Volatility
 

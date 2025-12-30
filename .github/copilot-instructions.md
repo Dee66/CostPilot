@@ -1,72 +1,30 @@
-# Copilot Operating Instructions
+This repository is governed by an explicit AI behavioral contract and an authoritative mental model.
 
-This repository uses an explicit, external mental model.
-Copilot must treat this model as authoritative compiled state.
+Mandatory
 
-## Mandatory Pre-Read
+Read /AGENTS.md and comply with it.
 
-Before responding to any request, you MUST:
+Read docs/mental_model.md as authoritative compiled state.
 
-1. Read `docs/mental_model.md` as authoritative project state
-2. Treat tests and executable code as higher authority than documentation
-3. Treat absence of information as UNKNOWN, not FALSE
-4. Prefer silence over speculation
+Treat tests and executable code as higher authority than documentation.
 
-If you have not read the mental model, you are not synced.
+Sync and Validation
 
-## Authority & Precedence
+When reasoning about correctness (code changes, reviews, or validation against claims), run:
+python3 scripts/detect_mental_model_contradictions.py
 
-Order of truth:
+If contradictions are detected, report them and stop.
 
-1. Tests
-2. Executable code
-3. `docs/mental_model.md`
-4. Other documentation and comments
+Mental Model Changes
 
-If any conflict exists between these layers, you MUST report it.
-Do not resolve conflicts implicitly.
+You must not rewrite docs/mental_model.md.
 
-## Mental Model Change Rules
+Any change to understanding must be proposed as an explicit delta.
 
-- New information MUST be proposed as a delta
-- Existing mental-model content MUST NOT be rewritten unless factually incorrect
-- Deltas MUST be explicit, minimal, and additive
-- Deltas MUST NOT be auto-applied or merged
+Respect MODEL_STATE; if frozen, do not propose changes.
 
-The mental model is not to be “improved”, “completed”, or “clarified”
-unless explicitly instructed.
+Reference
 
-## Discovery Rules
+Claim structure and verification classes are defined in docs/mental_model_claim_grammar.md.
 
-When interacting with the repository:
-
-- If repository facts contradict the mental model, REPORT the contradiction
-- If new verifiable facts are discovered, PROPOSE them as a delta
-- If evidence is insufficient, say so explicitly and stop
-
-Do NOT infer missing structure, intent, or behavior.
-
-## Prohibited Behaviors
-
-You MUST NOT:
-
-- Infer intent beyond documented facts
-- Fill in missing sections for completeness
-- Assume architectural patterns not explicitly stated
-- Redesign or refactor unless explicitly asked
-- Treat documentation as aspirational truth
-- Collapse uncertainty into assumptions
-
-## Output Discipline
-
-- Use factual, bounded language
-- Avoid “likely”, “probably”, “implied”, or “appears to”
-- State confidence explicitly when required
-- Silence is a valid and correct outcome
-
-## Sync Failure Condition
-
-If you cannot comply with these rules due to missing information,
-state what is missing and stop.
-
-Proceeding unsynced is incorrect behavior.
+All behavioral rules, refusal conditions, and uncertainty handling are defined in /AGENTS.md.
