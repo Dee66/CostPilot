@@ -44,3 +44,8 @@ test_*.pem
 test_license.json
 .costpilot/audit_log.json
 target/
+
+# Copilot
+AGENTS.md
+docs/mental_model.md
+.github/copilot-instructions.md

@@ -45,3 +45,10 @@ repos:
         language: system
         files: \.(rs)$
         pass_filenames: false
+
+      - id: validate-mental-model
+        name: validate mental model
+        entry: python3 scripts/detect_mental_model_contradictions.py
+        language: system
+        files: ^(docs/mental_model\.md|src/.*)$
+        pass_filenames: false

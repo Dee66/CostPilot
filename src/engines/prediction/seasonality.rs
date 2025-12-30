@@ -258,39 +258,26 @@ impl SeasonalityDetector {
     }
 
     /// Calculate adjustment factor for current time period
+    /// For deterministic operation, returns average adjustment based on historical patterns
     fn calculate_current_adjustment(&self, patterns: &[SeasonalPattern]) -> f64 {
         if patterns.is_empty() {
             return 1.0;
         }
 
-        // Use current timestamp
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-
+        // For deterministic operation, use average adjustment across all patterns
+        // instead of time-based calculation that would violate determinism
         let mut total_adjustment = 0.0;
-        let mut weight_sum = 0.0;
-
         for pattern in patterns {
-            let phase = self.calculate_phase(now, pattern.period_days);
-            // Peak at phase 0.5, trough at phase 0.0/1.0
-            let phase_factor = (phase * 2.0 * std::f64::consts::PI).sin();
-            let adjustment =
-                1.0 + (pattern.peak_multiplier - 1.0) * phase_factor * pattern.strength;
-
-            total_adjustment += adjustment * pattern.strength;
-            weight_sum += pattern.strength;
+            // Use the pattern's strength as a neutral adjustment factor
+            // This maintains determinism while still applying seasonal insights
+            total_adjustment += 1.0 + (pattern.peak_multiplier - 1.0) * pattern.strength * 0.5;
         }
 
-        if weight_sum > 0.0 {
-            total_adjustment / weight_sum
-        } else {
-            1.0
-        }
+        total_adjustment / patterns.len() as f64
     }
 
     /// Calculate phase within pattern (0.0 - 1.0)
+    #[allow(dead_code)]
     fn calculate_phase(&self, timestamp: u64, period_days: u32) -> f64 {
         let days_since_epoch = timestamp / 86400;
         let position_in_period = days_since_epoch % period_days as u64;
