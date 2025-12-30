@@ -11,6 +11,9 @@ premium/engine_build/*.wasm
 /build/package/tmp
 /staging/core/
 
+# Build artifacts
+build/artifacts/
+
 # Signing keys (private key only - public key IS committed)
 packaging/signing/private.key
 
