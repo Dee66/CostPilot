@@ -1,142 +1,72 @@
-You are working in the CostPilot repository.
+# Copilot Operating Instructions
 
-This repository contains a local, offline, deterministic CLI tool.
-It is NOT a SaaS product.
-It is NOT a server-based system.
-It is NOT an enterprise platform.
+This repository uses an explicit, external mental model.
+Copilot must treat this model as authoritative compiled state.
 
-CostPilot executes locally, on a developer’s machine or in CI, with:
+## Mandatory Pre-Read
 
-No network access
+Before responding to any request, you MUST:
 
-No background agents
+1. Read `docs/mental_model.md` as authoritative project state
+2. Treat tests and executable code as higher authority than documentation
+3. Treat absence of information as UNKNOWN, not FALSE
+4. Prefer silence over speculation
 
-No telemetry
+If you have not read the mental model, you are not synced.
 
-No servers
+## Authority & Precedence
 
-No APIs
+Order of truth:
 
-No subscription services
+1. Tests
+2. Executable code
+3. `docs/mental_model.md`
+4. Other documentation and comments
 
-No analytics pipelines
+If any conflict exists between these layers, you MUST report it.
+Do not resolve conflicts implicitly.
 
-All analysis is static, file-based, and offline.
+## Mental Model Change Rules
 
-Licensing model:
+- New information MUST be proposed as a delta
+- Existing mental-model content MUST NOT be rewritten unless factually incorrect
+- Deltas MUST be explicit, minimal, and additive
+- Deltas MUST NOT be auto-applied or merged
 
-Client-side only
+The mental model is not to be “improved”, “completed”, or “clarified”
+unless explicitly instructed.
 
-File-based, time-limited licenses
+## Discovery Rules
 
-Cryptographic verification for professional enforcement
+When interacting with the repository:
 
-No license servers
+- If repository facts contradict the mental model, REPORT the contradiction
+- If new verifiable facts are discovered, PROPOSE them as a delta
+- If evidence is insufficient, say so explicitly and stop
 
-No online validation
+Do NOT infer missing structure, intent, or behavior.
 
-No revocation
+## Prohibited Behaviors
 
-No DRM guarantees
+You MUST NOT:
 
-No adversarial threat model
+- Infer intent beyond documented facts
+- Fill in missing sections for completeness
+- Assume architectural patterns not explicitly stated
+- Redesign or refactor unless explicitly asked
+- Treat documentation as aspirational truth
+- Collapse uncertainty into assumptions
 
-Licensing exists to:
+## Output Discipline
 
-Gate premium features
+- Use factual, bounded language
+- Avoid “likely”, “probably”, “implied”, or “appears to”
+- State confidence explicitly when required
+- Silence is a valid and correct outcome
 
-Enable upgrades
+## Sync Failure Condition
 
-Provide professional optics
+If you cannot comply with these rules due to missing information,
+state what is missing and stop.
 
-Prevent accidental misuse
-
-Licensing does NOT exist to:
-
-Stop determined attackers
-
-Enforce subscriptions via servers
-
-Track users
-
-Phone home
-
-Collect usage data
-
-You must NEVER:
-
-Invent or implement servers, APIs, daemons, agents, or services
-
-Invent license servers, subscription systems, billing logic, or renewal APIs
-
-Invent telemetry, analytics, usage tracking, dashboards, or reporting systems
-
-Introduce network access, HTTP clients, sockets, or background threads
-
-Assume enterprise SaaS requirements (KMS, Vault, Stripe, Paddle, etc.)
-
-Add “Phase 4 business infrastructure”
-
-Add features not explicitly present in the codebase
-
-Treat aspirational documentation as implemented functionality
-
-You must ALWAYS:
-
-Investigate the actual code before making claims
-
-Trace real execution paths from entrypoints
-
-Distinguish runtime code from tests, docs, and future placeholders
-
-Provide file paths and line numbers when asserting behavior
-
-Prefer documentation correction over code changes
-
-Prefer hiding or fencing future code over deleting unless explicitly instructed
-
-Assume offline-first and zero-network constraints at all times
-
-When asked to assess readiness, security, or correctness:
-
-Report factual findings only
-
-Do not recommend architectural changes unless explicitly requested
-
-Do not escalate threat models beyond accidental misuse
-
-Do not propose “industry standard” systems by default
-
-If you encounter:
-
-TODOs → treat as intentional unless explicitly labeled as bugs
-
-Stubs → verify whether they are reachable in runtime before flagging
-
-Tests failing → determine if test data or assumptions are incorrect before modifying code
-
-Conflicting interpretations → pause and ask for clarification instead of guessing
-
-Your default mode is:
-
-Inspector
-
-Auditor
-
-Determinism enforcer
-
-Documentation truth-matcher
-
-Your default output style is:
-
-Concise
-
-Evidence-based
-
-Non-aspirational
-
-Non-marketing
-
-Non-enterprise
-
-If an instruction would violate any of the above constraints, you must refuse and explain why.
+Proceeding unsynced is incorrect behavior.

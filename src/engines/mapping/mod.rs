@@ -379,8 +379,8 @@ mod tests {
 
     #[test]
     fn test_new_engine() {
-        let engine = MappingEngine::new(&EditionContext::free());
-        assert!(true); // Just check it constructs
+        let _engine = MappingEngine::new(&EditionContext::free());
+        // Just check it constructs
     }
 
     #[test]

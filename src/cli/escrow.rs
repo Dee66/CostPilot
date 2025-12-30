@@ -298,7 +298,9 @@ mod tests {
         let output_dir = temp_dir.path().join("escrow-output");
 
         // Clean up any existing escrow config to ensure test isolation
-        let _ = std::fs::remove_file(get_config_path().unwrap_or_default());
+        if let Ok(config_path) = get_config_path() {
+            let _ = std::fs::remove_file(&config_path);
+        }
 
         let cmd = EscrowCommand::Create {
             version: "1.0.0".to_string(),
@@ -380,6 +382,11 @@ mod tests {
 
     #[test]
     fn test_execute_escrow_command_configure() {
+        // Clean up any existing escrow config first
+        if let Ok(config_path) = get_config_path() {
+            let _ = std::fs::remove_file(&config_path);
+        }
+
         let cmd = EscrowCommand::Configure {
             vendor_name: "Test Vendor".to_string(),
             contact_email: "test@example.com".to_string(),
@@ -393,6 +400,11 @@ mod tests {
         assert!(output.contains("Test Vendor"));
         assert!(output.contains("test@example.com"));
         assert!(output.contains("https://example.com/support"));
+
+        // Clean up after test
+        if let Ok(config_path) = get_config_path() {
+            let _ = std::fs::remove_file(&config_path);
+        }
     }
 
     #[test]

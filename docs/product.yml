@@ -245,7 +245,7 @@ features:
         description: "Push notifications for predicted SLO burns (e.g., Slack)."
 
 data_contracts:
-  input_schema: "Static IaC artifacts (Terraform plan JSON, CDK diff, CloudFormation changeset) plus optional usage hints."
+  input_schema: "Static IaC artifacts (Terraform plan JSON, CDK diff) plus optional usage hints."
   output_schema: "Structured JSON and static artifacts (trend, mapping, reports) with canonical keys."
   internal_state_schema: "Baselines, SLOs, policies, trends, and mapping metadata stored under .costpilot/."
 

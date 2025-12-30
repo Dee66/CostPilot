@@ -3,20 +3,11 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use costpilot::engines::detection::detection_engine::DetectionEngine;
-use costpilot::engines::detection::terraform::parser::TerraformPlan;
 use costpilot::engines::prediction::prediction_engine::PredictionEngine;
-use costpilot::engines::shared::models::{ChangeAction, Detection, ResourceChange};
+use costpilot::engines::shared::models::{ChangeAction, ResourceChange};
 use costpilot::errors::ErrorCategory;
 
 // Mock data for long-running tests
-fn create_test_plan() -> TerraformPlan {
-    TerraformPlan {
-        format_version: "1.0".to_string(),
-        terraform_version: Some("1.0.0".to_string()),
-        resource_changes: Some(vec![]), // We'll create ResourceChange separately
-        configuration: None,
-    }
-}
 
 fn create_test_changes() -> Vec<ResourceChange> {
     vec![ResourceChange::builder()
@@ -91,7 +82,7 @@ fn test_24_hour_soak_test_simulation() {
 #[test]
 fn test_resource_leak_detection() {
     // Test for memory and file descriptor leaks over multiple iterations
-    let initial_memory = 0; // In real implementation, would track actual memory usage
+    let _initial_memory = 0; // In real implementation, would track actual memory usage
     let iterations = 1000;
 
     let detection_engine = Arc::new(DetectionEngine::new());

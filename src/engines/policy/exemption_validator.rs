@@ -169,7 +169,7 @@ impl ExemptionValidator {
         };
 
         // Ensure created_at is parseable; if not, mark invalid
-        if let Err(_) = self.parse_created_date(&exemption.created_at) {
+        if self.parse_created_date(&exemption.created_at).is_err() {
             return ExemptionStatus::Invalid {
                 reason: "Invalid created_at date format".to_string(),
             };

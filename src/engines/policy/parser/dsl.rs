@@ -632,7 +632,7 @@ mod tests {
     fn test_evaluate_rule() {
         let rule = PolicyRule {
             name: "Test Rule".to_string(),
-            description: "Test".to_string(),
+            description: Some("Test".to_string()),
             enabled: true,
             severity: RuleSeverity::High,
             conditions: vec![Condition {

@@ -335,9 +335,7 @@ impl SnippetGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::{ChangeAction, CostEstimate, RegressionType, Severity};
-    use serde_json::json;
-    use std::collections::HashMap;
+    use crate::engines::shared::models::{ChangeAction, RegressionType, Severity};
 
     #[test]
     fn test_ec2_snippet_generation() {

@@ -19,7 +19,7 @@ const BANNER: &str = r#"
 
 #[derive(Parser)]
 #[command(name = "costpilot")]
-#[command(about = "Zero-IAM FinOps engine for Terraform, CDK, and CloudFormation", long_about = None)]
+#[command(about = "Zero-IAM FinOps engine for Terraform and CDK", long_about = None)]
 #[command(version = VERSION)]
 struct Cli {
     #[command(subcommand)]
@@ -472,7 +472,7 @@ enum AuditCommands {
     },
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load edition context BEFORE parsing CLI
     // This allows us to gate premium commands early
     let edition = costpilot::edition::detect_edition().unwrap_or_else(|_| {
@@ -486,7 +486,7 @@ fn main() {
         if arg == "--version" || arg == "-V" {
             let edition_str = if edition.is_premium() { "Premium" } else { "Free" };
             println!("costpilot {} ({})", VERSION, edition_str);
-            return;
+            return Ok(());
         }
     }
 
@@ -518,7 +518,7 @@ fn main() {
         println!();
     }
 
-    let start_time: Option<std::time::Instant> = None;
+    let _start_time: Option<std::time::Instant> = None;
 
     let result = match cli.command {
         Commands::Scan(scan_cmd) => {
@@ -602,16 +602,11 @@ fn main() {
         Commands::Explain { command, args } =>
         cmd_explain(command, args, &cli.format, cli.verbose, &edition),
         Commands::AutofixSnippet { plan, verbose } => {
-
-            if plan.is_none() {
-                Err("--plan is required for autofix-snippet".into())
-            } else {
-                let plan_path = plan.unwrap();
-                let args = AutofixSnippetArgs { plan: plan_path, verbose };
-                match costpilot::cli::commands::autofix_snippet::execute(&args, &edition) {
-                    Ok(()) => Ok(()),
-                    Err(e) => Err(format!("{}", e).into()),
-                }
+            let plan_path = plan.ok_or("--plan is required for autofix-snippet")?;
+            let args = AutofixSnippetArgs { plan: plan_path, verbose };
+            match costpilot::cli::commands::autofix_snippet::execute(&args, &edition) {
+                Ok(()) => Ok(()),
+                Err(e) => Err(format!("{}", e).into()),
             }
         }
         Commands::AutofixPatch(args) => {
@@ -696,14 +691,11 @@ fn main() {
         }
         Commands::Version { detailed } => {
             cmd_version(detailed, &edition);
-            return;
+            return Ok(());
         }
     };
 
-    if let Err(e) = result {
-        eprintln!("{} {}", "Error:".bright_red().bold(), e);
-        process::exit(1);
-    }
+    result
 }
 
 fn cmd_diff(

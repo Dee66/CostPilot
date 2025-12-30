@@ -1,6 +1,6 @@
 use costpilot::engines::prediction::heuristics_loader::{HeuristicsLoader, HeuristicsStats};
 use costpilot::engines::prediction::prediction_engine::CostHeuristics;
-use costpilot::engines::shared::error_model::{CostPilotError, ErrorCategory};
+use costpilot::engines::shared::error_model::ErrorCategory;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -240,7 +240,7 @@ fn test_load_no_files_found() {
 
 #[test]
 fn test_load_with_valid_file() {
-    let loader = HeuristicsLoader::new();
+    let _loader = HeuristicsLoader::new();
 
     let valid_heuristics = r#"{
         "version": "1.0.0",
@@ -879,7 +879,7 @@ fn test_load_from_file_permission_denied() {
 
 #[test]
 fn test_load_fallback_behavior() {
-    let loader = HeuristicsLoader::new();
+    let _loader = HeuristicsLoader::new();
 
     let valid_heuristics = r#"{
         "version": "1.0.0",

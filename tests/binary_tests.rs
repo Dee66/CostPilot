@@ -1,11 +1,11 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::fs;
 use tempfile::TempDir;
 
 #[test]
 fn test_version_command() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("version")
         .assert()
         .success()
@@ -14,7 +14,7 @@ fn test_version_command() {
 
 #[test]
 fn test_version_detailed_command() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("version")
         .arg("--detailed")
         .assert()
@@ -25,7 +25,7 @@ fn test_version_detailed_command() {
 #[test]
 fn test_init_command() {
     let temp_dir = TempDir::new().unwrap();
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("init").current_dir(&temp_dir).assert().success();
 
     // Check if .costpilot directory was created
@@ -35,7 +35,7 @@ fn test_init_command() {
 #[test]
 fn test_init_no_ci_command() {
     let temp_dir = TempDir::new().unwrap();
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("init")
         .arg("--no-ci")
         .current_dir(&temp_dir)
@@ -48,7 +48,7 @@ fn test_init_no_ci_command() {
 
 #[test]
 fn test_heuristics_command() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("heuristics")
         .arg("list")
         .assert()
@@ -58,7 +58,7 @@ fn test_heuristics_command() {
 
 #[test]
 fn test_explain_command() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("explain")
         .arg("aws_instance")
         .arg("--instance-type")
@@ -70,7 +70,7 @@ fn test_explain_command() {
 
 #[test]
 fn test_explain_unknown_resource() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("explain")
         .arg("unknown_resource")
         .arg("--instance-type")
@@ -121,13 +121,13 @@ rules:
     let file_path = temp_dir.path().join("test.yaml");
     fs::write(&file_path, yaml_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&file_path).assert().success();
 }
 
 #[test]
 fn test_validate_command_invalid_file() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate")
         .arg("nonexistent.yaml")
         .assert()
@@ -149,7 +149,7 @@ Resources:
     let file_path = temp_dir.path().join("invalid.yaml");
     fs::write(&file_path, invalid_yaml).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate")
         .arg(&file_path)
         .assert()

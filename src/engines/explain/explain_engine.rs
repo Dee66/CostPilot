@@ -414,7 +414,6 @@ impl ExplainEngine {
 mod tests {
     use super::*;
     use crate::engines::shared::models::{ChangeAction, RegressionType, Severity};
-    use std::collections::HashMap;
 
     #[test]
     fn test_explain_generation() {

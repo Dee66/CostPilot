@@ -1,4 +1,3 @@
-use std::time::Duration;
 // Integration tests for expired exemptions CI blocking
 
 use costpilot::engines::policy::{

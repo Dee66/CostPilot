@@ -326,7 +326,6 @@ impl Default for DetectionEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::shared::models::ChangeAction;
 
     #[test]
     fn test_detection_engine_creation() {

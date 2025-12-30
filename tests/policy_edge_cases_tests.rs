@@ -1,9 +1,6 @@
-use assert_cmd::Command;
-use predicates::prelude::*;
+use assert_cmd::cargo::cargo_bin_cmd;
 use std::fs;
 use tempfile::TempDir;
-
-use serde_json::json;
 
 // ===== POLICY EDGE CASE TESTS =====
 
@@ -24,7 +21,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl")
         .arg("validate")
         .arg(&policy_path)
@@ -53,7 +50,7 @@ metadata:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -78,7 +75,7 @@ metadata:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -112,7 +109,7 @@ rules:{}"#,
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -141,7 +138,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -169,7 +166,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -203,7 +200,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -234,7 +231,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -261,7 +258,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     // Should either succeed (last rule wins) or fail gracefully
@@ -305,7 +302,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();

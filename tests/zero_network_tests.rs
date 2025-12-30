@@ -9,10 +9,9 @@ mod zero_network_tests {
     use costpilot::edition::EditionContext;
     use costpilot::engines::policy::{Severity as PolicySeverity, *};
     use costpilot::engines::shared::models::{
-        ChangeAction, CostEstimate, CostImpact, ResourceChange, Severity,
+        ChangeAction, CostEstimate, CostImpact, ResourceChange,
     };
     use serde_json::json;
-    use std::collections::HashMap;
 
     #[test]
     fn test_policy_engine_zero_network() {
@@ -88,7 +87,7 @@ mod zero_network_tests {
             },
         };
 
-        engine.add_policy(policy);
+        _ = engine.add_policy(policy);
 
         let token = ZeroNetworkToken::new();
         let cost = CostEstimate::builder()

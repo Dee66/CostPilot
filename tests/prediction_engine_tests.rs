@@ -12,7 +12,7 @@ use serde_json::json;
 
 #[test]
 fn test_prediction_engine_new() {
-    let engine = PredictionEngine::new().unwrap();
+    let _engine = PredictionEngine::new().unwrap();
     // Just test that it creates successfully
     assert!(true);
 }
@@ -20,7 +20,7 @@ fn test_prediction_engine_new() {
 #[test]
 fn test_prediction_engine_new_with_edition_free() {
     let edition = EditionContext::free();
-    let engine = PredictionEngine::new_with_edition(&edition).unwrap();
+    let _engine = PredictionEngine::new_with_edition(&edition).unwrap();
     // Just test that it creates successfully
     assert!(true);
 }
@@ -29,14 +29,14 @@ fn test_prediction_engine_new_with_edition_free() {
 fn test_prediction_engine_with_heuristics() {
     let heuristics =
         costpilot::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
-    let engine = PredictionEngine::with_heuristics(heuristics.clone());
+    let _engine = PredictionEngine::with_heuristics(heuristics.clone());
     // Just test that it creates successfully
     assert!(true);
 }
 
 #[test]
 fn test_prediction_engine_with_verbose() {
-    let engine = PredictionEngine::new().unwrap().with_verbose(true);
+    let _engine = PredictionEngine::new().unwrap().with_verbose(true);
     // Just test that it creates successfully
     assert!(true);
 }
@@ -44,7 +44,7 @@ fn test_prediction_engine_with_verbose() {
 #[test]
 fn test_prediction_engine_with_performance_tracking() {
     let budgets = PerformanceBudgets::default();
-    let engine = PredictionEngine::new()
+    let _engine = PredictionEngine::new()
         .unwrap()
         .with_performance_tracking(budgets);
     // Just test that it creates successfully
@@ -2073,7 +2073,7 @@ proptest! {
     }
 
     #[test]
-    fn test_zero_cost_edge_cases(cost in 0.0f64..1000.0) {
+    fn test_zero_cost_edge_cases(_cost in 0.0f64..1000.0) {
         let engine = PredictionEngine::new().unwrap();
         let change = ResourceChange::builder()
             .resource_type("aws_instance".to_string())
@@ -2095,7 +2095,7 @@ proptest! {
     }
 
     #[test]
-    fn test_negative_cost_guards(cost in -1000.0f64..0.0) {
+    fn test_negative_cost_guards(_cost in -1000.0f64..0.0) {
         let engine = PredictionEngine::new().unwrap();
         let change = ResourceChange::builder()
             .resource_type("aws_instance".to_string())
@@ -2116,7 +2116,7 @@ proptest! {
     }
 
     #[test]
-    fn test_overflow_protection(large_cost in 1e10f64..1e20) {
+    fn test_overflow_protection(_large_cost in 1e10f64..1e20) {
         let engine = PredictionEngine::new().unwrap();
         let change = ResourceChange::builder()
             .resource_type("aws_instance".to_string())

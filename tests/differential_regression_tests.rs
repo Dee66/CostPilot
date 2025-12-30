@@ -1,7 +1,7 @@
 use costpilot::engines::detection::DetectionEngine;
 use costpilot::engines::explain::PredictionExplainer;
-use costpilot::engines::prediction::{prediction_engine::CostHeuristics, PredictionEngine};
-use costpilot::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
+use costpilot::engines::prediction::PredictionEngine;
+use costpilot::engines::shared::models::{ChangeAction, ResourceChange};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
@@ -106,7 +106,7 @@ mod differential_regression_tests {
         let explain_engine = PredictionExplainer::new(&heuristics);
 
         let change = create_test_resource_change();
-        let estimates = prediction_engine.predict(&[change.clone()]).unwrap();
+        let estimates = prediction_engine.predict(std::slice::from_ref(&change)).unwrap();
 
         let explanations = explain_engine.explain(&change, &estimates[0]);
         let current_output: Value = serde_json::to_value(&explanations).unwrap();
@@ -140,7 +140,7 @@ mod differential_regression_tests {
             );
             assert!(!detection.message.is_empty(), "Detection missing message");
             assert!(
-                detection.severity_score >= 0 && detection.severity_score <= 100,
+                detection.severity_score <= 100,
                 "Detection severity_score out of valid range: {}",
                 detection.severity_score
             );
@@ -155,8 +155,8 @@ mod differential_regression_tests {
         let change = create_test_resource_change();
 
         // Run prediction multiple times to ensure consistency
-        let estimates1 = engine.predict(&[change.clone()]).unwrap();
-        let estimates2 = engine.predict(&[change]).unwrap();
+        let estimates1 = engine.predict(std::slice::from_ref(&change)).unwrap();
+        let estimates2 = engine.predict(std::slice::from_ref(&change)).unwrap();
 
         assert_eq!(
             estimates1.len(),

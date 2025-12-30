@@ -1,4 +1,6 @@
-use assert_cmd::Command;
+#![allow(deprecated)]
+
+use assert_cmd::cargo::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::fs;
 use tempfile::TempDir;
@@ -61,7 +63,7 @@ fn test_policy_enforcement_warn_mode() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -103,7 +105,7 @@ fn test_policy_enforcement_block_mode() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -165,7 +167,7 @@ fn test_policy_exemption_workflow() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -230,7 +232,7 @@ fn test_expired_exemption() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -292,7 +294,7 @@ fn test_policy_versioning() {
     .unwrap();
 
     // Test v1.0 policy (should succeed - no warnings since $150 < $200)
-    let mut cmd_v1 = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd_v1 = cargo_bin_cmd!("costpilot");
     cmd_v1
         .arg("scan")
         .arg(&scan_path)
@@ -305,7 +307,7 @@ fn test_policy_versioning() {
         .stdout(predicate::str::is_empty().not()); // Should have output but no warnings
 
     // Test v2.0 policy (should succeed but show warnings since $150 > $100)
-    let mut cmd_v2 = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd_v2 = cargo_bin_cmd!("costpilot");
     cmd_v2
         .arg("scan")
         .arg(&scan_path)
@@ -345,7 +347,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate")
         .arg(&policy_path)
         .arg("--format")
@@ -372,7 +374,7 @@ metadata:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -396,7 +398,7 @@ metadata:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -431,7 +433,7 @@ rules:{}"#,
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -461,7 +463,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("policy-dsl").arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -490,7 +492,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -529,7 +531,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -565,7 +567,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -595,7 +597,7 @@ rules:
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg("--policy").arg(&policy_path);
 
     // Should either succeed (last rule wins) or fail gracefully
@@ -653,7 +655,7 @@ exemptions: []
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&policy_path);
 
     cmd.assert().success();
@@ -674,8 +676,8 @@ fn test_policy_enforcement_empty_policy_edge_case() {
     let plan = terraform_plan_with_ec2("t3.micro");
     fs::write(&scan_path, serde_json::to_string_pretty(&plan).unwrap()).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    let result = cmd
+    let mut cmd = cargo_bin_cmd!("costpilot");
+    let _result = cmd
         .arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -707,7 +709,7 @@ fn test_policy_enforcement_zero_budget_edge_case() {
     let plan = terraform_plan_with_ec2("t3.micro");
     fs::write(&scan_path, serde_json::to_string_pretty(&plan).unwrap()).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -739,7 +741,7 @@ fn test_policy_enforcement_negative_budget_edge_case() {
     let plan = terraform_plan_with_ec2("t3.micro");
     fs::write(&scan_path, serde_json::to_string_pretty(&plan).unwrap()).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -771,7 +773,7 @@ fn test_policy_enforcement_extremely_large_budget() {
     let plan = terraform_plan_with_ec2("t3.micro");
     fs::write(&scan_path, serde_json::to_string_pretty(&plan).unwrap()).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -808,8 +810,8 @@ fn test_policy_enforcement_empty_terraform_plan_edge_case() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    let result = cmd
+    let mut cmd = cargo_bin_cmd!("costpilot");
+    let _result = cmd
         .arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -845,7 +847,7 @@ fn test_policy_enforcement_extremely_long_policy_names() {
     let plan = terraform_plan_with_ec2("t3.micro");
     fs::write(&scan_path, serde_json::to_string_pretty(&plan).unwrap()).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -883,7 +885,7 @@ fn test_policy_enforcement_special_characters_in_policy_names() {
     let plan = terraform_plan_with_ec2("t3.micro");
     fs::write(&scan_path, serde_json::to_string_pretty(&plan).unwrap()).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -924,7 +926,7 @@ fn test_policy_enforcement_maximum_nested_rules() {
     let plan = terraform_plan_with_ec2("t3.micro");
     fs::write(&scan_path, serde_json::to_string_pretty(&plan).unwrap()).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&scan_path)
         .arg("--policy")
@@ -956,7 +958,7 @@ fn test_policy_enforcement_extremely_deep_nesting_edge_case() {
     let plan = terraform_plan_with_ec2("t3.micro");
     fs::write(&scan_path, serde_json::to_string_pretty(&plan).unwrap()).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg("--policy")
         .arg(&policy_path)

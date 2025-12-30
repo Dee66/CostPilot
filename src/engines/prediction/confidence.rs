@@ -90,7 +90,6 @@ mod tests {
     use super::*;
     use crate::engines::shared::models::ChangeAction;
     use serde_json::json;
-    use std::collections::HashMap;
 
     #[test]
     fn test_confidence_calculation() {

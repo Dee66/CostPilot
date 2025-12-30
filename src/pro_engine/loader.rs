@@ -5,7 +5,6 @@ use aes_gcm::{
     Aes256Gcm, Nonce,
 };
 use chrono::{DateTime, Utc};
-use curve25519_dalek::scalar::Scalar;
 use ed25519_dalek::{Signature, VerifyingKey};
 use hkdf::Hkdf;
 use serde::{Deserialize, Serialize};

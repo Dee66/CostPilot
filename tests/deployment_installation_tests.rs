@@ -33,7 +33,7 @@ fn test_package_manager_detection() {
         ("npm", "/usr/bin/npm"),
     ];
 
-    for (name, expected_path) in package_managers {
+    for (_name, expected_path) in package_managers {
         let exists = Path::new(expected_path).exists();
         // Just test that we can check for these paths (actual availability depends on system)
         let _detected = exists;
@@ -217,7 +217,7 @@ fn test_binary_installs_linux_architectures() {
 
     // Build for x86_64-unknown-linux-gnu
     let output = Command::new("cargo")
-        .args(&["build", "--release", "--target", "x86_64-unknown-linux-gnu"])
+        .args(["build", "--release", "--target", "x86_64-unknown-linux-gnu"])
         .output()
         .expect("Failed to run cargo build for x86_64");
     assert!(
@@ -248,13 +248,13 @@ fn test_binary_installs_linux_architectures() {
 
     // For ARM64, check if target is installed
     let target_check = Command::new("rustup")
-        .args(&["target", "list", "--installed"])
+        .args(["target", "list", "--installed"])
         .output()
         .expect("Failed to check installed targets");
     let targets = String::from_utf8_lossy(&target_check.stdout);
     if targets.contains("aarch64-unknown-linux-gnu") {
         let arm_output = Command::new("cargo")
-            .args(&[
+            .args([
                 "build",
                 "--release",
                 "--target",

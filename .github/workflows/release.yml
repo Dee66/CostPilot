@@ -7,187 +7,119 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux-amd64:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux-amd64
+            run_tests: true
+          - os: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            name: linux-arm64
+            run_tests: false
+          - os: macos-14
+            target: x86_64-apple-darwin
+            name: macos-amd64
+            run_tests: true
+          - os: macos-14
+            target: aarch64-apple-darwin
+            name: macos-arm64
+            run_tests: true
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: windows-amd64
+            run_tests: true
+          - os: ubuntu-latest
+            target: aarch64-pc-windows-msvc
+            name: windows-arm64
+            run_tests: false
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compilation tools (for windows-arm64)
+        if: matrix.name == 'windows-arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          rustup target add aarch64-pc-windows-msvc
 
       - name: Run ProEngine loader tests
+        if: matrix.run_tests
         run: cargo test --test pro_engine_loader_unit_tests
 
       - name: Run WASM runtime tests
+        if: matrix.run_tests
         run: cargo test --test wasm_runtime_tests
 
       - name: Run Pro Engine loader tests
+        if: matrix.run_tests
         run: cargo test --test pro_engine_loader_tests
 
       - name: Build release
-        run: cargo build --release
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ] || [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ] || [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+            cargo build --release
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
+
+      - name: Copy binary to standard location (for cross-compiled targets)
+        if: matrix.target != 'x86_64-unknown-linux-gnu' && matrix.target != 'aarch64-unknown-linux-gnu' && matrix.target != 'x86_64-pc-windows-msvc'
+        run: |
+          mkdir -p target/release
+          cp target/${{ matrix.target }}/release/costpilot target/release/
 
       - name: Package
         env:
-          TARGET: linux-amd64
+          TARGET: ${{ matrix.name }}
           COSTPILOT_VERSION: ${{ github.ref_name }}
           OUT_DIR: dist
         run: bash scripts/make_release_bundle.sh
 
       - name: Validate archives
         run: |
-          bash scripts/verify_release_bundle.sh dist/costpilot-linux-amd64.zip
-          bash scripts/verify_release_bundle.sh dist/costpilot-linux-amd64.tar.gz
+          bash scripts/verify_release_bundle.sh dist/costpilot-${{ matrix.name }}.zip
+          bash scripts/verify_release_bundle.sh dist/costpilot-${{ matrix.name }}.tar.gz
 
       - name: Verify release policy
+        if: matrix.name == 'linux-amd64'
         run: bash scripts/signing/verify_release_policy.sh
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: costpilot-linux-amd64.zip
-          path: dist/costpilot-linux-amd64.zip
+          name: costpilot-${{ matrix.name }}.zip
+          path: dist/costpilot-${{ matrix.name }}.zip
 
       - name: Upload TAR.GZ
         uses: actions/upload-artifact@v4
         with:
-          name: costpilot-linux-amd64.tar.gz
-          path: dist/costpilot-linux-amd64.tar.gz
-
-  build-macos-arm64:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin
-
-      - name: Build release
-        run: cargo build --release --target aarch64-apple-darwin
-
-      - name: Copy binary to standard location
-        run: |
-          mkdir -p target/release
-          cp target/aarch64-apple-darwin/release/costpilot target/release/
-
-      - name: Package
-        env:
-          TARGET: macos-arm64
-          COSTPILOT_VERSION: ${{ github.ref_name }}
-          OUT_DIR: dist
-        run: bash scripts/make_release_bundle.sh
-
-      - name: Validate archives
-        run: |
-          bash scripts/verify_release_bundle.sh dist/costpilot-macos-arm64.zip
-          bash scripts/verify_release_bundle.sh dist/costpilot-macos-arm64.tar.gz
-
-      - name: Upload ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: costpilot-macos-arm64.zip
-          path: dist/costpilot-macos-arm64.zip
-
-      - name: Upload TAR.GZ
-        uses: actions/upload-artifact@v4
-        with:
-          name: costpilot-macos-arm64.tar.gz
-          path: dist/costpilot-macos-arm64.tar.gz
-
-  build-macos-amd64:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-apple-darwin
-
-      - name: Build release
-        run: cargo build --release --target x86_64-apple-darwin
-
-      - name: Copy binary to standard location
-        run: |
-          mkdir -p target/release
-          cp target/x86_64-apple-darwin/release/costpilot target/release/
-
-      - name: Package
-        env:
-          TARGET: macos-amd64
-          COSTPILOT_VERSION: ${{ github.ref_name }}
-          OUT_DIR: dist
-        run: bash scripts/make_release_bundle.sh
-
-      - name: Validate archives
-        run: |
-          bash scripts/verify_release_bundle.sh dist/costpilot-macos-amd64.zip
-          bash scripts/verify_release_bundle.sh dist/costpilot-macos-amd64.tar.gz
-
-      - name: Upload ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: costpilot-macos-amd64.zip
-          path: dist/costpilot-macos-amd64.zip
-
-      - name: Upload TAR.GZ
-        uses: actions/upload-artifact@v4
-        with:
-          name: costpilot-macos-amd64.tar.gz
-          path: dist/costpilot-macos-amd64.tar.gz
-
-  build-windows-amd64:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Run ProEngine loader tests
-        run: cargo test --test pro_engine_loader_unit_tests
-
-      - name: Run WASM runtime tests
-        run: cargo test --test wasm_runtime_tests
-
-      - name: Run Pro Engine loader tests
-        run: cargo test --test pro_engine_loader_tests
-
-      - name: Build release
-        run: cargo build --release
-
-      - name: Package
-        shell: bash
-        env:
-          TARGET: windows-amd64
-          COSTPILOT_VERSION: ${{ github.ref_name }}
-          OUT_DIR: dist
-        run: bash scripts/make_release_bundle.sh
-
-      - name: Validate archives
-        shell: bash
-        run: |
-          bash scripts/verify_release_bundle.sh dist/costpilot-windows-amd64.zip
-          bash scripts/verify_release_bundle.sh dist/costpilot-windows-amd64.tar.gz
-
-      - name: Upload ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: costpilot-windows-amd64.zip
-          path: dist/costpilot-windows-amd64.zip
-
-      - name: Upload TAR.GZ
-        uses: actions/upload-artifact@v4
-        with:
-          name: costpilot-windows-amd64.tar.gz
-          path: dist/costpilot-windows-amd64.tar.gz
+          name: costpilot-${{ matrix.name }}.tar.gz
+          path: dist/costpilot-${{ matrix.name }}.tar.gz
 
   sign-and-release:
     runs-on: ubuntu-latest
-    needs: [build-linux-amd64, build-macos-arm64, build-macos-amd64, build-windows-amd64]
+    needs: [build]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
@@ -221,11 +153,14 @@ jobs:
           bash scripts/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/keys/ci_signing.pub.pem
 
       - name: Generate license token (dev)
-        if: env.RELEASE_SIGNING == 'true'
         env:
           SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
           SOURCE_DATE_EPOCH: ${{ github.event.head_commit.timestamp }}
         run: |
+          if [ -z "$SIGNING_SECRET" ]; then
+            echo "SIGNING_SECRET not available, skipping license token generation"
+            exit 0
+          fi
           chmod +x scripts/signing/generate_license_token.sh
           bash scripts/signing/generate_license_token.sh \
             "demo-license" \
@@ -265,10 +200,13 @@ jobs:
           done
 
       - name: Verify publisher signature (release)
-        if: secrets.PUBLISHER_PUBKEY != ''
         env:
           PUBLISHER_PUBKEY: ${{ secrets.PUBLISHER_PUBKEY }}
         run: |
+          if [ -z "$PUBLISHER_PUBKEY" ]; then
+            echo "PUBLISHER_PUBKEY not available, skipping publisher signature verification"
+            exit 0
+          fi
           echo "$PUBLISHER_PUBKEY" > build/publisher.pub.pem
           chmod +x scripts/signing/verify_checksum_ed25519.sh
           bash scripts/signing/verify_checksum_ed25519.sh dist/sha256sum.txt dist/sha256sum.txt.sig build/publisher.pub.pem

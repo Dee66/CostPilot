@@ -1,12 +1,12 @@
 // Golden file tests for mapping output
 
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use chrono;
 use costpilot::engines::mapping::{DependencyGraph, EdgeType, GraphEdge, GraphMetadata, GraphNode};
 
 #[test]
 fn golden_map_basic_ec2_instances() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("map").arg("tests/test_golden_plan.json");
 
     let output = cmd.output().unwrap();
@@ -17,7 +17,7 @@ fn golden_map_basic_ec2_instances() {
 
 #[test]
 fn golden_autofix_snippet_basic() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("autofix-snippet");
 
     let output = cmd.output().unwrap();
@@ -28,7 +28,7 @@ fn golden_autofix_snippet_basic() {
 
 #[test]
 fn golden_autofix_patch_basic() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("autofix-patch");
 
     let output = cmd.output().unwrap();

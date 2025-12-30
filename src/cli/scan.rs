@@ -249,11 +249,8 @@ impl ScanCommand {
                 let validator = ExemptionValidator::new();
                 if let Ok(file) = validator.load_from_file(ex_path) {
                     for ex in &file.exemptions {
-                        match validator.check_status(ex) {
-                            crate::engines::policy::ExemptionStatus::Expired { .. } => {
-                                println!("Exemption {} expired", ex.id);
-                            }
-                            _ => {}
+                        if let crate::engines::policy::ExemptionStatus::Expired { .. } = validator.check_status(ex) {
+                            println!("Exemption {} expired", ex.id);
                         }
                     }
                 }
@@ -1082,48 +1079,4 @@ impl ScanCommand {
             .collect::<Vec<_>>()
             .join("\n")
     }
-}
-
-#[cfg(test)]
-fn evaluate_slos(
-    total_cost: &CostEstimate,
-    estimates: &[CostEstimate],
-    edition: &crate::edition::EditionContext,
-) -> Result<crate::engines::slo::slo_engine::SloResult, CostPilotError> {
-    // Load SLO configuration
-    let slo_config_path = std::path::PathBuf::from(".costpilot/slo.json");
-    let slo_config_content = std::fs::read_to_string(&slo_config_path).map_err(|e| {
-        CostPilotError::new(
-            "SLO_001",
-            ErrorCategory::FileSystemError,
-            format!("Failed to read SLO config: {}", e),
-        )
-    })?;
-
-    // Parse SLO configuration
-    let slo_definitions: Vec<crate::engines::slo::slo_engine::SloDefinition> =
-        serde_json::from_str(&slo_config_content).map_err(|e| {
-            CostPilotError::new(
-                "SLO_002",
-                ErrorCategory::ValidationError,
-                format!("Failed to parse SLO config: {}", e),
-            )
-        })?;
-
-    // Create SLO engine and evaluate
-    let slo_engine = crate::engines::slo::SloEngine::new(slo_definitions, edition);
-
-    // Convert CostEstimate to TotalCost for SLO evaluation
-    let total_cost_struct = crate::engines::shared::models::TotalCost {
-        monthly: total_cost.monthly_cost,
-        prediction_interval_low: total_cost.prediction_interval_low,
-        prediction_interval_high: total_cost.prediction_interval_high,
-        confidence_score: total_cost.confidence_score,
-        resource_count: estimates.len(),
-    };
-
-    let slo_result = slo_engine.check_slo(&total_cost_struct, estimates);
-
-    // Return the full SLO result
-    Ok(slo_result)
 }

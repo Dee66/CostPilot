@@ -487,8 +487,7 @@ pub fn cmd_audit_record(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::policy::{AuditEvent, AuditEventType, AuditLog, AuditSeverity};
-    use std::fs;
+    use crate::engines::policy::{AuditEvent, AuditEventType, AuditLog};
     use tempfile::tempdir;
 
     #[test]
@@ -601,7 +600,7 @@ mod tests {
         let result = cmd_audit_verify("text", false);
         assert!(result.is_ok());
 
-        let result = cmd_audit_verify("json", false);
+        let _result = cmd_audit_verify("json", false);
         let _ = std::fs::remove_file(AUDIT_LOG_PATH);
 
         let result = cmd_audit_stats("text", false);
