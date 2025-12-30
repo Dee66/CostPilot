@@ -257,9 +257,8 @@ mod tests {
     fn test_slo_engine_creation() {
         let definitions = create_test_definitions();
         let edition = EditionContext::free();
-        let engine = SloEngine::new(definitions, &edition);
+        let _engine = SloEngine::new(definitions, &edition);
         // Engine created successfully
-        assert!(true);
     }
 
     #[test]
@@ -274,7 +273,7 @@ mod tests {
         // Should pass since costs are within limits
         assert!(!result.passed); // Note: has_violations() returns true if NO violations
         assert!(!result.should_block);
-        assert!(result.evaluations.len() >= 1);
+        assert!(!result.evaluations.is_empty());
     }
 
     #[test]
@@ -291,6 +290,6 @@ mod tests {
 
         // Should have violations since threshold is too low
         assert!(!result.passed); // passed is false when there are violations
-        assert!(result.evaluations.len() >= 1);
+        assert!(!result.evaluations.is_empty());
     }
 }

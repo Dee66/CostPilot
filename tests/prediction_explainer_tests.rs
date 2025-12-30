@@ -7,17 +7,15 @@ use serde_json::json;
 fn test_prediction_explainer_new() {
     let heuristics =
         costpilot::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
-    let explainer = PredictionExplainer::new(&heuristics);
+    let _explainer = PredictionExplainer::new(&heuristics);
     // Just test that it creates successfully
-    assert!(true);
 }
 
 #[test]
 fn test_prediction_explainer_from_engine() {
     let engine = PredictionEngine::new().unwrap();
-    let explainer = PredictionExplainer::from_engine(&engine);
+    let _explainer = PredictionExplainer::from_engine(&engine);
     // Just test that it creates successfully
-    assert!(true);
 }
 
 #[test]
@@ -370,7 +368,7 @@ fn test_prediction_explainer_explain_with_high_confidence() {
     assert!(reasoning.steps.iter().any(|step| step
         .output_value
         .as_ref()
-        .map_or(false, |ov| ov.name == "confidence_score"
+        .is_some_and(|ov| ov.name == "confidence_score"
             && ov.value == "95%")));
 }
 
@@ -408,13 +406,13 @@ fn test_prediction_explainer_explain_with_low_confidence() {
     assert!(reasoning.steps.iter().any(|step| step
         .output_value
         .as_ref()
-        .map_or(false, |ov| ov.name == "confidence_score"
+        .is_some_and(|ov| ov.name == "confidence_score"
             && ov.value == "30%")));
     // Check for wide interval
     assert!(reasoning.steps.iter().any(|step| step
         .output_value
         .as_ref()
-        .map_or(false, |ov| ov.name == "interval"
+        .is_some_and(|ov| ov.name == "interval"
             && ov.value == "$5.00 - $20.00")));
 }
 

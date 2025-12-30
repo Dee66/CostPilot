@@ -29,8 +29,8 @@ fn test_every_detected_finding_referenced_in_predict_output() {
         cost_impact: None,
     };
 
-    let detections = detection_engine.detect(&vec![change.clone()]).unwrap();
-    let estimates = prediction_engine.predict(&vec![change]).unwrap();
+    let detections = detection_engine.detect(&[change.clone()]).unwrap();
+    let estimates = prediction_engine.predict(&[change]).unwrap();
 
     // Every detected resource should have a corresponding cost estimate
     for detection in &detections {
@@ -66,7 +66,7 @@ fn test_every_predicted_cost_referenced_in_explain_output() {
         cost_impact: None,
     };
 
-    let estimates = prediction_engine.predict(&vec![change.clone()]).unwrap();
+    let estimates = prediction_engine.predict(&[change.clone()]).unwrap();
 
     // Every predicted resource should have an explanation
     for estimate in &estimates {
@@ -108,14 +108,14 @@ fn test_explain_output_references_same_resource_ids_as_detect_and_predict() {
         cost_impact: None,
     };
 
-    let detections = detection_engine.detect(&vec![change.clone()]).unwrap();
-    let estimates = prediction_engine.predict(&vec![change.clone()]).unwrap();
+    let detections = detection_engine.detect(&[change.clone()]).unwrap();
+    let estimates = prediction_engine.predict(&[change.clone()]).unwrap();
     let explanation = prediction_engine.explain(&change).unwrap();
 
     // Collect resource IDs from each output
-    let detect_ids: std::collections::HashSet<_> =
+    let _detect_ids: std::collections::HashSet<_> =
         detections.iter().map(|d| &d.resource_id).collect();
-    let predict_ids: std::collections::HashSet<_> =
+    let _predict_ids: std::collections::HashSet<_> =
         estimates.iter().map(|e| &e.resource_id).collect();
 
     // Explain should reference the same resource ID
@@ -164,13 +164,13 @@ fn test_explain_output_references_same_cost_figures_as_predict() {
         cost_impact: None,
     };
 
-    let estimates = prediction_engine.predict(&vec![change.clone()]).unwrap();
+    let estimates = prediction_engine.predict(&[change.clone()]).unwrap();
     let explanation = prediction_engine.explain(&change).unwrap();
 
     // Should have at least one estimate
     assert!(!estimates.is_empty(), "No cost estimates generated");
 
-    let estimate = &estimates[0];
+    let _estimate = &estimates[0];
 
     // In Free mode, predict returns fake values (150.0), but explain calculates real costs
     // So we check that explain provides a valid cost breakdown with components that sum to the total

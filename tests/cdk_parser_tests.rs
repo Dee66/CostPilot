@@ -1,9 +1,7 @@
 use costpilot::artifact::find_cdk_templates;
 use costpilot::artifact::is_cdk_output_dir;
-use costpilot::artifact::Artifact;
 use costpilot::artifact::ArtifactFormat;
 use costpilot::artifact::ArtifactParser;
-use costpilot::artifact::ArtifactResult;
 use costpilot::artifact::CdkParser;
 use std::fs;
 use tempfile::TempDir;

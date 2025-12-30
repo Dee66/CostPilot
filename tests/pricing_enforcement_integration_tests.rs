@@ -1,7 +1,9 @@
+#![allow(deprecated)]
+
 // Integration tests for pricing enforcement and plan integration
 // Ensures free-tier users cannot access premium features
 
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use costpilot::edition::EditionContext;
 use costpilot::engines::autofix::{AutofixEngine, AutofixMode};
 use costpilot::engines::shared::models::{
@@ -14,7 +16,7 @@ use tempfile::TempDir;
 /// Test that free users cannot access autofix patch mode
 #[test]
 fn test_autofix_patch_requires_premium_integration() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("autofix-patch");
 
     // Should fail with premium requirement message
@@ -26,7 +28,7 @@ fn test_autofix_patch_requires_premium_integration() {
 /// Test that free users cannot access autofix snippet mode
 #[test]
 fn test_autofix_snippet_requires_premium_integration() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("autofix-snippet");
 
     // Should fail with premium requirement message
@@ -63,7 +65,7 @@ fn test_scan_uses_static_prediction_in_free_mode() {
 
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg(&plan_path);
 
     // Should succeed and show cost estimate (free tier provides basic estimates)
@@ -110,7 +112,7 @@ budgets:
 "#;
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&plan_path)
         .arg("--policy")
@@ -129,7 +131,7 @@ budgets:
 /// Test that explain command with verbose flag works in free tier
 #[test]
 fn test_explain_verbose_works_in_free_tier() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("explain").arg("aws_instance").arg("--verbose");
 
     // Should succeed in free tier
@@ -163,7 +165,7 @@ fn test_anomaly_detection_requires_premium() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("anomaly").arg("--plan").arg(&plan_path);
 
     cmd.assert()
@@ -174,7 +176,7 @@ fn test_anomaly_detection_requires_premium() {
 /// Test that SLO commands require premium
 #[test]
 fn test_slo_commands_require_premium() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("slo-burn");
 
     // Should fail with premium requirement
@@ -211,7 +213,7 @@ fn test_deep_mapping_requires_premium() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("map").arg(&plan_path).arg("--max-depth").arg("5"); // Deep mapping
 
     // Should fail with premium requirement
@@ -328,7 +330,7 @@ fn test_scan_prediction_modes_differ_by_edition() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg(&plan_path);
 
     let output = cmd.assert().success().get_output().clone();
@@ -349,7 +351,7 @@ fn test_cli_command_edition_validation() {
     ];
 
     for cmd_args in premium_commands {
-        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        let mut cmd = cargo_bin_cmd!("costpilot");
         for arg in &cmd_args {
             cmd.arg(arg);
         }

@@ -1,7 +1,7 @@
 // Prediction mode integration tests
 // Tests that verify scan command uses appropriate prediction modes based on edition
 
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use costpilot::engines::prediction::PredictionEngine;
 use costpilot::engines::shared::models::{ResourceChange, ChangeAction};
 use costpilot::edition::EditionContext;
@@ -66,7 +66,7 @@ fn test_free_tier_scan_uses_static_prediction() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg("--plan")
         .arg(plan_path)
@@ -174,7 +174,7 @@ fn test_scan_indicates_prediction_mode() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg("--plan")
         .arg(plan_path)
@@ -228,7 +228,7 @@ fn test_free_tier_scan_includes_upgrade_messaging() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg("--plan")
         .arg(plan_path);
@@ -291,7 +291,7 @@ rules:
 "#;
     fs::write(&policy_path, policy_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg("--plan")
         .arg(plan_path)

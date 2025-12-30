@@ -1,17 +1,8 @@
 // Golden file tests for prediction output
 
 use costpilot::engines::prediction::PredictionEngine;
-use costpilot::engines::shared::models::{ResourceChange, Severity, ChangeAction};
+use costpilot::engines::shared::models::{ResourceChange, ChangeAction};
 use serde_json::json;
-use std::fs;
-use std::path::PathBuf;
-
-fn load_golden_file(name: &str) -> String {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("test/golden")
-        .join(name);
-    fs::read_to_string(path).expect("Failed to read golden file")
-}
 
 #[test]
 fn golden_ec2_t3_medium_prediction() {

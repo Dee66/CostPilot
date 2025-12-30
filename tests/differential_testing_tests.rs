@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-
 use costpilot::engines::detection::detection_engine::DetectionEngine;
 use costpilot::engines::prediction::prediction_engine::PredictionEngine;
-use costpilot::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
-use costpilot::errors::ErrorCategory;
+use costpilot::engines::shared::models::{ChangeAction, ResourceChange};
 
 // Mock data for differential testing
 fn create_base_changes() -> Vec<ResourceChange> {

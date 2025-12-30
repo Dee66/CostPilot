@@ -329,11 +329,12 @@ mod tests {
     #[test]
     fn test_severity_assessment_high() {
         // Test HIGH severity (>= 50%)
-        let severity = if 60.0 >= 50.0 {
+        let percentage = 60.0;
+        let severity = if percentage >= 50.0 {
             ("HIGH", "🔴")
-        } else if 60.0 >= 20.0 {
+        } else if percentage >= 20.0 {
             ("MEDIUM", "🟡")
-        } else if 60.0 >= 5.0 {
+        } else if percentage >= 5.0 {
             ("LOW", "🔵")
         } else {
             ("INFO", "⚪")
@@ -345,11 +346,12 @@ mod tests {
     #[test]
     fn test_severity_assessment_medium() {
         // Test MEDIUM severity (>= 20%)
-        let severity = if 30.0 >= 50.0 {
+        let percentage = 30.0;
+        let severity = if percentage >= 50.0 {
             ("HIGH", "🔴")
-        } else if 30.0 >= 20.0 {
+        } else if percentage >= 20.0 {
             ("MEDIUM", "🟡")
-        } else if 30.0 >= 5.0 {
+        } else if percentage >= 5.0 {
             ("LOW", "🔵")
         } else {
             ("INFO", "⚪")
@@ -361,11 +363,12 @@ mod tests {
     #[test]
     fn test_severity_assessment_low() {
         // Test LOW severity (>= 5%)
-        let severity = if 10.0 >= 50.0 {
+        let percentage = 10.0;
+        let severity = if percentage >= 50.0 {
             ("HIGH", "🔴")
-        } else if 10.0 >= 20.0 {
+        } else if percentage >= 20.0 {
             ("MEDIUM", "🟡")
-        } else if 10.0 >= 5.0 {
+        } else if percentage >= 5.0 {
             ("LOW", "🔵")
         } else {
             ("INFO", "⚪")
@@ -377,11 +380,12 @@ mod tests {
     #[test]
     fn test_severity_assessment_info() {
         // Test INFO severity (< 5%)
-        let severity = if 2.0 >= 50.0 {
+        let percentage = 2.0;
+        let severity = if percentage >= 50.0 {
             ("HIGH", "🔴")
-        } else if 2.0 >= 20.0 {
+        } else if percentage >= 20.0 {
             ("MEDIUM", "🟡")
-        } else if 2.0 >= 5.0 {
+        } else if percentage >= 5.0 {
             ("LOW", "🔵")
         } else {
             ("INFO", "⚪")

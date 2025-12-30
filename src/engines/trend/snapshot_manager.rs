@@ -363,7 +363,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let manager = SnapshotManager::new(temp_dir.path());
 
-        let mut snapshot = CostSnapshot::new("test-001".to_string(), -100.0);
+        let snapshot = CostSnapshot::new("test-001".to_string(), -100.0);
 
         let result = manager.validate_snapshot(&snapshot);
         assert!(result.is_err());

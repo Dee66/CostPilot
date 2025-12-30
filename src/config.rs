@@ -226,7 +226,7 @@ mod tests {
         assert_eq!(spec.zero_cost_policy.default_mode, "safe");
 
         // Verify invariants
-        assert!(spec.zero_cost_policy.invariants.len() > 0);
+        assert!(!spec.zero_cost_policy.invariants.is_empty());
         assert!(spec
             .zero_cost_policy
             .invariants

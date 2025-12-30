@@ -14,6 +14,29 @@ pub mod validation;
 pub mod wasm;
 pub mod zero_cost_guard;
 
+pub use config::{load_product_spec, load_product_spec_from_path, ConfigError, ProductSpec};
+pub use engines::shared::models::*;
+pub use security::{SandboxLimits, SecurityValidator};
+pub use validation::{
+    validate_file, BaselinesValidator, ConfigValidator, PolicyValidator, SloValidator,
+    ValidationError, ValidationReport, ValidationWarning,
+};
+pub use wasm::{EngineBudget, SandboxLimits as WasmSandboxLimits, ValidationResult};
+pub use zero_cost_guard::{ZeroCostGuard, ZeroCostViolation};
+
+/// CostPilot version
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Zero-IAM validation
+pub fn is_zero_iam_compliant() -> bool {
+    // Ensure no AWS SDK or network dependencies are loaded
+    true
+}
+
+/// WASM-specific initialization
+#[cfg(target_arch = "wasm32")]
+pub use wasm::init;
+
 #[cfg(test)]
 pub mod test_helpers {
     pub mod edition {
@@ -44,26 +67,3 @@ pub mod test_helpers {
         }
     }
 }
-
-pub use config::{load_product_spec, load_product_spec_from_path, ConfigError, ProductSpec};
-pub use engines::shared::models::*;
-pub use security::{SandboxLimits, SecurityValidator};
-pub use validation::{
-    validate_file, BaselinesValidator, ConfigValidator, PolicyValidator, SloValidator,
-    ValidationError, ValidationReport, ValidationWarning,
-};
-pub use wasm::{EngineBudget, SandboxLimits as WasmSandboxLimits, ValidationResult};
-pub use zero_cost_guard::{ZeroCostGuard, ZeroCostViolation};
-
-/// CostPilot version
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-/// Zero-IAM validation
-pub fn is_zero_iam_compliant() -> bool {
-    // Ensure no AWS SDK or network dependencies are loaded
-    true
-}
-
-/// WASM-specific initialization
-#[cfg(target_arch = "wasm32")]
-pub use wasm::init;

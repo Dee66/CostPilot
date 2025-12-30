@@ -17,19 +17,19 @@ use tempfile::NamedTempFile;
 
 #[test]
 fn test_detection_engine_new() {
-    let engine = DetectionEngine::new();
+    let _engine = DetectionEngine::new();
     // Basic construction test - no assertions needed if it doesn't panic
 }
 
 #[test]
 fn test_detection_engine_with_verbose() {
-    let engine = DetectionEngine::new().with_verbose(true);
+    let _engine = DetectionEngine::new().with_verbose(true);
     // Test that verbose mode can be set
 }
 
 #[test]
 fn test_detection_engine_default() {
-    let engine = DetectionEngine::default();
+    let _engine = DetectionEngine::default();
     // Default should work without panicking
 }
 
@@ -1012,7 +1012,7 @@ fn test_severity_calculation_magnitude_tiers() {
 
 #[test]
 fn test_severity_calculation_resource_importance() {
-    let base_change = ResourceChange::builder()
+    let _base_change = ResourceChange::builder()
         .action(ChangeAction::Update)
         .monthly_cost(50.0)
         .module_path("")
@@ -1364,7 +1364,7 @@ fn test_detection_engine_complex_module_path_extraction() {
 
 #[test]
 fn test_detection_engine_s3_missing_lifecycle_edge_case() {
-    let engine = DetectionEngine::new();
+    let _engine = DetectionEngine::new();
     let change = ResourceChange::builder()
         .resource_id("test".to_string())
         .resource_type("aws_s3_bucket".to_string())
@@ -1396,7 +1396,7 @@ fn test_detection_engine_rds_high_cost_detection() {
 
 #[test]
 fn test_detection_engine_multiple_changes_performance() {
-    let engine = DetectionEngine::new();
+    let _engine = DetectionEngine::new();
     let mut changes = Vec::new();
 
     // Create 100 changes
@@ -1618,7 +1618,7 @@ proptest! {
         if let Ok(detections) = result {
             for detection in detections {
                 // Severity scores should be valid (between 0 and 100 for severity_score)
-                prop_assert!(detection.severity_score >= 0 && detection.severity_score <= 100);
+                prop_assert!(detection.severity_score <= 100);
             }
         }
     }
@@ -1731,8 +1731,7 @@ fn quickcheck_detection_engine_valid_outputs(change: ArbResourceChange) -> bool 
     if let Ok(detections) = result {
         for detection in detections {
             // Check that outputs are valid
-            if !(detection.severity_score >= 0
-                && detection.severity_score <= 100
+            if !(detection.severity_score <= 100
                 && matches!(
                     detection.regression_type,
                     RegressionType::Configuration

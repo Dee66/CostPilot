@@ -333,7 +333,6 @@ impl TrendEngine {
 
 #[cfg(test)]
 mod tests {
-    use crate::edition::EditionContext;
     use super::*;
     use tempfile::TempDir;
 
@@ -362,27 +361,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: extract_service_name method removed
-    fn test_extract_service_name() {
-        let temp_dir = TempDir::new().unwrap();
-        let _engine =
-            TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
-
-        // assert_eq!(
-        //     engine.extract_service_name("aws_nat_gateway"),
-        //     "Nat Gateway"
-        // );
-        // assert_eq!(engine.extract_service_name("aws_s3_bucket"), "S3 Bucket");
-    }
-
-    #[test]
     fn test_detect_regressions() {
         let temp_dir = TempDir::new().unwrap();
         let engine =
             TrendEngine::new(temp_dir.path(), &crate::test_helpers::edition::premium()).unwrap();
 
         let baseline = CostSnapshot::new("baseline".to_string(), 1000.0);
-        let mut current = CostSnapshot::new("current".to_string(), 1300.0);
+        let current = CostSnapshot::new("current".to_string(), 1300.0);
 
         let regressions = engine.detect_regressions(&current, &baseline, 10.0);
 

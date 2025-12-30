@@ -2,7 +2,7 @@ use costpilot::pro_engine::license::License;
 use std::fs;
 use std::path::Path;
 use tempfile::TempDir;
-use costpilot::pro_engine::loader::{EncryptedBundle, parse_bundle};
+use costpilot::pro_engine::loader::parse_bundle;
 
 /// Comprehensive authentication security tests
 /// Covers invalid credentials, expired tokens, session hijacking, brute force protection
@@ -23,7 +23,7 @@ mod authentication_security_tests {
     fn test_invalid_license_credentials() {
         // Test various invalid license formats and credentials
         // Note: Current implementation only validates JSON parsing, not content validity
-        let invalid_licenses = vec![
+        let invalid_licenses = [
             // Invalid JSON
             r#"{"license_key": "test-key", "email": "test@example.com", "expires": "2026-12-31T00:00:00Z", "signature": "sig""#, // Missing closing brace
             r#"{"license_key": "test-key", "email": "test@example.com", "expires": "2026-12-31T00:00:00Z", "signature": "sig",}"#, // Trailing comma
@@ -60,7 +60,7 @@ mod authentication_security_tests {
         }
 
         // Test licenses with missing required fields - serde requires all fields
-        let incomplete_licenses = vec![
+        let incomplete_licenses = [
             r#"{"email": "test@example.com", "expires": "2026-12-31T00:00:00Z", "issuer": "test-issuer"}"#, // Missing license_key and signature
             r#"{"license_key": "test-key", "expires": "2026-12-31T00:00:00Z", "issuer": "test-issuer"}"#, // Missing email and signature
             r#"{"license_key": "test-key", "email": "test@example.com", "issuer": "test-issuer"}"#, // Missing expires and signature
@@ -92,7 +92,7 @@ mod authentication_security_tests {
     #[test]
     fn test_expired_license_tokens() {
         // Test licenses with expired dates
-        let expired_licenses = vec![
+        let expired_licenses = [
             // Past dates
             r#"{"license_key": "test-key", "email": "test@example.com", "expires": "2020-01-01", "signature": "sig", "issuer": "test-issuer"}"#, // Past date
             r#"{"license_key": "test-key", "email": "test@example.com", "expires": "2023-12-21", "signature": "sig", "issuer": "test-issuer"}"#, // Near past date
@@ -156,7 +156,7 @@ mod authentication_security_tests {
         let mut failure_count = 0;
 
         // Make multiple attempts
-        for i in 0..10 {
+        for _i in 0..10 {
             let result = license.validate();
             if result.is_ok() {
                 success_count += 1;
@@ -219,7 +219,7 @@ mod authentication_security_tests {
             30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93 // Signature
         ];
         // Debugging: Log encrypted_bundle_bytes
-        let encrypted_bundle = parse_bundle(&encrypted_bundle_bytes).expect("Failed to parse bundle");
+        let _encrypted_bundle = parse_bundle(&encrypted_bundle_bytes).expect("Failed to parse bundle");
 
         // Import verify_signature for test purposes
         use costpilot::pro_engine::loader::verify_signature;

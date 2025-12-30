@@ -1,14 +1,13 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use costpilot::engines::detection::DetectionEngine;
 use costpilot::engines::explain::PredictionExplainer;
-use costpilot::engines::prediction::{prediction_engine::CostHeuristics, PredictionEngine};
+use costpilot::engines::prediction::PredictionEngine;
 use costpilot::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
 use std::collections::HashMap;
 
 #[cfg(test)]
 mod determinism_tests {
     use super::*;
-    use regex::Regex;
 
     fn create_test_resource_change() -> ResourceChange {
         ResourceChange {
@@ -237,7 +236,7 @@ mod determinism_tests {
         // Currently, no commands output timestamps, so this is a placeholder test
         // When timestamps are added, they must end with 'Z' or '+00:00'
 
-        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        let mut cmd = cargo_bin_cmd!("costpilot");
         cmd.arg("explain")
             .arg("aws_instance")
             .arg("--instance-type")
@@ -326,7 +325,7 @@ mod determinism_tests {
         // Run costpilot multiple times and collect output hashes
         let mut hashes = Vec::new();
         for _ in 0..3 {
-            let mut cmd = Command::cargo_bin("costpilot").unwrap();
+            let mut cmd = cargo_bin_cmd!("costpilot");
             cmd.arg("scan").arg(plan_path).arg("--json");
 
             let output = cmd.output().unwrap();
@@ -401,7 +400,7 @@ mod determinism_tests {
         // Run costpilot multiple times and collect output hashes
         let mut hashes = Vec::new();
         for _ in 0..3 {
-            let mut cmd = Command::cargo_bin("costpilot").unwrap();
+            let mut cmd = cargo_bin_cmd!("costpilot");
             cmd.arg("scan").arg(plan_path).arg("--json");
 
             let output = cmd.output().unwrap();

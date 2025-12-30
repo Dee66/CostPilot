@@ -3,7 +3,7 @@
 // Validates policy YAML files against the expected schema.
 
 use crate::engines::policy::parser::PolicyRule;
-use crate::engines::policy::{PolicyExemption, PolicyMetadata};
+use crate::engines::policy::PolicyExemption;
 use crate::validation::error::{ValidationError, ValidationResult, ValidationWarning};
 use crate::validation::{FileType, ValidationReport};
 // use crate::engines::policy::Exemption; // TODO: Define Exemption type
@@ -75,12 +75,10 @@ impl PolicyValidator {
         // Validate rules exist. Accept policies that declare budgets but no rules
         if policy.rules.is_empty() {
             let mut has_budgets = false;
-            if let Some(meta) = &policy.metadata {
-                if let serde_yaml::Value::Mapping(map) = meta {
-                    let key = serde_yaml::Value::String("budgets".to_string());
-                    if map.get(&key).is_some() {
-                        has_budgets = true;
-                    }
+            if let Some(serde_yaml::Value::Mapping(map)) = &policy.metadata {
+                let key = serde_yaml::Value::String("budgets".to_string());
+                if map.get(&key).is_some() {
+                    has_budgets = true;
                 }
             }
 

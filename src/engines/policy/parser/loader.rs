@@ -114,17 +114,15 @@ impl PolicyRuleLoader {
                 Err(e) => {
                     // If the file is a mapping with a `rules:` key (policy file style),
                     // try extracting the rules sequence and parsing that instead.
-                    if let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(&content) {
-                        if let serde_yaml::Value::Mapping(map) = value {
-                            use serde_yaml::Value;
-                            let key = Value::String("rules".to_string());
-                            if let Some(rules_val) = map.get(&key) {
-                                if let Value::Sequence(_) = rules_val {
-                                    // Serialize the rules sequence back to YAML and parse
-                                    if let Ok(rules_yaml) = serde_yaml::to_string(rules_val) {
-                                        return DslParser::parse_yaml(&rules_yaml)
-                                            .map_err(|pe| LoadError::ParseError(file_path.to_path_buf(), pe));
-                                    }
+                    if let Ok(serde_yaml::Value::Mapping(map)) = serde_yaml::from_str::<serde_yaml::Value>(&content) {
+                        use serde_yaml::Value;
+                        let key = Value::String("rules".to_string());
+                        if let Some(rules_val) = map.get(&key) {
+                            if let Value::Sequence(_) = rules_val {
+                                // Serialize the rules sequence back to YAML and parse
+                                if let Ok(rules_yaml) = serde_yaml::to_string(rules_val) {
+                                    return DslParser::parse_yaml(&rules_yaml)
+                                        .map_err(|pe| LoadError::ParseError(file_path.to_path_buf(), pe));
                                 }
                             }
                         }

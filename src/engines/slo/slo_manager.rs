@@ -3,8 +3,6 @@ use super::slo_types::{
 };
 use crate::engines::baselines::BaselinesManager;
 use crate::engines::trend::CostSnapshot;
-use crate::engines::slo::slo_types::SloParams;
-use crate::engines::slo::SloThreshold;
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
@@ -385,6 +383,8 @@ impl SloManager {
 mod tests {
     use super::*;
     use crate::engines::trend::ModuleCost;
+    use crate::engines::slo::slo_types::SloParams;
+    use crate::engines::slo::SloThreshold;
 
     fn create_test_slo() -> Slo {
         Slo::new(SloParams {

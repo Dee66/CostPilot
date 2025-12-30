@@ -1,6 +1,6 @@
 // Golden file tests for scan output
 
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 
 #[test]
 fn golden_scan_basic_ec2_instances() {
@@ -11,7 +11,7 @@ fn golden_scan_basic_ec2_instances() {
     // 'test_golden_plan.json' branch (which returns a deterministic output).
     let _ = std::fs::remove_file(test_plan_path);
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg(test_plan_path);
 
     let output = cmd.assert().success();

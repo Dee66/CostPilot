@@ -247,8 +247,6 @@ impl AutofixEngine {
 mod tests {
     use super::*;
     use crate::engines::shared::models::{ChangeAction, CostEstimate, RegressionType, Severity};
-    use serde_json::json;
-    use std::collections::HashMap;
 
     #[test]
     fn test_snippet_mode() {

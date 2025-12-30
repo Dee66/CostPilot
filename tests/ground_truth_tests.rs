@@ -1,4 +1,4 @@
-use costpilot::engines::prediction::{prediction_engine::CostHeuristics, PredictionEngine};
+use costpilot::engines::prediction::PredictionEngine;
 use costpilot::engines::shared::models::{ChangeAction, ResourceChange};
 use std::collections::HashMap;
 

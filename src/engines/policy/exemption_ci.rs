@@ -176,11 +176,7 @@ mod tests {
     fn create_test_exemption(id: &str, expires_at: &str) -> PolicyExemption {
         // For expired exemptions (dates in 2024), use a created_at a few months before expiry
         // For active exemptions (dates in 2026), use created_at of 2025-06-01
-        let created_at = if expires_at.starts_with("2024-01") {
-            "2024-01-01T00:00:00Z"
-        } else if expires_at.starts_with("2024-06") {
-            "2024-01-01T00:00:00Z"
-        } else if expires_at.starts_with("2024-12") {
+        let created_at = if expires_at.starts_with("2024-") {
             "2024-01-01T00:00:00Z"
         } else {
             "2025-06-01T00:00:00Z"

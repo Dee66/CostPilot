@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod e2e_cli_tests {
-    use assert_cmd::Command;
+    use assert_cmd::cargo::cargo_bin_cmd;
     use predicates::prelude::*;
     use tempfile::TempDir;
     use std::fs;
@@ -418,7 +418,7 @@ mod e2e_cli_tests {
         let plan_path = temp.path().join("plan.json");
         fs::write(&plan_path, SAMPLE_PLAN).unwrap();
 
-        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        let mut cmd = cargo_bin_cmd!("costpilot");
         cmd.arg("scan").arg(&plan_path);
         let output = cmd.output().unwrap();
         assert_eq!(output.status.code(), Some(0));
@@ -426,7 +426,7 @@ mod e2e_cli_tests {
 
     #[test]
     fn test_cli_exits_1_on_error() {
-        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        let mut cmd = cargo_bin_cmd!("costpilot");
         cmd.arg("scan").arg("nonexistent.json");
         let output = cmd.output().unwrap();
         assert_eq!(output.status.code(), Some(1));
@@ -453,7 +453,7 @@ policies:
 "#;
         fs::write(&policy_path, policy_content).unwrap();
 
-        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        let mut cmd = cargo_bin_cmd!("costpilot");
         cmd.arg("scan")
            .arg("--policy")
            .arg(&policy_path)

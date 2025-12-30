@@ -1,6 +1,4 @@
 use std::fs;
-use std::path::Path;
-use std::process::Command;
 
 /// Test happy paths: All CLI commands with valid inputs
 #[test]

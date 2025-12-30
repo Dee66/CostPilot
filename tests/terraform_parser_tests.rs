@@ -1,6 +1,3 @@
-use std::fs;
-use std::path::Path;
-
 /// Test parsing basic Terraform resource blocks
 #[test]
 fn test_terraform_basic_resource_parsing() {

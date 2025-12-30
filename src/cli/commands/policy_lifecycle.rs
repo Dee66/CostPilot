@@ -555,7 +555,6 @@ pub fn cmd_diff(
 mod tests {
     use super::*;
     use crate::edition::EditionContext;
-    use std::path::PathBuf;
     use tempfile::NamedTempFile;
 
     #[test]

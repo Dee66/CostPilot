@@ -1,13 +1,6 @@
 // Baseline edge case tests
 
-use costpilot::engines::baselines::{Baseline, BaselinesManager};
-#[cfg(test)]
-use proptest::prelude::*;
-#[cfg(test)]
-use quickcheck::{Arbitrary, Gen};
-#[cfg(test)]
-use quickcheck_macros::quickcheck;
-use serde_json::json;
+use costpilot::engines::baselines::Baseline;
 use std::collections::HashMap;
 
 // ===== EDGE CASE TESTS =====
@@ -27,7 +20,7 @@ fn test_baseline_zero_expected_cost_edge_case() {
 
     // Zero actual cost should have zero variance
     let actual_cost = 0.0;
-    let variance =
+    let _variance =
         ((actual_cost - baseline.expected_monthly_cost) / baseline.expected_monthly_cost).abs()
             * 100.0;
     // This would cause division by zero, so we need to handle it specially

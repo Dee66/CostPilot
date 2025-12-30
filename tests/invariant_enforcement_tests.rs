@@ -28,7 +28,7 @@ fn test_severity_score_always_within_defined_bounds() {
         cost_impact: None,
     };
 
-    let detections = engine.detect(&vec![change]).unwrap();
+    let detections = engine.detect(&[change]).unwrap();
 
     // Check that all severity scores are within 0-100 bounds
     for detection in &detections {
@@ -133,8 +133,8 @@ fn test_severity_monotonically_increases_with_cost_delta() {
         cost_impact: None,
     };
 
-    let small_detections = engine.detect(&vec![small_change]).unwrap();
-    let large_detections = engine.detect(&vec![large_change]).unwrap();
+    let small_detections = engine.detect(&[small_change]).unwrap();
+    let large_detections = engine.detect(&[large_change]).unwrap();
 
     // If both have detections, the large change should have higher or equal severity
     if !small_detections.is_empty() && !large_detections.is_empty() {
@@ -196,8 +196,8 @@ fn test_confidence_decreases_under_cold_start_assumptions() {
         cost_impact: None,
     };
 
-    let known_estimates = engine.predict(&vec![known_change]).unwrap();
-    let unknown_estimates = engine.predict(&vec![unknown_change]).unwrap();
+    let known_estimates = engine.predict(&[known_change]).unwrap();
+    let unknown_estimates = engine.predict(&[unknown_change]).unwrap();
 
     // Both should produce estimates
     assert!(
@@ -242,7 +242,7 @@ fn test_incident_classification_consistent_with_severity_and_materiality() {
         cost_impact: None,
     };
 
-    let detections = engine.detect(&vec![change]).unwrap();
+    let detections = engine.detect(&[change]).unwrap();
 
     // Check that high-severity detections are properly classified
     for detection in &detections {

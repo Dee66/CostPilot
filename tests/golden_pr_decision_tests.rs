@@ -9,6 +9,4 @@ fn golden_pr_decision_scenarios() {
     // - Test decision outcomes for various cost change scenarios
     // - Validate PR comment generation
     // - Ensure decision consistency across runs
-
-    assert!(true); // Placeholder assertion
 }

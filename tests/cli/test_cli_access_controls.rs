@@ -1,7 +1,7 @@
 // CLI access control integration tests
 // Tests that verify premium features are properly gated at the CLI level
 
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::fs;
 use tempfile::TempDir;
@@ -18,7 +18,7 @@ fn test_premium_cli_commands_gated() {
     ];
 
     for (cmd, feature) in premium_commands {
-        let mut command = Command::cargo_bin("costpilot").unwrap();
+        let mut command = cargo_bin_cmd!("costpilot");
         command.arg(cmd);
 
         // Add required args for commands that need them
@@ -74,7 +74,7 @@ fn test_scan_explain_free_tier_limitations() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg("--plan")
         .arg(plan_path)
@@ -113,7 +113,7 @@ fn test_scan_autofix_requires_premium() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg("--plan")
         .arg(plan_path)
@@ -154,7 +154,7 @@ fn test_map_deep_requires_premium() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("map")
         .arg("--plan")
         .arg(plan_path)
@@ -191,7 +191,7 @@ fn test_explain_advanced_flags_require_premium() {
     }"#;
     fs::write(&plan_path, plan_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("explain")
         .arg("--plan")
         .arg(plan_path)
@@ -215,7 +215,7 @@ baselines:
 "#;
     fs::write(&config_path, config_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("validate")
         .arg(config_path);
 
@@ -226,7 +226,7 @@ baselines:
 /// Test that help output indicates premium features appropriately
 #[test]
 fn test_help_indicates_premium_features() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("--help");
 
     let output = cmd.assert().success().get_output().clone();
@@ -239,7 +239,7 @@ fn test_help_indicates_premium_features() {
 /// Test that version command shows edition information
 #[test]
 fn test_version_shows_edition_info() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("version")
         .arg("--detailed");
 
