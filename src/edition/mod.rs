@@ -18,18 +18,37 @@ use std::path::PathBuf;
 
 /// Detect and initialize edition context
 pub fn detect_edition() -> Result<EditionContext, String> {
-    // Check for test environment variable to force premium mode
-    if std::env::var("COSTPILOT_FORCE_PREMIUM").is_ok() {
-        return Ok(EditionContext::premium_for_test());
-    }
-
     let mut edition = EditionContext::free();
 
-    // Attempt to load ProEngine (fails silently for Free mode)
+    // Check for license file and validate it for premium mode
     #[cfg(not(target_arch = "wasm32"))]
-    if let Err(e) = crate::pro_engine::load_pro_engine(&mut edition) {
-        eprintln!("⚠️  Failed to load Premium engine: {}", e);
-        eprintln!("   Running in Free mode");
+    {
+        let paths = EditionPaths::default();
+        let license_path = paths.license_path();
+
+        if license_path.exists() {
+            match crate::pro_engine::License::load_from_file(&license_path) {
+                Ok(license) => {
+                    if license.validate().is_ok() {
+                        // Valid license found - enable premium mode
+                        edition.mode = EditionMode::Premium;
+                        edition.license = Some(license);
+                        edition.capabilities = Capabilities::from_edition(&edition);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("⚠️  Invalid license file: {}", e);
+                }
+            }
+        }
+
+        // Attempt to load ProEngine (only if we have premium mode)
+        if edition.is_premium() {
+            if let Err(e) = crate::pro_engine::load_pro_engine(&mut edition) {
+                eprintln!("⚠️  Failed to load Premium engine: {}", e);
+                eprintln!("   Running in Premium mode without ProEngine");
+            }
+        }
     }
 
     Ok(edition)

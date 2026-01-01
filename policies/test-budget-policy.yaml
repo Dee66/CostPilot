@@ -1,0 +1,26 @@
+id: test-budget-policy
+name: Test Budget Policy
+description: A test policy for budget enforcement with updated rules
+category: budget
+severity: error
+status: draft
+version: "1.0.0"
+
+rules:
+  - name: monthly-budget-limit
+    condition: resource.monthly_cost > 100.0
+    action: block
+    message: "Monthly cost exceeds budget limit of $100"
+  - name: daily-budget-warning
+    condition: resource.daily_cost > 50.0
+    action: warn
+    message: "Daily cost exceeds warning threshold of $50"
+
+metadata:
+  author: test@example.com
+  owner: security-team@example.com
+  team: platform
+  contact: security@example.com
+  reviewers:
+    - approver1@example.com
+    - approver2@example.com

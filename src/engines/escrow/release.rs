@@ -468,10 +468,10 @@ impl Default for ReleaseConfig {
     fn default() -> Self {
         Self {
             vendor: VendorInfo {
-                company_name: "CostPilot Inc.".to_string(),
-                contact_email: "support@costpilot.io".to_string(),
-                support_url: "https://costpilot.io/support".to_string(),
-                legal_entity: "CostPilot Inc.".to_string(),
+                company_name: "Your Company Name".to_string(),
+                contact_email: "support@yourcompany.com".to_string(),
+                support_url: "https://yourcompany.com/support".to_string(),
+                legal_entity: "Your Company Name".to_string(),
             },
             escrow_agent: None,
             auto_deposit: false,
@@ -492,7 +492,7 @@ mod tests {
     #[test]
     fn test_release_config_default() {
         let config = ReleaseConfig::default();
-        assert_eq!(config.vendor.company_name, "CostPilot Inc.");
+        assert_eq!(config.vendor.company_name, "Your Company Name");
         assert!(config.verify_before_deposit);
     }
 

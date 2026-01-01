@@ -82,7 +82,11 @@ fn generate_valid_signing_key() -> SigningKey {
         secret_key_bytes[31] |= 64; // Set the second highest bit
 
         // Validate the scalar to ensure it is within the Ed25519 curve's range
-        if <subtle::CtOption<Scalar> as Into<Option<Scalar>>>::into(Scalar::from_canonical_bytes(secret_key_bytes)).is_some() {
+        if <subtle::CtOption<Scalar> as Into<Option<Scalar>>>::into(Scalar::from_canonical_bytes(
+            secret_key_bytes,
+        ))
+        .is_some()
+        {
             return SigningKey::from_bytes(&secret_key_bytes);
         }
 

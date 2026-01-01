@@ -251,7 +251,7 @@ fn test_confidence_score_bounds() {
     let change = create_resource_change("aws_instance", json!({"instance_type": "t3.large"}));
 
     let confidence = calculate_confidence(&change, false, "aws_instance");
-    assert!(confidence >= 0.0 && confidence <= 1.0);
+    assert!((0.0..=1.0).contains(&confidence));
 
     // Even with all penalties
     let change_bad = ResourceChange::builder()
@@ -264,7 +264,7 @@ fn test_confidence_score_bounds() {
         .build();
 
     let confidence_bad = calculate_confidence(&change_bad, true, "unknown");
-    assert!(confidence_bad >= 0.0 && confidence_bad <= 1.0);
+    assert!((0.0..=1.0).contains(&confidence_bad));
 }
 
 #[test]
@@ -440,7 +440,7 @@ fn test_confidence_with_malformed_resource_types() {
     for resource_type in malformed_types {
         let change = create_resource_change(resource_type, json!({}));
         let confidence = calculate_confidence(&change, false, resource_type);
-        assert!(confidence >= 0.0 && confidence <= 1.0); // Should handle gracefully
+        assert!((0.0..=1.0).contains(&confidence)); // Should handle gracefully
     }
 }
 
@@ -535,7 +535,7 @@ fn test_confidence_bounds_with_all_known_values() {
 fn test_interval_symmetry_with_different_range_factors() {
     let range_factors = vec![0.1, 0.2, 0.3, 0.4, 0.5];
 
-    for range_factor in range_factors {
+    for _range_factor in range_factors {
         let mut engine = create_test_engine();
 
         let change = create_resource_change("aws_instance", json!({"instance_type": "t3.large"}));
@@ -610,15 +610,15 @@ fn test_confidence_hierarchy_by_resource_type() {
         ("unknown_type", 0.29), // Lower due to cold start
     ];
 
-    let mut last_confidence = 1.0;
-    for (resource_type, expected) in resources_by_expected_confidence {
+    let mut _last_confidence = 1.0;
+    for (resource_type, _expected) in resources_by_expected_confidence {
         let change = create_resource_change(resource_type, json!({}));
         let result = predict_single(&mut engine, change.clone());
 
         // Confidence should be reasonable (between 0 and 1)
         assert!(result.confidence_score >= 0.0);
         assert!(result.confidence_score <= 1.0);
-        last_confidence = result.confidence_score;
+        _last_confidence = result.confidence_score;
     }
 }
 

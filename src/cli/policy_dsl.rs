@@ -131,8 +131,8 @@ fn execute_list(
             crate::engines::policy::parser::RuleSeverity::Info => "Info".white(),
         };
 
-            println!("{} {} [{}]", status, rule.name.bold(), severity_color);
-            println!("   {}", rule.description.as_deref().unwrap_or("").dimmed());
+        println!("{} {} [{}]", status, rule.name.bold(), severity_color);
+        println!("   {}", rule.description.as_deref().unwrap_or("").dimmed());
         println!("   Conditions: {}", rule.conditions.len());
 
         if !rule.metadata.is_empty() {

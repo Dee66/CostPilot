@@ -472,14 +472,12 @@ Works with public modules (Terraform Registry), private modules (Git), and local
 
 One limitation: we can't analyze dynamic module counts (count/for_each with unknown values). We show warnings in those cases.
 
-### "Does this work with Terragrunt/Pulumi/CDK?"
+### "Does this work with Terragrunt/Pulumi?"
 
 **Answer:**
 **Terragrunt:** Yes! Generate the plan with `terragrunt plan -out=plan.tfplan`, then use CostPilot normally.
 
 **Pulumi:** Not yet. We'd need to parse Pulumi's state format. Open to PRs!
-
-**CDK:** Yes! CDK templates are supported.
 
 ### "How accurate are the AI predictions?"
 
@@ -745,7 +743,6 @@ HN isn't just a one-day launch. Engage long-term:
 
 2. **Recent Successful Launches**
    - Infracost (infrastructure cost estimation)
-   - Terraform CDK (IaC in familiar languages)
    - LocalStack (local AWS cloud stack)
 
 3. **What Made Them Successful**

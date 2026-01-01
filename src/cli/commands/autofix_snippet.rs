@@ -1,6 +1,5 @@
 // Autofix snippet command implementation - Generate fix snippets (MVP)
 
-use crate::engines::autofix::{AutofixEngine, AutofixMode};
 use crate::engines::detection::DetectionEngine;
 use crate::engines::prediction::PredictionEngine;
 use colored::Colorize;
@@ -64,12 +63,11 @@ pub fn execute(
 
     // Generate snippets
     println!("{}", "Generating fix snippets...".dimmed());
-    let autofix_result = AutofixEngine::generate_fixes(
+    let autofix_result = edition.require_pro("Autofix")?.autofix(
         &detections_with_estimates,
         &changes,
         &[], // estimates not used for snippet mode
-        AutofixMode::Snippet,
-        edition,
+        crate::engines::autofix::AutofixMode::Snippet,
     )?;
 
     if autofix_result.fixes.is_empty() {

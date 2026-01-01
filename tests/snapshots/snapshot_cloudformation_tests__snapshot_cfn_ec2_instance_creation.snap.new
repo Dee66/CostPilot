@@ -1,0 +1,23 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+assertion_line: 27
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "WebServer": {
+      "Properties": {
+        "ImageId": "ami-0c55b159cbfafe1f0",
+        "InstanceType": "t3.medium",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "WebServer"
+          }
+        ]
+      },
+      "Type": "AWS::EC2::Instance"
+    }
+  }
+}

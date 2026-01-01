@@ -1,30 +1,44 @@
+# Copilot Instructions
+
 This repository is governed by an explicit AI behavioral contract and an authoritative mental model.
 
-Mandatory
+## Scope of Responsibility
 
-Read /AGENTS.md and comply with it.
+This file defines integration and routing only.
 
-Read docs/mental_model.md as authoritative compiled state.
+- Behavioral rules, refusal conditions, uncertainty handling, output discipline, and execution constraints are defined in `/AGENTS.md`.
+- Claim structure and verification classes are defined in `docs/mental_model_claim_grammar.md`.
 
-Treat tests and executable code as higher authority than documentation.
+If guidance is missing, treat it as UNKNOWN and stop.
 
-Sync and Validation
+## Mandatory Preconditions
 
-When reasoning about correctness (code changes, reviews, or validation against claims), run:
-python3 scripts/detect_mental_model_contradictions.py
+- Read `/AGENTS.md` and comply with it.
+- Read `docs/mental_model.md` as authoritative compiled state.
+- Treat tests and executable code as higher authority than documentation.
 
-If contradictions are detected, report them and stop.
+If any required file is missing or unreadable, stop.
 
-Mental Model Changes
+## Sync and Validation
 
-You must not rewrite docs/mental_model.md.
+When performing decision-affecting work (including code changes, reviews, or validation against claims):
 
-Any change to understanding must be proposed as an explicit delta.
+Run: python3 scripts/detect_mental_model_contradictions.py
 
-Respect MODEL_STATE; if frozen, do not propose changes.
 
-Reference
+If contradictions are detected:
+- Report them.
+- Stop immediately.
 
-Claim structure and verification classes are defined in docs/mental_model_claim_grammar.md.
+Do not continue analysis or implementation while contradictions exist.
 
-All behavioral rules, refusal conditions, and uncertainty handling are defined in /AGENTS.md.
+## Mental Model Changes
+
+- Do not rewrite `docs/mental_model.md`.
+- Any change to understanding must be proposed as an explicit delta.
+- Respect `MODEL_STATE`.
+- If `MODEL_STATE` is `frozen`, do not propose deltas.
+
+No implicit clarification, completion, or improvement of the mental model is permitted.
+
+End of instructions.

@@ -1,0 +1,38 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+assertion_line: 327
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "Distribution": {
+      "Properties": {
+        "DistributionConfig": {
+          "DefaultCacheBehavior": {
+            "ForwardedValues": {
+              "QueryString": false
+            },
+            "TargetOriginId": "S3Origin",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          "Enabled": true,
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "Bucket",
+                  "DomainName"
+                ]
+              },
+              "Id": "S3Origin",
+              "S3OriginConfig": {}
+            }
+          ],
+          "PriceClass": "PriceClass_100"
+        }
+      },
+      "Type": "AWS::CloudFront::Distribution"
+    }
+  }
+}

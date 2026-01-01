@@ -106,7 +106,9 @@ mod differential_regression_tests {
         let explain_engine = PredictionExplainer::new(&heuristics);
 
         let change = create_test_resource_change();
-        let estimates = prediction_engine.predict(std::slice::from_ref(&change)).unwrap();
+        let estimates = prediction_engine
+            .predict(std::slice::from_ref(&change))
+            .unwrap();
 
         let explanations = explain_engine.explain(&change, &estimates[0]);
         let current_output: Value = serde_json::to_value(&explanations).unwrap();

@@ -59,14 +59,16 @@ impl DriftSafeEngine {
     /// Create drift-safe operation
     pub fn create_operation(&self, params: OperationParams) -> DriftSafeOperation {
         // Convert Option<Value> to HashMap
-        let current_config = params.current_change
+        let current_config = params
+            .current_change
             .new_config
             .as_ref()
             .and_then(|v| v.as_object())
             .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
             .unwrap_or_default();
 
-        let proposed_config = params.proposed_fix
+        let proposed_config = params
+            .proposed_fix
             .new_config
             .as_ref()
             .and_then(|v| v.as_object())

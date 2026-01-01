@@ -15,4 +15,4 @@ CostPilot is organized into several key engines:
 
 1. Deterministic output
 2. WASM-based sandboxing
-3. Multi-IaC support (Terraform, CDK)
+3. IaC support (Terraform)

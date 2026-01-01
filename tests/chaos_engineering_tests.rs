@@ -137,7 +137,7 @@ mod chaos_engineering_tests {
         let engine = DetectionEngine::new();
 
         // Test with inputs that could cause internal state corruption
-        let corrupted_inputs = vec![
+        let corrupted_inputs = [
             // JSON with null bytes that could cause string processing issues
             format!("{}\0{}", r#"{"planned_values": {"root_module": {"resources": []}}}"#, "trailing"),
             // Very deep but valid JSON
@@ -189,7 +189,7 @@ mod chaos_engineering_tests {
         let engine = DetectionEngine::new();
 
         // Test that the engine can continue processing after encountering errors
-        let mixed_inputs = vec![
+        let mixed_inputs = [
             // Valid input (empty resources)
             (
                 r#"{
@@ -387,7 +387,7 @@ mod chaos_engineering_tests {
         let engine = DetectionEngine::new();
 
         // Test that the engine recovers from various failure conditions
-        let test_cases = vec![
+        let test_cases = [
             // Empty input
             "",
             // Whitespace only

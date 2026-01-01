@@ -1,0 +1,9 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+assertion_line: 474
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {}
+}

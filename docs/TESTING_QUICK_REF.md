@@ -299,7 +299,6 @@ fn test_large_plan() {
 tests/
 ├── fixtures/           # Static test data files
 │   ├── terraform/
-│   └── cdk/
 ├── snapshots/          # Snapshot test baselines
 ├── golden/            # Golden file references
 └── helpers/           # Test utilities

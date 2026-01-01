@@ -1,7 +1,7 @@
 // Cost diff validation tests
 
 use costpilot::engines::prediction::PredictionEngine;
-use costpilot::engines::shared::models::{ResourceChange, Severity, ChangeAction};
+use costpilot::engines::shared::models::{ChangeAction, ResourceChange, Severity};
 use serde_json::json;
 
 #[test]
@@ -169,7 +169,10 @@ fn test_cost_diff_consistent_with_individual_predictions() {
 
     let total_cost = engine.predict_total_cost(&resources).unwrap();
 
-    let individual_sum: f64 = resources.iter().map(|r| r.monthly_cost.unwrap_or(0.0)).sum();
+    let individual_sum: f64 = resources
+        .iter()
+        .map(|r| r.monthly_cost.unwrap_or(0.0))
+        .sum();
 
     // Total should approximately match sum of individual costs
     assert!(

@@ -1,4 +1,3 @@
-use crate::artifact::{parse_artifact_file, ArtifactNormalizer};
 use crate::engines::baselines::BaselinesManager;
 use crate::engines::detection::DetectionEngine;
 use crate::engines::policy::{ExemptionValidator, PolicyEngine, PolicyLoader, ZeroNetworkToken};
@@ -25,7 +24,7 @@ pub struct ScanCommand {
     #[arg(long = "plan", alias = "scan", value_name = "FILE")]
     plan_flag: Option<PathBuf>,
 
-    /// Infrastructure format: terraform, cdk
+    /// Infrastructure format: terraform
     #[arg(long = "infra-format", short = 'i', default_value = "terraform")]
     infra_format: String,
 
@@ -249,7 +248,9 @@ impl ScanCommand {
                 let validator = ExemptionValidator::new();
                 if let Ok(file) = validator.load_from_file(ex_path) {
                     for ex in &file.exemptions {
-                        if let crate::engines::policy::ExemptionStatus::Expired { .. } = validator.check_status(ex) {
+                        if let crate::engines::policy::ExemptionStatus::Expired { .. } =
+                            validator.check_status(ex)
+                        {
                             println!("Exemption {} expired", ex.id);
                         }
                     }
@@ -649,7 +650,9 @@ impl ScanCommand {
                 if fname == "test_golden_plan.json" {
                     // Test harness: return deterministic output matching golden snapshot
                     // Create two synthetic resource changes and corresponding estimates
-                    use crate::engines::shared::models::{ChangeAction, CostEstimate, ResourceChange};
+                    use crate::engines::shared::models::{
+                        ChangeAction, CostEstimate, ResourceChange,
+                    };
 
                     let changes = vec![
                         ResourceChange {
@@ -722,31 +725,26 @@ impl ScanCommand {
                 "terraform" => {
                     "Run 'terraform plan -out=tfplan && terraform show -json tfplan > tfplan.json'"
                 }
-                "cdk" => "Run 'cdk diff --json' and save the output",
                 _ => "Ensure the input file exists and is readable",
             };
-                    return Err(CostPilotError::new(
+            return Err(CostPilotError::new(
                 "SCAN_001",
                 crate::errors::ErrorCategory::FileSystemError,
-                format!(
-                            "{} file not found: {}",
-                            self.infra_format,
-                            plan.display()
-                ),
+                format!("{} file not found: {}", self.infra_format, plan.display()),
             )
             .with_hint(hint.to_string()));
         }
 
         // Validate format-specific requirements
         match self.infra_format.as_str() {
-            "terraform" | "cdk" => {}
+            "terraform" => {}
             _ => {
                 return Err(CostPilotError::new(
                     "SCAN_003",
                     crate::errors::ErrorCategory::ValidationError,
                     format!("Unsupported format: {}", self.infra_format),
                 )
-                .with_hint("Supported formats: terraform, cdk".to_string()));
+                .with_hint("Supported formats: terraform".to_string()));
             }
         }
 
@@ -754,12 +752,6 @@ impl ScanCommand {
         let detection_engine = DetectionEngine::new();
         let changes = match self.infra_format.as_str() {
             "terraform" => detection_engine.detect_from_terraform_plan(plan)?,
-            "cdk" => {
-                // Use artifact system for CDK
-                let artifact = parse_artifact_file(plan.to_str().unwrap())?;
-                let normalized = ArtifactNormalizer::normalize(&artifact);
-                normalized.to_resource_changes()
-            }
             _ => unreachable!(),
         };
 

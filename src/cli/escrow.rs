@@ -233,13 +233,12 @@ fn load_escrow_config() -> Result<EscrowConfig, String> {
             .map_err(|e| format!("Failed to read config: {}", e))?;
         serde_json::from_str(&content).map_err(|e| format!("Failed to parse config: {}", e))
     } else {
-        // Return default config
         Ok(EscrowConfig {
             vendor: VendorInfo {
-                company_name: "CostPilot Inc.".to_string(),
-                contact_email: "support@costpilot.io".to_string(),
-                support_url: "https://costpilot.io/support".to_string(),
-                legal_entity: "CostPilot Inc.".to_string(),
+                company_name: "Your Company Name".to_string(),
+                contact_email: "support@yourcompany.com".to_string(),
+                support_url: "https://yourcompany.com/support".to_string(),
+                legal_entity: "Your Company Name".to_string(),
             },
             escrow_agent: None,
         })
@@ -249,7 +248,6 @@ fn load_escrow_config() -> Result<EscrowConfig, String> {
 fn save_escrow_config(config: &EscrowConfig) -> Result<(), String> {
     let config_path = get_config_path()?;
 
-    // Create parent directory
     if let Some(parent) = config_path.parent() {
         std::fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create config directory: {}", e))?;
@@ -466,9 +464,9 @@ mod tests {
         let result = load_escrow_config();
         assert!(result.is_ok());
         let config = result.unwrap();
-        assert_eq!(config.vendor.company_name, "CostPilot Inc.");
-        assert_eq!(config.vendor.contact_email, "support@costpilot.io");
-        assert_eq!(config.vendor.support_url, "https://costpilot.io/support");
+        assert_eq!(config.vendor.company_name, "Your Company Name");
+        assert_eq!(config.vendor.contact_email, "support@yourcompany.com");
+        assert_eq!(config.vendor.support_url, "https://yourcompany.com/support");
         assert!(config.escrow_agent.is_none());
 
         // Restore the config file if it was moved

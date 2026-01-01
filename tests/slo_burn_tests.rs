@@ -47,8 +47,21 @@ fn test_slo_burn_low_risk() {
     create_test_snapshot(&snapshots_path, "2025-02-01", 120.0);
     create_test_snapshot(&snapshots_path, "2025-03-01", 140.0);
 
+    // Create test license for premium features
+    let costpilot_dir = temp_dir.path().join(".costpilot");
+    fs::create_dir(&costpilot_dir).unwrap();
+    let license_path = costpilot_dir.join("license.json");
+    let license_content = r#"{
+        "email": "test@example.com",
+        "license_key": "test-license-key-for-slo-burn",
+        "expires": "2099-12-31T23:59:59Z",
+        "signature": "test-signature",
+        "issuer": "test-issuer"
+    }"#;
+    fs::write(&license_path, license_content).unwrap();
+
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+    cmd.env("HOME", temp_dir.path().to_str().unwrap())
         .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
@@ -61,7 +74,10 @@ fn test_slo_burn_low_risk() {
 
     // Parse JSON output and validate structure
     let output = String::from_utf8(assert.get_output().stdout.clone()).unwrap();
-    let json: Value = serde_json::from_str(&output).unwrap();
+    // Skip the first line (progress message) and parse JSON from the rest
+    let json_start = output.find('{').unwrap_or(0);
+    let json_str = &output[json_start..];
+    let json: Value = serde_json::from_str(json_str).unwrap();
 
     // Validate top-level structure
     assert!(json.is_object());
@@ -131,8 +147,21 @@ fn test_slo_burn_critical_risk() {
     create_test_snapshot(&snapshots_path, "2025-02-01", 120.0);
     create_test_snapshot(&snapshots_path, "2025-03-01", 190.0);
 
+    // Create test license for premium features
+    let costpilot_dir = temp_dir.path().join(".costpilot");
+    fs::create_dir(&costpilot_dir).unwrap();
+    let license_path = costpilot_dir.join("license.json");
+    let license_content = r#"{
+        "email": "test@example.com",
+        "license_key": "test-license-key-for-slo-burn-critical",
+        "expires": "2099-12-31T23:59:59Z",
+        "signature": "test-signature",
+        "issuer": "test-issuer"
+    }"#;
+    fs::write(&license_path, license_content).unwrap();
+
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+    cmd.env("HOME", temp_dir.path().to_str().unwrap())
         .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
@@ -199,8 +228,21 @@ fn test_slo_burn_composed_slo() {
     create_test_snapshot(&snapshots_path, "2025-02-01", 220.0);
     create_test_snapshot(&snapshots_path, "2025-03-01", 235.0);
 
+    // Create test license for premium features
+    let costpilot_dir = temp_dir.path().join(".costpilot");
+    fs::create_dir(&costpilot_dir).unwrap();
+    let license_path = costpilot_dir.join("license.json");
+    let license_content = r#"{
+        "email": "test@example.com",
+        "license_key": "test-license-key-for-slo-burn-composed",
+        "expires": "2099-12-31T23:59:59Z",
+        "signature": "test-signature",
+        "issuer": "test-issuer"
+    }"#;
+    fs::write(&license_path, license_content).unwrap();
+
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+    cmd.env("HOME", temp_dir.path().to_str().unwrap())
         .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
@@ -213,7 +255,10 @@ fn test_slo_burn_composed_slo() {
 
     // Parse JSON output
     let output = String::from_utf8(assert.get_output().stdout.clone()).unwrap();
-    let json: Value = serde_json::from_str(&output).unwrap();
+    // Skip the first line (progress message) and parse JSON from the rest
+    let json_start = output.find('{').unwrap_or(0);
+    let json_str = &output[json_start..];
+    let json: Value = serde_json::from_str(json_str).unwrap();
 
     let analyses = json.get("analyses").unwrap().as_array().unwrap();
     let analysis = &analyses[0];
@@ -255,8 +300,21 @@ fn test_slo_burn_insufficient_data() {
     fs::create_dir(&snapshots_path).unwrap();
     create_test_snapshot(&snapshots_path, "2025-01-01", 100.0);
 
+    // Create test license for premium features
+    let costpilot_dir = temp_dir.path().join(".costpilot");
+    fs::create_dir(&costpilot_dir).unwrap();
+    let license_path = costpilot_dir.join("license.json");
+    let license_content = r#"{
+        "email": "test@example.com",
+        "license_key": "test-license-key-for-slo-burn-insufficient",
+        "expires": "2099-12-31T23:59:59Z",
+        "signature": "test-signature",
+        "issuer": "test-issuer"
+    }"#;
+    fs::write(&license_path, license_content).unwrap();
+
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+    cmd.env("HOME", temp_dir.path().to_str().unwrap())
         .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
@@ -303,8 +361,21 @@ fn test_slo_burn_text_output() {
     create_test_snapshot(&snapshots_path, "2025-02-01", 150.0);
     create_test_snapshot(&snapshots_path, "2025-03-01", 200.0);
 
+    // Create test license for premium features
+    let costpilot_dir = temp_dir.path().join(".costpilot");
+    fs::create_dir(&costpilot_dir).unwrap();
+    let license_path = costpilot_dir.join("license.json");
+    let license_content = r#"{
+        "email": "test@example.com",
+        "license_key": "test-license-key-for-slo-burn-text",
+        "expires": "2099-12-31T23:59:59Z",
+        "signature": "test-signature",
+        "issuer": "test-issuer"
+    }"#;
+    fs::write(&license_path, license_content).unwrap();
+
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+    cmd.env("HOME", temp_dir.path().to_str().unwrap())
         .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
@@ -356,8 +427,21 @@ fn test_slo_burn_markdown_output() {
     create_test_snapshot(&snapshots_path, "2025-02-01", 150.0);
     create_test_snapshot(&snapshots_path, "2025-03-01", 200.0);
 
+    // Create test license for premium features
+    let costpilot_dir = temp_dir.path().join(".costpilot");
+    fs::create_dir(&costpilot_dir).unwrap();
+    let license_path = costpilot_dir.join("license.json");
+    let license_content = r#"{
+        "email": "test@example.com",
+        "license_key": "test-license-key-for-slo-burn-markdown",
+        "expires": "2099-12-31T23:59:59Z",
+        "signature": "test-signature",
+        "issuer": "test-issuer"
+    }"#;
+    fs::write(&license_path, license_content).unwrap();
+
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+    cmd.env("HOME", temp_dir.path().to_str().unwrap())
         .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
@@ -412,8 +496,21 @@ fn test_slo_burn_custom_parameters() {
     create_test_snapshot(&snapshots_path, "2025-04-01", 250.0);
     create_test_snapshot(&snapshots_path, "2025-05-01", 300.0);
 
+    // Create test license for premium features
+    let costpilot_dir = temp_dir.path().join(".costpilot");
+    fs::create_dir(&costpilot_dir).unwrap();
+    let license_path = costpilot_dir.join("license.json");
+    let license_content = r#"{
+        "email": "test@example.com",
+        "license_key": "test-license-key-for-slo-burn-custom",
+        "expires": "2099-12-31T23:59:59Z",
+        "signature": "test-signature",
+        "issuer": "test-issuer"
+    }"#;
+    fs::write(&license_path, license_content).unwrap();
+
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+    cmd.env("HOME", temp_dir.path().to_str().unwrap())
         .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
@@ -430,7 +527,10 @@ fn test_slo_burn_custom_parameters() {
 
     // Parse JSON output and validate custom parameters were applied
     let output = String::from_utf8(assert.get_output().stdout.clone()).unwrap();
-    let json: Value = serde_json::from_str(&output).unwrap();
+    // Skip the first line (progress message) and parse JSON from the rest
+    let json_start = output.find('{').unwrap_or(0);
+    let json_str = &output[json_start..];
+    let json: Value = serde_json::from_str(json_str).unwrap();
 
     let analyses = json.get("analyses").unwrap().as_array().unwrap();
     assert!(!analyses.is_empty()); // Should have analysis with 5 snapshots meeting minimum
@@ -483,8 +583,21 @@ fn test_slo_burn_multiple_slos() {
     create_test_snapshot(&snapshots_path, "2025-02-01", 300.0);
     create_test_snapshot(&snapshots_path, "2025-03-01", 400.0);
 
+    // Create test license for premium features
+    let costpilot_dir = temp_dir.path().join(".costpilot");
+    fs::create_dir(&costpilot_dir).unwrap();
+    let license_path = costpilot_dir.join("license.json");
+    let license_content = r#"{
+        "email": "test@example.com",
+        "license_key": "test-license-key-for-slo-burn-multiple",
+        "expires": "2099-12-31T23:59:59Z",
+        "signature": "test-signature",
+        "issuer": "test-issuer"
+    }"#;
+    fs::write(&license_path, license_content).unwrap();
+
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.env("COSTPILOT_FORCE_PREMIUM", "1")
+    cmd.env("HOME", temp_dir.path().to_str().unwrap())
         .arg("slo-burn")
         .arg("--config")
         .arg(&slo_path)
@@ -516,7 +629,7 @@ fn test_slo_not_breached_silent() {
     // Placeholder test for: SLO not breached → silent
     // TODO: Implement logic to check that when SLO is not breached,
     // the system runs silently (no findings, no explain output, exit code 0)
-    assert!(true);
+    todo!("Implement SLO not breached silent test");
 }
 
 // ===== SLO BURN EDGE CASE TESTS =====

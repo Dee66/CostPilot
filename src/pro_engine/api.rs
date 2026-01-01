@@ -9,8 +9,9 @@ use crate::engines::policy::PolicyResult;
 use crate::engines::prediction::CostEstimate;
 use crate::engines::slo::SloReport;
 use crate::engines::trend::CostSnapshot;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProEngineRequest {
     Predict {
         changes: Vec<ResourceChange>,
@@ -43,7 +44,7 @@ pub enum ProEngineRequest {
     },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProEngineResponse {
     Predict(Vec<CostEstimate>),
     Explain(Vec<Explanation>),

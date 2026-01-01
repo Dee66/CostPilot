@@ -52,9 +52,9 @@ cargo clean --target wasm32-unknown-unknown
 
 # Build WASM module
 echo -e "${BLUE}🔨 Building WASM module...${NC}"
-cargo build --target wasm32-unknown-unknown --release --lib --profile wasm-release
+cargo build --target wasm32-unknown-unknown --profile wasm-release --bin pro-engine
 
-WASM_FILE="target/wasm32-unknown-unknown/release/costpilot.wasm"
+WASM_FILE="target/wasm32-unknown-unknown/wasm-release/pro-engine.wasm"
 
 # Check if build succeeded
 if [ ! -f "$WASM_FILE" ]; then

@@ -33,6 +33,14 @@ impl ProEngineHandle {
         }
     }
 
+    /// Execute request via executor
+    pub fn execute(&self, req: ProEngineRequest) -> Result<ProEngineResponse, String> {
+        match &self.executor {
+            Some(executor) => executor.execute(req),
+            None => Err("No executor available (stub mode)".to_string()),
+        }
+    }
+
     /// Execute scan request (wrapper for execute)
     pub fn scan(&self, input: &[u8]) -> Result<Vec<u8>, String> {
         let _input_str =
@@ -71,12 +79,25 @@ impl ProEngineHandle {
         }
     }
 
-    /// Execute a ProEngine request
-    pub fn execute(&self, req: ProEngineRequest) -> Result<ProEngineResponse, String> {
-        self.executor
-            .as_ref()
-            .ok_or_else(|| "ProEngine executor not initialized".to_string())?
-            .execute(req)
+    /// Execute autofix request (wrapper for execute)
+    pub fn autofix(
+        &self,
+        detections: &[crate::engines::detection::Detection],
+        changes: &[crate::engines::detection::ResourceChange],
+        estimates: &[crate::engines::prediction::CostEstimate],
+        mode: crate::engines::autofix::AutofixMode,
+    ) -> Result<crate::engines::autofix::AutofixResult, String> {
+        let req = ProEngineRequest::Autofix {
+            detections: detections.to_vec(),
+            changes: changes.to_vec(),
+            estimates: estimates.to_vec(),
+            mode,
+        };
+        let resp = self.execute(req)?;
+        match resp {
+            ProEngineResponse::Autofix(result) => Ok(result),
+            _ => Err("Unexpected response type".to_string()),
+        }
     }
 }
 

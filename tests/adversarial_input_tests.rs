@@ -9,6 +9,7 @@ use tempfile::TempDir;
 mod adversarial_input_tests {
     use super::*;
 
+    #[allow(dead_code)]
     fn create_temp_file(content: &str) -> Result<String, Box<dyn std::error::Error>> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test_plan.json");
@@ -120,7 +121,7 @@ mod adversarial_input_tests {
     fn test_invalid_json() {
         let engine = DetectionEngine::new();
 
-        let invalid_jsons = vec![
+        let invalid_jsons = [
             "",                                                           // Empty string
             "{",                                                          // Unclosed brace
             r#"{"planned_values": "missing_brace""#,                      // Missing closing brace
@@ -160,7 +161,7 @@ mod adversarial_input_tests {
     fn test_malformed_terraform_plan() {
         let engine = DetectionEngine::new();
 
-        let malformed_plans = vec![
+        let malformed_plans = [
             // Missing planned_values
             r#"{"configuration": {"root_module": {}}}"#,
             // Empty resources array
@@ -220,7 +221,7 @@ mod adversarial_input_tests {
         let engine = DetectionEngine::new();
 
         // Test with binary data that could be interpreted as JSON
-        let binary_data = vec![
+        let binary_data = [
             vec![0x00, 0x01, 0x02, 0x03],                 // Null bytes
             vec![0xFF, 0xFE, 0xFD, 0xFC],                 // High bytes
             (0..1000).map(|i| (i % 256) as u8).collect(), // Pattern

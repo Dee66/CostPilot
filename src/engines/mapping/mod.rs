@@ -363,8 +363,8 @@ pub struct CostPropagation {
 
 #[cfg(test)]
 mod tests {
-    use crate::edition::EditionContext;
     use super::*;
+    use crate::edition::EditionContext;
     use crate::engines::shared::models::{ChangeAction, ResourceChange};
     use serde_json::json;
 

@@ -1,0 +1,33 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+assertion_line: 464
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "ApplicationStack": {
+      "Properties": {
+        "Parameters": {
+          "VpcId": {
+            "Fn::GetAtt": [
+              "NetworkStack",
+              "Outputs.VpcId"
+            ]
+          }
+        },
+        "TemplateURL": "https://s3.amazonaws.com/bucket/app.yaml"
+      },
+      "Type": "AWS::CloudFormation::Stack"
+    },
+    "NetworkStack": {
+      "Properties": {
+        "Parameters": {
+          "VpcCidr": "10.0.0.0/16"
+        },
+        "TemplateURL": "https://s3.amazonaws.com/bucket/network.yaml"
+      },
+      "Type": "AWS::CloudFormation::Stack"
+    }
+  }
+}

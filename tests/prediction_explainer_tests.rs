@@ -368,8 +368,7 @@ fn test_prediction_explainer_explain_with_high_confidence() {
     assert!(reasoning.steps.iter().any(|step| step
         .output_value
         .as_ref()
-        .is_some_and(|ov| ov.name == "confidence_score"
-            && ov.value == "95%")));
+        .is_some_and(|ov| ov.name == "confidence_score" && ov.value == "95%")));
 }
 
 #[test]
@@ -406,14 +405,12 @@ fn test_prediction_explainer_explain_with_low_confidence() {
     assert!(reasoning.steps.iter().any(|step| step
         .output_value
         .as_ref()
-        .is_some_and(|ov| ov.name == "confidence_score"
-            && ov.value == "30%")));
+        .is_some_and(|ov| ov.name == "confidence_score" && ov.value == "30%")));
     // Check for wide interval
     assert!(reasoning.steps.iter().any(|step| step
         .output_value
         .as_ref()
-        .is_some_and(|ov| ov.name == "interval"
-            && ov.value == "$5.00 - $20.00")));
+        .is_some_and(|ov| ov.name == "interval" && ov.value == "$5.00 - $20.00")));
 }
 
 // ===== PREDICTION EXPLAINER EDGE CASE TESTS =====
