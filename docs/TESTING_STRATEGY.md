@@ -74,9 +74,8 @@
   - `test_seasonality.rs` (30 tests)
   - `test_monte_carlo.rs` (20 tests)
 
-- Detection: 350 tests
+- Detection: 290 tests
   - `test_terraform_parser.rs` (80 tests)
-  - `test_cdk_parser.rs` (60 tests)
   - `test_normalizer.rs` (70 tests)
   - `test_resource_detector.rs` (80 tests)
 
@@ -144,13 +143,12 @@ proptest! {
 
 ---
 
-### 3. Snapshot Tests (200 tests)
+### 3. Snapshot Tests (160 tests)
 
 **Framework:** `insta` crate
 
 **Coverage:**
 - Terraform plan variants (50)
-- CDK diff outputs (40)
 - Explain output formatting (30)
 - Mapping graph outputs (20)
 - Policy evaluation reports (20)
@@ -355,7 +353,6 @@ tests/
 ├── unit/                          # 2,250 tests
 │   ├── detection/                 # 350 tests
 │   │   ├── test_terraform_parser.rs
-│   │   ├── test_cdk_parser.rs
 │   │   ├── test_normalizer.rs
 │   │   └── test_resource_detector.rs
 │   ├── prediction/                # 400 tests
@@ -436,7 +433,6 @@ tests/
 │
 ├── snapshot/                     # 200 tests
 │   ├── snap_terraform_plans.rs
-│   ├── snap_cdk_diffs.rs
 │   ├── snap_explain_output.rs
 │   └── snap_mapping_graphs.rs
 │
@@ -466,7 +462,6 @@ tests/
 │   │   ├── ec2_create.json
 │   │   ├── rds_modify.json
 │   │   └── ...
-│   ├── cdk/
 │   ├── policies/
 │   └── baselines/
 │

@@ -55,11 +55,10 @@
 **Location:** `tests/unit/`
 
 **test_detection_engine.rs**
-- 350 tests planned across 6 categories:
+- 290 tests planned across 5 categories:
   - Terraform plan parsing (80 tests)
   - Resource normalization (70 tests)
   - Cost change detection (80 tests)
-  - CDK parser (60 tests)
   - Edge cases (50 tests)
 - Complete test structure with TODOs
 
@@ -243,7 +242,7 @@ All with caching, artifact upload, and proper sequencing
 | - Mapping Engine | 200 | Planned |
 | - Grouping Engine | 250 | Planned |
 | - SLO Engine | 150 | Planned |
-| - Trend Engine | 100 | Planned |
+| - Trend Engine | 100 | Implemented ✓ |
 | - WASM Runtime | 150 | 37 implemented ✓ |
 | - CLI | 200 | Planned |
 | - Utils | 100 | Planned |

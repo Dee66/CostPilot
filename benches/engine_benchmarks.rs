@@ -5,6 +5,289 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::path::PathBuf;
+use std::process::Command;
+
+// ============================================================================
+// CLI End-to-End Benchmarks (No Cost)
+// ============================================================================
+
+fn bench_cli_scan_basic(c: &mut Criterion) {
+    // Create a temporary terraform plan file for benchmarking
+    let temp_dir = tempfile::TempDir::new().unwrap();
+    let plan_path = temp_dir.path().join("bench_plan.json");
+
+    // Use the sample terraform plan from e2e tests
+    let plan_content = r#"{
+        "format_version": "1.0",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {
+                "address": "aws_instance.web",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "web",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "instance_type": "t3.medium",
+                        "ami": "ami-0c55b159cbfafe1f0"
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "root_module": {}
+        }
+    }"#;
+
+    std::fs::write(&plan_path, plan_content).unwrap();
+
+    c.bench_function("cli_scan_basic", |b| {
+        b.iter(|| {
+            let mut cmd = Command::new("cargo");
+            cmd.args(&[
+                "run",
+                "--bin",
+                "costpilot",
+                "--quiet",
+                "--",
+                "scan",
+                &plan_path.to_string_lossy(),
+                "--format",
+                "json",
+            ]);
+
+            let output = cmd.output().unwrap();
+            assert!(output.status.success());
+
+            // Verify we get expected JSON output
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            assert!(stdout.contains("aws_instance.web"));
+            black_box(stdout);
+        });
+    });
+}
+
+fn bench_cli_scan_multi_resource(c: &mut Criterion) {
+    let temp_dir = tempfile::TempDir::new().unwrap();
+    let plan_path = temp_dir.path().join("bench_multi_plan.json");
+
+    // Multi-resource plan for more complex benchmarking
+    let plan_content = r#"{
+        "format_version": "1.0",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {
+                "address": "aws_instance.web",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "web",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "instance_type": "t3.medium",
+                        "ami": "ami-0c55b159cbfafe1f0"
+                    }
+                }
+            },
+            {
+                "address": "aws_nat_gateway.main",
+                "mode": "managed",
+                "type": "aws_nat_gateway",
+                "name": "main",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "subnet_id": "subnet-12345",
+                        "connectivity_type": "public"
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket.data",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "data",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "bucket": "my-data-bucket"
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "root_module": {}
+        }
+    }"#;
+
+    std::fs::write(&plan_path, plan_content).unwrap();
+
+    c.bench_function("cli_scan_multi_resource", |b| {
+        b.iter(|| {
+            let mut cmd = Command::new("cargo");
+            cmd.args(&[
+                "run",
+                "--bin",
+                "costpilot",
+                "--quiet",
+                "--",
+                "scan",
+                &plan_path.to_string_lossy(),
+                "--format",
+                "json",
+            ]);
+
+            let output = cmd.output().unwrap();
+            assert!(output.status.success());
+
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            assert!(stdout.contains("aws_instance.web"));
+            assert!(stdout.contains("aws_nat_gateway.main"));
+            assert!(stdout.contains("aws_s3_bucket.data"));
+            black_box(stdout);
+        });
+    });
+}
+
+fn bench_cli_scan_with_policy(c: &mut Criterion) {
+    let temp_dir = tempfile::TempDir::new().unwrap();
+    let plan_path = temp_dir.path().join("bench_plan.json");
+    let policy_path = temp_dir.path().join("bench_policy.yml");
+
+    // Simple plan
+    let plan_content = r#"{
+        "format_version": "1.0",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {
+                "address": "aws_instance.web",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "web",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "instance_type": "t3.medium",
+                        "ami": "ami-0c55b159cbfafe1f0"
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "root_module": {}
+        }
+    }"#;
+
+    // Simple policy
+    let policy_content = r#"version: "1.0"
+policies:
+  - name: "Instance Type Restrictions"
+    rule: "instance_type in ['t3.micro', 't3.small', 't3.medium']"
+    action: warn
+    severity: MEDIUM
+    resources:
+      - aws_instance
+"#;
+
+    std::fs::write(&plan_path, plan_content).unwrap();
+    std::fs::write(&policy_path, policy_content).unwrap();
+
+    c.bench_function("cli_scan_with_policy", |b| {
+        b.iter(|| {
+            let mut cmd = Command::new("cargo");
+            cmd.args(&[
+                "run",
+                "--bin",
+                "costpilot",
+                "--quiet",
+                "--",
+                "scan",
+                &plan_path.to_string_lossy(),
+                "--policy",
+                &policy_path.to_string_lossy(),
+                "--format",
+                "json",
+            ]);
+
+            let output = cmd.output().unwrap();
+            assert!(output.status.success());
+
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            assert!(stdout.contains("aws_instance.web"));
+            black_box(stdout);
+        });
+    });
+}
+
+fn bench_cli_init(c: &mut Criterion) {
+    c.bench_function("cli_init", |b| {
+        b.iter(|| {
+            let temp_dir = tempfile::TempDir::new().unwrap();
+            let init_path = temp_dir.path().join("bench_project");
+
+            let mut cmd = Command::new("cargo");
+            cmd.args(&[
+                "run",
+                "--bin",
+                "costpilot",
+                "--quiet",
+                "--",
+                "init",
+                "--path",
+                &init_path.to_string_lossy(),
+                "--no-ci",
+            ]);
+
+            let output = cmd.output().unwrap();
+            assert!(output.status.success());
+
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            assert!(stdout.contains("CostPilot initialized"));
+            black_box(stdout);
+        });
+    });
+}
+
+fn bench_cli_validate(c: &mut Criterion) {
+    c.bench_function("cli_validate", |b| {
+        b.iter(|| {
+            let temp_dir = tempfile::TempDir::new().unwrap();
+            let config_path = temp_dir.path().join("bench_config.yml");
+
+            let config_content = r#"version: 1.0.0
+detection:
+  enabled: true
+prediction:
+  enabled: true
+"#;
+
+            std::fs::write(&config_path, config_content).unwrap();
+
+            let mut cmd = Command::new("cargo");
+            cmd.args(&[
+                "run",
+                "--bin",
+                "costpilot",
+                "--quiet",
+                "--",
+                "validate",
+                &config_path.to_string_lossy(),
+            ]);
+
+            let output = cmd.output().unwrap();
+            // Validation may fail but command should run
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            assert!(stdout.contains("Validation Report"));
+            black_box(stdout);
+        });
+    });
+}
 
 // ============================================================================
 // Prediction Engine Benchmarks
@@ -312,7 +595,17 @@ criterion_group!(
 
 criterion_group!(pipeline_benches, bench_full_scan_pipeline);
 
+criterion_group!(
+    cli_benches,
+    bench_cli_scan_basic,
+    bench_cli_scan_multi_resource,
+    bench_cli_scan_with_policy,
+    bench_cli_init,
+    bench_cli_validate
+);
+
 criterion_main!(
+    cli_benches,
     test_benches,
     prediction_benches,
     detection_benches,

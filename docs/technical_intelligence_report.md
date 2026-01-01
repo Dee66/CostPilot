@@ -26,7 +26,7 @@ Detection → Prediction → Explain → Autofix → Policy → Mapping → Attr
 
 | Engine | Purpose | Key Features | Risk Level |
 |--------|---------|--------------|------------|
-| **Detection** | Cost issue identification | Terraform/CDK parsing, regression classification | LOW |
+| **Detection** | Cost issue identification | Terraform parsing, regression classification | LOW |
 | **Prediction** | Cost estimation | Heuristics-based pricing, confidence intervals | MEDIUM |
 | **Explain** | Root cause analysis | Cost impact attribution, severity scoring | LOW |
 | **Autofix** | Remediation generation | Patch creation, safe operations | MEDIUM |
@@ -43,7 +43,7 @@ Detection → Prediction → Explain → Autofix → Policy → Mapping → Attr
 
 1. **Modular Design**: Clean separation of concerns with independent engines
 2. **Deterministic Processing**: Consistent outputs across identical inputs
-3. **Multi-IaC Support**: Terraform and CDK compatibility
+3. **IaC Support**: Terraform compatibility
 4. **Edition System**: Free/Premium feature gating via capabilities
 5. **WASM Sandboxing**: Isolated execution for premium features
 

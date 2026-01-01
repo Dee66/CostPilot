@@ -555,3 +555,330 @@ struct GroupedResult {
 struct TeamGroup {
     total_cost: f64,
 }
+
+// ============================================================================
+// E2E CLI Integration Tests
+// ============================================================================
+
+#[cfg(test)]
+mod e2e_cli_integration_tests {
+    use assert_cmd::Command;
+    use predicates::prelude::*;
+    use std::fs;
+    use std::path::Path;
+    use tempfile::TempDir;
+
+    // Test data: Simple Terraform plan with EC2 instance
+    const SAMPLE_TERRAFORM_PLAN: &str = r#"{
+        "format_version": "1.0",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {
+                "address": "aws_instance.web",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "web",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "instance_type": "t3.medium",
+                        "ami": "ami-0c55b159cbfafe1f0",
+                        "tags": {
+                            "Name": "web-server",
+                            "Environment": "dev"
+                        }
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_instance.web",
+                        "mode": "managed",
+                        "type": "aws_instance",
+                        "name": "web",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "instance_type": {
+                                "constant_value": "t3.medium"
+                            },
+                            "ami": {
+                                "constant_value": "ami-0c55b159cbfafe1f0"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }"#;
+
+    // Test data: Terraform plan with multiple resources
+    const MULTI_RESOURCE_PLAN: &str = r#"{
+        "format_version": "1.0",
+        "terraform_version": "1.5.0",
+        "resource_changes": [
+            {
+                "address": "aws_instance.web",
+                "mode": "managed",
+                "type": "aws_instance",
+                "name": "web",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "instance_type": "t3.medium",
+                        "ami": "ami-0c55b159cbfafe1f0"
+                    }
+                }
+            },
+            {
+                "address": "aws_nat_gateway.main",
+                "mode": "managed",
+                "type": "aws_nat_gateway",
+                "name": "main",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "subnet_id": "subnet-12345",
+                        "connectivity_type": "public"
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket.data",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "data",
+                "change": {
+                    "actions": ["create"],
+                    "before": null,
+                    "after": {
+                        "bucket": "my-data-bucket"
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "root_module": {}
+        }
+    }"#;
+
+    // Test data: Policy file
+    const SAMPLE_POLICY: &str = r#"version: "1.0"
+policies:
+  - name: "Instance Type Restrictions"
+    rule: "instance_type in ['t3.micro', 't3.small', 't3.medium']"
+    action: warn
+    severity: MEDIUM
+    resources:
+      - aws_instance
+
+  - name: "NAT Gateway Limit"
+    rule: "resource_count <= 1"
+    action: block
+    severity: HIGH
+    resources:
+      - aws_nat_gateway
+"#;
+
+    #[test]
+    fn test_e2e_scan_basic_workflow() {
+        let temp_dir = TempDir::new().unwrap();
+        let plan_path = temp_dir.path().join("plan.json");
+        fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
+
+        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        cmd.arg("scan")
+            .arg(plan_path)
+            .arg("--format")
+            .arg("text");
+
+        let output = cmd.assert().success();
+        let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+
+        // Verify basic scan output structure
+        assert!(stdout.contains("🔍 CostPilot Scan"));
+        assert!(stdout.contains("📊 Detection"));
+        assert!(stdout.contains("💰 Cost Prediction"));
+        assert!(stdout.contains("📈 Summary"));
+        assert!(stdout.contains("aws_instance.web"));
+        assert!(stdout.contains("$")); // Cost information
+    }
+
+    #[test]
+    fn test_e2e_scan_with_policy() {
+        let temp_dir = TempDir::new().unwrap();
+
+        // Create plan file
+        let plan_path = temp_dir.path().join("plan.json");
+        fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
+
+        // Create policy file
+        let policy_path = temp_dir.path().join("policy.yml");
+        fs::write(&policy_path, SAMPLE_POLICY).unwrap();
+
+        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        cmd.arg("scan")
+            .arg(plan_path)
+            .arg("--policy")
+            .arg(policy_path)
+            .arg("--format")
+            .arg("text");
+
+        let output = cmd.assert().success();
+        let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+
+        // Verify policy evaluation occurred
+        assert!(stdout.contains("📋 Policy Evaluation"));
+        // Should pass the instance type check but may have warnings
+        assert!(stdout.contains("✅") || stdout.contains("⚠"));
+    }
+
+    #[test]
+    fn test_e2e_scan_multi_resource() {
+        let temp_dir = TempDir::new().unwrap();
+        let plan_path = temp_dir.path().join("plan.json");
+        fs::write(&plan_path, MULTI_RESOURCE_PLAN).unwrap();
+
+        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        cmd.arg("scan")
+            .arg(plan_path)
+            .arg("--format")
+            .arg("text");
+
+        let output = cmd.assert().success();
+        let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+
+        // Verify multiple resources detected
+        assert!(stdout.contains("aws_instance.web"));
+        assert!(stdout.contains("aws_nat_gateway.main"));
+        assert!(stdout.contains("aws_s3_bucket.data"));
+        assert!(stdout.contains("3 resource changes"));
+    }
+
+    #[test]
+    fn test_e2e_scan_json_output() {
+        let temp_dir = TempDir::new().unwrap();
+        let plan_path = temp_dir.path().join("plan.json");
+        fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
+
+        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        cmd.arg("scan")
+            .arg(plan_path)
+            .arg("--format")
+            .arg("json");
+
+        let output = cmd.assert().success();
+        let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+
+        // Verify JSON output structure
+        assert!(stdout.contains("summary"));
+        assert!(stdout.contains("changes"));
+        assert!(stdout.contains("estimates"));
+        assert!(stdout.contains("resources_changed"));
+        assert!(stdout.contains("monthly_cost"));
+
+        // Should be valid JSON
+        serde_json::from_str::<serde_json::Value>(&stdout).unwrap();
+    }
+
+    #[test]
+    fn test_e2e_init_workflow() {
+        let temp_dir = TempDir::new().unwrap();
+        let init_path = temp_dir.path().join("test_project");
+
+        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        cmd.arg("init")
+            .arg("--path")
+            .arg(init_path.to_str().unwrap())
+            .arg("--no-ci");
+
+        let output = cmd.assert().success();
+        let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+
+        // Verify init output
+        assert!(stdout.contains("🚀 Initializing CostPilot"));
+        assert!(stdout.contains("✅ CostPilot initialized successfully"));
+
+        // Verify files were created
+        assert!(init_path.join(".costpilot").exists());
+        assert!(init_path.join(".costpilot/config.yml").exists());
+        assert!(init_path.join(".costpilot/policy.yml").exists());
+        assert!(init_path.join(".gitignore").exists());
+    }
+
+    #[test]
+    fn test_e2e_explain_resource() {
+        let temp_dir = TempDir::new().unwrap();
+        let plan_path = temp_dir.path().join("plan.json");
+        fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
+
+        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        cmd.arg("explain")
+            .arg("resource")
+            .arg("--plan")
+            .arg(plan_path)
+            .arg("--resource")
+            .arg("aws_instance.web");
+
+        let output = cmd.assert().success();
+        let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
+
+        // Verify explanation output
+        assert!(stdout.contains("🔍 Cost Explanation"));
+        assert!(stdout.contains("aws_instance.web"));
+        assert!(stdout.contains("Resource Type: aws_instance"));
+        assert!(stdout.contains("Monthly Cost"));
+        assert!(stdout.contains("Confidence"));
+    }
+
+    #[test]
+    fn test_e2e_error_handling_invalid_plan() {
+        let temp_dir = TempDir::new().unwrap();
+        let plan_path = temp_dir.path().join("invalid.json");
+        fs::write(&plan_path, "invalid json content {").unwrap();
+
+        let mut cmd = Command::cargo_bin("costpilot").unwrap();
+        cmd.arg("scan")
+            .arg(plan_path);
+
+        let output = cmd.assert().failure();
+        let stderr = String::from_utf8(output.get_output().stderr.clone()).unwrap();
+
+        // Verify error handling
+        assert!(stderr.contains("error") || stderr.contains("Error"));
+    }
+
+    #[test]
+    fn test_e2e_output_consistency() {
+        let temp_dir = TempDir::new().unwrap();
+        let plan_path = temp_dir.path().join("plan.json");
+        fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
+
+        // Run scan multiple times to ensure deterministic output
+        let mut cmd1 = Command::cargo_bin("costpilot").unwrap();
+        cmd1.arg("scan")
+            .arg(plan_path)
+            .arg("--format")
+            .arg("json");
+
+        let output1 = cmd1.assert().success();
+        let stdout1 = String::from_utf8(output1.get_output().stdout.clone()).unwrap();
+
+        let mut cmd2 = Command::cargo_bin("costpilot").unwrap();
+        cmd2.arg("scan")
+            .arg(plan_path)
+            .arg("--format")
+            .arg("json");
+
+        let output2 = cmd2.assert().success();
+        let stdout2 = String::from_utf8(output2.get_output().stdout.clone()).unwrap();
+
+        // Outputs should be identical for same input
+        assert_eq!(stdout1, stdout2);
+    }
+}

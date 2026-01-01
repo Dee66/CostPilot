@@ -325,7 +325,6 @@ jobs:
 
 **Supported Formats:**
 - Terraform JSON plans (`terraform show -json`)
-- AWS CDK synthesized output (`cdk synth`)
 
 **Core Engines:**
 - Detection: Identify cost-impacting changes
@@ -359,19 +358,6 @@ costpilot autofix --plan plan.json
 costpilot map --output dependency-map.html
 ```
 
-### CDK Workflow
-
-```bash
-# 1. Synthesize CDK app
-cdk synth
-
-# 2. Analyze all stacks
-costpilot scan cdk.out/
-
-# 3. Check specific stack
-costpilot scan cdk.out/MyStack.template.json
-```
-
 ## Performance
 
 - **Speed:** <2s for typical Terraform plans (~100 resources)
@@ -389,7 +375,7 @@ costpilot scan cdk.out/MyStack.template.json
 
 ## Support
 
-- **Documentation:** [ARTIFACT_SUPPORT.md](ARTIFACT_SUPPORT.md), [POLICY_ENGINE.md](POLICY_ENGINE.md)
+- **Documentation:** [POLICY_ENGINE.md](POLICY_ENGINE.md)
 - **Examples:** `examples/` directory
 - **Issues:** GitHub repository
 - **Roadmap:** `checklist.md`

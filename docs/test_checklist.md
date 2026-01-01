@@ -402,7 +402,6 @@ Otherwise, delete it.
 
 ### 20.6 Test Data Requirements
 - [x] Terraform scenarios: simple EC2 instance, complex multi-resource stack, cost optimization opportunities, security violations, compliance failures
-- [x] CDK scenarios: TypeScript constructs, Python constructs, Java constructs
 - [x] Policy scenarios: cost limits, resource restrictions, approval workflows, SLO enforcement
 - [x] Baseline scenarios: historical costs, seasonal variations, growth trends
 - [x] Edge cases: empty plans, malformed JSON, unsupported resources, extreme cost values, unicode characters

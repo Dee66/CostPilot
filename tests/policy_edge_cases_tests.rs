@@ -313,5 +313,5 @@ fn test_non_blocking_policy_violations_silent() {
     // Placeholder test for: Non-blocking policy violations → silent
     // TODO: Implement logic to check that non-blocking policy violations
     // result in silent operation (no findings, no explain output, exit code 0)
-    assert!(true);
+    todo!("Implement non-blocking policy violations silent test");
 }

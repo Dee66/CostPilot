@@ -382,9 +382,9 @@ impl SloManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engines::trend::ModuleCost;
     use crate::engines::slo::slo_types::SloParams;
     use crate::engines::slo::SloThreshold;
+    use crate::engines::trend::ModuleCost;
 
     fn create_test_slo() -> Slo {
         Slo::new(SloParams {

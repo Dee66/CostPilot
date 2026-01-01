@@ -1,0 +1,33 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+assertion_line: 88
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "ApiHandler": {
+      "Properties": {
+        "Code": {
+          "ZipFile": "def handler(event, context): return {'statusCode': 200}"
+        },
+        "Handler": "index.handler",
+        "MemorySize": 512,
+        "Runtime": "python3.11",
+        "Timeout": 30
+      },
+      "Type": "AWS::Lambda::Function"
+    },
+    "RestApi": {
+      "Properties": {
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL"
+          ]
+        },
+        "Name": "MyApi"
+      },
+      "Type": "AWS::ApiGateway::RestApi"
+    }
+  }
+}

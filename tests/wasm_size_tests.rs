@@ -250,7 +250,7 @@ mod tests {
     fn test_wasm_checksum_reproducible() {
         // Build first time
         let output1 = Command::new("cargo")
-            .args(&[
+            .args([
                 "build",
                 "--target",
                 "wasm32-wasip1",
@@ -273,7 +273,7 @@ mod tests {
 
         // Build second time
         let output2 = Command::new("cargo")
-            .args(&[
+            .args([
                 "build",
                 "--target",
                 "wasm32-wasip1",

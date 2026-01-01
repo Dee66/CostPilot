@@ -27,7 +27,7 @@ fn test_archive_creation_extraction() {
     // Test tar.gz creation (if tar command is available)
     let archive_path = temp_dir.join("test.tar.gz");
     let tar_result = Command::new("tar")
-        .args(&[
+        .args([
             "-czf",
             &archive_path.to_string_lossy(),
             "-C",

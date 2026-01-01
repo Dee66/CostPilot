@@ -1,6 +1,5 @@
 // Autofix patch command implementation - Generate full unified diff patches
 
-use crate::engines::autofix::{AutofixEngine, AutofixMode};
 use crate::engines::detection::DetectionEngine;
 use crate::engines::prediction::PredictionEngine;
 use clap::Args;
@@ -82,12 +81,11 @@ pub fn execute(
 
     // Generate patches
     println!("{}", "Generating fix patches...".dimmed());
-    let autofix_result = AutofixEngine::generate_fixes(
+    let autofix_result = edition.require_pro("Autofix")?.autofix(
         &detections_with_estimates,
         &changes,
         &[], // estimates not used for patch mode
-        AutofixMode::Patch,
-        edition,
+        crate::engines::autofix::AutofixMode::Patch,
     )?;
 
     if autofix_result.patches.is_empty() {

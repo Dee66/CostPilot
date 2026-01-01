@@ -7,7 +7,6 @@ use proptest::prelude::*;
 use quickcheck::{Arbitrary, Gen};
 #[cfg(test)]
 use quickcheck_macros::quickcheck;
-use serde_json::json;
 use std::collections::HashMap;
 
 #[test]

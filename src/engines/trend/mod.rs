@@ -21,7 +21,7 @@ use crate::errors::CostPilotError;
 /// Main trend engine for cost tracking
 pub struct TrendEngine {
     snapshot_manager: SnapshotManager,
-    svg_generator: SvgGenerator,
+    pub svg_generator: SvgGenerator,
 }
 
 impl TrendEngine {

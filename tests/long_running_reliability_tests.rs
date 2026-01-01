@@ -106,7 +106,7 @@ fn test_resource_leak_detection() {
 
     // In a real test, we'd assert memory usage hasn't grown by more than X%
     // For now, just ensure no panics occurred
-    assert!(true, "Resource leak test completed without panics");
+    todo!("Implement resource leak test with actual memory monitoring");
 }
 
 #[test]
@@ -141,6 +141,7 @@ fn test_concurrent_stress_testing() {
         true,
         "Concurrent stress test completed without deadlocks or crashes"
     );
+    todo!("Implement concurrent stress test with actual deadlock detection");
 }
 
 #[test]
@@ -289,4 +290,5 @@ fn test_continuous_fuzzing_simulation() {
         true,
         "Continuous fuzzing simulation completed without panics"
     );
+    todo!("Implement continuous fuzzing simulation with actual panic detection");
 }

@@ -276,8 +276,10 @@ impl SvgGenerator {
         let mut path = String::from("    <path d=\"");
 
         for (i, snapshot) in params.snapshots.iter().enumerate() {
-            let x_pos = params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
-            let y_pos = params.y + params.height - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
+            let x_pos =
+                params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
+            let y_pos = params.y + params.height
+                - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
 
             if i == 0 {
                 write!(&mut path, "M {} {}", x_pos, y_pos).unwrap();
@@ -292,8 +294,11 @@ impl SvgGenerator {
         // Draw points if enabled
         if self.config.show_points {
             for (i, snapshot) in params.snapshots.iter().enumerate() {
-                let x_pos = params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
-                let y_pos = params.y + params.height - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
+                let x_pos = params.x
+                    + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
+                let y_pos = params.y + params.height
+                    - ((snapshot.total_monthly_cost - params.y_min) / params.y_range)
+                        * params.height;
 
                 writeln!(
                     svg,
@@ -312,8 +317,11 @@ impl SvgGenerator {
 
         for (i, snapshot) in params.snapshots.iter().enumerate() {
             if !snapshot.regressions.is_empty() {
-                let x_pos = params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
-                let y_pos = params.y + params.height - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
+                let x_pos = params.x
+                    + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
+                let y_pos = params.y + params.height
+                    - ((snapshot.total_monthly_cost - params.y_min) / params.y_range)
+                        * params.height;
 
                 // Draw warning marker
                 writeln!(
@@ -340,8 +348,11 @@ impl SvgGenerator {
 
         for (i, snapshot) in params.snapshots.iter().enumerate() {
             if !snapshot.slo_violations.is_empty() {
-                let x_pos = params.x + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
-                let y_pos = params.y + params.height - ((snapshot.total_monthly_cost - params.y_min) / params.y_range) * params.height;
+                let x_pos = params.x
+                    + (i as f64 / (params.snapshots.len() - 1).max(1) as f64) * params.width;
+                let y_pos = params.y + params.height
+                    - ((snapshot.total_monthly_cost - params.y_min) / params.y_range)
+                        * params.height;
 
                 // Draw SLO violation marker (different color from regression)
                 writeln!(

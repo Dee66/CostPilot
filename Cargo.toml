@@ -37,7 +37,7 @@ rand = "0.8"
 zeroize = "1.5"
 hcl = { package = "hcl-rs", version = "0.19" }
 jsonschema = "0.17"
-cargo = "0.93"
+cargo = { version = "0.93", optional = true }
 subtle = "2"
 
 # Conditional crypto dependencies (not available for WASM)
@@ -45,12 +45,20 @@ subtle = "2"
 ring = "0.17"
 wasmtime = "27"
 hex = "0.4"
+cargo = "0.93"
 
 # Build dependencies for key generation
 [build-dependencies]
 ed25519-dalek = "2.1"
 rand = "0.8"
 hex = "0.4"
+wit-bindgen = "0.24"
+aes-gcm = "0.10"
+hkdf = "0.12"
+sha2 = "0.10"
+chrono = { version = "0.4", features = ["serde"] }
+serde_json = "1.0"
+dirs = "5.0"
 
 [dev-dependencies]
 # E2E testing
@@ -92,10 +100,11 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [profile.release]
-opt-level = 3
+opt-level = "z"          # Optimize for size instead of speed
 lto = true
 codegen-units = 1
 strip = true
+panic = "abort"          # Smaller panic handler
 
 [profile.dev]
 opt-level = 0
@@ -108,6 +117,29 @@ lto = true
 codegen-units = 1
 panic = "abort"          # Smaller panic handler
 strip = true
+
+# Obfuscated release profile for enhanced security
+[profile.obfuscated]
+inherits = "release"
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+
+# Minimal size profile for smallest possible binary
+[profile.minimal]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+# Additional size optimizations
+debug = false
+rpath = false
+overflow-checks = false
+incremental = false
 
 # WASM support
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -130,3 +162,6 @@ grouping = []
 slo = []
 yaml = []
 wasm = ["getrandom"]
+release = []
+obfuscate = []
+compress = []

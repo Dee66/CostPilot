@@ -87,7 +87,9 @@ pub fn parse_bundle(bytes: &[u8]) -> Result<EncryptedBundle, LoaderError> {
 
     let metadata_len = u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
     let metadata_start = 4usize;
-    let metadata_end = metadata_start.checked_add(metadata_len).ok_or(LoaderError::InvalidFormat)?;
+    let metadata_end = metadata_start
+        .checked_add(metadata_len)
+        .ok_or(LoaderError::InvalidFormat)?;
 
     // signature occupies the last 64 bytes
     let signature_len = 64usize;
@@ -98,7 +100,9 @@ pub fn parse_bundle(bytes: &[u8]) -> Result<EncryptedBundle, LoaderError> {
 
     // nonce must be directly after metadata and before ciphertext
     let nonce_start = metadata_end;
-    let nonce_end = nonce_start.checked_add(12).ok_or(LoaderError::InvalidFormat)?;
+    let nonce_end = nonce_start
+        .checked_add(12)
+        .ok_or(LoaderError::InvalidFormat)?;
 
     // validate ranges
     if metadata_end > bytes.len() || nonce_end > signature_start || nonce_end >= signature_start {
@@ -106,9 +110,12 @@ pub fn parse_bundle(bytes: &[u8]) -> Result<EncryptedBundle, LoaderError> {
     }
 
     let metadata_bytes = bytes[metadata_start..metadata_end].to_vec();
-    let metadata: serde_json::Value = serde_json::from_slice(&metadata_bytes).map_err(|_| LoaderError::InvalidFormat)?;
+    let metadata: serde_json::Value =
+        serde_json::from_slice(&metadata_bytes).map_err(|_| LoaderError::InvalidFormat)?;
 
-    let nonce: [u8; 12] = bytes[nonce_start..nonce_end].try_into().map_err(|_| LoaderError::InvalidFormat)?;
+    let nonce: [u8; 12] = bytes[nonce_start..nonce_end]
+        .try_into()
+        .map_err(|_| LoaderError::InvalidFormat)?;
 
     let ciphertext = bytes[nonce_end..signature_start].to_vec();
     if ciphertext.is_empty() {
@@ -153,7 +160,8 @@ pub fn verify_signature(bundle: &EncryptedBundle, public_key: &[u8]) -> Result<(
     )
     .map_err(|_| LoaderError::SignatureInvalid)?;
 
-    let signature = Signature::from_slice(&bundle.signature).map_err(|_| LoaderError::SignatureInvalid)?;
+    let signature =
+        Signature::from_slice(&bundle.signature).map_err(|_| LoaderError::SignatureInvalid)?;
 
     verifying_key
         .verify_strict(&signed_data, &signature)

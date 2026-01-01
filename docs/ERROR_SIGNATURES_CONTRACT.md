@@ -33,7 +33,6 @@ pub enum ErrorCode {
     // Parse errors (E001-E099)
     E001,  // Invalid JSON
     E002,  // Invalid Terraform plan
-    E003,  // Invalid CDK structure
     E004,  // Invalid policy YAML
 
     // Validation errors (E100-E199)

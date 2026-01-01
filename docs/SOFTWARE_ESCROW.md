@@ -660,8 +660,3 @@ Software escrow transforms CostPilot from a black-box SaaS solution into a trust
 - ✅ **Transparency:** Full visibility into product internals
 - ✅ **Business Continuity:** Guaranteed access to critical software
 - ✅ **Trust:** Demonstrates vendor commitment to customers
-
-For questions about software escrow or to establish an escrow agreement, contact:
-- **Sales:** sales@costpilot.io
-- **Support:** support@costpilot.io
-- **Legal:** legal@costpilot.io

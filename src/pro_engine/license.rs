@@ -99,8 +99,8 @@ impl License {
         let content =
             std::fs::read_to_string(path).map_err(|e| format!("Failed to read license: {}", e))?;
 
-        let value: serde_json::Value = serde_json::from_str(&content)
-            .map_err(|e| format!("Invalid license format: {}", e))?;
+        let value: serde_json::Value =
+            serde_json::from_str(&content).map_err(|e| format!("Invalid license format: {}", e))?;
 
         let email = value["email"].as_str().unwrap_or("").to_string();
         let license_key = value["license_key"].as_str().unwrap_or("").to_string();
@@ -175,7 +175,11 @@ impl License {
         Ok(())
     }
 
-    pub fn verify_signature(&self, bundle: &EncryptedBundle, public_key: &[u8]) -> Result<(), LoaderError> {
+    pub fn verify_signature(
+        &self,
+        bundle: &EncryptedBundle,
+        public_key: &[u8],
+    ) -> Result<(), LoaderError> {
         crate::pro_engine::loader::verify_signature(bundle, public_key)
     }
 }

@@ -1,5 +1,4 @@
 use std::fs;
-use std::path::Path;
 
 /// Test that output schema version matches binary version compatibility table
 #[test]

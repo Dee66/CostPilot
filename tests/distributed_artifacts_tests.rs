@@ -20,8 +20,8 @@ fn test_distributed_artifacts_match_tested_artifacts() {
     // - WASM bundles vs distributed bundles
     // - Archive files vs distributed archives
 
-    // Placeholder assertion - always passes until implementation
-    assert!(true, "Placeholder test for distributed artifacts matching");
+    // Placeholder test - implementation pending
+    todo!("Implement distributed artifacts matching test");
 }
 
 /// Placeholder test for ensuring artifact parity across distribution channels
@@ -46,9 +46,6 @@ fn test_artifact_parity_across_distribution_channels() {
     // - crates.io published packages
     // - Any other distribution channels
 
-    // Placeholder assertion - always passes until implementation
-    assert!(
-        true,
-        "Placeholder test for artifact parity across distribution channels"
-    );
+    // Placeholder test - implementation pending
+    todo!("Implement artifact parity test across distribution channels");
 }

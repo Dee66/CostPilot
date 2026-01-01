@@ -3,9 +3,9 @@
 pub mod approval_workflow;
 mod audit_log;
 mod compliance;
-mod exemption_ci;
-mod exemption_types;
-mod exemption_validator;
+pub mod exemption_ci;
+pub mod exemption_types;
+pub mod exemption_validator;
 pub mod lifecycle;
 mod metadata_engine;
 mod policy_engine;

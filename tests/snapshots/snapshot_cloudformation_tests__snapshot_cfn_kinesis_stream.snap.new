@@ -1,0 +1,18 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+assertion_line: 406
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "EventStream": {
+      "Properties": {
+        "Name": "event-stream",
+        "RetentionPeriodHours": 168,
+        "ShardCount": 2
+      },
+      "Type": "AWS::Kinesis::Stream"
+    }
+  }
+}

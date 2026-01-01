@@ -52,6 +52,9 @@ pub fn execute(
         return Err("Insufficient data".into());
     }
 
+    // Require Premium for SLO enforcement
+    crate::edition::require_premium(edition, "SLO enforcement")?;
+
     if verbose {
         println!("  Loaded {} snapshots", history.snapshots.len());
     }
