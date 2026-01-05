@@ -2,11 +2,12 @@ fn main() {
     println!("cargo:rerun-if-changed=pro_engine/pro_engine.wit");
 
     // Generate cryptographic keys at compile time
-    generate_crypto_keys();
+    #[cfg(feature = "release")]
+    let wasm_signing_key = generate_crypto_keys();
 
     // Build and encrypt WASM module for release builds
     #[cfg(feature = "release")]
-    build_pro_engine_wasm();
+    build_pro_engine_wasm(&wasm_signing_key);
 
     // Apply code obfuscation for enhanced security
     #[cfg(feature = "obfuscate")]
@@ -24,7 +25,7 @@ fn main() {
 }
 
 #[cfg(feature = "release")]
-fn build_pro_engine_wasm() {
+fn build_pro_engine_wasm(wasm_signing_key: &ed25519_dalek::SigningKey) {
     use std::process::Command;
 
     println!("cargo:warning=Building ProEngine WASM module...");
@@ -61,11 +62,11 @@ fn build_pro_engine_wasm() {
     }
 
     // Encrypt and sign the WASM module
-    encrypt_wasm_module();
+    encrypt_wasm_module(wasm_signing_key);
 }
 
 #[cfg(feature = "release")]
-fn encrypt_wasm_module() {
+fn encrypt_wasm_module(wasm_signing_key: &ed25519_dalek::SigningKey) {
     use std::{fs, path::Path};
 
     // Path to the compiled WASM module
@@ -95,6 +96,9 @@ fn encrypt_wasm_module() {
     // Generate random nonce
     let nonce_bytes = generate_random_nonce();
 
+    // Sign the plaintext WASM module
+    let signature = sign_wasm(&wasm_bytes, wasm_signing_key);
+
     // Encrypt WASM module
     let ciphertext = match encrypt_aes_gcm(&wasm_bytes, &aes_key, &nonce_bytes) {
         Ok(ct) => ct,
@@ -103,9 +107,6 @@ fn encrypt_wasm_module() {
             return;
         }
     };
-
-    // Sign the encrypted data
-    let signature = sign_wasm(&ciphertext, &nonce_bytes);
 
     // Create bundle metadata
     let metadata = serde_json::json!({
@@ -183,19 +184,11 @@ fn encrypt_aes_gcm(plaintext: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> Result
 }
 
 #[cfg(feature = "release")]
-fn sign_wasm(ciphertext: &[u8], nonce: &[u8; 12]) -> Vec<u8> {
-    use ed25519_dalek::{Signer, SigningKey};
-    use rand::RngCore;
+fn sign_wasm(wasm_bytes: &[u8], signing_key: &ed25519_dalek::SigningKey) -> Vec<u8> {
+    use ed25519_dalek::Signer;
 
-    // Generate a signing key (in production this would be fixed)
-    let mut secret_bytes = [0u8; 32];
-    rand::rngs::OsRng.fill_bytes(&mut secret_bytes);
-    let signing_key = SigningKey::from_bytes(&secret_bytes);
-
-    // Sign the ciphertext + nonce
-    let mut message = nonce.to_vec();
-    message.extend_from_slice(ciphertext);
-    let signature = signing_key.sign(&message);
+    // Sign the plaintext WASM bytes
+    let signature = signing_key.sign(wasm_bytes);
 
     signature.to_bytes().to_vec()
 }
@@ -239,7 +232,9 @@ fn create_test_license(costpilot_dir: &std::path::Path, license_key: &str) {
     }
 }
 
-fn generate_crypto_keys() {
+#[allow(dead_code)]
+fn generate_crypto_keys() -> ed25519_dalek::SigningKey {
+    use ed25519_dalek::SigningKey;
     use std::{env, fs, path::Path};
 
     // Generate Ed25519 keypairs for license and WASM signing
@@ -288,6 +283,9 @@ pub const WASM_PUBLIC_KEY: &[u8] = &{:?};
 
     // Tell rustc to rerun if build.rs changes
     println!("cargo:rerun-if-changed=build.rs");
+
+    // Return the WASM signing key for use in signing
+    SigningKey::from_bytes(&wasm_keypair.private)
 }
 
 #[cfg(feature = "obfuscate")]
@@ -348,12 +346,14 @@ fn apply_binary_compression() {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct KeyPair {
     public: [u8; 32],
     #[allow(dead_code)]
     private: [u8; 32],
 }
 
+#[allow(dead_code)]
 fn generate_ed25519_keypair() -> KeyPair {
     use ed25519_dalek::SigningKey;
     use rand::rngs::OsRng;

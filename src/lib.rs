@@ -8,6 +8,7 @@ pub mod engines;
 pub mod errors;
 pub mod feature_flags;
 pub mod heuristics;
+pub mod license_issuer;
 pub mod pro_engine;
 pub mod security;
 pub mod validation;
