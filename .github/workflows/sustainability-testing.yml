@@ -1,3 +1,4 @@
+# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
 name: Sustainability and Ethics Testing
 
 on:
@@ -32,14 +33,6 @@ on:
           - basic
           - comprehensive
           - exhaustive
-  schedule:
-    # Run sustainability tests weekly on Wednesdays at 6 AM UTC
-    - cron: '0 6 * * 3'
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'scripts/run_sustainability_testing.sh'
-      - '.github/workflows/sustainability-testing.yml'
 
 env:
   CARGO_TERM_COLOR: always

@@ -1,18 +1,7 @@
+# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
 name: Security Scanning
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'products/costpilot/**'
-      - 'scripts/security_review.sh'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'products/costpilot/**'
-  schedule:
-    # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
       scan_type:

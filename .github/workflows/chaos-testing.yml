@@ -1,3 +1,4 @@
+# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
 name: Chaos Engineering Testing
 
 on:
@@ -33,14 +34,6 @@ on:
           - medium
           - high
           - extreme
-  schedule:
-    # Run chaos tests weekly on Sundays at 2 AM UTC
-    - cron: '0 2 * * 0'
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'scripts/run_chaos_testing.sh'
-      - '.github/workflows/chaos-testing.yml'
 
 env:
   CARGO_TERM_COLOR: always

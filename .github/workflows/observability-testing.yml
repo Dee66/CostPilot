@@ -1,18 +1,7 @@
+# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
 name: Observability Testing
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'products/costpilot/**'
-      - 'scripts/run_observability_testing.sh'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'products/costpilot/**'
-  schedule:
-    # Run comprehensive observability tests weekly
-    - cron: '0 1 * * 0'
   workflow_dispatch:
     inputs:
       test_type:

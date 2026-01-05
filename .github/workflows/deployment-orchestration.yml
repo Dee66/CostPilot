@@ -1,9 +1,7 @@
+# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
 name: Deployment Orchestration
 
 on:
-  push:
-    branches: [ main ]
-    tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
       environment:

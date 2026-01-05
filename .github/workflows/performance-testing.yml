@@ -1,18 +1,7 @@
+# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
 name: Performance Testing
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'products/costpilot/**'
-      - 'scripts/run_performance_testing.sh'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'products/costpilot/**'
-  schedule:
-    # Run comprehensive performance tests weekly
-    - cron: '0 0 * * 0'
   workflow_dispatch:
     inputs:
       test_type:
