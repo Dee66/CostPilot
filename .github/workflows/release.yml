@@ -1,9 +1,7 @@
+# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:

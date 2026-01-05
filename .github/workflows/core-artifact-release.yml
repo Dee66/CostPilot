@@ -1,10 +1,8 @@
+# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
 name: Core Artifact Release
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
 
 env:
   CARGO_TERM_COLOR: always
