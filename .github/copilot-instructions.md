@@ -1,8 +1,8 @@
-# Copilot Instructions
+Copilot Instructions
 
 This repository is governed by an explicit AI behavioral contract and an authoritative mental model.
 
-## Scope of Responsibility
+Scope of Responsibility
 
 This file defines integration and routing only.
 
@@ -11,7 +11,7 @@ This file defines integration and routing only.
 
 If guidance is missing, treat it as UNKNOWN and stop.
 
-## Mandatory Preconditions
+Mandatory Preconditions
 
 - Read `/AGENTS.md` and comply with it.
 - Read `docs/mental_model.md` as authoritative compiled state.
@@ -19,7 +19,7 @@ If guidance is missing, treat it as UNKNOWN and stop.
 
 If any required file is missing or unreadable, stop.
 
-## Sync and Validation
+Sync and Validation
 
 When performing decision-affecting work (including code changes, reviews, or validation against claims):
 
@@ -32,7 +32,7 @@ If contradictions are detected:
 
 Do not continue analysis or implementation while contradictions exist.
 
-## Mental Model Changes
+Mental Model Changes
 
 - Do not rewrite `docs/mental_model.md`.
 - Any change to understanding must be proposed as an explicit delta.

@@ -11,7 +11,10 @@ fn test_cli_help() {
     cmd.arg("--help");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("CostPilot"));
+        .stdout(predicate::str::contains("Usage: costpilot"))
+        .stdout(predicate::str::contains("scan"))
+        .stdout(predicate::str::contains("diff"))
+        .stdout(predicate::str::contains("validate"));
 }
 
 #[test]
@@ -210,7 +213,8 @@ fn test_cli_diff_missing_before_file() {
         .arg("nonexistent2.json");
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("Diff requires CostPilot Premium"));
+        .stderr(predicate::str::contains("UpgradeRequired"))
+        .stderr(predicate::str::contains("Diff"));
 }
 
 #[test]
@@ -320,7 +324,8 @@ fn test_cli_diff_with_identical_files() {
         .arg(temp_file2.path());
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("Diff requires CostPilot Premium"));
+        .stderr(predicate::str::contains("UpgradeRequired"))
+        .stderr(predicate::str::contains("Diff"));
 }
 
 #[test]
@@ -358,9 +363,10 @@ fn test_cli_map_with_valid_json() {
 
     let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("map").arg(temp_file.path());
-    cmd.assert().failure().stderr(predicate::str::contains(
-        "Deep mapping requires CostPilot Premium",
-    ));
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("UpgradeRequired"))
+        .stderr(predicate::str::contains("Deep mapping"));
 }
 
 #[test]
@@ -446,9 +452,9 @@ fn test_cli_slo_burn_with_valid_config() {
         .arg(&slo_path)
         .arg("--snapshots-dir")
         .arg(&snapshots_path);
-    cmd.assert().failure().stderr(predicate::str::contains(
-        "SLO features require premium license",
-    ));
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("require CostPilot Premium"));
 }
 
 // Helper function to create test snapshots
