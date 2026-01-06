@@ -35,7 +35,7 @@ Generated: <!-- DASHBOARD_TIMESTAMP -->
 - **Check Interval**: 15 minutes
 - **Alert Throttling**: 60 minutes
 - **Log Retention**: 30 days
-- **Notification Channels**: Email, Slack, Webhook
+- **Notification Channels**: Email, Webhook
 
 ## Quick Actions
 - [Run Manual Check](scripts/synthetic_monitoring.sh)

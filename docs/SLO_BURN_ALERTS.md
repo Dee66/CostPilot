@@ -377,7 +377,7 @@ Keep snapshots for:
 - **Anomaly Detection**: Identify sudden cost spikes
 - **Multi-Trend Analysis**: Detect trend shifts
 - **Bayesian Forecasting**: Probabilistic predictions
-- **Alert Integration**: Slack/Teams/PagerDuty webhooks
+- **Alert Integration**: Teams/PagerDuty webhooks
 
 ## Performance
 

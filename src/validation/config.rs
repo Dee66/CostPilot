@@ -96,9 +96,6 @@ pub struct SloConfig {
 pub struct IntegrationsConfig {
     #[serde(default)]
     pub github: Option<GithubIntegration>,
-
-    #[serde(default)]
-    pub slack: Option<SlackIntegration>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -106,13 +103,6 @@ pub struct GithubIntegration {
     pub enabled: bool,
     #[serde(default)]
     pub comment_on_pr: Option<bool>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SlackIntegration {
-    pub enabled: bool,
-    #[serde(default)]
-    pub webhook_url: Option<String>,
 }
 
 pub struct ConfigValidator;
@@ -224,35 +214,6 @@ impl ConfigValidator {
                             .with_warning_code("W102")
                             .with_suggestion("Use .yaml or .yml extension"),
                     );
-                }
-            }
-        }
-
-        // Slack webhook validation
-        if let Some(integrations) = &config.integrations {
-            if let Some(slack) = &integrations.slack {
-                if slack.enabled {
-                    if let Some(webhook) = &slack.webhook_url {
-                        if !webhook.starts_with("https://hooks.slack.com/") {
-                            report.add_error(
-                                ValidationError::new("Invalid Slack webhook URL")
-                                    .with_field("integrations.slack.webhook_url")
-                                    .with_error_code("E104")
-                                    .with_hint(
-                                        "Webhook URL must start with 'https://hooks.slack.com/'",
-                                    ),
-                            );
-                        }
-                    } else {
-                        report.add_error(
-                            ValidationError::new(
-                                "Slack integration enabled but webhook_url is missing",
-                            )
-                            .with_field("integrations.slack.webhook_url")
-                            .with_error_code("E105")
-                            .with_hint("Add 'webhook_url' field or disable Slack integration"),
-                        );
-                    }
                 }
             }
         }

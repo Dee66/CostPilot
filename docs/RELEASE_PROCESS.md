@@ -74,7 +74,7 @@ Follow [Keep a Changelog](https://keepachangelog.com/) format:
 ### Added
 - Azure provider support for cost estimation
 - Cost anomaly detection with ML models
-- Slack notification integration
+- Notification integration
 
 ### Changed
 - Improved policy DSL error messages
@@ -243,7 +243,7 @@ jobs:
 
 - **Azure Support:** Full cost estimation for Azure resources
 - **ML Anomaly Detection:** Automatically detect cost anomalies using machine learning
-- **Slack Integration:** Get notified of cost changes in Slack channels
+- **Webhook Integration:** Get notified of cost changes via webhooks
 
 ### Improvements
 
@@ -357,7 +357,7 @@ Create announcement post at https://github.com/Dee66/CostPilot/discussions
 
 ✨ Azure support
 🤖 ML-powered anomaly detection
-💬 Slack notifications
+💬 Webhook notifications
 
 Install: curl -fsSL https://costpilot.dev/install.sh | bash
 

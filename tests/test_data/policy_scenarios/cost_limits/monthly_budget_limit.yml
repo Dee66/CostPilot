@@ -73,15 +73,6 @@ notifications:
         - "engineering@company.com"
         - "finance@company.com"
       subject_template: "CostPilot Alert: {{percentage}}% of monthly budget used"
-    slack:
-      webhook_url: "${SLACK_WEBHOOK_URL}"
-      channel: "#cost-alerts"
-      message_template: |
-        🚨 *CostPilot Budget Alert*
-        Monthly budget usage: {{percentage}}%
-        Current spend: ${{current_cost}}
-        Budget limit: ${{budget_limit}}
-        Resources affected: {{resource_count}}
     pagerduty:
       integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
       severity: "critical"

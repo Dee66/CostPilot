@@ -639,7 +639,7 @@ if policy_result.has_blocking_violations() {
 - **RBAC Integration**: Role-based policy management
 - **Audit Trail**: Complete change history with diffs
 - **Policy Compliance Reporting**: Automated compliance reports
-- **Slack/Email Integration**: Notification on violations
+- **Email/Webhook Integration**: Notification on violations
 - **Dashboard**: Web UI for policy management
 - **GraphQL API**: Query policies via GraphQL
 

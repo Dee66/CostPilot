@@ -464,7 +464,7 @@ Future: SLO violations can be exempted with justification and expiration.
 
 ### Planned for Enterprise
 - **Approval Workflow**: Override strict-block SLOs with multi-party approval
-- **Slack/Teams Integration**: Real-time SLO violation notifications
+- **Teams Integration**: Real-time SLO violation notifications
 - **Custom Webhooks**: Trigger external systems on violations
 - **Cost Attribution**: Link SLOs to business units or projects
 - **Forecasting**: Predict future SLO violations based on trends

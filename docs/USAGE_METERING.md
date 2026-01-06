@@ -714,7 +714,6 @@ fn test_high_volume_events() {
 - Stripe for automated billing
 - AWS Marketplace for reseller billing
 - Salesforce for CRM integration
-- Slack notifications for budget alerts
 
 ### 5. Budgets & Alerts
 ```rust
