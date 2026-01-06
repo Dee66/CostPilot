@@ -47,25 +47,6 @@ send_email_alert() {
     fi
 }
 
-# Function to send Slack alert
-send_slack_alert() {
-    local message=$1
-    local webhook_url=$ALERT_SLACK_WEBHOOK
-
-    if [ -n "$webhook_url" ]; then
-        local payload="{\"text\":\"$message\"}"
-
-        if command -v curl >/dev/null 2>&1; then
-            curl -X POST -H 'Content-type: application/json' --data "$payload" "$webhook_url" >/dev/null 2>&1
-            log_alert "INFO" "Slack alert sent"
-        else
-            log_alert "WARN" "curl not available for Slack notifications"
-        fi
-    else
-        log_alert "INFO" "Slack webhook not configured"
-    fi
-}
-
 # Function to send webhook alert
 send_webhook_alert() {
     local payload=$1
@@ -138,7 +119,6 @@ Please investigate immediately."
             echo
 
             send_email_alert "$subject" "$body"
-            send_slack_alert "$subject\n\n$body"
             send_webhook_alert "{\"alert_type\":\"failure\",\"failures\":$failures,\"total_checks\":$total_checks,\"results_file\":\"$results_file\"}"
         fi
     fi
@@ -162,7 +142,6 @@ Please review when convenient."
             echo
 
             send_email_alert "$subject" "$body"
-            send_slack_alert "$subject\n\n$body"
         fi
     fi
 
@@ -223,7 +202,6 @@ show_alert_status() {
     echo
     echo "Configuration:"
     echo "  Email recipient: ${ALERT_EMAIL:-"not configured"}"
-    echo "  Slack webhook: ${ALERT_SLACK_WEBHOOK:+"configured"}"
     echo "  Webhook URL: ${ALERT_WEBHOOK_URL:+"configured"}"
     echo "  Throttle minutes: ${ALERT_THROTTLE_MINUTES:-60}"
     echo "  Log retention: ${ALERT_LOG_RETENTION_DAYS:-30} days"
@@ -265,7 +243,6 @@ If you received this, the alert system is working correctly."
 
             echo "Sending test alert..."
             send_email_alert "$test_subject" "$test_body"
-            send_slack_alert "$test_subject\n\n$test_body"
             send_webhook_alert "{\"alert_type\":\"test\",\"message\":\"Alert system test\",\"timestamp\":\"$(date -Iseconds)\"}"
             log_alert "INFO" "Test alert sent"
             ;;

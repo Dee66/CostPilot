@@ -1,7 +1,7 @@
 // Cost diff validation tests
 
 use costpilot::engines::prediction::PredictionEngine;
-use costpilot::engines::shared::models::{ChangeAction, ResourceChange, Severity};
+use costpilot::engines::shared::models::{ChangeAction, ResourceChange};
 use serde_json::json;
 
 #[test]

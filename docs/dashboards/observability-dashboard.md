@@ -104,7 +104,6 @@ Generated: 2025-12-20T13:25:52+02:00
 
 ### Alert Delivery
 - **Email Delivery Success**: 99%
-- **Slack Delivery Success**: 98%
 - **PagerDuty Delivery Success**: 100%
 - **Webhook Delivery Success**: 97%
 

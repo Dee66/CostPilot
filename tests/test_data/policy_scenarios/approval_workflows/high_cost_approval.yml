@@ -172,11 +172,6 @@ integrations:
       cost_estimate: "customfield_10001"
       approval_status: "customfield_10002"
 
-  slack:
-    enabled: true
-    approval_channel: "#resource-approvals"
-    emergency_channel: "#emergency-approvals"
-
 # Audit and compliance
 audit:
   enabled: true
