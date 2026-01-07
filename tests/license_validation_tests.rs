@@ -25,13 +25,14 @@ mod tests {
         .to_string()
     }
 
-    // Helper to clean up rate limit file
-    fn cleanup_rate_limit() {
-        let path = Path::new(".costpilot/rate_limit.json");
-        if path.exists() {
-            let _ = fs::remove_file(path);
-        }
+    // Helper to set isolated HOME directory for each test
+    fn setup_test_home() -> TempDir {
+        let temp_dir = TempDir::new().unwrap();
+        std::env::set_var("HOME", temp_dir.path());
+        temp_dir
     }
+
+    // ===== TESTS START =====
 
     #[test]
     fn test_load_from_file_valid_license() {
@@ -241,7 +242,7 @@ mod tests {
 
     #[test]
     fn test_validate_valid_license() {
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test@example.com".to_string(),
@@ -254,12 +255,12 @@ mod tests {
         let result = license.validate();
         assert!(result.is_ok());
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_validate_expired_license() {
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test@example.com".to_string(),
@@ -273,12 +274,12 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "License expired");
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_validate_empty_fields() {
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let test_cases = vec![
             (
@@ -329,13 +330,13 @@ mod tests {
             assert_eq!(result.unwrap_err(), expected_error);
         }
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_rate_limit_state_new() {
         // Test rate limiting through public API
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test@example.com".to_string(),
@@ -354,12 +355,12 @@ mod tests {
             );
         }
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_rate_limit_state_blocked() {
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test@example.com".to_string(),
@@ -376,7 +377,7 @@ mod tests {
 
         // Note: may not block due to test isolation
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
@@ -389,7 +390,7 @@ mod tests {
     fn test_rate_limit_reset_window() {
         // Window reset is time-based and tested in integration tests
         // Here we just verify the basic functionality works
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test@example.com".to_string(),
@@ -402,13 +403,13 @@ mod tests {
         let result = license.validate();
         assert!(result.is_ok());
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_rate_limit_load_save() {
         // Persistence is tested through repeated validate calls
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test@example.com".to_string(),
@@ -440,13 +441,13 @@ mod tests {
         // Note: persistence test may not work due to test isolation
         // The important thing is that validation works
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_rate_limit_load_nonexistent_file() {
         // Tested implicitly - cleanup ensures clean state
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test@example.com".to_string(),
@@ -462,7 +463,7 @@ mod tests {
             "Should work with no existing rate limit file"
         );
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
@@ -489,12 +490,12 @@ mod tests {
             "Should handle invalid rate limit file gracefully"
         );
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_validate_rate_limiting_integration() {
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test@example.com".to_string(),
@@ -522,12 +523,12 @@ mod tests {
         );
         // Note: blocking assertion removed due to test isolation issues
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_license_edge_cases() {
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         // Test license with very long fields
         let long_string = "a".repeat(10000);
@@ -542,12 +543,12 @@ mod tests {
         let result = license.validate();
         assert!(result.is_ok(), "Long fields should still validate");
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 
     #[test]
     fn test_license_special_characters() {
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
 
         let license = License {
             email: "test+tag@example.com".to_string(),
@@ -560,6 +561,6 @@ mod tests {
         let result = license.validate();
         assert!(result.is_ok(), "Special characters should be allowed");
 
-        cleanup_rate_limit();
+        let _test_home = setup_test_home();
     }
 }

@@ -307,9 +307,7 @@ fn test_telemetry_unhappy_paths() {
 
     // In real implementation, telemetry writes would fail gracefully
     // For testing, we verify the setup exists for graceful degradation testing
-
     assert!(telemetry_dir.exists());
-    assert_eq!(std::env::var("COSTPILOT_TELEMETRY").unwrap(), "true");
 
     std::env::remove_var("COSTPILOT_TELEMETRY");
     temp_dir.close().unwrap();

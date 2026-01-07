@@ -367,6 +367,9 @@ mod tests {
             evidence: vec![],
             suggested_fix: None,
             cost_impact: Some(560.0),
+            confidence: None,
+            thresholds: None,
+            assumptions: None,
         };
 
         let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern], None);
@@ -409,6 +412,9 @@ mod tests {
             evidence: vec![],
             suggested_fix: None,
             cost_impact: None,
+            confidence: None,
+            thresholds: None,
+            assumptions: None,
         };
 
         let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern], None);
@@ -450,6 +456,9 @@ mod tests {
             evidence: vec![],
             suggested_fix: None,
             cost_impact: None,
+            confidence: None,
+            thresholds: None,
+            assumptions: None,
         };
 
         let snippet = SnippetGenerator::generate(&detection, &change, &[anti_pattern], None);

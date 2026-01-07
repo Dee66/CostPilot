@@ -32,33 +32,33 @@ fn snapshot_ec2_t3_medium_create() {
         }
     })]);
 
-    assert_json_snapshot!(plan, @r###"
+    assert_json_snapshot!(plan, @r#"
     {
+      "configuration": {
+        "root_module": {}
+      },
       "format_version": "1.0",
-      "terraform_version": "1.5.0",
       "resource_changes": [
         {
           "address": "aws_instance.web",
-          "mode": "managed",
-          "type": "aws_instance",
-          "name": "web",
           "change": {
             "actions": [
               "create"
             ],
-            "before": null,
             "after": {
-              "instance_type": "t3.medium",
-              "ami": "ami-0c55b159cbfafe1f0"
-            }
-          }
+              "ami": "ami-0c55b159cbfafe1f0",
+              "instance_type": "t3.medium"
+            },
+            "before": null
+          },
+          "mode": "managed",
+          "name": "web",
+          "type": "aws_instance"
         }
       ],
-      "configuration": {
-        "root_module": {}
-      }
+      "terraform_version": "1.5.0"
     }
-    "###);
+    "#);
 }
 
 #[test]

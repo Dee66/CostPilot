@@ -1,5 +1,8 @@
 // CostPilot library root
 
+// Include auto-generated cryptographic keys
+include!(concat!(env!("OUT_DIR"), "/keys.rs"));
+
 pub mod artifact;
 pub mod cli;
 pub mod config;

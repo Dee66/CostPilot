@@ -1,0 +1,114 @@
+{
+  "format_version": "1.1",
+  "terraform_version": "1.5.0",
+  "resource_changes": [
+    {
+      "address": "aws_instance.ec2",
+      "type": "aws_instance",
+      "name": "ec2",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_type": "m5.4xlarge"
+        }
+      }
+    },
+    {
+      "address": "aws_db_instance.rds",
+      "type": "aws_db_instance",
+      "name": "rds",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_class": "db.r5.xlarge",
+          "allocated_storage": 2000,
+          "storage_type": "gp2"
+        }
+      }
+    },
+    {
+      "address": "aws_lambda_function.lambda",
+      "type": "aws_lambda_function",
+      "name": "lambda",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "function_name": "test",
+          "timeout": 150
+        }
+      }
+    },
+    {
+      "address": "aws_s3_bucket.bucket",
+      "type": "aws_s3_bucket",
+      "name": "bucket",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "bucket": "test-bucket"
+        }
+      }
+    },
+    {
+      "address": "aws_ebs_volume.large",
+      "type": "aws_ebs_volume",
+      "name": "large",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "size": 1500
+        }
+      }
+    },
+    {
+      "address": "aws_api_gateway_rest_api.api",
+      "type": "aws_api_gateway_rest_api",
+      "name": "api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "name": "test-api"
+        }
+      }
+    },
+    {
+      "address": "aws_ecs_task_definition.fargate",
+      "type": "aws_ecs_task_definition",
+      "name": "fargate",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "family": "test-task",
+          "requires_compatibilities": ["FARGATE"],
+          "cpu": "2048",
+          "memory": "8192"
+        }
+      }
+    },
+    {
+      "address": "aws_nat_gateway.nat",
+      "type": "aws_nat_gateway",
+      "name": "nat",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {}
+      }
+    }
+  ]
+}

@@ -313,7 +313,12 @@ fn apply_code_obfuscation() {
         println!("cargo:warning=Symbol stripping failed or strip not available");
     }
 
-    // Additional obfuscation: remove debug info and optimize further
+    // Additional obfuscation: encrypt string literals
+    encrypt_string_literals(&binary_path);
+
+    // Apply control flow obfuscation if available
+    apply_control_flow_obfuscation(&binary_path);
+
     println!("cargo:warning=Code obfuscation completed");
 }
 

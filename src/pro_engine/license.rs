@@ -2,7 +2,8 @@
 
 use crate::pro_engine::loader::{EncryptedBundle, LoaderError};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use sha2::{Sha256, Digest};
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Rate limiting state for license validation
@@ -11,6 +12,8 @@ struct RateLimitState {
     attempts: u32,
     last_attempt: u64,
     blocked_until: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hmac: Option<String>,
 }
 
 impl RateLimitState {
@@ -19,19 +22,62 @@ impl RateLimitState {
     const BLOCK_SECS: u64 = 300; // 5 minute block after exceeding limit
 
     fn new() -> Self {
-        Self {
+        let mut state = Self {
             attempts: 0,
             last_attempt: 0,
             blocked_until: None,
+            hmac: None,
+        };
+        state.compute_hmac();
+        state
+    }
+
+    /// Compute HMAC of state data to prevent tampering
+    fn compute_hmac(&mut self) {
+        let data = format!("{}:{}:{:?}", self.attempts, self.last_attempt, self.blocked_until);
+        let mut hasher = Sha256::new();
+        hasher.update(data.as_bytes());
+        hasher.update(b"costpilot-rate-limit-v1"); // Secret salt
+        let result = hasher.finalize();
+        self.hmac = Some(hex::encode(result));
+    }
+
+    /// Verify HMAC to detect tampering
+    fn verify_hmac(&self) -> bool {
+        let expected_data = format!("{}:{}:{:?}", self.attempts, self.last_attempt, self.blocked_until);
+        let mut hasher = Sha256::new();
+        hasher.update(expected_data.as_bytes());
+        hasher.update(b"costpilot-rate-limit-v1");
+        let expected = hex::encode(hasher.finalize());
+
+        match &self.hmac {
+            Some(stored) => stored == &expected,
+            None => false, // No HMAC = invalid (legacy files)
         }
     }
 
     fn load() -> Self {
-        let path = Path::new(".costpilot/rate_limit.json");
-        if path.exists() {
-            if let Ok(content) = std::fs::read_to_string(path) {
-                if let Ok(state) = serde_json::from_str(&content) {
-                    return state;
+        // Use HOME environment variable if set, otherwise use relative path
+        let home_dir = std::env::var("HOME").ok().map(PathBuf::from);
+        Self::load_from_home(home_dir.as_deref())
+    }
+
+    fn load_from_home(home_override: Option<&Path>) -> Self {
+        let rate_limit_path = if let Some(home) = home_override {
+            home.join(".costpilot").join("rate_limit.json")
+        } else {
+            PathBuf::from(".costpilot/rate_limit.json")
+        };
+
+        if rate_limit_path.exists() {
+            if let Ok(content) = std::fs::read_to_string(&rate_limit_path) {
+                if let Ok(state) = serde_json::from_str::<RateLimitState>(&content) {
+                    // Verify HMAC to detect tampering
+                    if state.verify_hmac() {
+                        return state;
+                    }
+                    // Tampered file detected - reset to clean state
+                    eprintln!("Warning: Rate limit file integrity check failed. Resetting.");
                 }
             }
         }
@@ -39,11 +85,22 @@ impl RateLimitState {
     }
 
     fn save(&self) {
-        let path = Path::new(".costpilot/rate_limit.json");
-        if let Some(parent) = path.parent() {
+        // Use HOME environment variable if set, otherwise use relative path
+        let home_dir = std::env::var("HOME").ok().map(PathBuf::from);
+        self.save_to_home(home_dir.as_deref())
+    }
+
+    fn save_to_home(&self, home_override: Option<&Path>) {
+        let rate_limit_path = if let Some(home) = home_override {
+            home.join(".costpilot").join("rate_limit.json")
+        } else {
+            PathBuf::from(".costpilot/rate_limit.json")
+        };
+
+        if let Some(parent) = rate_limit_path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        let _ = std::fs::write(path, serde_json::to_string(self).unwrap_or_default());
+        let _ = std::fs::write(&rate_limit_path, serde_json::to_string(self).unwrap_or_default());
     }
 
     fn is_blocked(&self) -> bool {
@@ -80,7 +137,8 @@ impl RateLimitState {
             self.blocked_until = Some(now + Self::BLOCK_SECS);
         }
 
-        // updated rate limit state (no debug output in production)
+        // Recompute HMAC after state change
+        self.compute_hmac();
     }
 }
 
@@ -150,7 +208,7 @@ impl License {
 
         // Check if currently blocked
         if rate_limit.is_blocked() {
-            return Err("Rate limit exceeded. Try again later.".to_string());
+            return Err("Rate limit exceeded. Try again later".to_string());
         }
 
         // Record this attempt

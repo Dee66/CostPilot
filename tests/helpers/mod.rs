@@ -14,6 +14,7 @@ pub mod autofix;
 pub mod baselines;
 pub mod metering;
 pub mod trend;
+pub mod license;
 
 pub use fixtures::*;
 pub use assertions::*;
@@ -24,6 +25,7 @@ pub use autofix::*;
 pub use baselines::*;
 pub use metering::*;
 pub use trend::*;
+pub use license::*;
 
 use costpilot::edition::{EditionContext, EditionMode, Capabilities};
 

@@ -253,6 +253,9 @@ mod tests {
             evidence: vec![],
             suggested_fix: None,
             cost_impact: None,
+            confidence: None,
+            thresholds: None,
+            assumptions: None,
         };
 
         let analysis = RootCauseAnalysis::analyze(&change, &detection, &[pattern]);

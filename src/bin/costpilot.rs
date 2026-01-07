@@ -103,7 +103,7 @@ enum Commands {
     SloBurn {
         #[arg(short, long)]
         config: Option<PathBuf>,
-        #[arg(short = 's', long = "snapshots-dir")]
+        #[arg(long = "snapshots-dir")]
         snapshots: Option<PathBuf>,
         #[arg(long)]
         min_snapshots: Option<usize>,
@@ -169,7 +169,7 @@ enum SloCommands {
         #[arg(short, long)]
         slo: Option<PathBuf>,
 
-        #[arg(short = 'd', long)]
+        #[arg(long)]
         snapshots: Option<PathBuf>,
 
         #[arg(long, default_value = "3")]
@@ -203,7 +203,7 @@ enum SloCli {
     Burn {
         #[arg(short, long)]
         config: Option<PathBuf>,
-        #[arg(short = 'd', long)]
+        #[arg(long)]
         snapshots: Option<PathBuf>,
         #[arg(long)]
         min_snapshots: Option<usize>,

@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "format_version": "0.2",
   "terraform_version": "1.0.0",
   "planned_values": {
     "root_module": {
@@ -27,6 +27,8 @@
   "resource_changes": [
     {
       "address": "aws_rds_instance.example",
+      "type": "aws_rds_instance",
+      "name": "example",
       "change": {
         "actions": ["create"],
         "before": null,

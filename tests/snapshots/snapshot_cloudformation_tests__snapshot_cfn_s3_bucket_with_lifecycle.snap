@@ -1,0 +1,31 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "DataBucket": {
+      "Properties": {
+        "BucketName": "my-data-bucket",
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Status": "Enabled",
+              "Transitions": [
+                {
+                  "StorageClass": "GLACIER",
+                  "TransitionInDays": 90
+                }
+              ]
+            }
+          ]
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        }
+      },
+      "Type": "AWS::S3::Bucket"
+    }
+  }
+}

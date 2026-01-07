@@ -23,14 +23,14 @@ def test_binary_garbage_in_json():
             f.write(b'"}}}')
 
         result = subprocess.run(
-            ["costpilot", "scan", "--plan", str(template_path)],
+            ["./target/debug/costpilot", "scan", "--plan", str(template_path)],
             capture_output=True,
             text=True,
             timeout=30
         )
 
         # Should reject binary garbage
-        assert result.returncode in [2, 101], "Should reject binary garbage in JSON"
+        assert result.returncode == 1, "Should reject binary garbage in JSON"
 
 
 def test_non_utf8_characters():

@@ -251,8 +251,14 @@ EOF
 
 # Get maximum memory usage during test
 get_max_memory_usage() {
-    # Simple approximation - in production would use proper monitoring
-    echo "512"  # Placeholder
+    # Use configurable command for testability
+    local cmd="${MEMORY_CMD:-ps aux | grep -E 'cargo.*test' | grep -v grep | head -1 | awk '{print \$6}'}"
+    local mem_kb=$(eval "$cmd")
+    if [[ -z "$mem_kb" ]]; then
+        echo "0"  # No process found
+    else
+        echo "$mem_kb"
+    fi
 }
 
 # Assess scalability based on results
@@ -396,5 +402,49 @@ generate_scalability_recommendations() {
             ;;
     esac
 }
+
+# Test functions for memory usage calculation
+test_get_max_memory_usage_with_process() {
+    export MEMORY_CMD="echo 1024"
+    local result=$(get_max_memory_usage)
+    if [[ "$result" == "1024" ]]; then
+        echo "PASS: test_get_max_memory_usage_with_process"
+    else
+        echo "FAIL: test_get_max_memory_usage_with_process - expected 1024, got $result"
+    fi
+}
+
+test_get_max_memory_usage_no_process() {
+    export MEMORY_CMD="echo ''"
+    local result=$(get_max_memory_usage)
+    if [[ "$result" == "0" ]]; then
+        echo "PASS: test_get_max_memory_usage_no_process"
+    else
+        echo "FAIL: test_get_max_memory_usage_no_process - expected 0, got $result"
+    fi
+}
+
+test_get_max_memory_usage_large_value() {
+    export MEMORY_CMD="echo 8388608"  # 8GB in KB
+    local result=$(get_max_memory_usage)
+    if [[ "$result" == "8388608" ]]; then
+        echo "PASS: test_get_max_memory_usage_large_value"
+    else
+        echo "FAIL: test_get_max_memory_usage_large_value - expected 8388608, got $result"
+    fi
+}
+
+run_tests() {
+    echo "Running tests for validate_test_scalability.sh"
+    test_get_max_memory_usage_with_process
+    test_get_max_memory_usage_no_process
+    test_get_max_memory_usage_large_value
+    echo "Tests completed"
+}
+
+# Run tests if --test flag is provided
+if [[ "$1" == "--test" ]]; then
+    run_tests
+fi
 
 main "$@"

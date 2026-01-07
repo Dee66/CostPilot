@@ -1,0 +1,15 @@
+{
+  "test_count": 100,
+  "parallel_jobs": 8,
+  "total_time_seconds": 1612,
+  "test_success": false,
+  "performance_metrics": {
+    "tests_per_second": .06,
+    "time_per_test_ms": 16120.00
+  },
+  "resource_usage": {
+    "max_memory_mb": 2732,
+    "cpu_cores_used": 8
+  },
+  "scalability_assessment": "failed"
+}

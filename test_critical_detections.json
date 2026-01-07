@@ -1,0 +1,83 @@
+{
+  "format_version": "1.1",
+  "terraform_version": "1.5.0",
+  "resource_changes": [
+    {
+      "address": "aws_instance.oversized",
+      "type": "aws_instance",
+      "name": "oversized",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_type": "c5.12xlarge"
+        }
+      }
+    },
+    {
+      "address": "aws_instance.expensive_compute",
+      "type": "aws_instance",
+      "name": "expensive_compute",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_type": "c5.4xlarge",
+          "tags": {
+            "Workload": "web-server"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_lambda_function.high_memory",
+      "type": "aws_lambda_function",
+      "name": "high_memory",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "function_name": "processor",
+          "memory_size": 3584,
+          "timeout": 300
+        }
+      }
+    },
+    {
+      "address": "aws_lambda_function.default_memory",
+      "type": "aws_lambda_function",
+      "name": "default_memory",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "function_name": "handler",
+          "memory_size": 128,
+          "timeout": 30
+        }
+      }
+    },
+    {
+      "address": "aws_s3_bucket.data",
+      "type": "aws_s3_bucket",
+      "name": "data",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "bucket": "my-data-bucket",
+          "versioning": [
+            {
+              "enabled": true
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
