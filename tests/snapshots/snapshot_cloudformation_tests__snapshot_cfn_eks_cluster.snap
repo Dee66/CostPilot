@@ -1,0 +1,32 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "EKSCluster": {
+      "Properties": {
+        "Name": "production",
+        "ResourcesVpcConfig": {
+          "SubnetIds": [
+            {
+              "Ref": "Subnet1"
+            },
+            {
+              "Ref": "Subnet2"
+            }
+          ]
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "ClusterRole",
+            "Arn"
+          ]
+        },
+        "Version": "1.28"
+      },
+      "Type": "AWS::EKS::Cluster"
+    }
+  }
+}

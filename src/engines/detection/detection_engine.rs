@@ -3,25 +3,38 @@
 use crate::engines::detection::classifier::RegressionClassifier;
 use crate::engines::detection::severity::{calculate_severity_score, score_to_severity};
 use crate::engines::detection::terraform::{convert_to_resource_changes, parse_terraform_plan};
+use crate::engines::explain::anti_patterns;
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
-use crate::engines::shared::models::{Detection, RegressionType, ResourceChange, Severity};
+use crate::engines::shared::models::{CostEstimate, Detection, RegressionType, ResourceChange, Severity};
+use std::collections::HashMap;
 use std::path::Path;
 
 /// Main detection engine
 pub struct DetectionEngine {
     /// Enable verbose logging
     verbose: bool,
+    /// Enable advanced optimization detection
+    enable_advanced_detection: bool,
 }
 
 impl DetectionEngine {
     /// Create a new detection engine
     pub fn new() -> Self {
-        Self { verbose: false }
+        Self {
+            verbose: false,
+            enable_advanced_detection: true, // Enable by default
+        }
     }
 
     /// Enable verbose mode
     pub fn with_verbose(mut self, verbose: bool) -> Self {
         self.verbose = verbose;
+        self
+    }
+
+    /// Enable or disable advanced optimization detection
+    pub fn with_advanced_detection(mut self, enable: bool) -> Self {
+        self.enable_advanced_detection = enable;
         self
     }
 
@@ -182,6 +195,63 @@ impl DetectionEngine {
     ) -> Result<Vec<Detection>> {
         let mut detections = Vec::new();
 
+        // Build estimates map for batch detection
+        let estimates_map: HashMap<String, CostEstimate> = cost_estimates
+            .iter()
+            .map(|(id, cost, conf)| {
+                (
+                    id.clone(),
+                    CostEstimate::builder()
+                        .resource_id(id.clone())
+                        .monthly_cost(*cost)
+                        .confidence_score(*conf)
+                        .prediction_interval_low(cost * 0.8)
+                        .prediction_interval_high(cost * 1.2)
+                        .build(),
+                )
+            })
+            .collect();
+
+        // Run advanced batch detection if enabled
+        if self.enable_advanced_detection {
+            if self.verbose {
+                println!("Running advanced optimization detection...");
+            }
+            let advanced_patterns = anti_patterns::detect_anti_patterns_batch(changes, &estimates_map);
+
+            if self.verbose {
+                println!("Detected {} advanced optimization opportunities", advanced_patterns.len());
+            }
+
+            // Convert anti-patterns to detections
+            for pattern in advanced_patterns {
+                let severity = match pattern.severity.as_str() {
+                    "HIGH" => Severity::High,
+                    "MEDIUM" => Severity::Medium,
+                    "LOW" => Severity::Low,
+                    "CRITICAL" => Severity::Critical,
+                    _ => Severity::Medium,
+                };
+
+                detections.push(Detection {
+                    rule_id: pattern.pattern_id.clone(),
+                    severity: severity.clone(),
+                    resource_id: pattern.detected_in.clone(),
+                    regression_type: RegressionType::Configuration, // Advanced patterns are config-based
+                    severity_score: match severity {
+                        Severity::Critical => 90,
+                        Severity::High => 70,
+                        Severity::Medium => 45,
+                        Severity::Low => 20,
+                    },
+                    message: format!("{}: {}", pattern.pattern_name, pattern.description),
+                    fix_snippet: pattern.suggested_fix.clone(),
+                    estimated_cost: pattern.cost_impact,
+                });
+            }
+        }
+
+        // Original per-resource detection for baseline anti-patterns
         for change in changes {
             // Find cost estimate for this resource
             let (cost_delta, confidence) = cost_estimates
@@ -198,7 +268,7 @@ impl DetectionEngine {
                 calculate_severity_score(change, cost_delta, &regression_type, confidence);
             let severity = score_to_severity(severity_score);
 
-            // Detect specific anti-patterns
+            // Detect specific anti-patterns (legacy per-resource)
             if let Some(detection) = self.detect_anti_patterns(
                 change,
                 &regression_type,

@@ -161,11 +161,6 @@ pub fn verify_wasm_signature(wasm: &[u8], sig: &[u8]) -> Result<(), String> {
 /// Verify license signature with multiple issuer keys
 #[cfg(not(target_arch = "wasm32"))]
 pub fn verify_license_signature(lic: &super::license::License) -> Result<(), String> {
-    // Skip verification for test licenses
-    if lic.issuer.starts_with("test") {
-        return Ok(());
-    }
-
     // Construct canonical signing message (now includes issuer)
     let message = format!(
         "{}|{}|{}|{}",
@@ -189,7 +184,19 @@ pub fn verify_license_signature(lic: &super::license::License) -> Result<(), Str
 fn get_license_public_key(issuer: &str) -> Result<&'static [u8], String> {
     match issuer {
         "costpilot-v1" => Ok(LICENSE_PUBLIC_KEY),
+        "test-costpilot" => Ok(TEST_LICENSE_PUBLIC_KEY),
         // Add more issuers here for key rotation
         _ => Err(format!("Unknown license issuer: {}", issuer)),
     }
 }
+
+/// Test license public key (corresponds to test signing key in test fixtures)
+/// Generated from ed25519_dalek with seed [42u8; 32]
+/// This allows tests to use real signature verification
+#[cfg(not(target_arch = "wasm32"))]
+const TEST_LICENSE_PUBLIC_KEY: &[u8] = &[
+    0x19, 0x7f, 0x6b, 0x23, 0xe1, 0x6c, 0x85, 0x32,
+    0xc6, 0xab, 0xc8, 0x38, 0xfa, 0xcd, 0x5e, 0xa7,
+    0x89, 0xbe, 0x0c, 0x76, 0xb2, 0x92, 0x03, 0x34,
+    0x03, 0x9b, 0xfa, 0x8b, 0x3d, 0x36, 0x8d, 0x61
+];

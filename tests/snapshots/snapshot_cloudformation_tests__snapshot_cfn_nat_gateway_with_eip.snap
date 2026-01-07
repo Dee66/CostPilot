@@ -1,0 +1,29 @@
+---
+source: tests/snapshot_cloudformation_tests.rs
+expression: template
+---
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "NatGateway": {
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "NatGatewayEIP",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "PublicSubnet"
+        }
+      },
+      "Type": "AWS::EC2::NatGateway"
+    },
+    "NatGatewayEIP": {
+      "Properties": {
+        "Domain": "vpc"
+      },
+      "Type": "AWS::EC2::EIP"
+    }
+  }
+}

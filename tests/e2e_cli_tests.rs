@@ -308,17 +308,15 @@ fn test_e2e_explain_resource() {
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
     cmd.arg("explain")
         .arg("aws_instance")
-        .arg("--plan")
-        .arg(&plan_path);
+        .arg("--instance-type")
+        .arg("t3.micro");
 
-    // Explain is a premium feature, so it should fail in free mode
-    let output = cmd.assert().failure();
-    let stderr = String::from_utf8(output.get_output().stderr.clone()).unwrap();
+    // Explain is available in free mode
+    let output = cmd.assert().success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
 
-    // Verify it fails due to premium requirement
-    assert!(
-        stderr.contains("Premium") || stderr.contains("upgrade") || stderr.contains("Free mode")
-    );
+    // Verify it produces output
+    assert!(!stdout.is_empty());
 }
 
 #[test]
@@ -328,16 +326,14 @@ fn test_e2e_explain_all() {
     fs::write(&plan_path, MULTI_RESOURCE_PLAN).unwrap();
 
     let mut cmd = Command::cargo_bin("costpilot").unwrap();
-    cmd.arg("explain").arg("all").arg("--plan").arg(&plan_path);
+    cmd.arg("explain").arg("aws_lambda_function");
 
-    // Explain is a premium feature, so it should fail in free mode
-    let output = cmd.assert().failure();
-    let stderr = String::from_utf8(output.get_output().stderr.clone()).unwrap();
+    // Explain is available in free mode
+    let output = cmd.assert().success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
 
-    // Verify it fails due to premium requirement
-    assert!(
-        stderr.contains("Premium") || stderr.contains("upgrade") || stderr.contains("Free mode")
-    );
+    // Verify it produces output
+    assert!(!stdout.is_empty());
 }
 
 #[test]

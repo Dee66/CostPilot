@@ -70,28 +70,11 @@ fn create_test_bundle(
     bundle
 }
 
-// Refine the signing key generation logic to ensure valid scalars
+// Generate a valid Ed25519 signing key
 fn generate_valid_signing_key() -> SigningKey {
-    loop {
-        let mut secret_key_bytes = [0u8; 32];
-        OsRng.fill_bytes(&mut secret_key_bytes);
-
-        // Ensure the scalar's high bit is not set and the scalar is clamped
-        secret_key_bytes[0] &= 248; // Clamp the first byte
-        secret_key_bytes[31] &= 127; // Clamp the last byte
-        secret_key_bytes[31] |= 64; // Set the second highest bit
-
-        // Validate the scalar to ensure it is within the Ed25519 curve's range
-        if <subtle::CtOption<Scalar> as Into<Option<Scalar>>>::into(Scalar::from_canonical_bytes(
-            secret_key_bytes,
-        ))
-        .is_some()
-        {
-            return SigningKey::from_bytes(&secret_key_bytes);
-        }
-
-        // regenerate silently
-    }
+    let mut secret_key_bytes = [0u8; 32];
+    OsRng.fill_bytes(&mut secret_key_bytes);
+    SigningKey::from_bytes(&secret_key_bytes)
 }
 
 #[test]

@@ -1,0 +1,56 @@
+{
+  "format_version": "1.1",
+  "terraform_version": "1.5.0",
+  "resource_changes": [
+    {
+      "address": "aws_ecs_task_definition.oversized",
+      "type": "aws_ecs_task_definition",
+      "name": "oversized",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "family": "oversized-task",
+          "requires_compatibilities": ["FARGATE"],
+          "network_mode": "awsvpc",
+          "cpu": "2048",
+          "memory": "8192",
+          "container_definitions": "[{\"name\":\"app\",\"image\":\"nginx\"}]"
+        }
+      }
+    },
+    {
+      "address": "aws_ecs_task_definition.suboptimal_ratio",
+      "type": "aws_ecs_task_definition",
+      "name": "suboptimal_ratio",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "family": "suboptimal-task",
+          "requires_compatibilities": ["FARGATE"],
+          "network_mode": "awsvpc",
+          "cpu": "1024",
+          "memory": "1024",
+          "container_definitions": "[{\"name\":\"app\",\"image\":\"nginx\"}]"
+        }
+      }
+    },
+    {
+      "address": "aws_nat_gateway.main",
+      "type": "aws_nat_gateway",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "allocation_id": "eipalloc-123",
+          "subnet_id": "subnet-123"
+        }
+      }
+    }
+  ]
+}

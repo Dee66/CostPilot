@@ -140,19 +140,31 @@ mod authentication_security_tests {
 
     #[test]
     fn test_brute_force_protection_through_license_verification() {
-        // Clean up any existing rate limit state
-        let rate_limit_path = Path::new(".costpilot/rate_limit.json");
-        if rate_limit_path.exists() {
-            let _ = fs::remove_file(rate_limit_path);
-        }
+        use tempfile::TempDir;
+        use ed25519_dalek::{SigningKey, Signer};
+
+        // Use isolated temp directory for test
+        let temp_dir = TempDir::new().unwrap();
+        std::env::set_var("HOME", temp_dir.path());
+
+        // Create a valid test license
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let issuer = "test-costpilot";
+        let email = "test@example.com";
+        let license_key = "test-key";
+        let expires = "2026-12-31T00:00:00Z";
+
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
 
         // Test brute force protection through repeated license verification attempts
         let license = License {
-            license_key: "test-key".to_string(),
-            email: "test@example.com".to_string(),
-            expires: "2026-12-31T00:00:00Z".to_string(),
-            signature: "test-signature".to_string(),
-            issuer: "costpilot-v1".to_string(),
+            license_key: license_key.to_string(),
+            email: email.to_string(),
+            expires: expires.to_string(),
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
         // Test that repeated attempts eventually trigger rate limiting
@@ -185,8 +197,8 @@ mod authentication_security_tests {
             failure_count
         );
 
-        // Clean up
-        let _ = fs::remove_file(rate_limit_path);
+        // Cleanup handled by TempDir drop
+        std::env::remove_var("HOME");
     }
 
     #[test]
@@ -303,33 +315,43 @@ mod authentication_security_tests {
 
     #[test]
     fn test_multi_factor_like_verification() {
-        // Clean up any existing rate limit state
-        let rate_limit_path = Path::new(".costpilot/rate_limit.json");
-        if rate_limit_path.exists() {
-            let _ = fs::remove_file(rate_limit_path);
-        }
+        use tempfile::TempDir;
+
+        // Use isolated temp directory for test
+        let temp_dir = TempDir::new().unwrap();
+
+        // Create a valid test license using the test fixture infrastructure
+        use ed25519_dalek::{SigningKey, Signer};
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let issuer = "test-costpilot";
+        let email = "test@example.com";
+        let license_key = "test-key-12345";
+        let expires = "2026-12-31T00:00:00Z";
+
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
 
         // Test license verification with multiple validation factors
         let license = License {
-            license_key: "test-key-12345".to_string(),
-            email: "test@example.com".to_string(),
-            expires: "2026-12-31T00:00:00Z".to_string(),
-            signature: "test-signature".to_string(),
-            issuer: "costpilot-v1".to_string(),
+            license_key: license_key.to_string(),
+            email: email.to_string(),
+            expires: expires.to_string(),
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
-        // Current implementation has stub verification that returns true
-        // In a real system, this would verify:
+        // Real implementation now verifies:
         // 1. Key format validity
         // 2. Email format validity
         // 3. Expiration date validity
-        // 4. Cryptographic signature validity
-        // 5. Possibly additional factors like IP binding, device fingerprinting, etc.
+        // 4. Cryptographic signature validity (Ed25519)
+        // 5. Rate limiting to prevent brute force
 
         let is_valid = license.validate().is_ok();
         assert!(
             is_valid,
-            "License verification should succeed (currently stubbed)"
+            "License verification should succeed with valid signature"
         );
 
         // Test with invalid license (though current stub doesn't check)
@@ -344,8 +366,7 @@ mod authentication_security_tests {
         let invalid_valid = invalid_license.validate().is_ok();
         assert!(!invalid_valid, "Invalid license verification should fail");
 
-        // Clean up
-        let _ = fs::remove_file(rate_limit_path);
+        // Cleanup handled by TempDir drop
     }
 
     #[test]

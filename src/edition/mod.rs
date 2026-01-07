@@ -78,8 +78,10 @@ pub struct EditionPaths {
 
 impl Default for EditionPaths {
     fn default() -> Self {
-        let config_dir = dirs::home_dir()
-            .map(|h| h.join(".costpilot"))
+        let config_dir = std::env::var("HOME")
+            .ok()
+            .map(|h| PathBuf::from(h).join(".costpilot"))
+            .or_else(|| dirs::home_dir().map(|h| h.join(".costpilot")))
             .unwrap_or_else(|| PathBuf::from(".costpilot"));
 
         Self { config_dir }

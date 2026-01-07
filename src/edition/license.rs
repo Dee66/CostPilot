@@ -26,10 +26,26 @@ impl License {
         Ok(Some(license))
     }
 
-    /// Verify license signature (stub implementation)
+    /// Verify license signature
     pub fn verify_signature(&self) -> bool {
-        // Stub: return true for now
-        true
+        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+
+        // Get the embedded public key
+        let public_key_bytes = crate::LICENSE_PUBLIC_KEY;
+        let public_key = VerifyingKey::from_bytes(public_key_bytes.try_into().unwrap()).unwrap();
+
+        // Create signature from the stored bytes
+        let sig_bytes: [u8; 64] = match self.signature.as_bytes().try_into() {
+            Ok(bytes) => bytes,
+            Err(_) => return false,
+        };
+        let signature = Signature::from_bytes(&sig_bytes);
+
+        // Data to verify: email + license_key + expires
+        let data = format!("{}{}{}", self.email, self.license_key, self.expires);
+
+        // Verify the signature
+        public_key.verify(data.as_bytes(), &signature).is_ok()
     }
 }
 

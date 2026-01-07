@@ -1,0 +1,172 @@
+{
+  "format_version": "1.1",
+  "terraform_version": "1.5.0",
+  "resource_changes": [
+    {
+      "address": "aws_instance.web",
+      "type": "aws_instance",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_type": "c5.8xlarge"
+        }
+      }
+    },
+    {
+      "address": "aws_db_instance.main",
+      "type": "aws_db_instance",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "instance_class": "db.r5.2xlarge",
+          "allocated_storage": 2000,
+          "storage_type": "gp2"
+        }
+      }
+    },
+    {
+      "address": "aws_lambda_function.processor",
+      "type": "aws_lambda_function",
+      "name": "processor",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "memory_size": 4096,
+          "timeout": 180
+        }
+      }
+    },
+    {
+      "address": "aws_s3_bucket.archive",
+      "type": "aws_s3_bucket",
+      "name": "archive",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "bucket": "archives",
+          "versioning": [{"enabled": true}]
+        }
+      }
+    },
+    {
+      "address": "aws_ecs_task_definition.app",
+      "type": "aws_ecs_task_definition",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "requires_compatibilities": ["FARGATE"],
+          "cpu": "4096",
+          "memory": "16384"
+        }
+      }
+    },
+    {
+      "address": "aws_nat_gateway.prod",
+      "type": "aws_nat_gateway",
+      "name": "prod",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "connectivity_type": "public"
+        }
+      }
+    },
+    {
+      "address": "aws_elasticache_cluster.redis",
+      "type": "aws_elasticache_cluster",
+      "name": "redis",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "node_type": "cache.r5.4xlarge",
+          "tags": {"Environment": "production"}
+        }
+      }
+    },
+    {
+      "address": "aws_opensearch_domain.logs",
+      "type": "aws_opensearch_domain",
+      "name": "logs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "cluster_config": [{"instance_type": "r6g.8xlarge.search"}],
+          "ebs_options": [{"volume_type": "gp2"}]
+        }
+      }
+    },
+    {
+      "address": "aws_kinesis_stream.events",
+      "type": "aws_kinesis_stream",
+      "name": "events",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "shard_count": 20,
+          "stream_mode_details": [{"stream_mode": "PROVISIONED"}]
+        }
+      }
+    },
+    {
+      "address": "aws_api_gateway_rest_api.api",
+      "type": "aws_api_gateway_rest_api",
+      "name": "api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "name": "api"
+        }
+      }
+    },
+    {
+      "address": "aws_cloudfront_distribution.cdn",
+      "type": "aws_cloudfront_distribution",
+      "name": "cdn",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "price_class": "PriceClass_All",
+          "default_cache_behavior": [{"compress": false}]
+        }
+      }
+    },
+    {
+      "address": "aws_ebs_volume.data",
+      "type": "aws_ebs_volume",
+      "name": "data",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "size": 1500
+        }
+      }
+    }
+  ]
+}
