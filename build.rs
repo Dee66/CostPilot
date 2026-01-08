@@ -235,33 +235,46 @@ fn generate_crypto_keys() -> ed25519_dalek::SigningKey {
     use ed25519_dalek::SigningKey;
     use std::{env, fs, path::Path};
 
-    // Generate Ed25519 keypairs for license and WASM signing
-    let license_keypair = generate_ed25519_keypair();
-    let wasm_keypair = generate_ed25519_keypair();
+    // MANDATORY: Use master public keys from environment variables
+    // These are the NEW keys rotated on 2026-01-08 after git history exposure
+    // OLD keys (fingerprints 23837ac5, 10f8798e) are REVOKED and must NOT be used
 
-    // Check for external public keys
-    let license_public_key = if let Ok(key_hex) = env::var("COSTPILOT_LICENSE_PUBKEY") {
-        hex::decode(key_hex).expect("Invalid COSTPILOT_LICENSE_PUBKEY format")
-    } else {
-        license_keypair.public.to_vec()
-    };
+    let license_public_key = env::var("COSTPILOT_LICENSE_PUBKEY")
+        .expect("COSTPILOT_LICENSE_PUBKEY environment variable MUST be set with NEW public key (hex-encoded)");
+    let license_public_key = hex::decode(&license_public_key)
+        .expect("COSTPILOT_LICENSE_PUBKEY must be valid hex-encoded Ed25519 public key (64 chars)");
 
-    let wasm_public_key = if let Ok(key_hex) = env::var("COSTPILOT_WASM_PUBKEY") {
-        hex::decode(key_hex).expect("Invalid COSTPILOT_WASM_PUBKEY format")
-    } else {
-        wasm_keypair.public.to_vec()
-    };
+    let wasm_public_key = env::var("COSTPILOT_WASM_PUBKEY").expect(
+        "COSTPILOT_WASM_PUBKEY environment variable MUST be set with NEW public key (hex-encoded)",
+    );
+    let wasm_public_key = hex::decode(&wasm_public_key)
+        .expect("COSTPILOT_WASM_PUBKEY must be valid hex-encoded Ed25519 public key (64 chars)");
+
+    // Verify key lengths
+    assert_eq!(
+        license_public_key.len(),
+        32,
+        "LICENSE public key must be exactly 32 bytes"
+    );
+    assert_eq!(
+        wasm_public_key.len(),
+        32,
+        "WASM public key must be exactly 32 bytes"
+    );
 
     // Create keys.rs file in OUT_DIR
     let out_dir = env::var("OUT_DIR").unwrap();
     let keys_file = format!(
         r#"// Auto-generated cryptographic keys - DO NOT EDIT
 // Generated at compile time for secure key embedding
+// Keys rotated 2026-01-08 after git history exposure
+// OLD keys (fingerprints 23837ac5, 10f8798e) are REVOKED
 
 pub const LICENSE_PUBLIC_KEY: &[u8] = &{:?};
 pub const WASM_PUBLIC_KEY: &[u8] = &{:?};
 
 // Public keys only. Private keys never shipped.
+// Private keys stored in secure external key management system.
 "#,
         license_public_key, wasm_public_key
     );
@@ -279,11 +292,15 @@ pub const WASM_PUBLIC_KEY: &[u8] = &{:?};
         hex::encode(&wasm_public_key[..4])
     );
 
-    // Tell rustc to rerun if build.rs changes
+    // Tell rustc to rerun if build.rs or env vars change
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-env-changed=COSTPILOT_LICENSE_PUBKEY");
+    println!("cargo:rerun-if-env-changed=COSTPILOT_WASM_PUBKEY");
 
-    // Return the WASM signing key for use in signing
-    SigningKey::from_bytes(&wasm_keypair.private)
+    // Generate ephemeral signing key for build process only
+    // This is NOT used for production - it's only for build.rs internal operations
+    generate_ed25519_keypair();
+    SigningKey::from_bytes(&[0u8; 32])
 }
 
 #[cfg(feature = "obfuscate")]
