@@ -336,6 +336,18 @@ fn apply_code_obfuscation() {
     println!("cargo:warning=Code obfuscation completed");
 }
 
+#[cfg(feature = "obfuscate")]
+fn encrypt_string_literals(_binary_path: &str) {
+    // TODO: Implement string literal encryption for additional obfuscation
+    println!("cargo:warning=String literal encryption not yet implemented");
+}
+
+#[cfg(feature = "obfuscate")]
+fn apply_control_flow_obfuscation(_binary_path: &str) {
+    // TODO: Implement control flow obfuscation for additional protection
+    println!("cargo:warning=Control flow obfuscation not yet implemented");
+}
+
 #[cfg(feature = "compress")]
 fn apply_binary_compression() {
     use std::process::Command;
