@@ -5,7 +5,9 @@ use crate::engines::detection::severity::{calculate_severity_score, score_to_sev
 use crate::engines::detection::terraform::{convert_to_resource_changes, parse_terraform_plan};
 use crate::engines::explain::anti_patterns;
 use crate::engines::shared::error_model::{CostPilotError, ErrorCategory, Result};
-use crate::engines::shared::models::{CostEstimate, Detection, RegressionType, ResourceChange, Severity};
+use crate::engines::shared::models::{
+    CostEstimate, Detection, RegressionType, ResourceChange, Severity,
+};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -217,10 +219,14 @@ impl DetectionEngine {
             if self.verbose {
                 println!("Running advanced optimization detection...");
             }
-            let advanced_patterns = anti_patterns::detect_anti_patterns_batch(changes, &estimates_map);
+            let advanced_patterns =
+                anti_patterns::detect_anti_patterns_batch(changes, &estimates_map);
 
             if self.verbose {
-                println!("Detected {} advanced optimization opportunities", advanced_patterns.len());
+                println!(
+                    "Detected {} advanced optimization opportunities",
+                    advanced_patterns.len()
+                );
             }
 
             // Convert anti-patterns to detections

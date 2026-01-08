@@ -550,7 +550,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let edition = costpilot::edition::detect_edition()
         .unwrap_or_else(|_| costpilot::edition::EditionContext::free());
 
-    let args: Vec<String> = std::env::args().collect();
+    let mut args: Vec<String> = std::env::args().collect();
+
+    // Handle --version/-V before argument rewriting
     if args.len() >= 2 {
         let arg = &args[1];
         if arg == "--version" || arg == "-V" {
@@ -564,29 +566,73 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // Default to 'scan' if first arg looks like a file path (not a known subcommand)
+    if args.len() >= 2 {
+        let first_arg = &args[1];
+        let known_commands = [
+            "scan",
+            "diff",
+            "init",
+            "map",
+            "policy",
+            "exemption",
+            "trend",
+            "audit",
+            "heuristics",
+            "explain",
+            "performance",
+            "slo",
+            "slocheck",
+            "sloburn",
+            "autofix-snippet",
+            "autofix-patch",
+            "escrow",
+            "policy-lifecycle",
+            "usage",
+            "policy-dsl",
+            "group",
+            "validate",
+            "version",
+            "--help",
+            "-h",
+            "--version",
+            "-V",
+        ];
+
+        // If first arg is not a known command and looks like a file (has extension or path separator),
+        // inject 'scan' as the subcommand
+        if !known_commands.contains(&first_arg.to_lowercase().as_str())
+            && (first_arg.contains('.') || first_arg.contains('/') || first_arg.contains('\\'))
+        {
+            args.insert(1, "scan".to_string());
+        }
+    }
+
     if edition.is_free() && args.len() >= 2 {
         let premium_commands = ["autofix", "patch", "slo"];
         let command = args[1].to_lowercase();
 
         if premium_commands.contains(&command.as_str()) {
             eprintln!(
-                "{} Unknown command '{}'",
-                "Error:".bright_red().bold(),
+                "{} Command '{}' requires Premium edition",
+                "⚠".bright_yellow().bold(),
                 command
             );
             eprintln!();
-            eprintln!("This command requires CostPilot Premium.");
-            eprintln!("Upgrade at: https://shieldcraft-ai.com/costpilot/upgrade");
+            eprintln!("  Currently running: Free edition");
+            eprintln!("  Upgrade at: https://shieldcraft-ai.com/costpilot/upgrade");
+            eprintln!();
+            eprintln!("  Available commands: scan, diff, init, map, policy, validate, --help");
             process::exit(1);
         }
     }
 
-    let cli = Cli::parse();
+    let cli = Cli::parse_from(args);
     if atty::is(atty::Stream::Stdout) {
         println!("{}", BANNER.bright_cyan());
         println!(
             "{}",
-            format!("v{} | Zero-IAM FinOps Engine", VERSION).bright_black()
+            format!("v{} | Zero-IAM FinOps Engine", VERSION).white()
         );
         println!();
     }
@@ -935,7 +981,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    result
+    // Handle errors with clean formatting (Display, not Debug)
+    if let Err(e) = result {
+        eprintln!("{} {}", "Error:".bright_red().bold(), e);
+        std::process::exit(1);
+    }
+
+    Ok(())
 }
 
 fn cmd_diff(

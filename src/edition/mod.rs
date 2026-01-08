@@ -34,19 +34,33 @@ pub fn detect_edition() -> Result<EditionContext, String> {
                         edition.mode = EditionMode::Premium;
                         edition.license = Some(license);
                         edition.capabilities = Capabilities::from_edition(&edition);
+                    } else {
+                        // License file exists but is invalid - only warn if user expects it to work
+                        if std::env::var("COSTPILOT_DEBUG").is_ok() {
+                            eprintln!("⚠️  License file found but validation failed");
+                            eprintln!("    Check license format or contact support");
+                        }
                     }
                 }
-                Err(e) => {
-                    eprintln!("⚠️  Invalid license file: {}", e);
+                Err(_e) => {
+                    // License file exists but can't be read - only warn in debug mode
+                    if std::env::var("COSTPILOT_DEBUG").is_ok() {
+                        eprintln!("⚠️  License file found but could not be loaded");
+                    }
                 }
             }
         }
+        // If no license file exists, we're in free mode - this is expected, don't warn
 
-        // Attempt to load ProEngine (only if we have premium mode)
+        // Attempt to load ProEngine (only if we have premium mode with valid license)
         if edition.is_premium() {
             if let Err(e) = crate::pro_engine::load_pro_engine(&mut edition) {
-                eprintln!("⚠️  Failed to load Premium engine: {}", e);
-                eprintln!("   Running in Premium mode without ProEngine");
+                // Only warn about ProEngine failure if we have a valid license
+                eprintln!(
+                    "⚠️  Premium license active but engine failed to load: {}",
+                    e
+                );
+                eprintln!("    Running in Premium mode with core features only");
             }
         }
     }

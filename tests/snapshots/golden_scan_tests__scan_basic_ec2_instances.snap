@@ -14,5 +14,9 @@ expression: stdout
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📈 Summary
-   Resources changed: 2
-   Monthly cost: $300.00
+
+   📦 Infrastructure Plan
+      2 resources (2 to create)
+      Estimated new monthly cost: $300.00
+
+   ✓ No optimization opportunities found. Infrastructure looks efficient!

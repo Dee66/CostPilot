@@ -588,7 +588,6 @@ fn test_slo_burn_zero_cost_edge_case() {
     create_test_snapshot(&snapshots_path, "2025-01-01", 0.0);
     create_test_snapshot(&snapshots_path, "2025-02-01", 0.0);
 
-
     // Create valid Premium license
     setup_premium_license_for_test(temp_dir.path()).unwrap();
 
@@ -634,7 +633,6 @@ fn test_slo_burn_negative_cost_edge_case() {
     fs::create_dir(&snapshots_path).unwrap();
     create_test_snapshot(&snapshots_path, "2025-01-01", -50.0);
     create_test_snapshot(&snapshots_path, "2025-02-01", -25.0);
-
 
     // Create valid Premium license
     setup_premium_license_for_test(temp_dir.path()).unwrap();
@@ -682,7 +680,6 @@ fn test_slo_burn_extremely_high_cost() {
     create_test_snapshot(&snapshots_path, "2025-01-01", 1_000_000.0);
     create_test_snapshot(&snapshots_path, "2025-02-01", 2_000_000.0);
 
-
     // Create valid Premium license
     setup_premium_license_for_test(temp_dir.path()).unwrap();
 
@@ -728,7 +725,6 @@ fn test_slo_burn_empty_snapshots_edge_case() {
     fs::create_dir(&snapshots_path).unwrap();
     // No snapshots created
 
-
     // Create valid Premium license
     setup_premium_license_for_test(temp_dir.path()).unwrap();
 
@@ -773,7 +769,6 @@ fn test_slo_burn_single_snapshot_edge_case() {
 
     fs::create_dir(&snapshots_path).unwrap();
     create_test_snapshot(&snapshots_path, "2025-01-01", 50.0);
-
 
     // Create valid Premium license
     setup_premium_license_for_test(temp_dir.path()).unwrap();
@@ -915,7 +910,6 @@ fn test_slo_burn_zero_threshold_edge_case() {
     fs::create_dir(&snapshots_path).unwrap();
     create_test_snapshot(&snapshots_path, "2025-01-01", 10.0);
 
-
     // Create valid Premium license
     setup_premium_license_for_test(temp_dir.path()).unwrap();
 
@@ -967,7 +961,6 @@ fn test_slo_burn_maximum_snapshots() {
             i as f64,
         );
     }
-
 
     // Create valid Premium license
     setup_premium_license_for_test(temp_dir.path()).unwrap();

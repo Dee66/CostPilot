@@ -1,10 +1,10 @@
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
 /// Compute SHA256 hash of a file
 fn sha256_hash(path: &Path) -> Result<String, Box<dyn std::error::Error>> {
+    use sha2::{Digest, Sha256};
     use std::io::Read;
-    use sha2::{Sha256, Digest};
 
     let mut file = fs::File::open(path)?;
     let mut hasher = Sha256::new();

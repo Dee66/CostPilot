@@ -20,8 +20,7 @@ fn test_autofix_patch_requires_premium_integration() {
     cmd.arg("autofix-patch");
 
     // Should fail - command requires arguments
-    cmd.assert()
-        .failure();
+    cmd.assert().failure();
 }
 
 /// Test that free users cannot access autofix snippet mode
@@ -31,8 +30,7 @@ fn test_autofix_snippet_requires_premium_integration() {
     cmd.arg("autofix-snippet");
 
     // Should fail - command requires arguments
-    cmd.assert()
-        .failure();
+    cmd.assert().failure();
 }
 
 /// Test that scan command works in free mode but uses static prediction
@@ -164,8 +162,7 @@ fn test_anomaly_detection_requires_premium() {
     cmd.arg("anomaly").arg("--plan").arg(&plan_path);
 
     // Command does not exist, should fail
-    cmd.assert()
-        .failure();
+    cmd.assert().failure();
 }
 
 /// Test that SLO commands require premium
@@ -212,8 +209,7 @@ fn test_deep_mapping_requires_premium() {
     cmd.arg("map").arg(&plan_path).arg("--max-depth").arg("5"); // Deep mapping
 
     // Should fail with upgrade requirement for deep mapping
-    cmd.assert()
-        .failure();
+    cmd.assert().failure();
 }
 
 /// Test AutofixEngine integration with edition context
@@ -351,7 +347,6 @@ fn test_cli_command_edition_validation() {
         }
 
         // All should fail (may be due to missing args or premium requirement)
-        cmd.assert()
-            .failure();
+        cmd.assert().failure();
     }
 }

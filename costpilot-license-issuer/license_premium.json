@@ -1,0 +1,9 @@
+{
+  "email": "test-premium@example.com",
+  "license_key": "PREMIUM-2596341E",
+  "expires": "2027-01-07T08:26:46.056456389+00:00",
+  "issued_at": "2026-01-07T08:26:46.056456389+00:00",
+  "signature": "a87221177e36270b83e3364ede0a59a8f3fbb70426189436a3ad54c3e217fc749c615d2338d9811038d79e69bdf35bee9353c69b4c3b3e3bd3d06a2b89d80907",
+  "version": "1.0",
+  "issuer": "costpilot-v1"
+}

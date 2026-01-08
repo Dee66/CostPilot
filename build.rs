@@ -1,9 +1,8 @@
 fn main() {
     println!("cargo:rerun-if-changed=pro_engine/pro_engine.wit");
 
-    // Generate cryptographic keys at compile time
-    #[cfg(feature = "release")]
-    let wasm_signing_key = generate_crypto_keys();
+    // Generate cryptographic keys at compile time (always, not just for release feature)
+    let _wasm_signing_key = generate_crypto_keys();
 
     // Build and encrypt WASM module for release builds
     #[cfg(feature = "release")]
@@ -232,7 +231,6 @@ fn create_test_license(costpilot_dir: &std::path::Path, license_key: &str) {
     }
 }
 
-#[allow(dead_code)]
 fn generate_crypto_keys() -> ed25519_dalek::SigningKey {
     use ed25519_dalek::SigningKey;
     use std::{env, fs, path::Path};
