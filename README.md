@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/status-stable-green.svg)
-![Version](https://img.shields.io/badge/status-stable-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)
 
 **Deterministic, audit-grade cost governance at the pull-request boundary.**
 
@@ -134,16 +134,35 @@ CostPilot is distributed as a single native binary.
 2. Download the appropriate archive for your platform (`.tar.gz` or `.zip`)
 3. Extract and place the `costpilot` binary on your PATH
 
-**Or build from source:**
-
-```bash
-git clone https://github.com/Dee66/CostPilot.git
-cd CostPilot
-cargo build --release
-sudo cp target/release/costpilot /usr/local/bin/
-```
+Premium features are unlocked via a time-limited offline license file. Free mode remains fully functional for core analysis.
 
 Verify installation:
 
 ```bash
 costpilot --version
+```
+
+### Input Format
+
+CostPilot operates on Terraform plan JSON files.
+
+Generate the plan JSON with:
+
+```bash
+terraform plan -out=plan.tfplan
+terraform show -json plan.tfplan > plan.json
+```
+
+Example invocation:
+
+```bash
+costpilot scan plan.json
+```
+
+### Example
+
+```bash
+costpilot scan plan.json --policy policy.yaml
+```
+
+Exit codes: 0 = no risk, 1 = advisory, 2 = blocking
