@@ -235,20 +235,19 @@ fn generate_crypto_keys() -> ed25519_dalek::SigningKey {
     use ed25519_dalek::SigningKey;
     use std::{env, fs, path::Path};
 
-    // MANDATORY: Use master public keys from environment variables
-    // These are the NEW keys rotated on 2026-01-08 after git history exposure
-    // OLD keys (fingerprints 23837ac5, 10f8798e) are REVOKED and must NOT be used
+    // NEW rotated public keys (2026-01-08)
+    // Fingerprints: db52fc95 (license), 8db250f6 (wasm)
+    // OLD keys (23837ac5, 10f8798e) are REVOKED and must NOT be used
+    const NEW_LICENSE_PUBLIC_KEY_HEX: &str =
+        "db52fc95fe7ccbd5e55ecfd357d8271d1b2d4a9f608e68db3e7f869d54dba5df";
+    const NEW_WASM_PUBLIC_KEY_HEX: &str =
+        "8db250f6bf7cdf016fcc1564b2309897a701c4e4fa1946ca0eb9084f1c557994";
 
-    let license_public_key = env::var("COSTPILOT_LICENSE_PUBKEY")
-        .expect("COSTPILOT_LICENSE_PUBKEY environment variable MUST be set with NEW public key (hex-encoded)");
-    let license_public_key = hex::decode(&license_public_key)
-        .expect("COSTPILOT_LICENSE_PUBKEY must be valid hex-encoded Ed25519 public key (64 chars)");
+    let license_public_key = hex::decode(NEW_LICENSE_PUBLIC_KEY_HEX)
+        .expect("Embedded LICENSE public key must be valid hex");
 
-    let wasm_public_key = env::var("COSTPILOT_WASM_PUBKEY").expect(
-        "COSTPILOT_WASM_PUBKEY environment variable MUST be set with NEW public key (hex-encoded)",
-    );
-    let wasm_public_key = hex::decode(&wasm_public_key)
-        .expect("COSTPILOT_WASM_PUBKEY must be valid hex-encoded Ed25519 public key (64 chars)");
+    let wasm_public_key =
+        hex::decode(NEW_WASM_PUBLIC_KEY_HEX).expect("Embedded WASM public key must be valid hex");
 
     // Verify key lengths
     assert_eq!(
@@ -292,10 +291,8 @@ pub const WASM_PUBLIC_KEY: &[u8] = &{:?};
         hex::encode(&wasm_public_key[..4])
     );
 
-    // Tell rustc to rerun if build.rs or env vars change
+    // Tell rustc to rerun if build.rs changes
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-env-changed=COSTPILOT_LICENSE_PUBKEY");
-    println!("cargo:rerun-if-env-changed=COSTPILOT_WASM_PUBKEY");
 
     // Generate ephemeral signing key for build process only
     // This is NOT used for production - it's only for build.rs internal operations

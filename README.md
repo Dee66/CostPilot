@@ -126,13 +126,22 @@ Additional IaC formats and features are intentionally deferred.
 
 ### Install
 
-CostPilot is distributed as a single native binary via GitHub Releases.
+CostPilot is distributed as a single native binary.
 
-Download the appropriate archive for your platform from:
+**Download pre-built binary:**
 
-https://github.com/Dee66/costpilot/releases
+1. Visit [GitHub Releases](https://github.com/Dee66/costpilot/releases)
+2. Download the appropriate archive for your platform (`.tar.gz` or `.zip`)
+3. Extract and place the `costpilot` binary on your PATH
 
-Extract the archive and place the `costpilot` binary on your PATH.
+**Or build from source:**
+
+```bash
+git clone https://github.com/Dee66/CostPilot.git
+cd CostPilot
+cargo build --release
+sudo cp target/release/costpilot /usr/local/bin/
+```
 
 Verify installation:
 

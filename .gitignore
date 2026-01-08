@@ -95,3 +95,6 @@ target/
 AGENTS.md
 docs/mental_model.md
 .github/copilot-instructions.md
+
+# License files
+license*.json
