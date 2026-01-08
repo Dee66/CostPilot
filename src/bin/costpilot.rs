@@ -38,7 +38,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    #[command(about = "Scan infrastructure changes for cost issues")]
     Scan(costpilot::cli::scan::ScanCommand),
+
+    #[command(about = "Compare cost between two infrastructure plans")]
     Diff {
         #[arg(value_name = "BEFORE")]
         before: PathBuf,
@@ -46,6 +49,8 @@ enum Commands {
         #[arg(value_name = "AFTER")]
         after: PathBuf,
     },
+
+    #[command(about = "Initialize CostPilot configuration in current directory")]
     Init {
         #[arg(long)]
         no_ci: bool,
@@ -54,33 +59,40 @@ enum Commands {
         path: Option<PathBuf>,
     },
 
+    #[command(about = "Generate dependency map for infrastructure resources")]
     Map(costpilot::cli::map::MapCommand),
 
+    #[command(about = "Manage policy lifecycle and approvals")]
     Policy {
         #[command(subcommand)]
         command: PolicyCommands,
     },
 
+    #[command(about = "Manage policy exemptions")]
     Exemption {
         #[command(subcommand)]
         command: ExemptionCommands,
     },
 
+    #[command(about = "Analyze cost trends over time")]
     Trend {
         #[command(subcommand)]
         command: TrendCommands,
     },
 
+    #[command(about = "Audit log and compliance reporting")]
     Audit {
         #[command(subcommand)]
         command: AuditCommands,
     },
 
+    #[command(about = "Manage cost heuristics")]
     Heuristics {
         #[command(subcommand)]
         command: costpilot::cli::heuristics::HeuristicsCommand,
     },
 
+    #[command(about = "Explain cost predictions with stepwise reasoning")]
     Explain {
         #[command(subcommand)]
         command: Option<costpilot::cli::explain::ExplainCommand>,
@@ -89,17 +101,22 @@ enum Commands {
         args: Option<costpilot::cli::explain::ExplainArgs>,
     },
 
+    #[command(about = "Performance monitoring and budgets")]
     Performance {
         #[command(subcommand)]
         command: Option<PerformanceCli>,
     },
 
+    #[command(about = "SLO management and compliance")]
     Slo {
         #[command(subcommand)]
         command: Option<SloCli>,
     },
 
+    #[command(about = "Check SLO compliance")]
     SloCheck,
+
+    #[command(about = "Calculate SLO burn rate")]
     SloBurn {
         #[arg(short, long)]
         config: Option<PathBuf>,
@@ -113,6 +130,7 @@ enum Commands {
         verbose: bool,
     },
 
+    #[command(about = "Generate autofix snippets")]
     AutofixSnippet {
         #[arg(long, value_name = "FILE")]
         plan: Option<PathBuf>,
@@ -121,18 +139,22 @@ enum Commands {
         verbose: bool,
     },
 
+    #[command(about = "Generate autofix patches")]
     AutofixPatch(AutofixPatchArgs),
 
+    #[command(about = "Manage escrow operations")]
     Escrow {
         #[command(subcommand)]
         command: Option<EscrowCli>,
     },
 
+    #[command(about = "Manage policy lifecycle")]
     PolicyLifecycle {
         #[command(subcommand)]
         command: Option<PolicyLifecycleCli>,
     },
 
+    #[command(about = "Usage metering and reporting")]
     Usage {
         #[arg(long = "days-in-month")]
         days_in_month: Option<String>,
@@ -141,12 +163,16 @@ enum Commands {
         command: Option<UsageCli>,
     },
 
+    #[command(about = "Manage custom policy rules (DSL)")]
     PolicyDsl {
         #[command(flatten)]
         command: costpilot::cli::policy_dsl::PolicyDslCommand,
     },
 
+    #[command(about = "Group resources for cost allocation")]
     Group(costpilot::cli::group::GroupCommand),
+
+    #[command(about = "Validate configuration files")]
     Validate {
         #[arg(required = true)]
         files: Vec<PathBuf>,
@@ -155,6 +181,7 @@ enum Commands {
         fail_fast: bool,
     },
 
+    #[command(about = "Show version information")]
     Version {
         #[arg(long)]
         detailed: bool,

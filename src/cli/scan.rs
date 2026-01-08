@@ -15,7 +15,7 @@ use std::path::PathBuf;
 /// Scan infrastructure changes for cost issues
 #[derive(Debug, Args)]
 pub struct ScanCommand {
-    /// Path to infrastructure change file (Terraform plan, CDK diff)
+    /// Path to Terraform plan JSON file (generated via 'terraform show -json plan.out')
     /// Positional plan path (also accepted via `--plan` / `--scan` flag)
     #[arg(value_name = "PLAN", required_unless_present = "plan_flag")]
     plan: Option<PathBuf>,
@@ -55,10 +55,6 @@ pub struct ScanCommand {
     /// Show autofix snippets
     #[arg(long)]
     autofix: bool,
-
-    /// Stack name for CDK synthesized templates (required for CDK format)
-    #[arg(long)]
-    stack: Option<String>,
 }
 
 #[derive(Debug, Clone, clap::ValueEnum)]

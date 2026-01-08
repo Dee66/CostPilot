@@ -2,16 +2,20 @@
 
 ## Installation
 
-### From Binary (Recommended)
+### From Pre-Built Binary (Recommended)
 
-Download the latest release from GitHub:
+Download from [GitHub Releases](https://github.com/Dee66/costpilot/releases):
 
 ```bash
-# Linux/macOS
-curl -L https://github.com/Dee66/CostPilot/releases/latest/download/costpilot-linux-x64.tar.gz | tar xz
-sudo mv costpilot /usr/local/bin/
+# Linux x86_64 example
+curl -L https://github.com/Dee66/costpilot/releases/latest/download/costpilot-v1.0.0-x86_64.tar.gz -o costpilot.tar.gz
+tar -xzf costpilot.tar.gz
+sudo mv costpilot-v1.0.0-x86_64/bin/costpilot /usr/local/bin/
+```
 
-# Or build from source
+### Build from Source
+
+```bash
 git clone https://github.com/Dee66/CostPilot.git
 cd CostPilot
 cargo build --release
