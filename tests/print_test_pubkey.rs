@@ -13,8 +13,12 @@ mod tests {
 
         print!("\nTEST_LICENSE_PUBLIC_KEY: &[");
         for (i, byte) in bytes.iter().enumerate() {
-            if i > 0 { print!(", "); }
-            if i % 8 == 0 && i > 0 { print!("\n    "); }
+            if i > 0 {
+                print!(", ");
+            }
+            if i % 8 == 0 && i > 0 {
+                print!("\n    ");
+            }
             print!("0x{:02x}", byte);
         }
         println!("\n];\n");

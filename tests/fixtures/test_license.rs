@@ -2,8 +2,7 @@
 ///
 /// Generates a real Ed25519 keypair and valid licenses for testing Premium features
 /// This uses REAL signature verification - no bypasses
-
-use ed25519_dalek::{SigningKey, Signer, VerifyingKey};
+use ed25519_dalek::{Signer, SigningKey, VerifyingKey};
 use serde_json::json;
 use std::fs;
 use std::path::Path;
@@ -73,9 +72,7 @@ pub fn create_test_license(
 }
 
 /// Create a valid Premium license in the standard location for a test
-pub fn setup_premium_license_for_test(
-    home_dir: &Path,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn setup_premium_license_for_test(home_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let costpilot_dir = home_dir.join(".costpilot");
     let license_path = costpilot_dir.join("license.json");
 

@@ -6,12 +6,10 @@ set -euo pipefail
 # If arguments not provided, uses environment variables or defaults
 
 if [[ $# -eq 0 ]]; then
-  # No arguments provided, use environment variables or defaults
   VERSION="${COSTPILOT_VERSION:-$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")}"
   PLATFORM="${TARGET:-$(uname -m)}"
   OUT_DIR="${OUT_DIR:-dist}"
 elif [[ $# -eq 3 ]]; then
-  # All arguments provided
   VERSION="$1"
   PLATFORM="$2"
   OUT_DIR="$3"
@@ -53,12 +51,6 @@ chmod 755 "$STAGE_DIR/bin/$BINARY_NAME"
 # Copy documentation
 [[ -f "${PROJECT_ROOT}/README.md" ]] && cp "${PROJECT_ROOT}/README.md" "$STAGE_DIR/"
 [[ -f "${PROJECT_ROOT}/LICENSE" ]] && cp "${PROJECT_ROOT}/LICENSE" "$STAGE_DIR/"
-
-# Copy examples if present
-if [[ -d "${PROJECT_ROOT}/examples" ]]; then
-  mkdir -p "$STAGE_DIR/examples"
-  cp -r "${PROJECT_ROOT}/examples/"*.json "$STAGE_DIR/examples/" 2>/dev/null || true
-fi
 
 # Generate SBOM
 SBOM_SCRIPT="${PROJECT_ROOT}/packaging/sbom/generate_sbom.sh"

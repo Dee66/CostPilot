@@ -177,8 +177,7 @@ fn test_policy_exemption_workflow() {
         .arg("--fail-on-critical");
 
     // Should succeed due to exemption
-    cmd.assert()
-        .success();
+    cmd.assert().success();
 }
 
 /// Test expired exemption handling

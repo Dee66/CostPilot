@@ -140,8 +140,8 @@ mod authentication_security_tests {
 
     #[test]
     fn test_brute_force_protection_through_license_verification() {
+        use ed25519_dalek::{Signer, SigningKey};
         use tempfile::TempDir;
-        use ed25519_dalek::{SigningKey, Signer};
 
         // Use isolated temp directory for test
         let temp_dir = TempDir::new().unwrap();
@@ -321,7 +321,7 @@ mod authentication_security_tests {
         let temp_dir = TempDir::new().unwrap();
 
         // Create a valid test license using the test fixture infrastructure
-        use ed25519_dalek::{SigningKey, Signer};
+        use ed25519_dalek::{Signer, SigningKey};
         let seed = [42u8; 32];
         let signing_key = SigningKey::from_bytes(&seed);
         let issuer = "test-costpilot";

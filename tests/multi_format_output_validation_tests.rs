@@ -30,9 +30,7 @@ fn test_scan_json_output_format() {
     fs::write(&plan_path, plan).unwrap();
 
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.arg("scan")
-        .arg("--format=json")
-        .arg(&plan_path);
+    cmd.arg("scan").arg("--format=json").arg(&plan_path);
 
     cmd.assert()
         .success()
@@ -53,9 +51,7 @@ fn test_scan_text_output_format() {
     fs::write(&plan_path, plan).unwrap();
 
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.arg("scan")
-        .arg("--format=text")
-        .arg(&plan_path);
+    cmd.arg("scan").arg("--format=text").arg(&plan_path);
 
     cmd.assert()
         .success()
@@ -75,9 +71,7 @@ fn test_scan_markdown_output_format() {
     fs::write(&plan_path, plan).unwrap();
 
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.arg("scan")
-        .arg("--format=markdown")
-        .arg(&plan_path);
+    cmd.arg("scan").arg("--format=markdown").arg(&plan_path);
 
     cmd.assert()
         .success()
@@ -153,9 +147,7 @@ fn test_invalid_format_error() {
     fs::write(&plan_path, plan).unwrap();
 
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.arg("scan")
-        .arg("--format=invalid")
-        .arg(&plan_path);
+    cmd.arg("scan").arg("--format=invalid").arg(&plan_path);
 
     cmd.assert()
         .success()
