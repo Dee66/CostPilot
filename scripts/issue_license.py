@@ -170,7 +170,7 @@ def main():
         issuer = custom_issuer
 
     # Output filename
-    default_output = f"license_{email.split('@')[0]}.json"
+    default_output = "license.json"
     output = input(f"\nOutput filename (press Enter for '{default_output}'): ").strip()
     if not output:
         output = default_output
