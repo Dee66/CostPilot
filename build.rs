@@ -1,8 +1,7 @@
 fn main() {
     println!("cargo:rerun-if-changed=pro_engine/pro_engine.wit");
 
-    // Generate cryptographic keys at compile time
-    #[cfg(feature = "release")]
+    // Generate cryptographic keys at compile time (always needed for compilation)
     let wasm_signing_key = generate_crypto_keys();
 
     // Build and encrypt WASM module for release builds
