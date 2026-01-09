@@ -137,7 +137,7 @@ fn test_error_code_stability() {
         let code_range = error_codes
             .get(category)
             .and_then(|v| v.as_str())
-            .expect(&format!("Error code range for {} must exist", category));
+            .unwrap_or_else(|| panic!("Error code range for {} must exist", category));
         assert_eq!(
             code_range, range,
             "Error code range for {} must be stable",

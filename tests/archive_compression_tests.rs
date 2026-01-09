@@ -45,7 +45,7 @@ fn test_archive_creation_extraction() {
         fs::create_dir_all(&extract_dir).ok();
 
         let extract_result = Command::new("tar")
-            .args(&[
+            .args([
                 "-xzf",
                 &archive_path.to_string_lossy(),
                 "-C",
@@ -141,7 +141,7 @@ fn test_corrupted_archive_detection() {
     fs::create_dir_all(&extract_dir).ok();
 
     let extract_result = Command::new("tar")
-        .args(&[
+        .args([
             "-xzf",
             &corrupt_archive.to_string_lossy(),
             "-C",
@@ -175,7 +175,7 @@ fn test_archive_size_limits() {
     // Create archive
     let archive_path = temp_dir.join("small.tar.gz");
     let _ = Command::new("tar")
-        .args(&[
+        .args([
             "-czf",
             &archive_path.to_string_lossy(),
             &small_file.to_string_lossy(),
@@ -217,7 +217,7 @@ fn test_nested_archive_structures() {
 
     // Test that tar can handle multiple files
     let result = Command::new("tar")
-        .args(&[
+        .args([
             "-czf",
             &archive_path.to_string_lossy(),
             &file1.to_string_lossy(),
@@ -229,7 +229,7 @@ fn test_nested_archive_structures() {
     if result.is_some() && archive_path.exists() {
         // Test that we can list contents
         let list_result = Command::new("tar")
-            .args(&["-tzf", &archive_path.to_string_lossy()])
+            .args(["-tzf", &archive_path.to_string_lossy()])
             .output()
             .ok();
 
@@ -275,7 +275,7 @@ fn test_archive_content_validation() {
     // Create archive
     let archive_path = temp_dir.join("content.tar.gz");
     let _ = Command::new("tar")
-        .args(&[
+        .args([
             "-czf",
             &archive_path.to_string_lossy(),
             "-C",
@@ -288,7 +288,7 @@ fn test_archive_content_validation() {
     if archive_path.exists() {
         // List archive contents
         let list_result = Command::new("tar")
-            .args(&["-tzf", &archive_path.to_string_lossy()])
+            .args(["-tzf", &archive_path.to_string_lossy()])
             .output()
             .ok();
 
@@ -321,7 +321,7 @@ fn test_partial_archive_handling() {
 
     let complete_archive = temp_dir.join("complete.tar.gz");
     let _ = Command::new("tar")
-        .args(&[
+        .args([
             "-czf",
             &complete_archive.to_string_lossy(),
             &test_file.to_string_lossy(),
@@ -342,7 +342,7 @@ fn test_partial_archive_handling() {
         fs::create_dir_all(&extract_dir).ok();
 
         let extract_result = Command::new("tar")
-            .args(&[
+            .args([
                 "-xzf",
                 &partial_archive.to_string_lossy(),
                 "-C",
@@ -375,7 +375,7 @@ fn test_archive_signature_validation() {
 
     // Test GPG signature creation if available
     let sig_result = Command::new("gpg")
-        .args(&["--detach-sign", "--armor", &test_file.to_string_lossy()])
+        .args(["--detach-sign", "--armor", &test_file.to_string_lossy()])
         .output()
         .ok();
 
@@ -388,7 +388,7 @@ fn test_archive_signature_validation() {
 
         // Test signature verification
         let verify_result = Command::new("gpg")
-            .args(&["--verify", &sig_file, &test_file.to_string_lossy()])
+            .args(["--verify", &sig_file, &test_file.to_string_lossy()])
             .output()
             .ok();
 

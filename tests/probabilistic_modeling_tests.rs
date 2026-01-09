@@ -66,7 +66,7 @@ mod probabilistic_modeling_tests {
 
         // Cold start should increase uncertainty
         assert!(estimate.coefficient_of_variation > 0.1);
-        assert!(estimate.uncertainty_factors.len() > 0);
+        assert!(!estimate.uncertainty_factors.is_empty());
 
         // Should have cold start uncertainty factor
         assert!(estimate

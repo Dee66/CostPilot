@@ -2,7 +2,6 @@
 // Verifies user-facing messages are clear, helpful, and appropriately toned
 
 use assert_cmd::cargo::cargo_bin_cmd;
-use predicates::prelude::*;
 use std::fs;
 use tempfile::TempDir;
 

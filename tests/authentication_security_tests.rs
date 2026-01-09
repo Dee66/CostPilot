@@ -318,7 +318,7 @@ mod authentication_security_tests {
         use tempfile::TempDir;
 
         // Use isolated temp directory for test
-        let temp_dir = TempDir::new().unwrap();
+        let _temp_dir = TempDir::new().unwrap();
 
         // Create a valid test license using the test fixture infrastructure
         use ed25519_dalek::{Signer, SigningKey};

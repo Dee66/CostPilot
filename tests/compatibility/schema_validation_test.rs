@@ -147,9 +147,9 @@ fn test_all_schemas_have_definitions() {
     for schema_file in schema_files {
         let schema_path = PathBuf::from(schema_file);
         let content = fs::read_to_string(&schema_path)
-            .expect(&format!("Failed to read schema: {}", schema_file));
+            .unwrap_or_else(|_| panic!("Failed to read schema: {}", schema_file));
         let schema: Value = serde_json::from_str(&content)
-            .expect(&format!("Schema must be valid JSON: {}", schema_file));
+            .unwrap_or_else(|_| panic!("Schema must be valid JSON: {}", schema_file));
 
         // Verify schema has definitions section
         assert!(
@@ -232,11 +232,11 @@ fn test_schemas_validate_cost_non_negative() {
     for field in cost_fields {
         let field_def = properties
             .get(field)
-            .expect(&format!("Must have {}", field));
+            .unwrap_or_else(|| panic!("Must have {}", field));
         let minimum = field_def
             .get("minimum")
             .and_then(|v| v.as_f64())
-            .expect(&format!("{} must have minimum constraint", field));
+            .unwrap_or_else(|| panic!("{} must have minimum constraint", field));
         assert_eq!(minimum, 0.0, "{} must have minimum of 0.0", field);
     }
 }
@@ -256,10 +256,12 @@ fn test_output_schema_version_matches_binary_version_compatibility_table() {
     let current_version = env!("CARGO_PKG_VERSION");
 
     // Get expected schema version for current binary version
-    let expected_schema_version = compatibility_table.get(current_version).expect(&format!(
-        "No schema version defined for binary version {}",
-        current_version
-    ));
+    let expected_schema_version = compatibility_table.get(current_version).unwrap_or_else(|| {
+        panic!(
+            "No schema version defined for binary version {}",
+            current_version
+        )
+    });
 
     // Test that all output types use the correct schema version
     let test_outputs = vec![
@@ -274,10 +276,10 @@ fn test_output_schema_version_matches_binary_version_compatibility_table() {
             continue; // Skip if golden file doesn't exist yet
         }
 
-        let content =
-            fs::read_to_string(&path).expect(&format!("Failed to read {} output", output_type));
+        let content = fs::read_to_string(&path)
+            .unwrap_or_else(|_| panic!("Failed to read {} output", output_type));
         let output: Value = serde_json::from_str(&content)
-            .expect(&format!("{} output must be valid JSON", output_type));
+            .unwrap_or_else(|_| panic!("{} output must be valid JSON", output_type));
 
         // Check that metadata.version matches expected schema version
         let metadata = match output.get("metadata") {

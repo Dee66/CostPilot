@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tests {
     use base64::Engine;
-    use chrono;
-    use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+    use ed25519_dalek::Verifier;
     use std::fs;
     use std::process::Command;
     use tempfile::tempdir;

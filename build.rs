@@ -2,12 +2,11 @@ fn main() {
     println!("cargo:rerun-if-changed=pro_engine/pro_engine.wit");
 
     // Generate cryptographic keys at compile time (always, not just for release feature)
-    #[cfg(feature = "release")]
-    let wasm_signing_key = generate_crypto_keys();
+    let _wasm_signing_key = generate_crypto_keys();
 
     // Build and encrypt WASM module for release builds
     #[cfg(feature = "release")]
-    build_pro_engine_wasm(&wasm_signing_key);
+    build_pro_engine_wasm(&_wasm_signing_key);
 
     // Apply code obfuscation for enhanced security
     #[cfg(feature = "obfuscate")]

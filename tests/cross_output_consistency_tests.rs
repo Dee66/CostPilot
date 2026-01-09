@@ -29,7 +29,9 @@ fn test_every_detected_finding_referenced_in_predict_output() {
         cost_impact: None,
     };
 
-    let detections = detection_engine.detect(&[change.clone()]).unwrap();
+    let detections = detection_engine
+        .detect(std::slice::from_ref(&change))
+        .unwrap();
     let estimates = prediction_engine.predict(&[change]).unwrap();
 
     // Every detected resource should have a corresponding cost estimate
@@ -66,7 +68,9 @@ fn test_every_predicted_cost_referenced_in_explain_output() {
         cost_impact: None,
     };
 
-    let estimates = prediction_engine.predict(&[change.clone()]).unwrap();
+    let estimates = prediction_engine
+        .predict(std::slice::from_ref(&change))
+        .unwrap();
 
     // Every predicted resource should have an explanation
     for estimate in &estimates {
@@ -108,8 +112,12 @@ fn test_explain_output_references_same_resource_ids_as_detect_and_predict() {
         cost_impact: None,
     };
 
-    let detections = detection_engine.detect(&[change.clone()]).unwrap();
-    let estimates = prediction_engine.predict(&[change.clone()]).unwrap();
+    let detections = detection_engine
+        .detect(std::slice::from_ref(&change))
+        .unwrap();
+    let estimates = prediction_engine
+        .predict(std::slice::from_ref(&change))
+        .unwrap();
     let explanation = prediction_engine.explain(&change).unwrap();
 
     // Collect resource IDs from each output
@@ -164,7 +172,9 @@ fn test_explain_output_references_same_cost_figures_as_predict() {
         cost_impact: None,
     };
 
-    let estimates = prediction_engine.predict(&[change.clone()]).unwrap();
+    let estimates = prediction_engine
+        .predict(std::slice::from_ref(&change))
+        .unwrap();
     let explanation = prediction_engine.explain(&change).unwrap();
 
     // Should have at least one estimate

@@ -9,6 +9,7 @@ use tempfile::TempDir;
 mod input_validation_security_tests {
     use super::*;
 
+    #[allow(dead_code)]
     fn create_temp_file(content: &str) -> Result<String, Box<dyn std::error::Error>> {
         let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("test_plan.json");
@@ -21,7 +22,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test various SQL injection patterns that could appear in Terraform configs
-        let sql_injection_payloads = vec![
+        let sql_injection_payloads = [
             // Basic SQL injection
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test.sql", "values": {"query": "'; DROP TABLE users; --"}}]}}}"#,
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test.sql", "values": {"query": "1' OR '1'='1"}}]}}}"#,
@@ -68,7 +69,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test XSS payloads that could appear in Terraform configurations
-        let xss_payloads = vec![
+        let xss_payloads = [
             // Basic XSS
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test.xss", "values": {"script": "<script>alert('xss')</script>"}}]}}}"#,
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test.xss", "values": {"html": "<img src=x onerror=alert('xss')>"}}]}}}"#,
@@ -122,7 +123,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test command injection patterns in Terraform configs
-        let command_injection_payloads = vec![
+        let command_injection_payloads = [
             // Basic command injection
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test.cmd", "values": {"command": "ls; rm -rf /"}}]}}}"#,
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test.cmd", "values": {"command": "echo 'safe' && dangerous_command"}}]}}}"#,
@@ -167,7 +168,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test various malformed JSON that could cause parsing issues
-        let malformed_json_cases = vec![
+        let malformed_json_cases = [
             // Unclosed strings
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test, "values": {}}]}}}"#,
             // Invalid escape sequences
@@ -231,7 +232,7 @@ mod input_validation_security_tests {
         };
 
         // Test boundary values that could cause issues
-        let boundary_cases = vec![
+        let boundary_cases = [
             // Empty strings
             r#"{"planned_values": {"root_module": {"resources": [{"address": "", "values": {}}]}}}"#,
             // Very long strings
@@ -281,7 +282,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test path traversal/directory traversal attacks
-        let path_traversal_payloads = vec![
+        let path_traversal_payloads = [
             // Basic directory traversal
             r#"{"planned_values": {"root_module": {"resources": [{"address": "../../../etc/passwd", "values": {}}]}}}"#,
             r#"{"planned_values": {"root_module": {"resources": [{"address": "..\\..\\..\\windows\\system32\\config\\sam", "values": {}}]}}}"#,
@@ -341,7 +342,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test extreme boundary values that could cause performance or memory issues
-        let extreme_cases = vec![
+        let extreme_cases = [
             // Maximum string length (100KB) - simplified
             {
                 let mut long_string = String::from(r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"data": ""#);
@@ -396,7 +397,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test malicious Unicode and encoding attacks
-        let unicode_attacks = vec![
+        let unicode_attacks = [
             // Zero-width characters (invisible)
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test\u200B\u200C\u200D\u200E\u200F", "values": {}}]}}}"#,
             // Right-to-left override
@@ -447,7 +448,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test attacks designed to cause resource exhaustion
-        let exhaustion_attacks = vec![
+        let exhaustion_attacks = [
             // Many small resources (simplified)
             {
                 let mut many_resources =
@@ -455,7 +456,7 @@ mod input_validation_security_tests {
                 for i in 0..10 {
                     // Reduced from 1000
                     if i > 0 {
-                        many_resources.push_str(",");
+                        many_resources.push(',');
                     }
                     many_resources.push_str(&format!(
                         r#"{{"address": "test{}", "values": {{"data": "value{}"}}}}"#,
@@ -472,7 +473,7 @@ mod input_validation_security_tests {
                 );
                 for i in 0..1000 {
                     if i > 0 {
-                        large_array.push_str(",");
+                        large_array.push(',');
                     }
                     large_array.push_str(&format!(r#""item{}""#, i));
                 }
@@ -485,11 +486,11 @@ mod input_validation_security_tests {
                     r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"nested": "#,
                 );
                 for _ in 0..20 {
-                    nested.push_str(r#"["#);
+                    nested.push('[');
                 }
                 nested.push_str(r#""deep""#);
                 for _ in 0..20 {
-                    nested.push_str(r#"]"#);
+                    nested.push(']');
                 }
                 nested.push_str(r#"}}]}}}"#);
                 nested
@@ -529,7 +530,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test format string vulnerabilities and template injection
-        let format_injection_payloads = vec![
+        let format_injection_payloads = [
             // Format string specifiers
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"data": "%s%s%s%s%s"}}]}}}"#,
             r#"{"planned_values": {"root_module": {"resources": [{"address": "test", "values": {"data": "%n%x%p%d"}}]}}}"#,
@@ -576,7 +577,7 @@ mod input_validation_security_tests {
         let engine = DetectionEngine::new();
 
         // Test inputs that could cause buffer overflows or memory corruption
-        let buffer_attacks = vec![
+        let buffer_attacks = [
             // Very long resource names (simplified)
             {
                 let mut long_name = String::from(
@@ -603,7 +604,7 @@ mod input_validation_security_tests {
                 for i in 0..10 {
                     // Reduced from 1000
                     if i > 0 {
-                        many_keys.push_str(",");
+                        many_keys.push(',');
                     }
                     many_keys.push_str(&format!("\"key{}\": \"value{}\"", i, i));
                 }
@@ -620,7 +621,7 @@ mod input_validation_security_tests {
                 }
                 nested_path.push_str(r#""deep""#);
                 for _ in 0..100 {
-                    nested_path.push_str(r#"}"#);
+                    nested_path.push('}');
                 }
                 nested_path.push_str(r#"}}]}}}"#);
                 nested_path

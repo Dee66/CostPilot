@@ -187,7 +187,7 @@ fn test_cli_scan_performance_baseline() {
     let start = Instant::now();
 
     let mut cmd = std::process::Command::new("./target/debug/costpilot");
-    cmd.args(&["scan", &plan_path.to_string_lossy(), "--format", "json"]);
+    cmd.args(["scan", &plan_path.to_string_lossy(), "--format", "json"]);
 
     let output = cmd.output().unwrap();
     assert!(output.status.success());
@@ -217,7 +217,7 @@ fn test_cli_init_performance_baseline() {
     let init_path = temp_dir.path().join("perf_project");
 
     let mut cmd = std::process::Command::new("./target/debug/costpilot");
-    cmd.args(&["init", "--path", &init_path.to_string_lossy(), "--no-ci"]);
+    cmd.args(["init", "--path", &init_path.to_string_lossy(), "--no-ci"]);
 
     let output = cmd.output().unwrap();
     assert!(output.status.success());
@@ -254,7 +254,7 @@ prediction:
     std::fs::write(&config_path, config_content).unwrap();
 
     let mut cmd = std::process::Command::new("./target/debug/costpilot");
-    cmd.args(&["validate", &config_path.to_string_lossy()]);
+    cmd.args(["validate", &config_path.to_string_lossy()]);
 
     let output = cmd.output().unwrap();
     // Validation may fail but should run
