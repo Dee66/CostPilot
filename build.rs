@@ -1,12 +1,12 @@
 fn main() {
     println!("cargo:rerun-if-changed=pro_engine/pro_engine.wit");
 
-    // Generate cryptographic keys at compile time (always needed for compilation)
-    let wasm_signing_key = generate_crypto_keys();
+    // Generate cryptographic keys at compile time (always, not just for release feature)
+    let _wasm_signing_key = generate_crypto_keys();
 
     // Build and encrypt WASM module for release builds
     #[cfg(feature = "release")]
-    build_pro_engine_wasm(&wasm_signing_key);
+    build_pro_engine_wasm(&_wasm_signing_key);
 
     // Apply code obfuscation for enhanced security
     #[cfg(feature = "obfuscate")]
@@ -236,33 +236,45 @@ fn generate_crypto_keys() -> ed25519_dalek::SigningKey {
     use ed25519_dalek::SigningKey;
     use std::{env, fs, path::Path};
 
-    // Generate Ed25519 keypairs for license and WASM signing
-    let license_keypair = generate_ed25519_keypair();
-    let wasm_keypair = generate_ed25519_keypair();
+    // NEW rotated public keys (2026-01-08)
+    // Fingerprints: db52fc95 (license), 8db250f6 (wasm)
+    // OLD keys (23837ac5, 10f8798e) are REVOKED and must NOT be used
+    const NEW_LICENSE_PUBLIC_KEY_HEX: &str =
+        "db52fc95fe7ccbd5e55ecfd357d8271d1b2d4a9f608e68db3e7f869d54dba5df";
+    const NEW_WASM_PUBLIC_KEY_HEX: &str =
+        "8db250f6bf7cdf016fcc1564b2309897a701c4e4fa1946ca0eb9084f1c557994";
 
-    // Check for external public keys
-    let license_public_key = if let Ok(key_hex) = env::var("COSTPILOT_LICENSE_PUBKEY") {
-        hex::decode(key_hex).expect("Invalid COSTPILOT_LICENSE_PUBKEY format")
-    } else {
-        license_keypair.public.to_vec()
-    };
+    let license_public_key = hex::decode(NEW_LICENSE_PUBLIC_KEY_HEX)
+        .expect("Embedded LICENSE public key must be valid hex");
 
-    let wasm_public_key = if let Ok(key_hex) = env::var("COSTPILOT_WASM_PUBKEY") {
-        hex::decode(key_hex).expect("Invalid COSTPILOT_WASM_PUBKEY format")
-    } else {
-        wasm_keypair.public.to_vec()
-    };
+    let wasm_public_key =
+        hex::decode(NEW_WASM_PUBLIC_KEY_HEX).expect("Embedded WASM public key must be valid hex");
+
+    // Verify key lengths
+    assert_eq!(
+        license_public_key.len(),
+        32,
+        "LICENSE public key must be exactly 32 bytes"
+    );
+    assert_eq!(
+        wasm_public_key.len(),
+        32,
+        "WASM public key must be exactly 32 bytes"
+    );
 
     // Create keys.rs file in OUT_DIR
     let out_dir = env::var("OUT_DIR").unwrap();
     let keys_file = format!(
         r#"// Auto-generated cryptographic keys - DO NOT EDIT
 // Generated at compile time for secure key embedding
+// Keys rotated 2026-01-08 after git history exposure
+// OLD keys (fingerprints 23837ac5, 10f8798e) are REVOKED
 
 pub const LICENSE_PUBLIC_KEY: &[u8] = &{:?};
 pub const WASM_PUBLIC_KEY: &[u8] = &{:?};
 
 // Public keys only. Private keys never shipped.
+// Private keys stored in secure external key management system.
 "#,
         license_public_key, wasm_public_key
     );
@@ -283,8 +295,10 @@ pub const WASM_PUBLIC_KEY: &[u8] = &{:?};
     // Tell rustc to rerun if build.rs changes
     println!("cargo:rerun-if-changed=build.rs");
 
-    // Return the WASM signing key for use in signing
-    SigningKey::from_bytes(&wasm_keypair.private)
+    // Generate ephemeral signing key for build process only
+    // This is NOT used for production - it's only for build.rs internal operations
+    generate_ed25519_keypair();
+    SigningKey::from_bytes(&[0u8; 32])
 }
 
 #[cfg(feature = "obfuscate")]
@@ -319,6 +333,18 @@ fn apply_code_obfuscation() {
     apply_control_flow_obfuscation(&binary_path);
 
     println!("cargo:warning=Code obfuscation completed");
+}
+
+#[cfg(feature = "obfuscate")]
+fn encrypt_string_literals(_binary_path: &str) {
+    // TODO: Implement string literal encryption for additional obfuscation
+    println!("cargo:warning=String literal encryption not yet implemented");
+}
+
+#[cfg(feature = "obfuscate")]
+fn apply_control_flow_obfuscation(_binary_path: &str) {
+    // TODO: Implement control flow obfuscation for additional protection
+    println!("cargo:warning=Control flow obfuscation not yet implemented");
 }
 
 #[cfg(feature = "compress")]

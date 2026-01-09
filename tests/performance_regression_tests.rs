@@ -1,6 +1,6 @@
 use assert_cmd::cargo::cargo_bin_cmd;
-use std::time::{Duration, Instant};
 use std::fs;
+use std::time::{Duration, Instant};
 use tempfile::TempDir;
 
 // Performance regression tests
@@ -46,15 +46,17 @@ fn test_scan_performance_regression() {
 
     let start = Instant::now();
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.arg("scan")
-        .arg("--format=json")
-        .arg(&plan_path);
+    cmd.arg("scan").arg("--format=json").arg(&plan_path);
     cmd.assert().success();
     let duration = start.elapsed();
 
     println!("Scan performance: {:?}", duration);
     // Assert it completes within reasonable time
-    assert!(duration < Duration::from_secs(5), "Scan took too long: {:?}", duration);
+    assert!(
+        duration < Duration::from_secs(5),
+        "Scan took too long: {:?}",
+        duration
+    );
 }
 
 #[test]
@@ -117,7 +119,11 @@ fn test_diff_performance_regression() {
     let duration = start.elapsed();
 
     println!("Diff performance: {:?}", duration);
-    assert!(duration < Duration::from_secs(5), "Diff took too long: {:?}", duration);
+    assert!(
+        duration < Duration::from_secs(5),
+        "Diff took too long: {:?}",
+        duration
+    );
 }
 
 #[test]
@@ -136,13 +142,15 @@ fn test_memory_usage_regression() {
     let start = Instant::now();
     for _ in 0..10 {
         let mut cmd = cargo_bin_cmd!("costpilot");
-        cmd.arg("scan")
-            .arg("--format=json")
-            .arg(&plan_path);
+        cmd.arg("scan").arg("--format=json").arg(&plan_path);
         cmd.assert().success();
     }
     let duration = start.elapsed();
 
     println!("10x scan performance: {:?}", duration);
-    assert!(duration < Duration::from_secs(10), "10 scans took too long: {:?}", duration);
+    assert!(
+        duration < Duration::from_secs(10),
+        "10 scans took too long: {:?}",
+        duration
+    );
 }

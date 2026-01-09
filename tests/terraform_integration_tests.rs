@@ -9,9 +9,7 @@ fn test_scan_ec2_create_plan() {
     let plan_path = Path::new("tests/fixtures/terraform/ec2_create.json");
 
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.arg("scan")
-        .arg("--format=json")
-        .arg(plan_path);
+    cmd.arg("scan").arg("--format=json").arg(plan_path);
 
     cmd.assert()
         .success()
@@ -23,9 +21,7 @@ fn test_scan_rds_create_plan() {
     let plan_path = Path::new("tests/fixtures/terraform/rds_create.json");
 
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.arg("scan")
-        .arg("--format=json")
-        .arg(plan_path);
+    cmd.arg("scan").arg("--format=json").arg(plan_path);
 
     cmd.assert()
         .success()
@@ -44,5 +40,5 @@ fn test_diff_with_real_plans() {
 
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("UpgradeRequired"));
+        .stderr(predicate::str::contains("Diff requires CostPilot Premium"));
 }

@@ -45,74 +45,77 @@ fn test_release_slo_burn_with_production_license() {
     fs::create_dir(&snapshots_path).unwrap();
 
     // Create test snapshots using proper format (need 3+ for burn rate analysis)
-    let snapshot1 = format!(r#"{{
+    let snapshot1 = r#"{
         "id": "test_20250101",
         "timestamp": "2025-01-01T00:00:00Z",
         "total_monthly_cost": 500.0,
-        "modules": {{
-            "ec2": {{
+        "modules": {
+            "ec2": {
                 "name": "ec2",
                 "monthly_cost": 350.0,
                 "resource_count": 5
-            }},
-            "rds": {{
+            },
+            "rds": {
                 "name": "rds",
                 "monthly_cost": 150.0,
                 "resource_count": 2
-            }}
-        }},
-        "services": {{}},
+            }
+        },
+        "services": {},
         "regressions": [],
         "slo_violations": []
-    }}"#);
+    }"#
+    .to_string();
     fs::write(snapshots_path.join("snapshot_20250101.json"), snapshot1).unwrap();
 
-    let snapshot2 = format!(r#"{{
+    let snapshot2 = r#"{
         "id": "test_20250201",
         "timestamp": "2025-02-01T00:00:00Z",
         "total_monthly_cost": 600.0,
-        "modules": {{
-            "ec2": {{
+        "modules": {
+            "ec2": {
                 "name": "ec2",
                 "monthly_cost": 420.0,
                 "resource_count": 5
-            }},
-            "rds": {{
+            },
+            "rds": {
                 "name": "rds",
                 "monthly_cost": 180.0,
                 "resource_count": 2
-            }}
-        }},
-        "services": {{}},
+            }
+        },
+        "services": {},
         "regressions": [],
         "slo_violations": []
-    }}"#);
+    }"#
+    .to_string();
     fs::write(snapshots_path.join("snapshot_20250201.json"), snapshot2).unwrap();
 
-    let snapshot3 = format!(r#"{{
+    let snapshot3 = r#"{
         "id": "test_20250301",
         "timestamp": "2025-03-01T00:00:00Z",
         "total_monthly_cost": 700.0,
-        "modules": {{
-            "ec2": {{
+        "modules": {
+            "ec2": {
                 "name": "ec2",
                 "monthly_cost": 490.0,
                 "resource_count": 5
-            }},
-            "rds": {{
+            },
+            "rds": {
                 "name": "rds",
                 "monthly_cost": 210.0,
                 "resource_count": 2
-            }}
-        }},
-        "services": {{}},
+            }
+        },
+        "services": {},
         "regressions": [],
         "slo_violations": []
-    }}"#);
+    }"#
+    .to_string();
     fs::write(snapshots_path.join("snapshot_20250301.json"), snapshot3).unwrap();
 
     // Create a test license using test issuer (production validation would use license_issuer.rs)
-    use ed25519_dalek::{SigningKey, Signer};
+    use ed25519_dalek::{Signer, SigningKey};
     let seed = [42u8; 32];
     let signing_key = SigningKey::from_bytes(&seed);
     let issuer = "test-costpilot";
@@ -136,7 +139,11 @@ fn test_release_slo_burn_with_production_license() {
     let license_dir = temp_dir.path().join(".costpilot");
     fs::create_dir_all(&license_dir).unwrap();
     let license_path = license_dir.join("license.json");
-    fs::write(&license_path, serde_json::to_string_pretty(&license).unwrap()).unwrap();
+    fs::write(
+        &license_path,
+        serde_json::to_string_pretty(&license).unwrap(),
+    )
+    .unwrap();
 
     // Run the release binary with production-like license
     let mut cmd = cargo_bin_cmd!("costpilot");
@@ -177,7 +184,11 @@ fn test_release_rejects_invalid_signature() {
     let license_dir = temp_dir.path().join(".costpilot");
     fs::create_dir_all(&license_dir).unwrap();
     let license_path = license_dir.join("license.json");
-    fs::write(&license_path, serde_json::to_string_pretty(&license).unwrap()).unwrap();
+    fs::write(
+        &license_path,
+        serde_json::to_string_pretty(&license).unwrap(),
+    )
+    .unwrap();
 
     // Attempt to use Premium feature should fail
     let mut cmd = cargo_bin_cmd!("costpilot");
@@ -199,7 +210,7 @@ fn test_release_rate_limit_tamper_protection() {
     std::env::set_var("HOME", temp_dir.path());
 
     // Create valid license
-    use ed25519_dalek::{SigningKey, Signer};
+    use ed25519_dalek::{Signer, SigningKey};
     let seed = [42u8; 32];
     let signing_key = SigningKey::from_bytes(&seed);
     let issuer = "test-costpilot";
@@ -223,7 +234,11 @@ fn test_release_rate_limit_tamper_protection() {
     let license_dir = temp_dir.path().join(".costpilot");
     fs::create_dir_all(&license_dir).unwrap();
     let license_path = license_dir.join("license.json");
-    fs::write(&license_path, serde_json::to_string_pretty(&license).unwrap()).unwrap();
+    fs::write(
+        &license_path,
+        serde_json::to_string_pretty(&license).unwrap(),
+    )
+    .unwrap();
 
     // Make 6 validation attempts to trigger rate limiting
     use costpilot::pro_engine::license::License;
@@ -239,7 +254,11 @@ fn test_release_rate_limit_tamper_protection() {
     }
 
     // Should hit rate limit before 6 attempts
-    assert!(attempts <= 5, "Rate limiting should block after 5 attempts, got {}", attempts);
+    assert!(
+        attempts <= 5,
+        "Rate limiting should block after 5 attempts, got {}",
+        attempts
+    );
 
     // Try to tamper with rate limit file
     let rate_limit_path = temp_dir.path().join(".costpilot").join("rate_limit.json");
@@ -251,7 +270,10 @@ fn test_release_rate_limit_tamper_protection() {
     // Next validation should detect tampering and reset - meaning it will succeed
     // (because tampering was detected and state was reset to clean)
     let result = lic.validate();
-    assert!(result.is_ok(), "After detecting and resetting tampered file, validation should succeed");
+    assert!(
+        result.is_ok(),
+        "After detecting and resetting tampered file, validation should succeed"
+    );
 
     std::env::remove_var("HOME");
 }

@@ -297,15 +297,23 @@ fn limit_patterns_by_category(patterns: Vec<AntiPattern>) -> Vec<AntiPattern> {
     let mut by_category: HashMap<String, Vec<AntiPattern>> = HashMap::new();
 
     for pattern in patterns {
-        let category = pattern.pattern_id.split('_').next().unwrap_or("OTHER").to_string();
-        by_category.entry(category).or_insert_with(Vec::new).push(pattern);
+        let category = pattern
+            .pattern_id
+            .split('_')
+            .next()
+            .unwrap_or("OTHER")
+            .to_string();
+        by_category.entry(category).or_default().push(pattern);
     }
 
     let mut result = Vec::new();
     for (_, mut category_patterns) in by_category {
         // Sort by cost impact descending
         category_patterns.sort_by(|a, b| {
-            b.cost_impact.unwrap_or(0.0).partial_cmp(&a.cost_impact.unwrap_or(0.0)).unwrap()
+            b.cost_impact
+                .unwrap_or(0.0)
+                .partial_cmp(&a.cost_impact.unwrap_or(0.0))
+                .unwrap()
         });
         result.extend(category_patterns.into_iter().take(3));
     }
@@ -315,7 +323,9 @@ fn limit_patterns_by_category(patterns: Vec<AntiPattern>) -> Vec<AntiPattern> {
 
 /// Detect environment from resource tags (Phase 2)
 fn detect_environment(change: &ResourceChange) -> &str {
-    change.tags.get("Environment")
+    change
+        .tags
+        .get("Environment")
         .or_else(|| change.tags.get("Env"))
         .or_else(|| change.tags.get("environment"))
         .map(|s| s.to_lowercase())
@@ -324,30 +334,38 @@ fn detect_environment(change: &ResourceChange) -> &str {
             "test" | "testing" | "qa" => "test",
             "staging" | "stage" | "stg" => "staging",
             "prod" | "production" | "prd" => "production",
-            _ => "unknown"
+            _ => "unknown",
         })
         .unwrap_or("unknown")
 }
 
 /// Apply environment-aware filters (Phase 2)
-fn apply_environment_filters(patterns: Vec<AntiPattern>, changes: &[ResourceChange]) -> Vec<AntiPattern> {
-    patterns.into_iter().filter(|pattern| {
-        // Find the resource this pattern applies to
-        let resource = changes.iter().find(|c| c.resource_id == pattern.detected_in);
-        let env = resource.map(|r| detect_environment(r)).unwrap_or("unknown");
+fn apply_environment_filters(
+    patterns: Vec<AntiPattern>,
+    changes: &[ResourceChange],
+) -> Vec<AntiPattern> {
+    patterns
+        .into_iter()
+        .filter(|pattern| {
+            // Find the resource this pattern applies to
+            let resource = changes
+                .iter()
+                .find(|c| c.resource_id == pattern.detected_in);
+            let env = resource.map(detect_environment).unwrap_or("unknown");
 
-        // Filter HA recommendations for dev/test
-        if env == "dev" || env == "test" {
-            if pattern.pattern_id.contains("SINGLE_NODE") ||
-               pattern.pattern_id.contains("SINGLE_AZ") ||
-               pattern.pattern_id.contains("NO_HA") {
+            // Filter HA recommendations for dev/test
+            if (env == "dev" || env == "test")
+                && (pattern.pattern_id.contains("SINGLE_NODE")
+                    || pattern.pattern_id.contains("SINGLE_AZ")
+                    || pattern.pattern_id.contains("NO_HA"))
+            {
                 return false; // Skip HA recommendations for non-prod
             }
-        }
 
-        // Keep all other recommendations
-        true
-    }).collect()
+            // Keep all other recommendations
+            true
+        })
+        .collect()
 }
 
 // ============================================================================
@@ -384,7 +402,7 @@ fn detect_multi_instance_consolidation(changes: &[ResourceChange]) -> Vec<AntiPa
             if let Some(instance_type) = config.get("instance_type").and_then(|v| v.as_str()) {
                 if let Some(family) = extract_instance_family(instance_type) {
                     let key = (instance.module_path.clone(), family.to_string());
-                    groups.entry(key).or_insert_with(Vec::new).push(instance);
+                    groups.entry(key).or_default().push(instance);
                 }
             }
         }
@@ -441,10 +459,16 @@ fn detect_multi_instance_consolidation(changes: &[ResourceChange]) -> Vec<AntiPa
                     "MEDIUM"
                 };
 
-                let severity = if savings_percent >= 25.0 { "MEDIUM" } else { "LOW" };
+                let severity = if savings_percent >= 25.0 {
+                    "MEDIUM"
+                } else {
+                    "LOW"
+                };
 
-                let resource_ids: Vec<String> =
-                    group_instances.iter().map(|i| i.resource_id.clone()).collect();
+                let resource_ids: Vec<String> = group_instances
+                    .iter()
+                    .map(|i| i.resource_id.clone())
+                    .collect();
 
                 let mut evidence = vec![
                     format!(
@@ -484,9 +508,7 @@ fn detect_multi_instance_consolidation(changes: &[ResourceChange]) -> Vec<AntiPa
                 );
                 thresholds.insert(
                     "min_savings_percent".to_string(),
-                    serde_json::Value::Number(
-                        serde_json::Number::from_f64(15.0).unwrap()
-                    ),
+                    serde_json::Value::Number(serde_json::Number::from_f64(15.0).unwrap()),
                 );
 
                 patterns.push(AntiPattern {
@@ -549,7 +571,9 @@ fn has_common_service_tag(instances: &[&ResourceChange]) -> bool {
 /// Find consolidated instance type for given vCPU requirement
 fn find_consolidated_instance(family: &str, total_vcpu: u32) -> Option<(String, f64)> {
     // Instance sizes in ascending order
-    let sizes = ["large", "xlarge", "2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge"];
+    let sizes = [
+        "large", "xlarge", "2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge",
+    ];
 
     for size in &sizes {
         let instance_type = format!("{}.{}", family, size);
@@ -608,8 +632,16 @@ fn detect_ec2_overprovisioning(
     let max_vcpu = get_max_reasonable_vcpu_by_environment(environment);
 
     if vcpu > max_vcpu {
-        let confidence = if environment != "unknown" { "HIGH" } else { "LOW" };
-        let severity = if vcpu > max_vcpu * 2 { "HIGH" } else { "MEDIUM" };
+        let confidence = if environment != "unknown" {
+            "HIGH"
+        } else {
+            "LOW"
+        };
+        let severity = if vcpu > max_vcpu * 2 {
+            "HIGH"
+        } else {
+            "MEDIUM"
+        };
 
         let mut evidence = vec![
             format!("Instance type: {} ({} vCPU)", instance_type, vcpu),
@@ -715,9 +747,7 @@ fn detect_rds_overprovisioning(
                 cost_impact: estimate.map(|e| e.monthly_cost),
                 confidence: Some("MEDIUM".to_string()),
                 thresholds: Some(thresholds),
-                assumptions: Some(vec![
-                    "10TB threshold is conservative guideline".to_string(),
-                ]),
+                assumptions: Some(vec!["10TB threshold is conservative guideline".to_string()]),
             });
         }
     }
@@ -727,10 +757,7 @@ fn detect_rds_overprovisioning(
         if iops > MAX_REASONABLE_IOPS as u64 {
             let evidence = vec![
                 format!("Provisioned IOPS: {}", iops),
-                format!(
-                    "Exceeds {} IOPS threshold",
-                    MAX_REASONABLE_IOPS
-                ),
+                format!("Exceeds {} IOPS threshold", MAX_REASONABLE_IOPS),
             ];
 
             let mut thresholds = HashMap::new();
@@ -766,7 +793,7 @@ fn detect_rds_overprovisioning(
 #[allow(dead_code)]
 fn estimate_instance_memory_gb(instance_class: &str) -> Option<f64> {
     // Extract size from instance class (e.g., db.t3.medium -> medium)
-    let size = instance_class.split('.').last()?;
+    let size = instance_class.split('.').next_back()?;
 
     match size {
         // t3/t4g family
@@ -807,21 +834,39 @@ fn detect_rds_storage_optimization(
 
     // 1. Large RDS storage (>5TB) - flag for review
     if let Some(allocated_storage) = config.get("allocated_storage").and_then(|v| v.as_u64()) {
-        if allocated_storage >= RDS_LARGE_STORAGE_THRESHOLD_GB as u64 && allocated_storage < MAX_REASONABLE_STORAGE_GB as u64 {
+        if allocated_storage >= RDS_LARGE_STORAGE_THRESHOLD_GB as u64
+            && allocated_storage < MAX_REASONABLE_STORAGE_GB as u64
+        {
             let mut evidence = vec![
-                format!("Allocated storage: {} GB ({:.1} TB)", allocated_storage, allocated_storage as f64 / 1000.0),
+                format!(
+                    "Allocated storage: {} GB ({:.1} TB)",
+                    allocated_storage,
+                    allocated_storage as f64 / 1000.0
+                ),
                 "Large storage allocation may indicate over-provisioning".to_string(),
-                format!("Exceeds review threshold of {} GB", RDS_LARGE_STORAGE_THRESHOLD_GB),
+                format!(
+                    "Exceeds review threshold of {} GB",
+                    RDS_LARGE_STORAGE_THRESHOLD_GB
+                ),
             ];
 
             if let Some(est) = estimate {
                 let storage_cost = allocated_storage as f64 * GP2_COST_PER_GB;
-                evidence.push(format!("Estimated storage cost: ${:.2}/month", storage_cost));
-                evidence.push(format!("Total instance cost: ${:.2}/month", est.monthly_cost));
+                evidence.push(format!(
+                    "Estimated storage cost: ${:.2}/month",
+                    storage_cost
+                ));
+                evidence.push(format!(
+                    "Total instance cost: ${:.2}/month",
+                    est.monthly_cost
+                ));
             }
 
             let mut thresholds = HashMap::new();
-            thresholds.insert("review_threshold_gb".to_string(), serde_json::Value::Number(serde_json::Number::from(RDS_LARGE_STORAGE_THRESHOLD_GB)));
+            thresholds.insert(
+                "review_threshold_gb".to_string(),
+                serde_json::Value::Number(serde_json::Number::from(RDS_LARGE_STORAGE_THRESHOLD_GB)),
+            );
 
             patterns.push(AntiPattern {
                 pattern_id: "RDS_LARGE_STORAGE".to_string(),
@@ -845,12 +890,15 @@ fn detect_rds_storage_optimization(
     // 2. RDS gp2 storage - already handled by storage inefficiency but add RDS-specific context
     if let Some(storage_type) = config.get("storage_type").and_then(|v| v.as_str()) {
         if storage_type == "gp2" {
-            if let Some(allocated_storage) = config.get("allocated_storage").and_then(|v| v.as_u64()) {
+            if let Some(allocated_storage) =
+                config.get("allocated_storage").and_then(|v| v.as_u64())
+            {
                 let gp2_cost = allocated_storage as f64 * GP2_COST_PER_GB;
                 let gp3_cost = allocated_storage as f64 * GP3_COST_PER_GB;
                 let savings = gp2_cost - gp3_cost;
 
-                if savings >= 10.0 { // Higher threshold for RDS (significant databases)
+                if savings >= 10.0 {
+                    // Higher threshold for RDS (significant databases)
                     patterns.push(AntiPattern {
                         pattern_id: "RDS_GP2_MIGRATION".to_string(),
                         pattern_name: "RDS gp2 to gp3 Migration Opportunity".to_string(),
@@ -896,7 +944,10 @@ fn detect_nat_gateway_optimization(change: &ResourceChange) -> Vec<AntiPattern> 
     };
 
     // 1. Public NAT gateway without explicit private specification
-    let connectivity_type = config.get("connectivity_type").and_then(|v| v.as_str()).unwrap_or("public");
+    let connectivity_type = config
+        .get("connectivity_type")
+        .and_then(|v| v.as_str())
+        .unwrap_or("public");
 
     if connectivity_type == "public" {
         let hourly_cost = NAT_GATEWAY_HOURLY_COST;
@@ -1027,8 +1078,16 @@ fn detect_security_group_complexity(change: &ResourceChange) -> Vec<AntiPattern>
     };
 
     // Count ingress and egress rules
-    let ingress_count = config.get("ingress").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
-    let egress_count = config.get("egress").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
+    let ingress_count = config
+        .get("ingress")
+        .and_then(|v| v.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
+    let egress_count = config
+        .get("egress")
+        .and_then(|v| v.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
     let total_rules = ingress_count + egress_count;
 
     if total_rules > SECURITY_GROUP_COMPLEX_THRESHOLD as usize {
@@ -1098,7 +1157,9 @@ fn detect_elasticache_rightsizing(
 ) -> Vec<AntiPattern> {
     let mut patterns = Vec::new();
 
-    if change.resource_type != "aws_elasticache_cluster" && change.resource_type != "aws_elasticache_replication_group" {
+    if change.resource_type != "aws_elasticache_cluster"
+        && change.resource_type != "aws_elasticache_replication_group"
+    {
         return patterns;
     }
 
@@ -1108,12 +1169,18 @@ fn detect_elasticache_rightsizing(
     };
 
     // Check for large instance types
-    let node_type = config.get("node_type").or_else(|| config.get("cache_node_type")).and_then(|v| v.as_str());
+    let node_type = config
+        .get("node_type")
+        .or_else(|| config.get("cache_node_type"))
+        .and_then(|v| v.as_str());
 
     if let Some(node_type_str) = node_type {
         // Flag large instance types (2xlarge and above)
-        if node_type_str.contains(".2xlarge") || node_type_str.contains(".4xlarge") ||
-           node_type_str.contains(".8xlarge") || node_type_str.contains(".12xlarge") {
+        if node_type_str.contains(".2xlarge")
+            || node_type_str.contains(".4xlarge")
+            || node_type_str.contains(".8xlarge")
+            || node_type_str.contains(".12xlarge")
+        {
             let mut evidence = vec![
                 format!("Node type: {}", node_type_str),
                 "Large ElastiCache instance type detected".to_string(),
@@ -1181,7 +1248,9 @@ fn detect_bastion_host_rightsizing(
     }
 
     // Look for bastion host indicators in tags or name
-    let is_bastion = change.tags.get("Name")
+    let is_bastion = change
+        .tags
+        .get("Name")
         .or_else(|| change.tags.get("Role"))
         .or_else(|| change.tags.get("Purpose"))
         .map(|s| {
@@ -1201,9 +1270,9 @@ fn detect_bastion_host_rightsizing(
     // Flag if using compute-optimized, memory-optimized, or large general-purpose
     let family = extract_instance_family(instance_type)?;
 
-    let inappropriate = get_compute_families().contains(&family) ||
-                        get_memory_families().contains(&family) ||
-                        instance_type.contains("xlarge");
+    let inappropriate = get_compute_families().contains(&family)
+        || get_memory_families().contains(&family)
+        || instance_type.contains("xlarge");
 
     if inappropriate {
         let mut evidence = vec![
@@ -1217,7 +1286,10 @@ fn detect_bastion_host_rightsizing(
             // Estimate savings with t3.small ($15.18/month)
             let t3_small_cost = 15.18;
             if est.monthly_cost > t3_small_cost {
-                evidence.push(format!("Potential savings with t3.small: ${:.2}/month", est.monthly_cost - t3_small_cost));
+                evidence.push(format!(
+                    "Potential savings with t3.small: ${:.2}/month",
+                    est.monthly_cost - t3_small_cost
+                ));
             }
         }
 
@@ -1255,12 +1327,20 @@ fn detect_development_environment_rightsizing(
     }
 
     // Check if this is dev/staging environment
-    let environment = change.tags.get("Environment")
+    let environment = change
+        .tags
+        .get("Environment")
         .or_else(|| change.tags.get("Env"))
         .map(|s| s.to_lowercase());
 
     let is_dev = match &environment {
-        Some(env) => env == "dev" || env == "development" || env == "staging" || env == "stage" || env == "test",
+        Some(env) => {
+            env == "dev"
+                || env == "development"
+                || env == "staging"
+                || env == "stage"
+                || env == "test"
+        }
         None => false,
     };
 
@@ -1277,17 +1357,21 @@ fn detect_development_environment_rightsizing(
     if change.resource_type == "aws_instance" {
         if let Some(instance_type) = config.get("instance_type").and_then(|v| v.as_str()) {
             // Production-grade: 2xlarge and above, or r5/c5 families xlarge and above
-            let is_production_grade = instance_type.contains(".2xlarge") ||
-                                       instance_type.contains(".4xlarge") ||
-                                       instance_type.contains(".8xlarge") ||
-                                       (instance_type.starts_with("r5.") && instance_type.contains("xlarge")) ||
-                                       (instance_type.starts_with("c5.") && instance_type.contains("xlarge"));
+            let is_production_grade = instance_type.contains(".2xlarge")
+                || instance_type.contains(".4xlarge")
+                || instance_type.contains(".8xlarge")
+                || (instance_type.starts_with("r5.") && instance_type.contains("xlarge"))
+                || (instance_type.starts_with("c5.") && instance_type.contains("xlarge"));
 
             if is_production_grade {
                 let mut evidence = vec![
-                    format!("Environment: {} (non-production)", environment.as_ref().unwrap()),
+                    format!(
+                        "Environment: {} (non-production)",
+                        environment.as_ref().unwrap()
+                    ),
                     format!("Instance type: {} (production-grade)", instance_type),
-                    "Development environments typically don't need production-grade resources".to_string(),
+                    "Development environments typically don't need production-grade resources"
+                        .to_string(),
                 ];
 
                 if let Some(est) = estimate {
@@ -1316,7 +1400,8 @@ fn detect_development_environment_rightsizing(
     // For RDS: Flag large storage allocations in dev
     if change.resource_type == "aws_db_instance" {
         if let Some(allocated_storage) = config.get("allocated_storage").and_then(|v| v.as_u64()) {
-            if allocated_storage > 1000 { // >1TB in dev is unusual
+            if allocated_storage > 1000 {
+                // >1TB in dev is unusual
                 patterns.push(AntiPattern {
                     pattern_id: "DEV_ENVIRONMENT_LARGE_DATABASE".to_string(),
                     pattern_name: "Development Database With Production-Grade Storage".to_string(),
@@ -1399,7 +1484,8 @@ fn detect_microservices_consolidation(
     let mut patterns = Vec::new();
 
     // Group small EC2 instances by module path (microservices pattern)
-    let mut module_groups: HashMap<String, Vec<(&ResourceChange, Option<&CostEstimate>)>> = HashMap::new();
+    let mut module_groups: HashMap<String, Vec<(&ResourceChange, Option<&CostEstimate>)>> =
+        HashMap::new();
 
     for change in resource_changes {
         if change.resource_type != "aws_instance" {
@@ -1417,9 +1503,10 @@ fn detect_microservices_consolidation(
         };
 
         // Only consider small instances (micro, small, medium)
-        if !instance_type.contains(".micro") &&
-           !instance_type.contains(".small") &&
-           !instance_type.contains(".medium") {
+        if !instance_type.contains(".micro")
+            && !instance_type.contains(".small")
+            && !instance_type.contains(".medium")
+        {
             continue;
         }
 
@@ -1431,24 +1518,28 @@ fn detect_microservices_consolidation(
         };
 
         let estimate = estimates.get(&change.resource_id);
-        module_groups.entry(module_path.to_string())
-            .or_insert_with(Vec::new)
+        module_groups
+            .entry(module_path.to_string())
+            .or_default()
             .push((change, estimate));
     }
 
     // Find modules with 5+ small instances
     for (module_path, instances) in module_groups {
         if instances.len() >= MICROSERVICES_SMALL_INSTANCE_THRESHOLD as usize {
-            let instance_types: Vec<String> = instances.iter()
+            let instance_types: Vec<String> = instances
+                .iter()
                 .filter_map(|(c, _)| {
-                    c.new_config.as_ref()
+                    c.new_config
+                        .as_ref()
                         .and_then(|cfg| cfg.get("instance_type"))
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
                 })
                 .collect();
 
-            let total_cost: f64 = instances.iter()
+            let total_cost: f64 = instances
+                .iter()
                 .filter_map(|(_, est)| est.map(|e| e.monthly_cost))
                 .sum();
 
@@ -1462,7 +1553,10 @@ fn detect_microservices_consolidation(
                 evidence.push(format!("Combined monthly cost: ${:.2}", total_cost));
                 // Estimate 30-40% savings from consolidation
                 let estimated_savings = total_cost * 0.35;
-                evidence.push(format!("Potential savings from consolidation: ${:.2}/month", estimated_savings));
+                evidence.push(format!(
+                    "Potential savings from consolidation: ${:.2}/month",
+                    estimated_savings
+                ));
             }
 
             patterns.push(AntiPattern {
@@ -1496,26 +1590,29 @@ fn detect_regional_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
     let mut patterns = Vec::new();
 
     // Only check expensive resource types
-    if change.resource_type != "aws_instance" &&
-       change.resource_type != "aws_db_instance" &&
-       change.resource_type != "aws_elasticache_cluster" {
+    if change.resource_type != "aws_instance"
+        && change.resource_type != "aws_db_instance"
+        && change.resource_type != "aws_elasticache_cluster"
+    {
         return patterns;
     }
 
     // Check if provider specifies an expensive region
     // This is a heuristic based on resource_id patterns
-    let expensive_regions = vec![
-        "us-east-1",  // Reference region
-        "eu-west-1",  // ~5-10% more expensive
+    let expensive_regions = [
+        "us-east-1",      // Reference region
+        "eu-west-1",      // ~5-10% more expensive
         "ap-northeast-1", // Tokyo - significantly more expensive
         "ap-northeast-2", // Seoul
         "ap-southeast-1", // Singapore
         "ap-southeast-2", // Sydney - most expensive
-        "sa-east-1",  // São Paulo - very expensive
+        "sa-east-1",      // São Paulo - very expensive
     ];
 
     // Check if resource tags or name indicates non-US region usage
-    let region_hint = change.tags.get("Region")
+    let region_hint = change
+        .tags
+        .get("Region")
         .or_else(|| change.tags.get("AWS_REGION"))
         .map(|s| s.as_str());
 
@@ -1565,7 +1662,10 @@ fn detect_asg_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
 
     let min_size = config.get("min_size").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
     let max_size = config.get("max_size").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
-    let desired_capacity = config.get("desired_capacity").and_then(|v| v.as_u64()).unwrap_or(min_size as u64) as u32;
+    let desired_capacity = config
+        .get("desired_capacity")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(min_size as u64) as u32;
 
     // 1. High minimum capacity
     if min_size >= ASG_MIN_CAPACITY_THRESHOLD {
@@ -1653,8 +1753,9 @@ fn detect_asg_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
 fn detect_api_gateway_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
     let mut patterns = Vec::new();
 
-    if change.resource_type != "aws_api_gateway_rest_api" &&
-       change.resource_type != "aws_apigatewayv2_api" {
+    if change.resource_type != "aws_api_gateway_rest_api"
+        && change.resource_type != "aws_apigatewayv2_api"
+    {
         return patterns;
     }
 
@@ -1664,7 +1765,10 @@ fn detect_api_gateway_optimization(change: &ResourceChange) -> Vec<AntiPattern> 
     };
 
     // Check if caching is disabled (default)
-    let cache_enabled = config.get("cache_cluster_enabled").and_then(|v| v.as_bool()).unwrap_or(false);
+    let cache_enabled = config
+        .get("cache_cluster_enabled")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
 
     if !cache_enabled && change.resource_type == "aws_api_gateway_rest_api" {
         patterns.push(AntiPattern {
@@ -1705,7 +1809,10 @@ fn detect_cloudfront_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
     };
 
     // Check if price class is PriceClass_All (most expensive)
-    let price_class = config.get("price_class").and_then(|v| v.as_str()).unwrap_or("PriceClass_All");
+    let price_class = config
+        .get("price_class")
+        .and_then(|v| v.as_str())
+        .unwrap_or("PriceClass_All");
 
     if price_class == "PriceClass_All" {
         patterns.push(AntiPattern {
@@ -1731,7 +1838,8 @@ fn detect_cloudfront_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
     }
 
     // Check if compression is disabled
-    let compression_enabled = config.get("default_cache_behavior")
+    let compression_enabled = config
+        .get("default_cache_behavior")
         .and_then(|v| v.as_array())
         .and_then(|arr| arr.first())
         .and_then(|behavior| behavior.get("compress"))
@@ -1778,11 +1886,9 @@ fn detect_efs_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
 
     // Check lifecycle policy (IA storage class)
     let lifecycle_policy = config.get("lifecycle_policy").and_then(|v| v.as_array());
-    let has_ia_transition = lifecycle_policy.map(|policies| {
-        policies.iter().any(|p| {
-            p.get("transition_to_ia").is_some()
-        })
-    }).unwrap_or(false);
+    let has_ia_transition = lifecycle_policy
+        .map(|policies| policies.iter().any(|p| p.get("transition_to_ia").is_some()))
+        .unwrap_or(false);
 
     if !has_ia_transition {
         patterns.push(AntiPattern {
@@ -1808,8 +1914,13 @@ fn detect_efs_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
     }
 
     // Check throughput mode
-    let throughput_mode = config.get("throughput_mode").and_then(|v| v.as_str()).unwrap_or("bursting");
-    let provisioned_throughput = config.get("provisioned_throughput_in_mibps").and_then(|v| v.as_f64());
+    let throughput_mode = config
+        .get("throughput_mode")
+        .and_then(|v| v.as_str())
+        .unwrap_or("bursting");
+    let provisioned_throughput = config
+        .get("provisioned_throughput_in_mibps")
+        .and_then(|v| v.as_f64());
 
     if throughput_mode == "provisioned" {
         if let Some(throughput) = provisioned_throughput {
@@ -1959,8 +2070,7 @@ fn detect_waf_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
 fn detect_iam_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
     let mut patterns = Vec::new();
 
-    if change.resource_type != "aws_iam_policy" &&
-       change.resource_type != "aws_iam_role_policy" {
+    if change.resource_type != "aws_iam_policy" && change.resource_type != "aws_iam_role_policy" {
         return patterns;
     }
 
@@ -2014,7 +2124,9 @@ fn detect_reserved_instance_opportunity(
         return patterns;
     }
 
-    let environment = change.tags.get("Environment")
+    let environment = change
+        .tags
+        .get("Environment")
         .or_else(|| change.tags.get("Env"))
         .map(|s| s.to_lowercase());
 
@@ -2081,7 +2193,8 @@ fn detect_spot_instance_opportunity(change: &ResourceChange) -> Vec<AntiPattern>
     };
 
     // Check if instance market is "spot" or if using launch template with spot
-    let instance_market = config.get("instance_market_options")
+    let instance_market = config
+        .get("instance_market_options")
         .and_then(|v| v.as_array())
         .and_then(|arr| arr.first())
         .and_then(|opt| opt.get("market_type"))
@@ -2094,18 +2207,20 @@ fn detect_spot_instance_opportunity(change: &ResourceChange) -> Vec<AntiPattern>
     }
 
     // Check for workload tags that indicate spot-suitable workloads
-    let workload_hint = change.tags.get("Workload")
+    let workload_hint = change
+        .tags
+        .get("Workload")
         .or_else(|| change.tags.get("Purpose"))
         .or_else(|| change.tags.get("Role"))
         .map(|s| s.to_lowercase());
 
     let spot_suitable = if let Some(workload) = &workload_hint {
-        workload.contains("batch") ||
-        workload.contains("processing") ||
-        workload.contains("analytics") ||
-        workload.contains("etl") ||
-        workload.contains("worker") ||
-        workload.contains("queue")
+        workload.contains("batch")
+            || workload.contains("processing")
+            || workload.contains("analytics")
+            || workload.contains("etl")
+            || workload.contains("worker")
+            || workload.contains("queue")
     } else {
         false
     };
@@ -2154,7 +2269,8 @@ fn detect_ecs_fargate_oversized(
     };
 
     // Check if using Fargate
-    let requires_compatibilities = config.get("requires_compatibilities")
+    let requires_compatibilities = config
+        .get("requires_compatibilities")
         .and_then(|v| v.as_array())
         .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>());
 
@@ -2168,13 +2284,24 @@ fn detect_ecs_fargate_oversized(
     }
 
     // Get CPU and memory allocations
-    let cpu = config.get("cpu").and_then(|v| v.as_str()).and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
-    let memory = config.get("memory").and_then(|v| v.as_str()).and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
+    let cpu = config
+        .get("cpu")
+        .and_then(|v| v.as_str())
+        .and_then(|s| s.parse::<u32>().ok())
+        .unwrap_or(0);
+    let memory = config
+        .get("memory")
+        .and_then(|v| v.as_str())
+        .and_then(|s| s.parse::<u32>().ok())
+        .unwrap_or(0);
 
     // Check for high CPU allocation
     if cpu >= FARGATE_HIGH_CPU_THRESHOLD {
         let mut evidence = vec![
-            format!("Fargate CPU allocation: {} (threshold: {})", cpu, FARGATE_HIGH_CPU_THRESHOLD),
+            format!(
+                "Fargate CPU allocation: {} (threshold: {})",
+                cpu, FARGATE_HIGH_CPU_THRESHOLD
+            ),
             "High CPU allocations increase Fargate costs significantly".to_string(),
             "Consider rightsizing based on actual CPU utilization".to_string(),
         ];
@@ -2208,7 +2335,10 @@ fn detect_ecs_fargate_oversized(
     // Check for high memory allocation
     if memory >= FARGATE_HIGH_MEMORY_THRESHOLD {
         let mut evidence = vec![
-            format!("Fargate memory allocation: {}MB (threshold: {}MB)", memory, FARGATE_HIGH_MEMORY_THRESHOLD),
+            format!(
+                "Fargate memory allocation: {}MB (threshold: {}MB)",
+                memory, FARGATE_HIGH_MEMORY_THRESHOLD
+            ),
             "High memory allocations increase Fargate costs".to_string(),
             "Review actual memory usage patterns".to_string(),
         ];
@@ -2244,7 +2374,7 @@ fn detect_ecs_fargate_oversized(
 
         // Fargate optimal ratios: 256 CPU (0.25 vCPU) → 512-2048 MB (ratio 2-8)
         // Typical is 1:4 (e.g., 1024 CPU = 4096 MB)
-        if ratio < 2.0 || ratio > 8.0 {
+        if !(2.0..=8.0).contains(&ratio) {
             patterns.push(AntiPattern {
                 pattern_id: "FARGATE_SUBOPTIMAL_RATIO".to_string(),
                 pattern_name: "ECS Fargate Suboptimal CPU:Memory Ratio".to_string(),
@@ -2278,13 +2408,16 @@ fn detect_elasticache_reserved_instance(
 ) -> Vec<AntiPattern> {
     let mut patterns = Vec::new();
 
-    if change.resource_type != "aws_elasticache_cluster" &&
-       change.resource_type != "aws_elasticache_replication_group" {
+    if change.resource_type != "aws_elasticache_cluster"
+        && change.resource_type != "aws_elasticache_replication_group"
+    {
         return patterns;
     }
 
     // Check if production environment
-    let environment = change.tags.get("Environment")
+    let environment = change
+        .tags
+        .get("Environment")
         .or_else(|| change.tags.get("Env"))
         .map(|s| s.to_lowercase());
 
@@ -2343,8 +2476,9 @@ fn detect_opensearch_optimization(
 ) -> Vec<AntiPattern> {
     let mut patterns = Vec::new();
 
-    if change.resource_type != "aws_opensearch_domain" &&
-       change.resource_type != "aws_elasticsearch_domain" {
+    if change.resource_type != "aws_opensearch_domain"
+        && change.resource_type != "aws_elasticsearch_domain"
+    {
         return patterns;
     }
 
@@ -2354,12 +2488,18 @@ fn detect_opensearch_optimization(
     };
 
     // Check for large instance types
-    if let Some(cluster_config) = config.get("cluster_config").and_then(|v| v.as_array()).and_then(|arr| arr.first()) {
+    if let Some(cluster_config) = config
+        .get("cluster_config")
+        .and_then(|v| v.as_array())
+        .and_then(|arr| arr.first())
+    {
         if let Some(instance_type) = cluster_config.get("instance_type").and_then(|v| v.as_str()) {
             // Flag large instances (4xlarge+)
-            if instance_type.contains(".4xlarge") || instance_type.contains(".8xlarge") ||
-               instance_type.contains(".12xlarge") || instance_type.contains(".16xlarge") {
-
+            if instance_type.contains(".4xlarge")
+                || instance_type.contains(".8xlarge")
+                || instance_type.contains(".12xlarge")
+                || instance_type.contains(".16xlarge")
+            {
                 let mut evidence = vec![
                     format!("Instance type: {}", instance_type),
                     "Large OpenSearch instances are expensive".to_string(),
@@ -2389,7 +2529,11 @@ fn detect_opensearch_optimization(
         }
 
         // Check storage type
-        if let Some(ebs_options) = config.get("ebs_options").and_then(|v| v.as_array()).and_then(|arr| arr.first()) {
+        if let Some(ebs_options) = config
+            .get("ebs_options")
+            .and_then(|v| v.as_array())
+            .and_then(|arr| arr.first())
+        {
             if let Some(volume_type) = ebs_options.get("volume_type").and_then(|v| v.as_str()) {
                 if volume_type == "gp2" {
                     patterns.push(AntiPattern {
@@ -2470,7 +2614,10 @@ fn detect_kinesis_optimization(change: &ResourceChange) -> Vec<AntiPattern> {
     }
 
     // Check stream mode (provisioned vs on-demand)
-    let stream_mode_details = config.get("stream_mode_details").and_then(|v| v.as_array()).and_then(|arr| arr.first());
+    let stream_mode_details = config
+        .get("stream_mode_details")
+        .and_then(|v| v.as_array())
+        .and_then(|arr| arr.first());
     if let Some(mode_details) = stream_mode_details {
         if let Some(stream_mode) = mode_details.get("stream_mode").and_then(|v| v.as_str()) {
             if stream_mode == "PROVISIONED" {
@@ -2532,9 +2679,11 @@ fn detect_ec2_rightsizing(
     let size = parts[1];
 
     // Detect oversized instances (8xlarge, 12xlarge, 16xlarge, 24xlarge)
-    if size.contains("8xlarge") || size.contains("12xlarge") ||
-       size.contains("16xlarge") || size.contains("24xlarge") {
-
+    if size.contains("8xlarge")
+        || size.contains("12xlarge")
+        || size.contains("16xlarge")
+        || size.contains("24xlarge")
+    {
         let mut evidence = vec![
             format!("Instance type: {} (very large)", instance_type),
             "Large instances often indicate over-provisioning".to_string(),
@@ -2546,7 +2695,10 @@ fn detect_ec2_rightsizing(
 
             // Calculate potential savings with 4xlarge
             let potential_savings = est.monthly_cost * 0.4; // Assume 40% savings
-            evidence.push(format!("Potential savings: ${:.2}/month with rightsizing", potential_savings));
+            evidence.push(format!(
+                "Potential savings: ${:.2}/month with rightsizing",
+                potential_savings
+            ));
         }
 
         patterns.push(AntiPattern {
@@ -2576,15 +2728,24 @@ fn detect_ec2_rightsizing(
     // Detect expensive compute-optimized instances for non-compute workloads
     if family.starts_with("c5") || family.starts_with("c6") {
         // Check workload tags
-        let workload = change.tags.get("Workload")
+        let workload = change
+            .tags
+            .get("Workload")
             .or_else(|| change.tags.get("Purpose"))
             .or_else(|| change.tags.get("Role"))
             .map(|s| s.to_lowercase());
 
-        let is_compute_workload = workload.as_ref().map(|w| {
-            w.contains("compute") || w.contains("cpu") || w.contains("processing") ||
-            w.contains("batch") || w.contains("encoding") || w.contains("rendering")
-        }).unwrap_or(false);
+        let is_compute_workload = workload
+            .as_ref()
+            .map(|w| {
+                w.contains("compute")
+                    || w.contains("cpu")
+                    || w.contains("processing")
+                    || w.contains("batch")
+                    || w.contains("encoding")
+                    || w.contains("rendering")
+            })
+            .unwrap_or(false);
 
         if !is_compute_workload && (size.contains("large") || size.contains("xlarge")) {
             patterns.push(AntiPattern {
@@ -2614,17 +2775,26 @@ fn detect_ec2_rightsizing(
     }
 
     // Detect expensive memory-optimized instances
-    if (family.starts_with("r5") || family.starts_with("r6") || family.starts_with("x1")) &&
-       (size.contains("xlarge") || size.contains("large")) {
-
-        let workload = change.tags.get("Workload")
+    if (family.starts_with("r5") || family.starts_with("r6") || family.starts_with("x1"))
+        && (size.contains("xlarge") || size.contains("large"))
+    {
+        let workload = change
+            .tags
+            .get("Workload")
             .or_else(|| change.tags.get("Purpose"))
             .map(|s| s.to_lowercase());
 
-        let is_memory_workload = workload.as_ref().map(|w| {
-            w.contains("memory") || w.contains("cache") || w.contains("database") ||
-            w.contains("analytics") || w.contains("redis") || w.contains("elastic")
-        }).unwrap_or(false);
+        let is_memory_workload = workload
+            .as_ref()
+            .map(|w| {
+                w.contains("memory")
+                    || w.contains("cache")
+                    || w.contains("database")
+                    || w.contains("analytics")
+                    || w.contains("redis")
+                    || w.contains("elastic")
+            })
+            .unwrap_or(false);
 
         if !is_memory_workload {
             patterns.push(AntiPattern {
@@ -2679,7 +2849,11 @@ fn detect_lambda_memory_optimization(
         // Flag very high memory allocations (>3GB)
         if memory_mb >= 3072 {
             let mut evidence = vec![
-                format!("Memory allocation: {} MB ({:.1} GB)", memory_mb, memory_mb as f64 / 1024.0),
+                format!(
+                    "Memory allocation: {} MB ({:.1} GB)",
+                    memory_mb,
+                    memory_mb as f64 / 1024.0
+                ),
                 "High memory allocation increases Lambda costs".to_string(),
                 "Lambda pricing: $0.0000166667 per GB-second".to_string(),
             ];
@@ -2831,7 +3005,11 @@ fn detect_s3_storage_class_optimization(change: &ResourceChange) -> Vec<AntiPatt
         None => return patterns,
     };
 
-    if let Some(versioning) = config.get("versioning").and_then(|v| v.as_array()).and_then(|arr| arr.first()) {
+    if let Some(versioning) = config
+        .get("versioning")
+        .and_then(|v| v.as_array())
+        .and_then(|arr| arr.first())
+    {
         if let Some(enabled) = versioning.get("enabled").and_then(|v| v.as_bool()) {
             if enabled {
                 patterns.push(AntiPattern {
@@ -2894,81 +3072,79 @@ fn detect_instance_family_mismatch(change: &ResourceChange) -> Option<AntiPatter
     let workload_to_family = get_workload_to_family_hints();
 
     for (keyword, recommended_families) in &workload_to_family {
-        if workload_hint.contains(keyword) {
-            if !recommended_families.contains(&family) {
-                let mut evidence = vec![
-                    format!("Instance type: {} (family: {})", instance_type, family),
-                    format!("Workload tag indicates: {}", workload_hint),
-                    format!(
-                        "Recommended families for '{}' workload: {}",
-                        keyword,
-                        recommended_families.join(", ")
-                    ),
-                ];
+        if workload_hint.contains(keyword) && !recommended_families.contains(&family) {
+            let mut evidence = vec![
+                format!("Instance type: {} (family: {})", instance_type, family),
+                format!("Workload tag indicates: {}", workload_hint),
+                format!(
+                    "Recommended families for '{}' workload: {}",
+                    keyword,
+                    recommended_families.join(", ")
+                ),
+            ];
 
-                // Classify family types for explanation
-                let current_family_type = if get_compute_families().contains(&family) {
-                    "compute-optimized"
-                } else if get_memory_families().contains(&family) {
-                    "memory-optimized"
-                } else if get_burstable_families().contains(&family) {
-                    "burstable"
-                } else if get_general_families().contains(&family) {
-                    "general-purpose"
-                } else {
-                    "specialized"
-                };
+            // Classify family types for explanation
+            let current_family_type = if get_compute_families().contains(&family) {
+                "compute-optimized"
+            } else if get_memory_families().contains(&family) {
+                "memory-optimized"
+            } else if get_burstable_families().contains(&family) {
+                "burstable"
+            } else if get_general_families().contains(&family) {
+                "general-purpose"
+            } else {
+                "specialized"
+            };
 
-                evidence.push(format!(
-                    "Current instance uses {} family ({})",
-                    family, current_family_type
-                ));
+            evidence.push(format!(
+                "Current instance uses {} family ({})",
+                family, current_family_type
+            ));
 
-                let mut thresholds = HashMap::new();
-                thresholds.insert(
-                    "workload_keyword".to_string(),
-                    serde_json::Value::String(keyword.to_string()),
-                );
-                thresholds.insert(
-                    "recommended_families".to_string(),
-                    serde_json::Value::Array(
-                        recommended_families
-                            .iter()
-                            .map(|f| serde_json::Value::String(f.to_string()))
-                            .collect(),
-                    ),
-                );
+            let mut thresholds = HashMap::new();
+            thresholds.insert(
+                "workload_keyword".to_string(),
+                serde_json::Value::String(keyword.to_string()),
+            );
+            thresholds.insert(
+                "recommended_families".to_string(),
+                serde_json::Value::Array(
+                    recommended_families
+                        .iter()
+                        .map(|f| serde_json::Value::String(f.to_string()))
+                        .collect(),
+                ),
+            );
 
-                return Some(AntiPattern {
-                    pattern_id: "INSTANCE_FAMILY_MISMATCH".to_string(),
-                    pattern_name: "Instance Family May Not Match Workload".to_string(),
-                    description: format!(
-                        "{} family instance used for '{}' workload - consider {} family instead",
-                        family,
-                        keyword,
-                        recommended_families.join(" or ")
-                    ),
-                    severity: "LOW".to_string(),
-                    detected_in: change.resource_id.clone(),
-                    evidence,
-                    suggested_fix: Some(format!(
-                        "Consider using {} family instances for this workload. \
-                        Current {} family may be over/under-provisioned for '{}' use case. \
-                        Verify instance family aligns with actual workload requirements.",
-                        recommended_families.join(" or "),
-                        family,
-                        keyword
-                    )),
-                    cost_impact: None,
-                    confidence: Some("MEDIUM".to_string()),
-                    thresholds: Some(thresholds),
-                    assumptions: Some(vec![
-                        format!("Workload classification based on '{}' tag", workload_hint),
-                        "Family recommendation is advisory, not prescriptive".to_string(),
-                        "Actual requirements may differ from tag indication".to_string(),
-                    ]),
-                });
-            }
+            return Some(AntiPattern {
+                pattern_id: "INSTANCE_FAMILY_MISMATCH".to_string(),
+                pattern_name: "Instance Family May Not Match Workload".to_string(),
+                description: format!(
+                    "{} family instance used for '{}' workload - consider {} family instead",
+                    family,
+                    keyword,
+                    recommended_families.join(" or ")
+                ),
+                severity: "LOW".to_string(),
+                detected_in: change.resource_id.clone(),
+                evidence,
+                suggested_fix: Some(format!(
+                    "Consider using {} family instances for this workload. \
+                    Current {} family may be over/under-provisioned for '{}' use case. \
+                    Verify instance family aligns with actual workload requirements.",
+                    recommended_families.join(" or "),
+                    family,
+                    keyword
+                )),
+                cost_impact: None,
+                confidence: Some("MEDIUM".to_string()),
+                thresholds: Some(thresholds),
+                assumptions: Some(vec![
+                    format!("Workload classification based on '{}' tag", workload_hint),
+                    "Family recommendation is advisory, not prescriptive".to_string(),
+                    "Actual requirements may differ from tag indication".to_string(),
+                ]),
+            });
         }
     }
 
@@ -3016,9 +3192,19 @@ fn detect_ebs_storage_inefficiency(change: &ResourceChange) -> Option<AntiPatter
             // Only flag if savings >= $1/month
             let evidence = vec![
                 format!("Volume type: gp2 ({} GB)", size_gb),
-                format!("Current cost: ${:.2}/month (${:.2}/GB)", current_cost, GP2_COST_PER_GB),
-                format!("gp3 cost: ${:.2}/month (${:.2}/GB)", gp3_cost, GP3_COST_PER_GB),
-                format!("Potential savings: ${:.2}/month ({:.0}%)", savings, (savings / current_cost) * 100.0),
+                format!(
+                    "Current cost: ${:.2}/month (${:.2}/GB)",
+                    current_cost, GP2_COST_PER_GB
+                ),
+                format!(
+                    "gp3 cost: ${:.2}/month (${:.2}/GB)",
+                    gp3_cost, GP3_COST_PER_GB
+                ),
+                format!(
+                    "Potential savings: ${:.2}/month ({:.0}%)",
+                    savings,
+                    (savings / current_cost) * 100.0
+                ),
                 "gp3 provides same baseline performance (3000 IOPS, 125 MB/s)".to_string(),
             ];
 
@@ -3083,7 +3269,10 @@ fn detect_ebs_storage_inefficiency(change: &ResourceChange) -> Option<AntiPatter
 
                 if savings_percent >= 20.0 {
                     let evidence = vec![
-                        format!("Volume type: {} with {} IOPS", volume_type, provisioned_iops),
+                        format!(
+                            "Volume type: {} with {} IOPS",
+                            volume_type, provisioned_iops
+                        ),
                         format!("Current cost: ${:.2}/month", io_total_cost),
                         format!(
                             "  - Storage: ${:.2} ({} GB × $0.125)",
@@ -3093,8 +3282,14 @@ fn detect_ebs_storage_inefficiency(change: &ResourceChange) -> Option<AntiPatter
                             "  - IOPS: ${:.2} ({} × ${})",
                             io_iops_cost, provisioned_iops, IO1_IOPS_COST
                         ),
-                        format!("gp3 can deliver same {} IOPS for ${:.2}/month", provisioned_iops, gp3_total_cost),
-                        format!("Potential savings: ${:.2}/month ({:.0}%)", savings, savings_percent),
+                        format!(
+                            "gp3 can deliver same {} IOPS for ${:.2}/month",
+                            provisioned_iops, gp3_total_cost
+                        ),
+                        format!(
+                            "Potential savings: ${:.2}/month ({:.0}%)",
+                            savings, savings_percent
+                        ),
                     ];
 
                     let mut thresholds = HashMap::new();
@@ -3155,7 +3350,11 @@ fn detect_rds_storage_inefficiency(change: &ResourceChange) -> Option<AntiPatter
                 format!("Storage type: gp2 ({} GB)", allocated_storage),
                 format!("Current cost: ${:.2}/month", current_cost),
                 format!("gp3 cost: ${:.2}/month", gp3_cost),
-                format!("Potential savings: ${:.2}/month ({:.0}%)", savings, (savings / current_cost) * 100.0),
+                format!(
+                    "Potential savings: ${:.2}/month ({:.0}%)",
+                    savings,
+                    (savings / current_cost) * 100.0
+                ),
             ];
 
             let mut thresholds = HashMap::new();

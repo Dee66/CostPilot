@@ -13,16 +13,12 @@ use serde_json::json;
 #[test]
 fn test_prediction_engine_new() {
     let _engine = PredictionEngine::new().unwrap();
-    // Just test that it creates successfully
-    assert!(true);
 }
 
 #[test]
 fn test_prediction_engine_new_with_edition_free() {
     let edition = EditionContext::free();
     let _engine = PredictionEngine::new_with_edition(&edition).unwrap();
-    // Just test that it creates successfully
-    assert!(true);
 }
 
 #[test]
@@ -30,15 +26,11 @@ fn test_prediction_engine_with_heuristics() {
     let heuristics =
         costpilot::engines::prediction::minimal_heuristics::MinimalHeuristics::to_cost_heuristics();
     let _engine = PredictionEngine::with_heuristics(heuristics.clone());
-    // Just test that it creates successfully
-    assert!(true);
 }
 
 #[test]
 fn test_prediction_engine_with_verbose() {
     let _engine = PredictionEngine::new().unwrap().with_verbose(true);
-    // Just test that it creates successfully
-    assert!(true);
 }
 
 #[test]
@@ -47,8 +39,6 @@ fn test_prediction_engine_with_performance_tracking() {
     let _engine = PredictionEngine::new()
         .unwrap()
         .with_performance_tracking(budgets);
-    // Just test that it creates successfully
-    assert!(true);
 }
 
 #[test]
@@ -2200,5 +2190,4 @@ fn test_indirect_cost_only_changes_silent() {
     // Placeholder test for: Indirect-cost-only changes → silent
     // TODO: Implement logic to check that when only indirect costs change,
     // the system runs silently (no findings, no explain output, exit code 0)
-    assert!(true);
 }

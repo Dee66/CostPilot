@@ -2,7 +2,7 @@
 
 use crate::pro_engine::loader::{EncryptedBundle, LoaderError};
 use serde::{Deserialize, Serialize};
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -34,7 +34,10 @@ impl RateLimitState {
 
     /// Compute HMAC of state data to prevent tampering
     fn compute_hmac(&mut self) {
-        let data = format!("{}:{}:{:?}", self.attempts, self.last_attempt, self.blocked_until);
+        let data = format!(
+            "{}:{}:{:?}",
+            self.attempts, self.last_attempt, self.blocked_until
+        );
         let mut hasher = Sha256::new();
         hasher.update(data.as_bytes());
         hasher.update(b"costpilot-rate-limit-v1"); // Secret salt
@@ -44,7 +47,10 @@ impl RateLimitState {
 
     /// Verify HMAC to detect tampering
     fn verify_hmac(&self) -> bool {
-        let expected_data = format!("{}:{}:{:?}", self.attempts, self.last_attempt, self.blocked_until);
+        let expected_data = format!(
+            "{}:{}:{:?}",
+            self.attempts, self.last_attempt, self.blocked_until
+        );
         let mut hasher = Sha256::new();
         hasher.update(expected_data.as_bytes());
         hasher.update(b"costpilot-rate-limit-v1");
@@ -100,7 +106,10 @@ impl RateLimitState {
         if let Some(parent) = rate_limit_path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        let _ = std::fs::write(&rate_limit_path, serde_json::to_string(self).unwrap_or_default());
+        let _ = std::fs::write(
+            &rate_limit_path,
+            serde_json::to_string(self).unwrap_or_default(),
+        );
     }
 
     fn is_blocked(&self) -> bool {
@@ -202,7 +211,7 @@ impl License {
         }
     }
 
-    /// Validate license structure
+    /// Validate license structure and cryptographic signature
     pub fn validate(&self) -> Result<(), String> {
         let mut rate_limit = RateLimitState::load();
 
@@ -230,6 +239,14 @@ impl License {
         if self.is_expired() {
             return Err("License expired".to_string());
         }
+
+        // Verify cryptographic signature
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use crate::pro_engine::crypto;
+            crypto::verify_license_signature(self)?;
+        }
+
         Ok(())
     }
 

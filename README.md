@@ -2,11 +2,11 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/status-stable-green.svg)
-![Version](https://img.shields.io/badge/version-1.0.2-orange.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)
 
 **Deterministic, audit-grade cost governance at the pull-request boundary.**
 
-CostPilot analyzes infrastructure-as-code changes **before they merge** and blocks only **irreversible cloud cost regressions**.  
+CostPilot analyzes infrastructure-as-code changes **before they merge** and blocks only **irreversible cloud cost regressions**.
 When no meaningful risk exists, it stays silent.
 
 Silence is a valid outcome.
@@ -17,7 +17,7 @@ Silence is a valid outcome.
 
 CostPilot is a **local, offline CLI tool** for PR-time cost governance.
 
-It exists for one reason:  
+It exists for one reason:
 to surface *real*, *irreversible* cost risk **at review time**, not after deployment.
 
 Given a pull request and its associated infrastructure plan, CostPilot:
@@ -39,7 +39,7 @@ All outputs are deterministic, reproducible, and suitable for CI enforcement.
 - Supports advisory and blocking modes
 - Remains silent for no-op or cosmetic changes
 
-CostPilot does not reward noise.  
+CostPilot does not reward noise.
 It acts only when evidence is sufficient.
 
 ---
@@ -53,8 +53,8 @@ It acts only when evidence is sufficient.
 - No external service dependencies at runtime
 - No speculative or noisy blocking
 
-Everything runs locally.  
-Everything is inspectable.  
+Everything runs locally.
+Everything is inspectable.
 Nothing phones home.
 
 ---
@@ -72,7 +72,7 @@ CostPilot blocks CI **only** in the following cases:
 
 All other findings are advisory by default.
 
-This is intentional.  
+This is intentional.
 Blocking is a last resort, not a feature.
 
 ---
@@ -100,10 +100,10 @@ It demonstrates a complete, frozen scenario:
 - Zero-IAM, offline-safe execution
 - CI-enforced invariants
 
-Demo repository:  
+Demo repository:
 https://github.com/Dee66/costpilotdemo
 
-Live demo UI:  
+Live demo UI:
 https://dee66.github.io/costpilotdemo
 
 All screenshots, videos, and launch materials originate from this demo.
@@ -115,7 +115,7 @@ All screenshots, videos, and launch materials originate from this demo.
 - Terraform-based infrastructure diffs
 - Pull-request–time analysis
 - Deterministic detect / predict / explain outputs
-- Policy-based governance
+- Static, file-based policy governance
 - Explicitly scoped autofix previews
 
 Additional IaC formats and features are intentionally deferred.
@@ -126,9 +126,52 @@ Additional IaC formats and features are intentionally deferred.
 
 ### Install
 
-CostPilot is distributed as a single native binary via GitHub Releases.
+CostPilot is distributed as a single native binary.
+
+**Download pre-built binary:**
+
+1. Visit [GitHub Releases](https://github.com/Dee66/costpilot/releases)
+2. Download the appropriate archive for your platform (`.tar.gz` or `.zip`)
+3. Extract and place the `costpilot` binary on your PATH
+
+Premium features are unlocked via a time-limited offline license file. Free mode remains fully functional for core analysis.
+
+**License Management:**
+
+CostPilot includes a `license-issuer` binary for generating premium licenses:
 
 ```bash
-# Example (Linux x86_64)
-curl -L https://github.com/Dee66/CostPilot/releases/latest/download/costpilot-linux-amd64.tar.gz | tar xz
-./costpilot --version
+license-issuer generate-key  # Generate Ed25519 keypair
+license-issuer generate-license --email user@example.com --license-key ABC123  # Issue license
+```
+
+Verify installation:
+
+```bash
+costpilot --version
+```
+
+### Input Format
+
+CostPilot operates on Terraform plan JSON files.
+
+Generate the plan JSON with:
+
+```bash
+terraform plan -out=plan.tfplan
+terraform show -json plan.tfplan > plan.json
+```
+
+Example invocation:
+
+```bash
+costpilot scan plan.json
+```
+
+### Example
+
+```bash
+costpilot scan plan.json --policy policy.yaml
+```
+
+Exit codes: 0 = no risk, 1 = advisory, 2 = blocking

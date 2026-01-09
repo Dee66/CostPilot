@@ -1,2 +1,0 @@
-RUST_SUMMARY: compilation_errors=0
-TIMESTAMP: 2025-12-11T15:04:09+02:00

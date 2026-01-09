@@ -1,7 +1,12 @@
 # Distribution archives
 /dist
+dist/
+**/dist/
 dist/costpilot-*.zip
 dist/costpilot-*.tar.gz
+*.tar.gz
+*.zip
+sha256sum.txt
 
 # Pro Engine artifacts
 dist/pro-engine-*
@@ -13,9 +18,13 @@ premium/engine_build/*.wasm
 
 # Build artifacts
 build/artifacts/
+**/build_artifacts/
 
 # Signing keys (private key only - public key IS committed)
 packaging/signing/private.key
+scripts/signing/private.key
+**/private.key
+**/rotated_key.pem
 
 # Rust build artifacts
 /target
@@ -34,6 +43,24 @@ packaging/signing/private.key
 .DS_Store
 Thumbs.db
 
+# Local runtime state and caches
+.costpilot/
+.benchmarks/
+.pytest_cache/
+.scanner/
+.guardsuite/
+scalability-test-results/
+
+# Release artifact directories
+linux-amd64/
+
+# Private signing keys (NEVER commit these)
+scripts/signing/private.key
+scripts/cleanup/build_artifacts/build/keys/rotated_key.pem
+scripts/cleanup/build_artifacts/build/keys/*.pem
+**/private*.key
+**/rotated*.pem
+
 # Test outputs
 *.profdata
 *.profraw
@@ -46,9 +73,28 @@ tmp.txt
 test_*.pem
 test_license.json
 .costpilot/audit_log.json
+
+# Master license keys (NEVER commit private keys)
+*.pem
+!**/test_fixtures/**/*.pem
+license_customer.json
+
+# Test data and temporary files
+test_*.json
+test_*.log
+.archive/
+
+# Generated artifacts
+costpilot
+trend.html
+trend.svg
+
 target/
 
 # Copilot
 AGENTS.md
 docs/mental_model.md
 .github/copilot-instructions.md
+
+# License files
+license*.json

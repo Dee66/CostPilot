@@ -6,7 +6,6 @@ use aes_gcm::{
 };
 use chrono::Utc;
 use costpilot::pro_engine::{load_pro_engine_from_file, LicenseInfo, LoaderError};
-use curve25519_dalek::scalar::Scalar;
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use rand::rngs::OsRng;
 use rand::RngCore; // Import the RngCore trait to bring `fill_bytes` into scope

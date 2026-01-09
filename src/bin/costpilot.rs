@@ -38,7 +38,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    #[command(about = "Scan infrastructure changes for cost issues")]
     Scan(costpilot::cli::scan::ScanCommand),
+
+    #[command(about = "Compare cost between two infrastructure plans")]
     Diff {
         #[arg(value_name = "BEFORE")]
         before: PathBuf,
@@ -46,6 +49,8 @@ enum Commands {
         #[arg(value_name = "AFTER")]
         after: PathBuf,
     },
+
+    #[command(about = "Initialize CostPilot configuration in current directory")]
     Init {
         #[arg(long)]
         no_ci: bool,
@@ -54,33 +59,40 @@ enum Commands {
         path: Option<PathBuf>,
     },
 
+    #[command(about = "Generate dependency map for infrastructure resources")]
     Map(costpilot::cli::map::MapCommand),
 
+    #[command(about = "Manage policy lifecycle and approvals")]
     Policy {
         #[command(subcommand)]
         command: PolicyCommands,
     },
 
+    #[command(about = "Manage policy exemptions")]
     Exemption {
         #[command(subcommand)]
         command: ExemptionCommands,
     },
 
+    #[command(about = "Analyze cost trends over time")]
     Trend {
         #[command(subcommand)]
         command: TrendCommands,
     },
 
+    #[command(about = "Audit log and compliance reporting")]
     Audit {
         #[command(subcommand)]
         command: AuditCommands,
     },
 
+    #[command(about = "Manage cost heuristics")]
     Heuristics {
         #[command(subcommand)]
         command: costpilot::cli::heuristics::HeuristicsCommand,
     },
 
+    #[command(about = "Explain cost predictions with stepwise reasoning")]
     Explain {
         #[command(subcommand)]
         command: Option<costpilot::cli::explain::ExplainCommand>,
@@ -89,17 +101,22 @@ enum Commands {
         args: Option<costpilot::cli::explain::ExplainArgs>,
     },
 
+    #[command(about = "Performance monitoring and budgets")]
     Performance {
         #[command(subcommand)]
         command: Option<PerformanceCli>,
     },
 
+    #[command(about = "SLO management and compliance")]
     Slo {
         #[command(subcommand)]
         command: Option<SloCli>,
     },
 
+    #[command(about = "Check SLO compliance")]
     SloCheck,
+
+    #[command(about = "Calculate SLO burn rate")]
     SloBurn {
         #[arg(short, long)]
         config: Option<PathBuf>,
@@ -113,6 +130,7 @@ enum Commands {
         verbose: bool,
     },
 
+    #[command(about = "Generate autofix snippets")]
     AutofixSnippet {
         #[arg(long, value_name = "FILE")]
         plan: Option<PathBuf>,
@@ -121,18 +139,22 @@ enum Commands {
         verbose: bool,
     },
 
+    #[command(about = "Generate autofix patches")]
     AutofixPatch(AutofixPatchArgs),
 
+    #[command(about = "Manage escrow operations")]
     Escrow {
         #[command(subcommand)]
         command: Option<EscrowCli>,
     },
 
+    #[command(about = "Manage policy lifecycle")]
     PolicyLifecycle {
         #[command(subcommand)]
         command: Option<PolicyLifecycleCli>,
     },
 
+    #[command(about = "Usage metering and reporting")]
     Usage {
         #[arg(long = "days-in-month")]
         days_in_month: Option<String>,
@@ -141,12 +163,16 @@ enum Commands {
         command: Option<UsageCli>,
     },
 
+    #[command(about = "Manage custom policy rules (DSL)")]
     PolicyDsl {
         #[command(flatten)]
         command: costpilot::cli::policy_dsl::PolicyDslCommand,
     },
 
+    #[command(about = "Group resources for cost allocation")]
     Group(costpilot::cli::group::GroupCommand),
+
+    #[command(about = "Validate configuration files")]
     Validate {
         #[arg(required = true)]
         files: Vec<PathBuf>,
@@ -155,6 +181,7 @@ enum Commands {
         fail_fast: bool,
     },
 
+    #[command(about = "Show version information")]
     Version {
         #[arg(long)]
         detailed: bool,
@@ -550,7 +577,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let edition = costpilot::edition::detect_edition()
         .unwrap_or_else(|_| costpilot::edition::EditionContext::free());
 
-    let args: Vec<String> = std::env::args().collect();
+    let mut args: Vec<String> = std::env::args().collect();
+
+    // Handle --version/-V before argument rewriting
     if args.len() >= 2 {
         let arg = &args[1];
         if arg == "--version" || arg == "-V" {
@@ -564,29 +593,73 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // Default to 'scan' if first arg looks like a file path (not a known subcommand)
+    if args.len() >= 2 {
+        let first_arg = &args[1];
+        let known_commands = [
+            "scan",
+            "diff",
+            "init",
+            "map",
+            "policy",
+            "exemption",
+            "trend",
+            "audit",
+            "heuristics",
+            "explain",
+            "performance",
+            "slo",
+            "slocheck",
+            "sloburn",
+            "autofix-snippet",
+            "autofix-patch",
+            "escrow",
+            "policy-lifecycle",
+            "usage",
+            "policy-dsl",
+            "group",
+            "validate",
+            "version",
+            "--help",
+            "-h",
+            "--version",
+            "-V",
+        ];
+
+        // If first arg is not a known command and looks like a file (has extension or path separator),
+        // inject 'scan' as the subcommand
+        if !known_commands.contains(&first_arg.to_lowercase().as_str())
+            && (first_arg.contains('.') || first_arg.contains('/') || first_arg.contains('\\'))
+        {
+            args.insert(1, "scan".to_string());
+        }
+    }
+
     if edition.is_free() && args.len() >= 2 {
         let premium_commands = ["autofix", "patch", "slo"];
         let command = args[1].to_lowercase();
 
         if premium_commands.contains(&command.as_str()) {
             eprintln!(
-                "{} Unknown command '{}'",
-                "Error:".bright_red().bold(),
+                "{} Command '{}' requires Premium edition",
+                "⚠".bright_yellow().bold(),
                 command
             );
             eprintln!();
-            eprintln!("This command requires CostPilot Premium.");
-            eprintln!("Upgrade at: https://shieldcraft-ai.com/costpilot/upgrade");
+            eprintln!("  Currently running: Free edition");
+            eprintln!("  Upgrade at: https://shieldcraft-ai.com/costpilot/upgrade");
+            eprintln!();
+            eprintln!("  Available commands: scan, diff, init, map, policy, validate, --help");
             process::exit(1);
         }
     }
 
-    let cli = Cli::parse();
+    let cli = Cli::parse_from(args);
     if atty::is(atty::Stream::Stdout) {
         println!("{}", BANNER.bright_cyan());
         println!(
             "{}",
-            format!("v{} | Zero-IAM FinOps Engine", VERSION).bright_black()
+            format!("v{} | Zero-IAM FinOps Engine", VERSION).white()
         );
         println!();
     }
@@ -935,7 +1008,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    result
+    // Handle errors with clean formatting (Display, not Debug)
+    if let Err(e) = result {
+        eprintln!("{} {}", "Error:".bright_red().bold(), e);
+        std::process::exit(1);
+    }
+
+    Ok(())
 }
 
 fn cmd_diff(

@@ -3,7 +3,7 @@
 // Tests complete workflows from CLI command execution through result validation,
 // ensuring all components work together correctly.
 
-use assert_cmd::Command;
+use assert_cmd::cargo;
 use std::fs;
 use tempfile::TempDir;
 
@@ -130,7 +130,7 @@ fn test_e2e_scan_basic_workflow() {
     let plan_path = temp_dir.path().join("plan.json");
     fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg(&plan_path).arg("--format").arg("json");
 
     let output = cmd.assert().success();
@@ -155,7 +155,7 @@ fn test_e2e_scan_with_policy() {
     let policy_path = temp_dir.path().join("policy.yml");
     fs::write(&policy_path, SAMPLE_POLICY).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(plan_path)
         .arg("--policy")
@@ -178,7 +178,7 @@ fn test_e2e_scan_multi_resource() {
     let plan_path = temp_dir.path().join("plan.json");
     fs::write(&plan_path, MULTI_RESOURCE_PLAN).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg(&plan_path).arg("--format").arg("json");
 
     let output = cmd.assert().success();
@@ -197,7 +197,7 @@ fn test_e2e_scan_json_output() {
     let plan_path = temp_dir.path().join("plan.json");
     fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg(plan_path).arg("--format").arg("json");
 
     let output = cmd.assert().success();
@@ -220,7 +220,7 @@ fn test_e2e_scan_with_explain() {
     let plan_path = temp_dir.path().join("plan.json");
     fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(&plan_path)
         .arg("--explain")
@@ -259,7 +259,7 @@ fn test_e2e_scan_with_baselines() {
         }"#;
     fs::write(&baseline_path, baseline_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg(plan_path)
         .arg("--baselines")
@@ -279,7 +279,7 @@ fn test_e2e_init_workflow() {
     let temp_dir = TempDir::new().unwrap();
     let init_path = temp_dir.path().join("test_project");
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("init")
         .arg("--path")
         .arg(init_path.to_str().unwrap())
@@ -305,7 +305,7 @@ fn test_e2e_explain_resource() {
     let plan_path = temp_dir.path().join("plan.json");
     fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("explain")
         .arg("aws_instance")
         .arg("--instance-type")
@@ -325,7 +325,7 @@ fn test_e2e_explain_all() {
     let plan_path = temp_dir.path().join("plan.json");
     fs::write(&plan_path, MULTI_RESOURCE_PLAN).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("explain").arg("aws_lambda_function");
 
     // Explain is available in free mode
@@ -350,7 +350,7 @@ prediction:
 "#;
     fs::write(&config_path, config_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("validate").arg(&config_path);
 
     // Validation should find issues with the config (missing rules)
@@ -368,7 +368,7 @@ fn test_e2e_error_handling_invalid_plan() {
     let plan_path = temp_dir.path().join("invalid.json");
     fs::write(&plan_path, "invalid json content {").unwrap();
 
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg(plan_path);
 
     let output = cmd.assert().failure();
@@ -380,7 +380,7 @@ fn test_e2e_error_handling_invalid_plan() {
 
 #[test]
 fn test_e2e_error_handling_missing_file() {
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg("nonexistent.json");
 
     let output = cmd.assert().failure();
@@ -398,7 +398,7 @@ fn test_e2e_edition_gating_free() {
     fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
 
     // This should work in free edition
-    let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd = cargo::cargo_bin_cmd!("costpilot");
     cmd.arg("scan").arg(plan_path);
 
     cmd.assert().success();
@@ -411,13 +411,13 @@ fn test_e2e_output_consistency() {
     fs::write(&plan_path, SAMPLE_TERRAFORM_PLAN).unwrap();
 
     // Run scan multiple times to ensure deterministic output
-    let mut cmd1 = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd1 = cargo::cargo_bin_cmd!("costpilot");
     cmd1.arg("scan").arg(&plan_path).arg("--format").arg("json");
 
     let output1 = cmd1.assert().success();
     let stdout1 = String::from_utf8(output1.get_output().stdout.clone()).unwrap();
 
-    let mut cmd2 = Command::cargo_bin("costpilot").unwrap();
+    let mut cmd2 = cargo::cargo_bin_cmd!("costpilot");
     cmd2.arg("scan").arg(&plan_path).arg("--format").arg("json");
 
     let output2 = cmd2.assert().success();

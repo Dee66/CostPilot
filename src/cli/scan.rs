@@ -15,7 +15,7 @@ use std::path::PathBuf;
 /// Scan infrastructure changes for cost issues
 #[derive(Debug, Args)]
 pub struct ScanCommand {
-    /// Path to infrastructure change file (Terraform plan, CDK diff)
+    /// Path to Terraform plan JSON file (generated via 'terraform show -json plan.out')
     /// Positional plan path (also accepted via `--plan` / `--scan` flag)
     #[arg(value_name = "PLAN", required_unless_present = "plan_flag")]
     plan: Option<PathBuf>,
@@ -55,10 +55,6 @@ pub struct ScanCommand {
     /// Show autofix snippets
     #[arg(long)]
     autofix: bool,
-
-    /// Stack name for CDK synthesized templates (required for CDK format)
-    #[arg(long)]
-    stack: Option<String>,
 }
 
 #[derive(Debug, Clone, clap::ValueEnum)]
@@ -114,6 +110,57 @@ struct PolicyViolation {
 }
 
 impl ScanCommand {
+    /// Get terminal width, defaulting to 100 if unable to detect
+    fn get_terminal_width() -> usize {
+        // Try environment variable first (set by terminal or user)
+        if let Ok(cols) = std::env::var("COLUMNS") {
+            if let Ok(width) = cols.parse::<usize>() {
+                return width.clamp(60, 200);
+            }
+        }
+
+        // Try term_size detection
+        if let Some((w, _)) = term_size::dimensions() {
+            w.clamp(60, 200) // Clamp between 60 and 200
+        } else {
+            100 // Default for non-interactive or pipes
+        }
+    }
+
+    /// Wrap text to fit terminal width with proper indentation
+    fn wrap_text(text: &str, width: usize, indent: usize) -> Vec<String> {
+        let available = width.saturating_sub(indent);
+        if available < 40 {
+            // Terminal too narrow, just return lines as-is
+            return text.lines().map(|s| s.to_string()).collect();
+        }
+
+        let mut lines = Vec::new();
+        for paragraph in text.split('\n') {
+            if paragraph.trim().is_empty() {
+                lines.push(String::new());
+                continue;
+            }
+
+            let mut current_line = String::new();
+            for word in paragraph.split_whitespace() {
+                if current_line.is_empty() {
+                    current_line = word.to_string();
+                } else if current_line.len() + word.len() < available {
+                    current_line.push(' ');
+                    current_line.push_str(word);
+                } else {
+                    lines.push(current_line);
+                    current_line = word.to_string();
+                }
+            }
+            if !current_line.is_empty() {
+                lines.push(current_line);
+            }
+        }
+        lines
+    }
+
     fn get_output_format(&self, global_format: &str) -> OutputFormat {
         self.output_format.as_ref().map_or_else(
             || match global_format {
@@ -125,6 +172,45 @@ impl ScanCommand {
             |f| f.clone(),
         )
     }
+
+    /// Print a single detection with smart formatting
+    fn print_detection(detection: &crate::engines::shared::models::Detection, term_width: usize) {
+        // Resource name in bold
+        println!("     • {}", detection.resource_id.bright_cyan().bold());
+
+        // Rule ID on separate line
+        println!("       {}", format!("[{}]", detection.rule_id).yellow());
+
+        // Message - wrap if needed
+        let message_lines = Self::wrap_text(&detection.message, term_width, 9);
+        for line in message_lines.iter() {
+            println!("       {}", line);
+        }
+
+        // Cost savings - HIGHLIGHT THIS!
+        if let Some(cost) = detection.estimated_cost {
+            println!(
+                "       {} {}: {}",
+                "💰".bright_yellow(),
+                "Potential savings".bold().bright_yellow(),
+                format!("${:.2}/month", cost).bold().bright_yellow()
+            );
+        }
+
+        // Fix snippet - show FULL text with wrapping (no truncation!)
+        if let Some(fix) = &detection.fix_snippet {
+            let fix_lines = Self::wrap_text(fix, term_width, 12);
+            for (i, line) in fix_lines.iter().enumerate() {
+                if i == 0 {
+                    println!("       {} {}", "🔧".bright_green(), line.bright_green());
+                } else {
+                    println!("          {}", line.bright_green());
+                }
+            }
+        }
+        println!();
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn format_output(
         &self,
@@ -180,6 +266,7 @@ impl ScanCommand {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn format_text_output(
         &self,
         changes: &[crate::engines::detection::ResourceChange],
@@ -334,7 +421,10 @@ impl ScanCommand {
         // Optimization recommendations
         if !detections.is_empty() {
             println!("{}", "💡 Optimization Recommendations".bold());
-            println!("   {} optimization opportunities detected", detections.len());
+            println!(
+                "   {} optimization opportunities detected\n",
+                detections.len()
+            );
 
             // Group by severity for better organization
             let mut critical = Vec::new();
@@ -351,79 +441,40 @@ impl ScanCommand {
                 }
             }
 
-            // Display detections by severity
+            let term_width = Self::get_terminal_width();
+
+            // Display detections by severity with improved formatting
             if !critical.is_empty() {
                 println!("   {} Critical ({})", "🔴".red(), critical.len());
                 for detection in critical {
-                    println!(
-                        "     • {} [{}] {}",
-                        detection.resource_id.bright_black(),
-                        detection.rule_id.yellow(),
-                        detection.message
-                    );
-                    if let Some(cost) = detection.estimated_cost {
-                        println!("       💰 Potential savings: ${:.2}/month", cost);
-                    }
-                    if let Some(fix) = &detection.fix_snippet {
-                        println!("       🔧 Fix: {}", fix.bright_green());
-                    }
+                    Self::print_detection(detection, term_width);
                 }
+                println!();
             }
 
             if !high.is_empty() {
                 println!("   {} High ({})", "🟠".yellow(), high.len());
                 for detection in high {
-                    println!(
-                        "     • {} [{}] {}",
-                        detection.resource_id.bright_black(),
-                        detection.rule_id.yellow(),
-                        detection.message
-                    );
-                    if let Some(cost) = detection.estimated_cost {
-                        println!("       💰 Potential savings: ${:.2}/month", cost);
-                    }
-                    if let Some(fix) = &detection.fix_snippet {
-                        println!("       🔧 Fix: {}", fix.bright_green());
-                    }
+                    Self::print_detection(detection, term_width);
                 }
+                println!();
             }
 
             if !medium.is_empty() {
                 println!("   {} Medium ({})", "🟡".bright_yellow(), medium.len());
                 for detection in medium {
-                    println!(
-                        "     • {} [{}] {}",
-                        detection.resource_id.bright_black(),
-                        detection.rule_id.yellow(),
-                        detection.message
-                    );
-                    if let Some(cost) = detection.estimated_cost {
-                        println!("       💰 Potential savings: ${:.2}/month", cost);
-                    }
-                    if let Some(fix) = &detection.fix_snippet {
-                        println!("       🔧 Fix: {}", fix.bright_green());
-                    }
+                    Self::print_detection(detection, term_width);
                 }
+                println!();
             }
 
             if !low.is_empty() {
                 println!("   {} Low ({})", "🟢".green(), low.len());
                 for detection in low {
-                    println!(
-                        "     • {} [{}] {}",
-                        detection.resource_id.bright_black(),
-                        detection.rule_id.yellow(),
-                        detection.message
-                    );
-                    if let Some(cost) = detection.estimated_cost {
-                        println!("       💰 Potential savings: ${:.2}/month", cost);
-                    }
-                    if let Some(fix) = &detection.fix_snippet {
-                        println!("       🔧 Fix: {}", fix.bright_green());
-                    }
+                    Self::print_detection(detection, term_width);
                 }
+                println!();
             }
-            println!();
         }
 
         // Summary
@@ -432,24 +483,203 @@ impl ScanCommand {
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_black()
         );
         println!("{}", "📈 Summary".bold());
-        println!("   Resources changed: {}", changes.len());
-        println!("   Monthly cost: ${:.2}", total_monthly);
-        if let Some(policy_result) = policy_result {
-            if policy_result.passed {
-                println!("   Policy status: {}", "PASSED".green());
+        println!();
+
+        // Count by severity
+        let critical_count = detections
+            .iter()
+            .filter(|d| {
+                matches!(
+                    d.severity,
+                    crate::engines::shared::models::Severity::Critical
+                )
+            })
+            .count();
+        let high_count = detections
+            .iter()
+            .filter(|d| matches!(d.severity, crate::engines::shared::models::Severity::High))
+            .count();
+        let medium_count = detections
+            .iter()
+            .filter(|d| matches!(d.severity, crate::engines::shared::models::Severity::Medium))
+            .count();
+        let low_count = detections
+            .iter()
+            .filter(|d| matches!(d.severity, crate::engines::shared::models::Severity::Low))
+            .count();
+
+        // Calculate total potential savings
+        let total_savings: f64 = detections.iter().filter_map(|d| d.estimated_cost).sum();
+
+        // Count resource changes by action type
+        use crate::engines::shared::models::ChangeAction;
+        let create_count = changes
+            .iter()
+            .filter(|c| c.action == ChangeAction::Create)
+            .count();
+        let update_count = changes
+            .iter()
+            .filter(|c| c.action == ChangeAction::Update)
+            .count();
+        let delete_count = changes
+            .iter()
+            .filter(|c| c.action == ChangeAction::Delete)
+            .count();
+        let replace_count = changes
+            .iter()
+            .filter(|c| c.action == ChangeAction::Replace)
+            .count();
+
+        // Main metrics
+        println!("   📦 Infrastructure Plan");
+        let mut parts = Vec::new();
+        if create_count > 0 {
+            parts.push(format!("{} to create", create_count));
+        }
+        if update_count > 0 {
+            parts.push(format!("{} to modify", update_count));
+        }
+        if replace_count > 0 {
+            parts.push(format!("{} to replace", replace_count));
+        }
+        if delete_count > 0 {
+            parts.push(format!("{} to delete", delete_count));
+        }
+
+        if parts.is_empty() {
+            println!("      No resource changes");
+        } else {
+            println!("      {} resources ({})", changes.len(), parts.join(", "));
+        }
+        println!("      Estimated new monthly cost: ${:.2}", total_monthly);
+        println!();
+
+        // Optimization opportunities
+        if !detections.is_empty() {
+            println!("   💡 Optimization Opportunities");
+
+            // Show severity breakdown
+            let mut severity_parts = Vec::new();
+            if critical_count > 0 {
+                severity_parts.push(format!("{} critical", critical_count).red().to_string());
+            }
+            if high_count > 0 {
+                severity_parts.push(format!("{} high", high_count).yellow().to_string());
+            }
+            if medium_count > 0 {
+                severity_parts.push(format!("{} medium", medium_count).to_string());
+            }
+            if low_count > 0 {
+                severity_parts.push(format!("{} low", low_count).bright_black().to_string());
+            }
+
+            if !severity_parts.is_empty() {
+                println!(
+                    "      {} issues found ({})",
+                    detections.len(),
+                    severity_parts.join(", ")
+                );
             } else {
-                println!("   Policy status: {}", "FAILED".red());
+                println!("      {} issues found", detections.len());
+            }
+
+            if total_savings > 0.0 {
+                println!(
+                    "      {} {}",
+                    "Potential savings:".bold(),
+                    format!("${:.2}/month", total_savings)
+                        .bold()
+                        .bright_yellow()
+                );
+
+                // Calculate percentage if meaningful
+                if total_monthly > 0.0 {
+                    let savings_percent = (total_savings / total_monthly) * 100.0;
+                    if savings_percent >= 5.0 {
+                        println!(
+                            "      {} of planned monthly spend",
+                            format!("(~{:.0}%)", savings_percent).bright_black()
+                        );
+                    }
+                }
+            }
+            println!();
+        }
+
+        // Policy/SLO status
+        let mut has_status = false;
+        if let Some(policy_result) = policy_result {
+            if !has_status {
+                println!("   🛡️  Compliance");
+                has_status = true;
+            }
+            if policy_result.passed {
+                println!("      Policy checks: {}", "✓ PASSED".green());
+            } else {
+                println!("      Policy checks: {}", "✗ FAILED".red());
             }
         }
         if let Some(slo_result) = slo_result {
+            if !has_status {
+                println!("   🛡️  Compliance");
+                has_status = true;
+            }
             if slo_result.passed {
-                println!("   SLO status: {}", "PASSED".green());
+                println!("      SLO checks: {}", "✓ PASSED".green());
             } else {
-                println!("   SLO status: {}", "FAILED".red());
+                println!("      SLO checks: {}", "✗ FAILED".red());
             }
         }
+        if has_status {
+            println!();
+        }
+
+        // Actionable next steps
         if !detections.is_empty() {
-            println!("   Optimization opportunities: {}", detections.len());
+            println!("   {} Next Steps", "→".bright_cyan().bold());
+
+            if critical_count > 0 || high_count > 0 {
+                let urgent_count = critical_count + high_count;
+                println!(
+                    "      {} Address {} high-priority {} first",
+                    "1.".bold(),
+                    urgent_count,
+                    if urgent_count == 1 { "issue" } else { "issues" }
+                );
+            }
+
+            if total_savings > 0.0 {
+                // Find quick wins (medium/low with savings)
+                let quick_wins = detections
+                    .iter()
+                    .filter(|d| {
+                        matches!(
+                            d.severity,
+                            crate::engines::shared::models::Severity::Medium
+                                | crate::engines::shared::models::Severity::Low
+                        ) && d.estimated_cost.is_some()
+                    })
+                    .count();
+
+                if quick_wins > 0 {
+                    println!(
+                        "      {} Review {} quick {} for easy savings",
+                        if critical_count > 0 || high_count > 0 {
+                            "2."
+                        } else {
+                            "1."
+                        }
+                        .bold(),
+                        quick_wins,
+                        if quick_wins == 1 { "win" } else { "wins" }
+                    );
+                }
+            }
+        } else {
+            println!(
+                "   {} No optimization opportunities found. Infrastructure looks efficient!",
+                "✓".green().bold()
+            );
         }
 
         Ok(())
@@ -492,6 +722,7 @@ impl ScanCommand {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn format_json_output(
         &self,
         changes: &[crate::engines::detection::ResourceChange],
@@ -564,6 +795,7 @@ impl ScanCommand {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn format_markdown_output(
         &self,
         changes: &[crate::engines::detection::ResourceChange],
@@ -642,10 +874,9 @@ impl ScanCommand {
             if !critical.is_empty() {
                 println!("### 🔴 Critical");
                 for detection in critical {
-                    println!("- **{}** [{}]: {}",
-                        detection.resource_id,
-                        detection.rule_id,
-                        detection.message
+                    println!(
+                        "- **{}** [{}]: {}",
+                        detection.resource_id, detection.rule_id, detection.message
                     );
                     if let Some(cost) = detection.estimated_cost {
                         println!("  - 💰 Potential savings: ${:.2}/month", cost);
@@ -660,10 +891,9 @@ impl ScanCommand {
             if !high.is_empty() {
                 println!("### 🟠 High");
                 for detection in high {
-                    println!("- **{}** [{}]: {}",
-                        detection.resource_id,
-                        detection.rule_id,
-                        detection.message
+                    println!(
+                        "- **{}** [{}]: {}",
+                        detection.resource_id, detection.rule_id, detection.message
                     );
                     if let Some(cost) = detection.estimated_cost {
                         println!("  - 💰 Potential savings: ${:.2}/month", cost);
@@ -678,10 +908,9 @@ impl ScanCommand {
             if !medium.is_empty() {
                 println!("### 🟡 Medium");
                 for detection in medium {
-                    println!("- **{}** [{}]: {}",
-                        detection.resource_id,
-                        detection.rule_id,
-                        detection.message
+                    println!(
+                        "- **{}** [{}]: {}",
+                        detection.resource_id, detection.rule_id, detection.message
                     );
                     if let Some(cost) = detection.estimated_cost {
                         println!("  - 💰 Potential savings: ${:.2}/month", cost);
@@ -696,10 +925,9 @@ impl ScanCommand {
             if !low.is_empty() {
                 println!("### 🟢 Low");
                 for detection in low {
-                    println!("- **{}** [{}]: {}",
-                        detection.resource_id,
-                        detection.rule_id,
-                        detection.message
+                    println!(
+                        "- **{}** [{}]: {}",
+                        detection.resource_id, detection.rule_id, detection.message
                     );
                     if let Some(cost) = detection.estimated_cost {
                         println!("  - 💰 Potential savings: ${:.2}/month", cost);
@@ -741,6 +969,7 @@ impl ScanCommand {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn format_pr_comment_output(
         &self,
         changes: &[crate::engines::detection::ResourceChange],
@@ -845,7 +1074,11 @@ impl ScanCommand {
             }
 
             if !low.is_empty() {
-                println!("🟢 **Low** ({}) - {} opportunities available", low.len(), low.len());
+                println!(
+                    "🟢 **Low** ({}) - {} opportunities available",
+                    low.len(),
+                    low.len()
+                );
                 println!();
             }
         }
@@ -920,6 +1153,18 @@ impl ScanCommand {
                 "No plan specified".to_string(),
             ));
         };
+
+        // Check if user passed a .tf or .tfvars file instead of JSON plan
+        if let Some(ext) = plan.extension() {
+            if ext == "tf" || ext == "tfvars" {
+                return Err(CostPilotError::new(
+                    "SCAN_INPUT_001",
+                    crate::errors::ErrorCategory::InvalidInput,
+                    format!("CostPilot requires Terraform plan JSON, not .{} source files", ext.to_string_lossy()),
+                )
+                .with_hint("Generate a plan: terraform plan -out=tfplan && terraform show -json tfplan > plan.json"));
+            }
+        }
 
         // Validate input file exists
         if !plan.exists() {
@@ -1087,7 +1332,8 @@ impl ScanCommand {
             .map(|e| (e.resource_id.clone(), e.monthly_cost, e.confidence_score))
             .collect();
 
-        let detections = detection_engine.analyze_changes(&changes, &cost_estimates_for_analysis)?;
+        let detections =
+            detection_engine.analyze_changes(&changes, &cost_estimates_for_analysis)?;
 
         let total_cost_estimate = CostEstimate {
             resource_id: "total".to_string(),
@@ -1218,7 +1464,10 @@ impl ScanCommand {
             match self.evaluate_slos(&total_cost_estimate, &estimates, edition) {
                 Ok(slo_result) => Some(slo_result),
                 Err(e) => {
-                    eprintln!("Warning: SLO evaluation failed: {}", e);
+                    // Only show warning if debug mode enabled
+                    if std::env::var("COSTPILOT_DEBUG").is_ok() {
+                        eprintln!("Warning: SLO evaluation failed: {}", e);
+                    }
                     None
                 }
             }

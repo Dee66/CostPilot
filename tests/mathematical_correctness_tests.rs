@@ -335,7 +335,7 @@ fn test_zero_cost_resources_handled_explicitly() {
         cost_impact: None,
     };
 
-    let estimates = engine.predict(&vec![change.clone()]).unwrap();
+    let estimates = engine.predict(std::slice::from_ref(&change)).unwrap();
 
     // Should still return an estimate (not omit zero-cost resources)
     assert_eq!(

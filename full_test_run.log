@@ -1,0 +1,136 @@
+warning: unused variable: `wasm_signing_key`
+ --> build.rs:5:9
+  |
+5 |     let wasm_signing_key = generate_crypto_keys();
+  |         ^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_wasm_signing_key`
+  |
+  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `costpilot` (build script) generated 1 warning
+warning: costpilot@1.0.0: License key fingerprint: d8171a72
+warning: costpilot@1.0.0: WASM key fingerprint: 4f81d061
+   Compiling costpilot v1.0.0 (/home/dee/workspace/AI/GuardSuite/CostPilot)
+warning: unused import: `std::collections::HashMap`
+ --> tests/download_network_tests.rs:1:5
+  |
+1 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::process::Command`
+ --> tests/download_network_tests.rs:5:5
+  |
+5 | use std::process::Command;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: `costpilot` (test "download_network_tests") generated 2 warnings (run `cargo fix --test "download_network_tests"` to apply 2 suggestions)
+warning: unused imports: `Signature` and `VerifyingKey`
+ --> tests/license_issuer_integration_tests.rs:5:25
+  |
+5 |     use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+  |                         ^^^^^^^^^            ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `costpilot` (test "license_issuer_integration_tests") generated 1 warning (run `cargo fix --test "license_issuer_integration_tests"` to apply 1 suggestion)
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:133:28
+    |
+133 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:158:28
+    |
+158 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:181:28
+    |
+181 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:200:28
+    |
+200 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:223:28
+    |
+223 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:262:28
+    |
+262 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:282:28
+    |
+282 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:308:28
+    |
+308 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:328:28
+    |
+328 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:353:28
+    |
+353 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:371:28
+    |
+371 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:383:28
+    |
+383 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:401:28
+    |
+401 |     let mut cmd = Command::cargo_bin("costpilot").unwrap();
+    |                            ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:414:29
+    |
+414 |     let mut cmd1 = Command::cargo_bin("costpilot").unwrap();
+    |                             ^^^^^^^^^
+
+warning: use of deprecated associated function `assert_cmd::Command::cargo_bin`: incompatible with a custom cargo build-dir, see instead `cargo::cargo_bin_cmd!`
+   --> tests/e2e_cli_tests.rs:420:29
+    |
+420 |     let mut cmd2 = Command::cargo_bin("costpilot").unwrap();
+    |                             ^^^^^^^^^
+
+warning: `costpilot` (test "e2e_cli_tests") generated 15 warnings
+warning: unused import: `curve25519_dalek::scalar::Scalar`
+ --> tests/pro_engine_loader_tests.rs:9:5
+  |
+9 | use curve25519_dalek::scalar::Scalar;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default

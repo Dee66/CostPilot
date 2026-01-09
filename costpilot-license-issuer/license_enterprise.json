@@ -1,0 +1,9 @@
+{
+  "email": "test-enterprise@example.com",
+  "license_key": "ENTERPRISE-59128F7B",
+  "expires": "2027-01-07T08:26:46.056675218+00:00",
+  "issued_at": "2026-01-07T08:26:46.056675218+00:00",
+  "signature": "913c1a131cd62df7b3692db38740383e62c94771e93845341780fe01342f8986b7665e948de62bb87ca8bf33364f299757f212d58e9df026b0f320200242390e",
+  "version": "1.0",
+  "issuer": "costpilot-v1"
+}

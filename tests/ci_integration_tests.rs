@@ -15,19 +15,22 @@ fn test_ci_github_actions_environment() {
 
     let temp_dir = TempDir::new().unwrap();
     let plan_path = temp_dir.path().join("plan.json");
-    fs::write(&plan_path, r#"{
+    fs::write(
+        &plan_path,
+        r#"{
         "format_version": "1.0",
         "terraform_version": "1.5.0",
         "resource_changes": []
-    }"#).unwrap();
+    }"#,
+    )
+    .unwrap();
 
     let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("scan")
         .arg("--format=github-annotations")
         .arg(&plan_path);
 
-    cmd.assert()
-        .success();
+    cmd.assert().success();
 
     env::remove_var("GITHUB_ACTIONS");
     env::remove_var("GITHUB_WORKFLOW");
@@ -42,16 +45,18 @@ fn test_ci_jenkins_environment() {
 
     let temp_dir = TempDir::new().unwrap();
     let plan_path = temp_dir.path().join("plan.json");
-    fs::write(&plan_path, r#"{
+    fs::write(
+        &plan_path,
+        r#"{
         "format_version": "1.0",
         "terraform_version": "1.5.0",
         "resource_changes": []
-    }"#).unwrap();
+    }"#,
+    )
+    .unwrap();
 
     let mut cmd = cargo_bin_cmd!("costpilot");
-    cmd.arg("scan")
-        .arg("--format=text")
-        .arg(&plan_path);
+    cmd.arg("scan").arg("--format=text").arg(&plan_path);
 
     cmd.assert().success();
 

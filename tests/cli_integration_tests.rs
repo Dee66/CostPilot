@@ -213,8 +213,7 @@ fn test_cli_diff_missing_before_file() {
         .arg("nonexistent2.json");
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("UpgradeRequired"))
-        .stderr(predicate::str::contains("Diff"));
+        .stderr(predicate::str::contains("Diff requires CostPilot Premium"));
 }
 
 #[test]
@@ -324,8 +323,7 @@ fn test_cli_diff_with_identical_files() {
         .arg(temp_file2.path());
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("UpgradeRequired"))
-        .stderr(predicate::str::contains("Diff"));
+        .stderr(predicate::str::contains("Diff requires CostPilot Premium"));
 }
 
 #[test]
@@ -363,10 +361,9 @@ fn test_cli_map_with_valid_json() {
 
     let mut cmd = cargo_bin_cmd!("costpilot");
     cmd.arg("map").arg(temp_file.path());
-    cmd.assert()
-        .failure()
-        .stderr(predicate::str::contains("UpgradeRequired"))
-        .stderr(predicate::str::contains("Deep mapping"));
+    cmd.assert().failure().stderr(predicate::str::contains(
+        "Deep mapping requires CostPilot Premium",
+    ));
 }
 
 #[test]
