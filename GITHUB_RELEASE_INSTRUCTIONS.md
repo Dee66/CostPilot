@@ -9,6 +9,18 @@
 
 ## 🚀 Step-by-Step Release Process
 
+#### Tag Provenance Verification
+
+Before proceeding, verify that tag v1.0.0 points to a commit already on branch 'main' and the working tree is clean:
+
+```bash
+git show v1.0.0 --no-patch
+git branch --show-current
+git status
+```
+
+The tag must point to a commit on 'main', and `git status` must show a clean working tree.
+
 ### Step 1: Push the Tag to GitHub
 
 ```bash
@@ -59,6 +71,14 @@ bc1459220a856abcd33d179af780bc5712d770f6cd538c90526c644f620135c0  costpilot-1.0.
 e4aa6cc969a15af5be8aba4b0928b4a18361a94fd8e4183579ad3b3d69fb8b14  costpilot-1.0.0-linux-amd64.zip
 ```
 
+**Artifact Immutability Rule:** Contents of `dist/` must not change after checksums are generated. Artifacts must not be rebuilt between tagging and upload.
+
+```bash
+ls -lh dist/
+sha256sum dist/*
+# Verify no changes to existing files
+```
+
 ## 🔍 Verification After Release
 
 1. **Check release page:**
@@ -85,7 +105,14 @@ e4aa6cc969a15af5be8aba4b0928b4a18361a94fd8e4183579ad3b3d69fb8b14  costpilot-1.0.
    # Should output: costpilot 1.0.0
    ```
 
-## 🪟 Windows Release (Future)
+## 🪟 Windows Release
+
+#### Windows Prerequisites
+
+Required tools and setup before building:
+- Visual Studio with MSVC toolchain (C++ build tools)
+- rustup target x86_64-pc-windows-msvc
+- Git Bash or equivalent for bash scripts
 
 To add Windows binaries after rebooting to Windows:
 
@@ -104,6 +131,8 @@ To add Windows binaries after rebooting to Windows:
    bash scripts/make_release_bundle.sh
    ```
 
+   **STOP CONDITION:** If `make_release_bundle.sh` does not run successfully on Windows, stop the process. Do not improvise alternative build or packaging approaches.
+
 3. **Upload to existing release:**
    - Go to release page
    - Click "Edit release"
@@ -111,6 +140,18 @@ To add Windows binaries after rebooting to Windows:
      - `costpilot-1.0.0-windows-amd64.zip`
      - Update `sha256sum.txt` with new checksums
    - Save changes
+
+   **CHECKSUM HANDLING:** After upload, generate SHA256 checksum for the Windows artifact using PowerShell:
+
+   ```powershell
+   Get-FileHash -Algorithm SHA256 costpilot-1.0.0-windows-amd64.zip | Format-List
+   ```
+
+   Add the checksum to the release notes under a "Checksums" section.
+
+## 🍎 macOS Release
+
+**SCOPE:** macOS releases are out of scope for this release cycle. macOS binaries will be added in a future release when macOS development environment is available.
 
 ## 📊 Project Status
 
@@ -150,6 +191,7 @@ To add Windows binaries after rebooting to Windows:
 - **Test the download** after publishing to ensure links work
 - **Keep sha256sum.txt** with artifacts for user verification
 - **Update checksums** if you rebuild or add more platforms
+- **CLEANUP SAFETY:** Do not delete the v1.0.0 tag or release. These are immutable release artifacts. Only add new platforms to existing releases.
 
 ---
 
