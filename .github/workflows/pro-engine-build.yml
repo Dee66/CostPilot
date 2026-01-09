@@ -39,18 +39,21 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pro-engine-linux-amd64.wasm.enc
+          retention-days: 90
           path: dist/pro-engine-linux-amd64.wasm.enc
 
       - name: Upload metadata
         uses: actions/upload-artifact@v4
         with:
           name: pro-engine-linux-amd64.meta.json
+          retention-days: 90
           path: dist/pro-engine-linux-amd64.meta.json
 
       - name: Upload checksum
         uses: actions/upload-artifact@v4
         with:
           name: pro-engine-linux-amd64.sha256
+          retention-days: 90
           path: dist/pro-engine-linux-amd64.sha256
 
       - name: Verify no unencrypted WASM leaked
