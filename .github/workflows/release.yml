@@ -14,10 +14,11 @@ jobs:
             target: x86_64-unknown-linux-gnu
             name: linux-amd64
             run_tests: true
-          - os: ubuntu-22.04-arm
-            target: aarch64-unknown-linux-gnu
-            name: linux-arm64
-            run_tests: false
+          # ARM builds disabled for v1.0.0 (not available in private repos)
+          # - os: ubuntu-22.04-arm
+          #   target: aarch64-unknown-linux-gnu
+          #   name: linux-arm64
+          #   run_tests: false
           - os: macos-14
             target: x86_64-apple-darwin
             name: macos-amd64
@@ -30,10 +31,10 @@ jobs:
             target: x86_64-pc-windows-msvc
             name: windows-amd64
             run_tests: true
-          - os: ubuntu-latest
-            target: aarch64-pc-windows-msvc
-            name: windows-arm64
-            run_tests: false
+          # - os: ubuntu-latest
+          #   target: aarch64-pc-windows-msvc
+          #   name: windows-arm64
+          #   run_tests: false
 
     steps:
       - uses: actions/checkout@v4
