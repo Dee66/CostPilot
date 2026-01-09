@@ -120,9 +120,7 @@ To add Windows binaries after rebooting to Windows:
    ```powershell
    cd C:\path\to\CostPilot
    git pull origin v1.0.0
-   cargo build --release --target x86_64-pc-windows-msvc
-   ```
-
+   cargo build --release --target x86_64
 2. **Package:**
    ```powershell
    $env:COSTPILOT_VERSION="1.0.0"
@@ -195,4 +193,4 @@ To add Windows binaries after rebooting to Windows:
 
 ---
 
-**Ready to release!** All Linux work complete. Windows binaries can be added later.
+**Ready to release!**
