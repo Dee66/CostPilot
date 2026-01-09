@@ -40,6 +40,7 @@ hcl = { package = "hcl-rs", version = "0.19" }
 jsonschema = "0.17"
 cargo = { version = "0.93", optional = true }
 subtle = "2"
+openssl = { version = "0.10", features = ["vendored"] }
 
 # Conditional crypto dependencies (not available for WASM)
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
