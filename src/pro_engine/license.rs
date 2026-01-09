@@ -211,7 +211,7 @@ impl License {
         }
     }
 
-    /// Validate license structure
+    /// Validate license structure and cryptographic signature
     pub fn validate(&self) -> Result<(), String> {
         let mut rate_limit = RateLimitState::load();
 
@@ -239,6 +239,14 @@ impl License {
         if self.is_expired() {
             return Err("License expired".to_string());
         }
+
+        // Verify cryptographic signature
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use crate::pro_engine::crypto;
+            crypto::verify_license_signature(self)?;
+        }
+
         Ok(())
     }
 

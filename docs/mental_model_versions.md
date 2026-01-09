@@ -3,6 +3,19 @@
 This file tracks changes to the mental model over time.
 Each entry represents a validated delta that was applied.
 
+## Version 1.1.0 - 2026-01-09
+
+**Test Infrastructure and Security Enhancements**
+
+- Added test license infrastructure claims for real Ed25519 validation
+- Added rate limiting integrity protection claims
+- Added release validation test claims
+- Updated command surface area note with current count
+
+**Validation Status**: ✅ All claims verified against codebase
+**Authority Source**: Tests and executable code
+**Conflicts Detected**: 0
+
 ## Version 1.0.0 - 2025-12-30
 
 **Initial Mental Model Established**

@@ -136,6 +136,15 @@ CostPilot is distributed as a single native binary.
 
 Premium features are unlocked via a time-limited offline license file. Free mode remains fully functional for core analysis.
 
+**License Management:**
+
+CostPilot includes a `license-issuer` binary for generating premium licenses:
+
+```bash
+license-issuer generate-key  # Generate Ed25519 keypair
+license-issuer generate-license --email user@example.com --license-key ABC123  # Issue license
+```
+
 Verify installation:
 
 ```bash

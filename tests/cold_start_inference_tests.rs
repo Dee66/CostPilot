@@ -15,9 +15,8 @@ fn get_test_defaults() -> ColdStartDefaults {
 #[test]
 fn test_cold_start_new() {
     let defaults = get_test_defaults();
-    let inference = ColdStartInference::new(&defaults);
+    let _inference = ColdStartInference::new(&defaults);
     // Just test that it creates successfully
-    assert!(true);
 }
 
 #[test]

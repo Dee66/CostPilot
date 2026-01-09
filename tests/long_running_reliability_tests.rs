@@ -135,11 +135,6 @@ fn test_concurrent_stress_testing() {
             .join()
             .expect("All threads should complete successfully");
     }
-
-    assert!(
-        true,
-        "Concurrent stress test completed without deadlocks or crashes"
-    );
 }
 
 #[test]
@@ -283,9 +278,4 @@ fn test_continuous_fuzzing_simulation() {
             }
         }
     }
-
-    assert!(
-        true,
-        "Continuous fuzzing simulation completed without panics"
-    );
 }

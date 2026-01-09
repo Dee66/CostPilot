@@ -1,7 +1,6 @@
 // Golden file tests for mapping output
 
 use assert_cmd::cargo::cargo_bin_cmd;
-use chrono;
 use costpilot::engines::mapping::{DependencyGraph, EdgeType, GraphEdge, GraphMetadata, GraphNode};
 
 #[test]
@@ -37,6 +36,7 @@ fn golden_autofix_patch_basic() {
     insta::assert_snapshot!("autofix_patch_basic", stdout);
 }
 
+#[allow(dead_code)]
 fn golden_simple_dependency_graph() {
     let graph = DependencyGraph {
         nodes: vec![

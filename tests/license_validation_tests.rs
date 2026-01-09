@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn test_load_from_file_invalid_json() {
-        let invalid_jsons = vec![
+        let invalid_jsons = [
             r#"{"email": "test@example.com", "license_key": "key"}"#, // Missing closing brace
             r#"not json at all"#,
             r#"{"email": "test@example.com", "license_key": "key",}"#, // Trailing comma
@@ -152,7 +152,7 @@ mod tests {
             "issuer": "costpilot-v1",
             "extra_field": "should be ignored"
         }"#;
-        let (file_path, _temp_dir) = create_temp_license_file(&json);
+        let (file_path, _temp_dir) = create_temp_license_file(json);
         let path = Path::new(&file_path);
 
         let result = License::load_from_file(path);

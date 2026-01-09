@@ -45,76 +45,73 @@ fn test_release_slo_burn_with_production_license() {
     fs::create_dir(&snapshots_path).unwrap();
 
     // Create test snapshots using proper format (need 3+ for burn rate analysis)
-    let snapshot1 = format!(
-        r#"{{
+    let snapshot1 = r#"{
         "id": "test_20250101",
         "timestamp": "2025-01-01T00:00:00Z",
         "total_monthly_cost": 500.0,
-        "modules": {{
-            "ec2": {{
+        "modules": {
+            "ec2": {
                 "name": "ec2",
                 "monthly_cost": 350.0,
                 "resource_count": 5
-            }},
-            "rds": {{
+            },
+            "rds": {
                 "name": "rds",
                 "monthly_cost": 150.0,
                 "resource_count": 2
-            }}
-        }},
-        "services": {{}},
+            }
+        },
+        "services": {},
         "regressions": [],
         "slo_violations": []
-    }}"#
-    );
+    }"#
+    .to_string();
     fs::write(snapshots_path.join("snapshot_20250101.json"), snapshot1).unwrap();
 
-    let snapshot2 = format!(
-        r#"{{
+    let snapshot2 = r#"{
         "id": "test_20250201",
         "timestamp": "2025-02-01T00:00:00Z",
         "total_monthly_cost": 600.0,
-        "modules": {{
-            "ec2": {{
+        "modules": {
+            "ec2": {
                 "name": "ec2",
                 "monthly_cost": 420.0,
                 "resource_count": 5
-            }},
-            "rds": {{
+            },
+            "rds": {
                 "name": "rds",
                 "monthly_cost": 180.0,
                 "resource_count": 2
-            }}
-        }},
-        "services": {{}},
+            }
+        },
+        "services": {},
         "regressions": [],
         "slo_violations": []
-    }}"#
-    );
+    }"#
+    .to_string();
     fs::write(snapshots_path.join("snapshot_20250201.json"), snapshot2).unwrap();
 
-    let snapshot3 = format!(
-        r#"{{
+    let snapshot3 = r#"{
         "id": "test_20250301",
         "timestamp": "2025-03-01T00:00:00Z",
         "total_monthly_cost": 700.0,
-        "modules": {{
-            "ec2": {{
+        "modules": {
+            "ec2": {
                 "name": "ec2",
                 "monthly_cost": 490.0,
                 "resource_count": 5
-            }},
-            "rds": {{
+            },
+            "rds": {
                 "name": "rds",
                 "monthly_cost": 210.0,
                 "resource_count": 2
-            }}
-        }},
-        "services": {{}},
+            }
+        },
+        "services": {},
         "regressions": [],
         "slo_violations": []
-    }}"#
-    );
+    }"#
+    .to_string();
     fs::write(snapshots_path.join("snapshot_20250301.json"), snapshot3).unwrap();
 
     // Create a test license using test issuer (production validation would use license_issuer.rs)

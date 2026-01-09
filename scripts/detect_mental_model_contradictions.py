@@ -51,19 +51,12 @@ class MentalModelContradictionDetector:
 
         content = self.mental_model_path.read_text()
 
-        # Extract factual claims (not aspirational or interpretive)
-        claim_patterns = [
-            (r"Name: ([^\n]+)", "project_name"),
-            (r"Artifact type: ([^\n]+)", "artifact_type"),
-            (r"Execution scope: ([^\n]+)", "execution_scope"),
-            (r"Runtime network access: ([^\n]+)", "network_access"),
-            (r"Non-deterministic behavior is a ([^\n]+)", "determinism"),
-        ]
+        # Extract CLAIM entries in format: CLAIM key = value
+        claim_pattern = r'CLAIM\s+(\w+)\s*=\s*([^\n]+)'
+        matches = re.findall(claim_pattern, content)
 
-        for pattern, key in claim_patterns:
-            match = re.search(pattern, content)
-            if match:
-                claims[key] = match.group(1).strip()
+        for key, value in matches:
+            claims[key] = value.strip()
 
         return claims
 
@@ -140,15 +133,16 @@ class MentalModelContradictionDetector:
         contradictions = []
 
         # Check network access claim
-        if "network_access" in claims:
-            network_claim = claims["network_access"]
-            if "Not permitted" in network_claim:
-                # Check for exceptions
+        if "runtime_network_access" in claims:
+            network_claim = claims["runtime_network_access"]
+            if "prohibited" in network_claim:
+                # Check for exceptions - static analysis violation detection is allowed
                 allowed_patterns = []
-                if "except pattern matching for violation detection" in network_claim:
+                content = self.mental_model_path.read_text()
+                if "static_analysis_violation_detection" in content:
                     allowed_patterns = [
-                        "validator.rs"
-                    ]  # Security validator is allowed to pattern match
+                        "security/validator.rs",  # Security validator can use network patterns for detection
+                    ]
 
                 for symbol_info in facts["network_symbols"]:
                     file_path = symbol_info["file"]
@@ -156,7 +150,7 @@ class MentalModelContradictionDetector:
                     if not any(allowed in file_path for allowed in allowed_patterns):
                         contradictions.append(
                             Contradiction(
-                                claim="Runtime network access: Not permitted",
+                                claim="Runtime network access: prohibited",
                                 evidence=symbol_info,
                             )
                         )
@@ -164,84 +158,27 @@ class MentalModelContradictionDetector:
         # Check determinism claim
         if "determinism" in claims:
             determinism_claim = claims["determinism"]
-            if "defect" in determinism_claim:
-                # Parse allowed exceptions
-                allowed_contexts = []
-                if "except" in determinism_claim:
-                    exception_text = (
-                        determinism_claim.split("except:", 1)[1]
-                        if "except:" in determinism_claim
-                        else ""
-                    )
-                    if "Cryptographic key generation" in exception_text:
-                        allowed_contexts.append("license_issuer.rs")
-                    if "Unique identifier generation" in exception_text:
-                        allowed_contexts.extend(
-                            ["escrow/release.rs", "metering/usage_meter.rs"]
-                        )
-                    if "Timestamp recording" in exception_text:
-                        allowed_contexts.extend(
-                            [
-                                "escrow/release.rs",
-                                "escrow/package.rs",
-                                "pro_engine/license.rs",
-                                "cli/usage.rs",
-                                "performance/monitoring.rs",
-                            ]
-                        )
-                    if "Deterministic pseudo-random sequences" in exception_text:
-                        allowed_contexts.append("prediction/monte_carlo.rs")
+            if "strict" in determinism_claim:
+                # Parse EXCEPT lines for allowed modules
+                content = self.mental_model_path.read_text()
+                except_pattern = r'EXCEPT\s+module\s*=\s*([^\n]+)'
+                except_matches = re.findall(except_pattern, content)
+                allowed_modules = [match.strip() for match in except_matches]
 
                 for symbol_info in facts["non_deterministic_symbols"]:
                     file_path = symbol_info["file"]
-                    symbol = symbol_info["symbol"]
 
-                    # Check if this usage is allowed under exceptions
+                    # Check if this file is in the allowed modules
                     is_allowed = False
-
-                    # License issuer can use rand:: for crypto
-                    if "license_issuer.rs" in file_path and "rand::" in symbol:
-                        is_allowed = True
-
-                    # Escrow and metering can use UUIDs
-                    if any(
-                        ctx in file_path
-                        for ctx in ["escrow/release.rs", "metering/usage_meter.rs"]
-                    ) and ("uuid::" in symbol or "Uuid::" in symbol):
-                        is_allowed = True
-
-                    # Various files can use SystemTime for timestamps
-                    if (
-                        any(
-                            ctx in file_path
-                            for ctx in [
-                                "escrow/release.rs",
-                                "escrow/package.rs",
-                                "pro_engine/license.rs",
-                                "cli/usage.rs",
-                                "performance/monitoring.rs",
-                            ]
-                        )
-                        and "SystemTime::now" in symbol
-                    ):
-                        is_allowed = True
-
-                    # Monte Carlo can use Random (it's deterministic pseudo-random)
-                    if "prediction/monte_carlo.rs" in file_path and "Random" in symbol:
-                        is_allowed = True
-
-                    # Zero network policy can reference rand:: in validation
-                    if "policy/zero_network.rs" in file_path and "rand::" in symbol:
-                        is_allowed = True
-
-                    # Crypto tests can use rand:: for testing
-                    if "crypto_tests.rs" in file_path and "rand::" in symbol:
-                        is_allowed = True
+                    for allowed_module in allowed_modules:
+                        if allowed_module in file_path:
+                            is_allowed = True
+                            break
 
                     if not is_allowed:
                         contradictions.append(
                             Contradiction(
-                                claim="Non-deterministic behavior is a defect",
+                                claim="Determinism: strict (non-deterministic behavior prohibited)",
                                 evidence=symbol_info,
                             )
                         )

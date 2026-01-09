@@ -77,11 +77,10 @@ fn test_baselines_manager_loads_config() {
         metadata: None,
     };
 
-    let manager = BaselinesManager::from_config(config);
+    let _manager = BaselinesManager::from_config(config);
 
     // Manager should initialize without error
     // TODO: Add meaningful validation checks for baseline manager
-    assert!(true, "Manager initialized successfully");
 }
 
 // ===== PROPERTY-BASED TESTS =====
@@ -112,7 +111,7 @@ proptest! {
         prop_assert!(variance >= 0.0);
 
         // Check if actual cost is within variance bounds
-        let within_variance = variance <= baseline.acceptable_variance_percent;
+        let _within_variance = variance <= baseline.acceptable_variance_percent;
 
         // If actual cost equals expected cost, variance should be 0
         if (actual_cost - expected_cost).abs() < 0.001 {
@@ -214,8 +213,7 @@ impl Arbitrary for ArbBaseline {
             };
 
         let acceptable_variance_percent = if acceptable_variance_percent.is_finite()
-            && acceptable_variance_percent >= 0.0
-            && acceptable_variance_percent <= 100.0
+            && (0.0..=100.0).contains(&acceptable_variance_percent)
         {
             acceptable_variance_percent
         } else {
@@ -290,7 +288,7 @@ fn test_baseline_zero_expected_cost_edge_case() {
 
     // Zero actual cost should have zero variance
     let actual_cost = 0.0;
-    let variance =
+    let _variance =
         ((actual_cost - baseline.expected_monthly_cost) / baseline.expected_monthly_cost).abs()
             * 100.0;
     // This would cause division by zero, so we need to handle it specially

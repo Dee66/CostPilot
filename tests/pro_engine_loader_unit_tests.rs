@@ -85,7 +85,7 @@ mod tests {
         let pubkey_der = verifying_key.to_bytes();
         let pem = format!(
             "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----\n",
-            base64::engine::general_purpose::STANDARD.encode(&pubkey_der)
+            base64::engine::general_purpose::STANDARD.encode(pubkey_der)
         );
         fs::write(&pubkey_path, pem).unwrap();
 

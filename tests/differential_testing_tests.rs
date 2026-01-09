@@ -267,5 +267,4 @@ fn test_alternative_algorithm_comparison() {
 
     // In a real implementation, we would compare results from different algorithms
     // For now, just ensure both execute successfully
-    assert!(true, "Alternative algorithm comparison completed");
 }

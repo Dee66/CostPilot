@@ -80,8 +80,12 @@ mod determinism_tests {
         let change2 = create_test_resource_change(); // identical
 
         // Get estimates first
-        let estimates1 = prediction_engine.predict(&[change1.clone()]).unwrap();
-        let estimates2 = prediction_engine.predict(&[change2.clone()]).unwrap();
+        let estimates1 = prediction_engine
+            .predict(std::slice::from_ref(&change1))
+            .unwrap();
+        let estimates2 = prediction_engine
+            .predict(std::slice::from_ref(&change2))
+            .unwrap();
 
         let explanations1 = engine.explain(&change1, &estimates1[0]);
         let explanations2 = engine.explain(&change2, &estimates2[0]);
@@ -106,7 +110,7 @@ mod determinism_tests {
         // Run detection multiple times
         let mut hashes = Vec::new();
         for _ in 0..5 {
-            let detections = engine.detect(&[change.clone()]).unwrap();
+            let detections = engine.detect(std::slice::from_ref(&change)).unwrap();
             let json = serde_json::to_string(&detections).unwrap();
             let hash = Sha256::new().chain_update(json.as_bytes()).finalize();
             hashes.push(hash);
@@ -183,8 +187,8 @@ mod determinism_tests {
         let engine = DetectionEngine::new();
         let change = create_test_resource_change();
 
-        let detections1 = engine.detect(&[change.clone()]).unwrap();
-        let detections2 = engine.detect(&[change]).unwrap();
+        let detections1 = engine.detect(std::slice::from_ref(&change)).unwrap();
+        let detections2 = engine.detect(std::slice::from_ref(&change)).unwrap();
 
         // Convert to JSON strings
         let json1 = serde_json::to_string(&detections1).unwrap();
@@ -209,8 +213,8 @@ mod determinism_tests {
         let mut engine = PredictionEngine::new().unwrap();
         let change = create_test_resource_change();
 
-        let estimates1 = engine.predict(&[change.clone()]).unwrap();
-        let estimates2 = engine.predict(&[change]).unwrap();
+        let estimates1 = engine.predict(std::slice::from_ref(&change)).unwrap();
+        let estimates2 = engine.predict(std::slice::from_ref(&change)).unwrap();
 
         // Serialize with consistent formatting
         let json1 = serde_json::to_string(&estimates1).unwrap();
@@ -440,7 +444,6 @@ mod determinism_tests {
         // - Byte-identical output validation
 
         // For now, this is a placeholder that always passes
-        assert!(true);
     }
 
     #[test]
@@ -453,6 +456,5 @@ mod determinism_tests {
         // - Validates against golden reference outputs
 
         // For now, this is a placeholder that always passes
-        assert!(true);
     }
 }

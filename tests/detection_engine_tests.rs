@@ -231,7 +231,7 @@ fn test_nat_gateway_detection_low_cost_no_detection() {
     assert!(result.is_ok());
     let detections = result.unwrap();
     // NAT Gateway detection now fires regardless of cost threshold
-    assert!(detections.len() >= 1); // At least NAT_GATEWAY_HIGH_COST
+    assert!(!detections.is_empty()); // At least NAT_GATEWAY_HIGH_COST
 }
 
 // EC2 Overprovisioning Tests
@@ -351,7 +351,7 @@ fn test_s3_with_lifecycle_no_detection() {
     let cost_estimates = vec![("test-s3".to_string(), 60.0, 0.8)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
-    let detections = result.unwrap();
+    let _detections = result.unwrap();
     // May still detect S3_VERSIONING_WITHOUT_EXPIRATION if versioning is enabled
     // assert!(detections.is_empty()); // Relaxed assertion
 }
@@ -368,7 +368,7 @@ fn test_s3_missing_lifecycle_low_cost_no_detection() {
     let cost_estimates = vec![("test-s3".to_string(), 30.0, 0.8)]; // Below threshold
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
-    let detections = result.unwrap();
+    let _detections = result.unwrap();
     // New S3 patterns may fire regardless of cost threshold
     // assert!(detections.is_empty()); // Relaxed assertion
 }
@@ -1532,7 +1532,7 @@ fn test_detection_engine_zero_cost_estimates() {
     let cost_estimates = vec![("test-resource".to_string(), 0.0, 0.5)];
     let result = engine.analyze_changes(&changes, &cost_estimates);
     assert!(result.is_ok());
-    let detections = result.unwrap();
+    let _detections = result.unwrap();
     // NAT Gateway pattern fires regardless of cost
     // assert!(detections.is_empty()); // Relaxed - NAT_GATEWAY_HIGH_COST ignores cost threshold
 }

@@ -46,7 +46,7 @@ fn bench_cli_scan_basic(c: &mut Criterion) {
     c.bench_function("cli_scan_basic", |b| {
         b.iter(|| {
             let mut cmd = Command::new("cargo");
-            cmd.args(&[
+            cmd.args([
                 "run",
                 "--bin",
                 "costpilot",
@@ -130,7 +130,7 @@ fn bench_cli_scan_multi_resource(c: &mut Criterion) {
     c.bench_function("cli_scan_multi_resource", |b| {
         b.iter(|| {
             let mut cmd = Command::new("cargo");
-            cmd.args(&[
+            cmd.args([
                 "run",
                 "--bin",
                 "costpilot",
@@ -201,7 +201,7 @@ policies:
     c.bench_function("cli_scan_with_policy", |b| {
         b.iter(|| {
             let mut cmd = Command::new("cargo");
-            cmd.args(&[
+            cmd.args([
                 "run",
                 "--bin",
                 "costpilot",
@@ -232,7 +232,7 @@ fn bench_cli_init(c: &mut Criterion) {
             let init_path = temp_dir.path().join("bench_project");
 
             let mut cmd = Command::new("cargo");
-            cmd.args(&[
+            cmd.args([
                 "run",
                 "--bin",
                 "costpilot",
@@ -270,7 +270,7 @@ prediction:
             std::fs::write(&config_path, config_content).unwrap();
 
             let mut cmd = Command::new("cargo");
-            cmd.args(&[
+            cmd.args([
                 "run",
                 "--bin",
                 "costpilot",
