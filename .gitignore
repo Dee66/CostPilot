@@ -98,3 +98,7 @@ docs/mental_model.md
 
 # License files
 license*.json
+
+docs/checklist.md
+docs/checklist.yml
+docs/pricing_enforcement_checklist.yml

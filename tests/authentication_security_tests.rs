@@ -147,6 +147,12 @@ mod authentication_security_tests {
         let temp_dir = TempDir::new().unwrap();
         std::env::set_var("HOME", temp_dir.path());
 
+        // Ensure clean rate limit state by removing any existing file
+        let rate_limit_path = temp_dir.path().join(".costpilot").join("rate_limit.json");
+        if rate_limit_path.exists() {
+            std::fs::remove_file(&rate_limit_path).ok();
+        }
+
         // Create a valid test license
         let seed = [42u8; 32];
         let signing_key = SigningKey::from_bytes(&seed);
