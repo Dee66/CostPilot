@@ -25,6 +25,13 @@ packaging/signing/private.key
 scripts/signing/private.key
 **/private.key
 **/rotated_key.pem
+*.pem
+!scripts/test-data/*.pem
+
+# Internal planning docs (never commit)
+docs/mental_model_delta*
+docs/planning/
+docs/API_PRIVATE_KEY_FIX.md
 
 # Rust build artifacts
 /target
@@ -102,3 +109,4 @@ license*.json
 docs/checklist.md
 docs/checklist.yml
 docs/pricing_enforcement_checklist.yml
+keypair_info.json

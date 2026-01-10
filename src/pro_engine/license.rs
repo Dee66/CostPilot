@@ -1,4 +1,14 @@
-// License management for CostPilot Premium
+// ============================================================================
+// IMMUTABLE LICENSE CONTRACT - DO NOT MODIFY
+// ============================================================================
+// This module defines the license validation contract for CostPilot.
+// ANY changes to the following will break license compatibility:
+// - License struct field names or types (email, license_key, expires, signature, issuer)
+// - Expiry validation logic (expires > now())
+// - Rate limiting parameters
+//
+// See CONTRACT.md for the complete specification.
+// ============================================================================
 
 use crate::pro_engine::loader::{EncryptedBundle, LoaderError};
 use serde::{Deserialize, Serialize};

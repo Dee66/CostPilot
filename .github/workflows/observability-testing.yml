@@ -1,4 +1,4 @@
-# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
+# MANUAL WORKFLOW - intentionally not automated. Run only when explicitly required.
 name: Observability Testing
 
 on:

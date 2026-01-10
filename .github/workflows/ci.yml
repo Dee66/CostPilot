@@ -1,10 +1,8 @@
+# ⚠️ COST CONTROL: Manual-only to prevent fork CI charges
 name: CI
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

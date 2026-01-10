@@ -1,4 +1,4 @@
-CostPilot — One-Page Launch Narrative (Internal)
+CostPilot - One-Page Launch Narrative (Internal)
 What CostPilot Is
 
 CostPilot provides deterministic, audit-grade cost governance at the pull-request boundary.
@@ -47,7 +47,7 @@ How CostPilot Works (Trust Chain)
 CostPilot operates through a single, inseparable trust chain:
 
 Detect
-Identifies cost-impacting changes introduced by a PR diff — including emergent, cross-service effects that are invisible to linting or static checks.
+Identifies cost-impacting changes introduced by a PR diff - including emergent, cross-service effects that are invisible to linting or static checks.
 
 Predict
 Calculates the expected recurring cost delta using deterministic heuristics and cold-start assumptions. No billing data, no credentials, no runtime signals.
@@ -152,7 +152,7 @@ Not to maximize savings.
 Not to produce more alerts.
 Not to optimize dashboards.
 
-Its value is restraint, correctness, and authority — exercised only when justified.
+Its value is restraint, correctness, and authority - exercised only when justified.
 
 Non-Negotiable Invariants
 

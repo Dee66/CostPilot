@@ -104,15 +104,15 @@ market:
     - "Policy-as-code and SLO enforcement built directly into CI."
     - "Static mapping and trend artifacts that can be embedded and shared."
   risk_profile:
-    technical_risk: "Medium — requires robust IaC parsing and deterministic heuristics."
-    market_risk: "Medium — many FinOps tools exist, but few are zero-IAM/local-first."
-    legal_risk: "Low — no customer data or credentials required by default."
+    technical_risk: "Medium - requires robust IaC parsing and deterministic heuristics."
+    market_risk: "Medium - many FinOps tools exist, but few are zero-IAM/local-first."
+    legal_risk: "Low - no customer data or credentials required by default."
 
 product_marketing:
   hero_metric: "Catch 90% of AWS cost regressions before they hit your bill."
   shareable_artifact: "Static cost trend and mapping visualizations embeddable in PRs and docs."
   differentiators:
-    - "Zero IAM required — runs entirely on local IaC artifacts."
+    - "Zero IAM required - runs entirely on local IaC artifacts."
     - "Deterministic heuristics with auditable explain output."
     - "Patch and snippet autofix with rollback artifacts."
     - "Policy-as-code and SLO burn detection in CI."

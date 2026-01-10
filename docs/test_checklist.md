@@ -86,7 +86,7 @@
 </div>
 
 
-**Version:** 4.0 — VISIONARY EXECUTION
+**Version:** 4.0 - VISIONARY EXECUTION
 
 **Date:** 2025-12-22
 
@@ -117,7 +117,7 @@ Every checklist item maps to test_plan.yml requirements with measurable outcomes
 
 ## 📋 ESSENTIAL TEST SUITES
 
-## P0 — RELEASE BLOCKING
+## P0 - RELEASE BLOCKING
 
 ### 1. Installation & Packaging
 - [x] Binary installs on Linux x86_64 and ARM64
@@ -245,7 +245,7 @@ Every checklist item maps to test_plan.yml requirements with measurable outcomes
 
 ---
 
-## P0 — COMMERCIAL TRUST
+## P0 - COMMERCIAL TRUST
 
 ### 9. Artifact Integrity
 - [x] Build artifacts reproducible across clean environments
@@ -290,7 +290,7 @@ Every checklist item maps to test_plan.yml requirements with measurable outcomes
 
 ---
 
-## P1 — IMPORTANT (NOT RELEASE BLOCKING)
+## P1 - IMPORTANT (NOT RELEASE BLOCKING)
 
 ### 13. Autofix Safety
 - [x] Snippet generation matches detected regression
@@ -321,7 +321,7 @@ Every checklist item maps to test_plan.yml requirements with measurable outcomes
 
 ---
 
-## P2 — POST-LAUNCH
+## P2 - POST-LAUNCH
 
 ### 16. Policy Language Depth
 - [x] Exhaustive policy syntax coverage
@@ -347,8 +347,8 @@ Every checklist item maps to test_plan.yml requirements with measurable outcomes
 
 CostPilot is **LAUNCH READY** when:
 
-- [x] All P0 — Release Blocking items complete
-- [x] All P0 — Commercial Trust items complete
+- [x] All P0 - Release Blocking items complete
+- [x] All P0 - Commercial Trust items complete
 - [x] All golden decision scenarios pass
 - [x] Determinism proven across platforms
 
@@ -372,7 +372,7 @@ Otherwise, delete it.
 
 ---
 
-## P3 — ADVANCED TESTING (POST-LAUNCH ENHANCEMENT)
+## P3 - ADVANCED TESTING (POST-LAUNCH ENHANCEMENT)
 
 ### 19. Test Execution Strategy Implementation
 - [x] Automation frameworks implemented (Cargo, custom Rust harness, Playwright)
@@ -482,7 +482,7 @@ Otherwise, delete it.
 
 ---
 
-## P4 — FUTURE-PROOFING (VISIONARY CAPABILITIES)
+## P4 - FUTURE-PROOFING (VISIONARY CAPABILITIES)
 
 ### 29. AI-Augmented Testing
 - [x] AI-driven test generation from code changes
@@ -548,8 +548,8 @@ Otherwise, delete it.
 
 CostPilot is **LAUNCH READY** when:
 
-- [x] All P0 — Release Blocking items complete
-- [x] All P0 — Commercial Trust items complete
+- [x] All P0 - Release Blocking items complete
+- [x] All P0 - Commercial Trust items complete
 - [x] All golden decision scenarios pass
 - [x] Determinism proven across platforms
 - [x] P3 Advanced Testing foundation established

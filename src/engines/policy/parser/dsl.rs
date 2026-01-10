@@ -199,7 +199,7 @@ impl DslParser {
         // Allow rules with empty conditions for edge-case testing; the
         // evaluator may treat empty conditions as always-matching or
         // skipped depending on context. Emit a warning at parse time is
-        // unnecessary here — we accept the input.
+        // unnecessary here - we accept the input.
 
         // Validate each condition
         for condition in &rule.conditions {

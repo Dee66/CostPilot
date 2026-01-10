@@ -1,9 +1,8 @@
+# ⚠️ COST CONTROL: Manual-only (macOS runners are 10x Linux cost)
 name: macOS Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
 
 jobs:
   macos-release:

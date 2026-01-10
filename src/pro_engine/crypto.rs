@@ -1,4 +1,15 @@
-// Cryptographic operations for ProEngine loading
+// ============================================================================
+// IMMUTABLE LICENSE CONTRACT - DO NOT MODIFY
+// ============================================================================
+// This module defines the cryptographic verification contract for CostPilot.
+// ANY changes to the following will break license compatibility:
+// - Canonical message format: {email}|{license_key}|{expires}|{issuer}
+// - Signature algorithm: Ed25519 (RFC 8032)
+// - Signature encoding: Hex string (128 characters)
+// - Public key selection by issuer name
+//
+// See CONTRACT.md for the complete specification.
+// ============================================================================
 
 #[cfg(not(target_arch = "wasm32"))]
 use ring::{aead, hkdf as ring_hkdf, signature};

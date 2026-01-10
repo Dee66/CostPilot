@@ -4,7 +4,7 @@ This system maintains authoritative, accurate understanding of the CostPilot rep
 
 ## Architecture: Four Strict Layers
 
-### Layer 1 — Fact Extraction (Mechanical, Dumb, Exhaustive)
+### Layer 1 - Fact Extraction (Mechanical, Dumb, Exhaustive)
 **What**: Pure extraction of provable facts from the codebase
 **How**: No judgment, no exceptions, no interpretation
 **Examples**:
@@ -12,19 +12,19 @@ This system maintains authoritative, accurate understanding of the CostPilot rep
 - "This symbol appears in this file"
 - "This binary references this module"
 
-### Layer 2 — Claim Declaration (Human / Curated)
+### Layer 2 - Claim Declaration (Human / Curated)
 **What**: Explicit claims in `docs/mental_model.md`
 **How**: Factual statements only, following normative grammar in `docs/mental_model_claim_grammar.md`
 **Examples**:
 - "Runtime network access: Not permitted"
 - "Non-deterministic behavior is a defect"
 
-### Layer 3 — Claim ↔ Fact Comparison (Strict, Mechanical)
+### Layer 3 - Claim ↔ Fact Comparison (Strict, Mechanical)
 **What**: Detect contradictions between claims and facts
 **How**: Pure comparison, no business logic, no allowances
 **Tool**: `scripts/detect_mental_model_contradictions.py`
 
-### Layer 4 — Human Resolution / Delta Proposal
+### Layer 4 - Human Resolution / Delta Proposal
 **What**: Decide how to reconcile contradictions
 **How**: Either fix claims, fix code, or narrow claims
 **Tools**: Delta proposals, version history

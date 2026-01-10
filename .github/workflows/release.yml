@@ -1,8 +1,14 @@
-# MANUAL WORKFLOW — intentionally not automated. Run only when explicitly required.
+# ⚠️ COST WARNING: This workflow uses macOS (10x) and Windows (2x) runners
+# Expected cost: ~240 CI minutes (~$3-5 depending on plan)
+# EXECUTE ONLY ONCE per version
 name: Release
 
 on:
   workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -220,10 +226,10 @@ jobs:
             dist/sha256sum.txt
             dist/sha256sum.sig
             dist/license.json
+          retention-days: 90
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
-          retention-days: 90
         with:
           files: |
             dist/*.zip

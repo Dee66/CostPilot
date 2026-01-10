@@ -91,7 +91,7 @@ pub fn check_exemptions_for_ci(
         // First perform strict validation to catch malformed exemptions (missing fields,
         // invalid date formats). However, do not treat duration-related validation
         // (created_at after expires or overly long duration) as invalid for CI status
-        // purposes — we still want to recognize expired exemptions.
+        // purposes - we still want to recognize expired exemptions.
         match validator.validate_exemption(exemption) {
             Ok(_) => {}
             Err(e) => {

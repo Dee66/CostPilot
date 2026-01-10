@@ -1,9 +1,9 @@
-COSTPILOT — FREE VS PREMIUM FUNCTIONAL SPECIFICATION
+COSTPILOT - FREE VS PREMIUM FUNCTIONAL SPECIFICATION
 (Detailed, enforceable, architecture-ready version)
 FREE COSTPILOT (Community Edition)
 Purpose:
 
-A high-value but bounded cost scanning tool that builds trust, warms the market, and directs serious users toward the paid version—all while protecting the commercial IP that ultimately funds GuardSuite.
+A high-value but bounded cost scanning tool that builds trust, warms the market, and directs serious users toward the paid version-all while protecting the commercial IP that ultimately funds GuardSuite.
 
 1. Allowed Capabilities (Free)
 1.1 Deterministic Cost Scanning (Core Engine)
@@ -52,7 +52,7 @@ No STS calls
 No telemetry
 
 Your free version becomes a security selling point:
-“We run entirely offline—your plans never leave your machine.”
+“We run entirely offline-your plans never leave your machine.”
 
 1.4 Minimal Static Rule Engine (Embedded)
 
@@ -123,7 +123,7 @@ Accidentally expose internals via debug flags.
 
 You already have 1500 tests. Free version must remain bulletproof without leaking anything proprietary.
 
-PREMIUM COSTPILOT — “Founding Engineer Edition” ($29)
+PREMIUM COSTPILOT - “Founding Engineer Edition” ($29)
 Purpose:
 
 Deliver unmistakable value, protect the advanced heuristics engine, and monetise the serious users while maintaining a frictionless upgrade path.
