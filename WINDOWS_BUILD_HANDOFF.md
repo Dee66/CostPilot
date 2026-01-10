@@ -1,6 +1,6 @@
 # Windows Build Handoff
 
-**Commit**: 63e2577a
+**Commit**: 639e5475
 **Date**: 2026-01-10
 
 ---
@@ -8,7 +8,7 @@
 ## Build Command
 
 ```powershell
-git checkout 63e2577a
+git checkout 639e5475
 cargo build --release --target x86_64-pc-windows-msvc
 ```
 

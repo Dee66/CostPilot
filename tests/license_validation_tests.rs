@@ -242,20 +242,31 @@ mod tests {
 
     #[test]
     fn test_validate_valid_license() {
-        let _test_home = setup_test_home();
+        let test_home = setup_test_home();
+
+        // Create properly signed test license
+        use ed25519_dalek::{Signer, SigningKey};
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let email = "test@example.com";
+        let license_key = "TEST-KEY-12345";
+        let expires = "2026-12-31T23:59:59Z";
+        let issuer = "test-costpilot";
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
 
         let license = License {
-            email: "test@example.com".to_string(),
-            license_key: "TEST-KEY-12345".to_string(),
-            expires: "2026-12-31T23:59:59Z".to_string(),
-            signature: "a1b2c3d4e5f6...".to_string(),
-            issuer: "costpilot-v1".to_string(),
+            email: email.to_string(),
+            license_key: license_key.to_string(),
+            expires: expires.to_string(),
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
         let result = license.validate();
         assert!(result.is_ok());
 
-        let _test_home = setup_test_home();
+        drop(test_home);
     }
 
     #[test]
@@ -390,20 +401,31 @@ mod tests {
     fn test_rate_limit_reset_window() {
         // Window reset is time-based and tested in integration tests
         // Here we just verify the basic functionality works
-        let _test_home = setup_test_home();
+        let test_home = setup_test_home();
+
+        // Create properly signed test license
+        use ed25519_dalek::{Signer, SigningKey};
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let email = "test@example.com";
+        let license_key = "key";
+        let expires = "2026-12-31T23:59:59Z";
+        let issuer = "test-costpilot";
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
 
         let license = License {
-            email: "test@example.com".to_string(),
-            license_key: "key".to_string(),
-            expires: "2026-12-31T23:59:59Z".to_string(),
-            signature: "sig".to_string(),
-            issuer: "iss".to_string(),
+            email: email.to_string(),
+            license_key: license_key.to_string(),
+            expires: expires.to_string(),
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
         let result = license.validate();
         assert!(result.is_ok());
 
-        let _test_home = setup_test_home();
+        drop(test_home);
     }
 
     #[test]
@@ -447,14 +469,25 @@ mod tests {
     #[test]
     fn test_rate_limit_load_nonexistent_file() {
         // Tested implicitly - cleanup ensures clean state
-        let _test_home = setup_test_home();
+        let test_home = setup_test_home();
+
+        // Create properly signed test license
+        use ed25519_dalek::{Signer, SigningKey};
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let email = "test@example.com";
+        let license_key = "key";
+        let expires = "2026-12-31T23:59:59Z";
+        let issuer = "test-costpilot";
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
 
         let license = License {
-            email: "test@example.com".to_string(),
-            license_key: "key".to_string(),
-            expires: "2026-12-31T23:59:59Z".to_string(),
-            signature: "sig".to_string(),
-            issuer: "iss".to_string(),
+            email: email.to_string(),
+            license_key: license_key.to_string(),
+            expires: expires.to_string(),
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
         let result = license.validate();
@@ -463,24 +496,37 @@ mod tests {
             "Should work with no existing rate limit file"
         );
 
-        let _test_home = setup_test_home();
+        drop(test_home);
     }
 
     #[test]
     fn test_rate_limit_load_invalid_json() {
-        // Create invalid rate limit file
-        let path = Path::new(".costpilot/rate_limit.json");
+        let test_home = setup_test_home();
+
+        // Create invalid rate limit file in test HOME
+        let path = test_home.path().join(".costpilot/rate_limit.json");
         if let Some(parent) = path.parent() {
             let _ = fs::create_dir_all(parent);
         }
-        let _ = fs::write(path, "invalid json content");
+        let _ = fs::write(&path, "invalid json content");
+
+        // Create properly signed test license
+        use ed25519_dalek::{Signer, SigningKey};
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let email = "test@example.com";
+        let license_key = "key";
+        let expires = "2026-12-31T23:59:59Z";
+        let issuer = "test-costpilot";
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
 
         let license = License {
-            email: "test@example.com".to_string(),
-            license_key: "key".to_string(),
-            expires: "2026-12-31T23:59:59Z".to_string(),
-            signature: "sig".to_string(),
-            issuer: "iss".to_string(),
+            email: email.to_string(),
+            license_key: license_key.to_string(),
+            expires: expires.to_string(),
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
         // Should still work despite invalid file
@@ -490,19 +536,30 @@ mod tests {
             "Should handle invalid rate limit file gracefully"
         );
 
-        let _test_home = setup_test_home();
+        drop(test_home);
     }
 
     #[test]
     fn test_validate_rate_limiting_integration() {
-        let _test_home = setup_test_home();
+        let test_home = setup_test_home();
+
+        // Create properly signed test license
+        use ed25519_dalek::{Signer, SigningKey};
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let email = "test@example.com";
+        let license_key = "key";
+        let expires = "2026-12-31T23:59:59Z";
+        let issuer = "test-costpilot";
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
 
         let license = License {
-            email: "test@example.com".to_string(),
-            license_key: "key".to_string(),
-            expires: "2026-12-31T23:59:59Z".to_string(),
-            signature: "sig".to_string(),
-            issuer: "iss".to_string(),
+            email: email.to_string(),
+            license_key: license_key.to_string(),
+            expires: expires.to_string(),
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
         // Make multiple validation attempts
@@ -523,44 +580,67 @@ mod tests {
         );
         // Note: blocking assertion removed due to test isolation issues
 
-        let _test_home = setup_test_home();
+        drop(test_home);
     }
 
     #[test]
     fn test_license_edge_cases() {
-        let _test_home = setup_test_home();
+        let test_home = setup_test_home();
 
         // Test license with very long fields
         let long_string = "a".repeat(10000);
+
+        // Create properly signed test license with long fields
+        use ed25519_dalek::{Signer, SigningKey};
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let email = format!("{}@example.com", &long_string[..1000]);
+        let license_key = long_string.clone();
+        let expires = "2026-12-31T23:59:59Z".to_string();
+        let issuer = "test-costpilot";
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
+
         let license = License {
-            email: format!("{}@example.com", &long_string[..1000]),
-            license_key: long_string.clone(),
-            expires: "2026-12-31T23:59:59Z".to_string(),
-            signature: long_string.clone(),
-            issuer: long_string,
+            email,
+            license_key,
+            expires,
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
         let result = license.validate();
         assert!(result.is_ok(), "Long fields should still validate");
 
-        let _test_home = setup_test_home();
+        drop(test_home);
     }
 
     #[test]
     fn test_license_special_characters() {
-        let _test_home = setup_test_home();
+        let test_home = setup_test_home();
+
+        // Create properly signed test license with special characters
+        use ed25519_dalek::{Signer, SigningKey};
+        let seed = [42u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let email = "test+tag@example.com";
+        let license_key = "KEY-123_456.789";
+        let expires = "2026-12-31T23:59:59Z";
+        let issuer = "test-costpilot";
+        let message = format!("{}|{}|{}|{}", email, license_key, expires, issuer);
+        let signature = signing_key.sign(message.as_bytes());
 
         let license = License {
-            email: "test+tag@example.com".to_string(),
-            license_key: "KEY-123_456.789".to_string(),
-            expires: "2026-12-31T23:59:59Z".to_string(),
-            signature: "a1b2c3d4!@#$%^&*()".to_string(),
-            issuer: "costpilot-v1.0.0".to_string(),
+            email: email.to_string(),
+            license_key: license_key.to_string(),
+            expires: expires.to_string(),
+            signature: hex::encode(signature.to_bytes()),
+            issuer: issuer.to_string(),
         };
 
         let result = license.validate();
         assert!(result.is_ok(), "Special characters should be allowed");
 
-        let _test_home = setup_test_home();
+        drop(test_home);
     }
 }
