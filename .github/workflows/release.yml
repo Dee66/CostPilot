@@ -107,12 +107,14 @@ jobs:
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
+          retention-days: 90
           name: costpilot-${{ matrix.name }}.zip
           path: dist/costpilot-${{ matrix.name }}.zip
 
       - name: Upload TAR.GZ
         uses: actions/upload-artifact@v4
         with:
+          retention-days: 90
           name: costpilot-${{ matrix.name }}.tar.gz
           path: dist/costpilot-${{ matrix.name }}.tar.gz
 
@@ -221,6 +223,7 @@ jobs:
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
+          retention-days: 90
         with:
           files: |
             dist/*.zip
