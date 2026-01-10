@@ -20,7 +20,6 @@ else
 fi
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BINARY_PATH="${PROJECT_ROOT}/target/release/costpilot"
 
 # Detect platform for binary naming
 PLATFORM_TYPE=$(uname -s)
@@ -28,6 +27,8 @@ BINARY_NAME="costpilot"
 if [[ "$PLATFORM_TYPE" == "MINGW"* ]] || [[ "$PLATFORM_TYPE" == "MSYS"* ]] || [[ "$PLATFORM_TYPE" == "CYGWIN"* ]]; then
   BINARY_NAME="costpilot.exe"
 fi
+
+BINARY_PATH="${PROJECT_ROOT}/target/release/${BINARY_NAME}"
 
 if [[ ! -f "$BINARY_PATH" ]]; then
   echo "ERROR: Binary not found: $BINARY_PATH" >&2
