@@ -1,6 +1,7 @@
 # Windows Build Handoff
 
-**Commit**: 639e5475
+**Tag**: v1.0.1
+**Commit**: c4747d6a
 **Date**: 2026-01-10
 
 ---
@@ -8,7 +9,7 @@
 ## Build Command
 
 ```powershell
-git checkout 639e5475
+git checkout v1.0.1
 cargo build --release --target x86_64-pc-windows-msvc
 ```
 
@@ -25,7 +26,7 @@ cargo build --release --target x86_64-pc-windows-msvc
 
 ```powershell
 .\target\x86_64-pc-windows-msvc\release\costpilot.exe --version
-# Expected: costpilot 1.0.0
+# Expected: costpilot 1.0.1 (Free)
 ```
 
 ---
