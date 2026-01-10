@@ -73,8 +73,15 @@ TAR_OUTPUT="${OUT_DIR}/${BUNDLE_NAME}.tar.gz"
 if [[ -n "${DEV_FAST:-}" ]]; then
   tar -czf "$TAR_OUTPUT" -C "$TMPDIR" "$BUNDLE_NAME"
 else
-  tar --sort=name $MTIME_ARG --owner=0 --group=0 --numeric-owner \
-    -czf "$TAR_OUTPUT" -C "$TMPDIR" "$BUNDLE_NAME"
+  # Check if tar supports --sort (GNU tar), otherwise use basic options
+  if tar --sort=name --help >/dev/null 2>&1; then
+    tar --sort=name $MTIME_ARG --owner=0 --group=0 --numeric-owner \
+      -czf "$TAR_OUTPUT" -C "$TMPDIR" "$BUNDLE_NAME"
+  else
+    # macOS tar doesn't support --sort, use basic deterministic options
+    tar $MTIME_ARG --owner=0 --group=0 --numeric-owner \
+      -czf "$TAR_OUTPUT" -C "$TMPDIR" "$BUNDLE_NAME"
+  fi
 fi
 
 # Create deterministic ZIP
