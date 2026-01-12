@@ -197,6 +197,7 @@ mod tests {
     use tempfile::NamedTempFile;
 
     #[test]
+    #[ignore = "product.yml is internal-only, not in public repo"]
     fn test_spec_loader_roundtrip() {
         // Load the actual spec
         let spec = load_product_spec().expect("Failed to load product spec");
@@ -211,6 +212,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "product.yml is internal-only, not in public repo"]
     fn test_zero_cost_policy_loaded() {
         let spec = load_product_spec().expect("Failed to load product spec");
 
