@@ -246,6 +246,7 @@ fn test_output_schema_version_matches_binary_version_compatibility_table() {
     // Define the compatibility table: binary version -> expected schema version
     let compatibility_table: std::collections::HashMap<&str, &str> = [
         ("1.0.0", "1.0.0"),
+        ("1.0.1", "1.0.0"),
         // Future versions would be added here as they are released
     ]
     .iter()
