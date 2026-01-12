@@ -59,7 +59,7 @@ mod contract_protection_tests {
              If this is intentional (key rotation):\n\
              1. Update EXPECTED_PUBLIC_KEY_HEX in this test\n\
              2. Update EXPECTED_LICENSE_KEY_FINGERPRINT\n\
-             3. Document the rotation in CONTRACT.md\n\
+             3. Document the rotation in docs/CONTRACT.md\n\
              4. Notify all license holders\n\
              5. Update the issuer with the new private key\n\
              \n\

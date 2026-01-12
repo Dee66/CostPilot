@@ -21,7 +21,7 @@
 
 ### 1. Security Scan ✅ PASS
 
-**Report**: [SECURITY_AUDIT_REPORT.md](SECURITY_AUDIT_REPORT.md)
+**Report**: [SECURITY_AUDIT_REPORT.md](../audits/SECURITY_AUDIT_REPORT.md)
 
 **Findings**:
 - 0 actual secrets
