@@ -1,9 +1,0 @@
-{
-  "email": "test-free@example.com",
-  "license_key": "FREE-79DB18E4",
-  "expires": "2027-01-07T08:26:46.056212414+00:00",
-  "issued_at": "2026-01-07T08:26:46.056212414+00:00",
-  "signature": "c38765b2a09736adbc883cf609f47309f5c397b3c449c6fcc78efa4bc56a0ee0d0d774b694922bf0a2d9a244ceb21a0d9f1e85ea98836bbdf82399edfd358c0f",
-  "version": "1.0",
-  "issuer": "costpilot-v1"
-}

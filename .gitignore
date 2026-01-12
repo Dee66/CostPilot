@@ -150,3 +150,9 @@ docs/checklist.yml
 docs/pricing_enforcement_checklist.yml
 keypair_info.json
 dist-v1.0.1/
+
+# Local development configs and internal tooling (never commit)
+.cargo/
+.github/
+costpilot-license-issuer/
+products/
