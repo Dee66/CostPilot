@@ -1,5 +1,6 @@
-# Distribution archives
+# Distribution archives (build locally, don't commit)
 /dist
+/dist-v*/
 dist/
 **/dist/
 dist/costpilot-*.zip
@@ -7,6 +8,8 @@ dist/costpilot-*.tar.gz
 *.tar.gz
 *.zip
 sha256sum.txt
+SHA256SUMS.txt
+**/RELEASE_DESCRIPTION.md
 
 # Pro Engine artifacts
 dist/pro-engine-*
@@ -50,16 +53,23 @@ docs/API_PRIVATE_KEY_FIX.md
 .DS_Store
 Thumbs.db
 
-# Local runtime state and caches
+# Local runtime state and caches (never commit these)
 .costpilot/
 .benchmarks/
 .pytest_cache/
 .scanner/
 .guardsuite/
 scalability-test-results/
+.archive/
+
+# Build and test artifacts (never commit these)
+build/artifacts/
+**/build_artifacts/
 
 # Release artifact directories
 linux-amd64/
+dist-v*/
+dist/
 
 # Private signing keys (NEVER commit these)
 scripts/signing/private.key
@@ -96,7 +106,36 @@ costpilot
 trend.html
 trend.svg
 
+# Internal reports and analysis (don't commit to public repo)
+reports/
+repos.txt
+route53-policy.json
+
+# Test results and generated data (don't commit to public repo)
+docs/results/
+
+# Large Rust build artifacts
 target/
+
+# Node.js dependencies (if any)
+node_modules/
+package-lock.json
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache files (never commit these)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Large log files
+*.log
 
 # Copilot
 AGENTS.md
