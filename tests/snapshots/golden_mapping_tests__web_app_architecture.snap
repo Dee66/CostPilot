@@ -40,7 +40,7 @@ expression: json_output
     "node_count": 5,
     "timestamp": "2024-01-01T00:00:00Z",
     "total_cost": 119.13,
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "nodes": [
     {
