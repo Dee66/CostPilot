@@ -1,0 +1,158 @@
+name: 'CostPilot'
+description: 'Cost analysis for infrastructure as code'
+author: 'Dee Prinsloo'
+
+branding:
+  icon: 'dollar-sign'
+  color: 'blue'
+
+inputs:
+  terraform_plan:
+    description: 'Path to terraform plan JSON (from terraform show -json)'
+    required: true
+
+  config_file:
+    description: 'Optional CostPilot configuration file'
+    required: false
+
+outputs:
+  total_cost:
+    description: 'Total estimated monthly cost'
+    value: ${{ steps.execute.outputs.total_cost }}
+
+  cost_delta:
+    description: 'Cost change from baseline'
+    value: ${{ steps.execute.outputs.cost_delta }}
+
+  risk_level:
+    description: 'Risk level assessment'
+    value: ${{ steps.execute.outputs.risk_level }}
+
+  summary:
+    description: 'Analysis summary'
+    value: ${{ steps.execute.outputs.summary }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup CostPilot
+      id: setup
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Detect architecture
+        ARCH=$(uname -m)
+        if [ "$ARCH" != "x86_64" ]; then
+          echo "Error: Only x86_64 architecture is supported. Detected: $ARCH" >&2
+          exit 1
+        fi
+
+        # Detect OS and download appropriate binary
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          echo "Downloading CostPilot for Linux x86_64..."
+          curl -fsSL "https://github.com/Dee66/CostPilot/releases/download/v1.0.1/costpilot-v1.0.1-linux-x86_64.tar.gz" -o /tmp/costpilot.tar.gz
+          tar -xzf /tmp/costpilot.tar.gz -C /tmp
+          chmod +x /tmp/costpilot
+          echo "CostPilot installed at /tmp/costpilot"
+        elif [ "$RUNNER_OS" = "Windows" ]; then
+          echo "Downloading CostPilot for Windows x86_64..."
+          curl -fsSL "https://github.com/Dee66/CostPilot/releases/download/v1.0.1/costpilot-v1.0.1-windows-x86_64.exe" -o "$TEMP/costpilot.exe"
+          echo "CostPilot installed at $TEMP/costpilot.exe"
+        else
+          echo "Error: Unsupported OS: $RUNNER_OS" >&2
+          exit 1
+        fi
+
+    - name: Execute CostPilot
+      id: execute
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        PLAN="${{ inputs.terraform_plan }}"
+        CONFIG="${{ inputs.config_file }}"
+
+        # Validate required inputs
+        if [ -z "$PLAN" ]; then
+          echo "Error: terraform_plan input is required" >&2
+          exit 1
+        fi
+
+        if [ ! -f "$PLAN" ]; then
+          echo "Error: Terraform plan file not found: $PLAN" >&2
+          exit 1
+        fi
+
+        # Validate optional config file if provided
+        if [ -n "$CONFIG" ] && [ ! -f "$CONFIG" ]; then
+          echo "Error: Config file not found: $CONFIG" >&2
+          exit 1
+        fi
+
+        # Build command
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          COSTPILOT="/tmp/costpilot"
+        elif [ "$RUNNER_OS" = "Windows" ]; then
+          COSTPILOT="$TEMP/costpilot.exe"
+        fi
+
+        CMD="$COSTPILOT scan \"$PLAN\" --format json"
+
+        if [ -n "$CONFIG" ]; then
+          CMD="$CMD --config \"$CONFIG\""
+        fi
+
+        # Execute CostPilot with strict exit code propagation
+        echo "Executing: $CMD"
+        set +e
+        eval "$CMD" > costpilot-output.json
+        EXIT_CODE=$?
+        set -e
+
+        # Propagate non-zero exit codes immediately
+        if [ $EXIT_CODE -ne 0 ]; then
+          echo "CostPilot exited with code $EXIT_CODE" >&2
+          exit $EXIT_CODE
+        fi
+
+        # Parse JSON output (only if exit code was 0)
+        if [ ! -f "costpilot-output.json" ]; then
+          echo "Error: CostPilot output file not found" >&2
+          exit 1
+        fi
+
+        # Extract required fields
+        TOTAL_COST=$(jq -r '.total_cost // empty' costpilot-output.json)
+        COST_DELTA=$(jq -r '.cost_delta // empty' costpilot-output.json)
+        RISK_LEVEL=$(jq -r '.risk_level // empty' costpilot-output.json)
+        SUMMARY=$(jq -r '.summary // empty' costpilot-output.json)
+
+        # Validate all required fields are present
+        if [ -z "$TOTAL_COST" ]; then
+          echo "Error: Missing required field 'total_cost' in CostPilot output" >&2
+          exit 1
+        fi
+
+        if [ -z "$COST_DELTA" ]; then
+          echo "Error: Missing required field 'cost_delta' in CostPilot output" >&2
+          exit 1
+        fi
+
+        if [ -z "$RISK_LEVEL" ]; then
+          echo "Error: Missing required field 'risk_level' in CostPilot output" >&2
+          exit 1
+        fi
+
+        if [ -z "$SUMMARY" ]; then
+          echo "Error: Missing required field 'summary' in CostPilot output" >&2
+          exit 1
+        fi
+
+        # Write outputs
+        echo "total_cost=$TOTAL_COST" >> $GITHUB_OUTPUT
+        echo "cost_delta=$COST_DELTA" >> $GITHUB_OUTPUT
+        echo "risk_level=$RISK_LEVEL" >> $GITHUB_OUTPUT
+        echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+        echo "CostPilot analysis complete"
